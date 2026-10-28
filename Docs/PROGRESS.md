@@ -302,3 +302,7 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 **Manual steps:** Test Runner EditMode/PlayMode; in Play mode on level 1 step into the fixed guard's cone (captured). Level 2 cannot be completed until it is redesigned.
 
 **Next (user decision, KNOWN_ISSUES #18):** redesign the 20 unsolvable levels for the new rule, or keep legacy levels on `afterGuardMove` per level.
+
+## 2026-10-28 — Solvability check under the corrected rule
+
+Exhaustive check: the solver's explored-state counts for the unsolvable levels are 1–1124 against a 250,000 budget, so "unsolvable" is a full-state-space result, not a timeout. Added `--reach` to the runner (`Tools/level_reach.sh`): per level, an ASCII map of every node the player can ever stand on under the level's detection rule plus the fringe nodes where every entry attempt is a capture. Result on the shipped packs: solvable 1, 4, 12, 14, 101; on 13, 16 and 17 the start node is inside a cone at phase 0 (only 1 reachable node); on 8 the two patrol cones cover both exits from the start corner; the other levels dead-end at the first guard crossing. No content changed.

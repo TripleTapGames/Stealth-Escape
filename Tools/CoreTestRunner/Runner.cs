@@ -15,6 +15,7 @@ public static class Runner
         if (args.Length >= 3 && args[0] == "--migrate") return Migrate(args[1], args[2], args.Length > 3 && args[3] == "v2rules");
         if (args.Length >= 6 && args[0] == "--search") return Search(args[1], int.Parse(args[2]), int.Parse(args[3]), int.Parse(args[4]), args[5], args.Length > 6 ? int.Parse(args[6]) : 10, args.Length > 7 ? int.Parse(args[8 - 1]) : 8);
         if (args.Length >= 2 && args[0] == "--solve") return PrintMetrics(args[1], true);
+        if (args.Length >= 2 && args[0] == "--reach") return PrintReachability(args[1]);
         string filter = args.Length > 0 ? args[0] : null;
         var asm = Assembly.GetExecutingAssembly();
         int passed = 0, failed = 0, skipped = 0;
@@ -90,6 +91,85 @@ public static class Runner
         }
         File.WriteAllText(outPath, ShadowSteps.Data.LevelPackWriter.ToJson(levels, pk.CoordinateSystem));
         Console.WriteLine("wrote schema 2: " + outPath + " (" + levels.Count + " levels)");
+        return 0;
+    }
+
+    /// <summary>
+    /// Designer diagnostic: for every level, exhaustively explore the reachable (non-captured) states under the level's rules
+    /// and draw which nodes the player can ever stand on. Legend: # wall, x solid cover, . never reachable, o reachable,
+    /// S start, E/e exit (reachable/unreachable), K/k key, D/d door, g guard route node (upper-case when reachable).
+    /// Fringe = nodes with an edge from a reachable node that were never entered safely (every attempt was a capture).
+    /// </summary>
+    private static int PrintReachability(string path)
+    {
+        var pack = ShadowSteps.Data.LevelPackLoader.Parse(File.ReadAllText(path));
+        foreach (var level in pack.Levels)
+        {
+            var seen = new HashSet<string>();
+            var reachable = new HashSet<ShadowSteps.Core.GridCoord>();
+            var fringe = new Dictionary<ShadowSteps.Core.GridCoord, string>();
+            var queue = new Queue<ShadowSteps.Core.GameState>();
+            var init = ShadowSteps.Core.RulesEngine.CreateInitialState(level);
+            queue.Enqueue(init); seen.Add(init.ToReferenceTuple()); reachable.Add(init.PlayerPosition);
+            bool won = false; int states = 0;
+            while (queue.Count > 0 && states < 250000)
+            {
+                var st = queue.Dequeue(); states++;
+                foreach (var a in ShadowSteps.Core.GameActionUtil.ReferenceOrder)
+                {
+                    var r = ShadowSteps.Core.RulesEngine.Step(level, st, a);
+                    if (!r.IsValid) continue;
+                    if (r.Captured)
+                    {
+                        if (!reachable.Contains(r.PlayerTo) && !fringe.ContainsKey(r.PlayerTo))
+                            fringe[r.PlayerTo] = r.Capture + " by guard " + r.CapturingGuard + " at phase " + st.Phase + "->" + r.StateAfter.Phase;
+                        continue;
+                    }
+                    reachable.Add(r.PlayerTo);
+                    if (r.Won) { won = true; continue; }
+                    if (seen.Add(r.StateAfter.ToReferenceTuple())) queue.Enqueue(r.StateAfter);
+                }
+            }
+            foreach (var c in reachable) fringe.Remove(c);
+            var routeNodes = new HashSet<ShadowSteps.Core.GridCoord>();
+            foreach (var g in level.Guards) foreach (var c in g.Route) routeNodes.Add(c);
+            Console.WriteLine("level " + level.Id + " " + level.Name + " [" + ShadowSteps.Core.DetectionRuleUtil.ToToken(level.Detection) + "] " + (won ? "SOLVABLE" : "UNSOLVABLE") +
+                              " reachableNodes=" + reachable.Count + "/" + level.Graph.TraversableNodeCount + " states=" + states);
+            for (int y = 0; y < level.Height; y++)
+            {
+                var row = new System.Text.StringBuilder("  ");
+                for (int x = 0; x < level.Width; x++)
+                {
+                    var c = new ShadowSteps.Core.GridCoord(x, y);
+                    char ch;
+                    if (!level.Graph.HasNode(c)) ch = ' ';
+                    else if (level.IsWall(c)) ch = '#';
+                    else if (!level.Graph.IsTraversable(c)) ch = 'x';
+                    else if (c == level.Start) ch = 'S';
+                    else if (c == level.Exit) ch = reachable.Contains(c) ? 'E' : 'e';
+                    else if (level.IsKey(c)) ch = reachable.Contains(c) ? 'K' : 'k';
+                    else if (level.IsDoor(c)) ch = reachable.Contains(c) ? 'D' : 'd';
+                    else if (routeNodes.Contains(c)) ch = reachable.Contains(c) ? 'G' : 'g';
+                    else ch = reachable.Contains(c) ? 'o' : '.';
+                    row.Append(ch).Append(' ');
+                }
+                Console.WriteLine(row.ToString());
+            }
+            if (fringe.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder("  fringe:");
+                foreach (var kv in fringe) sb.Append(" ").Append(kv.Key).Append("=").Append(kv.Value).Append(";");
+                Console.WriteLine(sb.ToString());
+            }
+            if (!won && level.Guards.Count > 0)
+            {
+                var g0 = ShadowSteps.Core.GuardSchedule.PosesAt(level, 0);
+                var blocked = ShadowSteps.Core.VisionSystem.BlockedPredicate(level, false);
+                for (int i = 0; i < g0.Length; i++)
+                    if (ShadowSteps.Core.VisionSystem.ConeVisible(g0[i], level.Start, blocked))
+                        Console.WriteLine("  note: start node is inside guard " + i + "'s cone at phase 0, so WAIT on turn 1 is lethal");
+            }
+        }
         return 0;
     }
 
