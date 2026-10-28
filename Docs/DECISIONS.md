@@ -79,3 +79,13 @@ Every screen implements `BuildHierarchy()`; `UiPrefabSet.Create<T>` instantiates
 
 ## D-024 Procedural audio until licensed assets exist
 `AudioService` synthesises short tones and an ambient pad at startup (original, licence-free). Clips are addressed by the `Sfx` enum so real recordings can replace them later without touching callers. Audio never influences simulation.
+
+## D-025 Detection is a per-level rule; V2 means "seen before and after the guard move"
+Design change (2026-10-28): after the player acts, a cone captures only if the player's landing node is inside guard vision both at the guard poses before the phase advance and at the poses after it. Being lit by only one of the two looks is safe. "Guard vision" is the **union of all cones**, not a per-guard check, so the rule matches what the on-screen overlay shows (a node lit before and after by two different guards still captures; the guard reported as the captor is the one that sees the player after the move). EMP freezes the phase, so both looks are identical and a single sighting captures; smoke conceals both looks.
+
+The rule is stored on the level (`rules.detection`: `beforeAndAfterGuardMove` | `afterGuardMove`) rather than hard-coded so that:
+- schema 1 files (and `LevelDefinition`'s legacy constructor) keep V1 semantics, which keeps the Python parity suite meaningful as proof of the engine port;
+- schema 2 files default to the V2 rule and the shipped packs state it explicitly;
+- `--migrate` preserves semantics (a V1 file converts to `afterGuardMove` with a conversion note) and `--migrate … v2rules` opts into the V2 rule.
+
+Consequence: V2 is never stricter than V1 (tested over the reachable state space of all 20 levels), so every V1 solution still wins, but the levels are much more lenient: pars dropped (level 20: 23 → 12), WAIT is forced only on 17, smoke only on 17, 19 and 105, and tutorial 102 no longer teaches WAIT. Level redesign under the new rule is a separate content task (KNOWN_ISSUES #16).

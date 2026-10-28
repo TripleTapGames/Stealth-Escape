@@ -12,7 +12,7 @@ public static class Runner
     {
         if (args.Length >= 2 && args[0] == "--metrics") return PrintMetrics(args[1]);
         if (args.Length >= 3 && args[0] == "--export-validation") return ExportValidation(args[1], args[2]);
-        if (args.Length >= 3 && args[0] == "--migrate") { var pk = ShadowSteps.Data.LevelPackLoader.Parse(File.ReadAllText(args[1])); File.WriteAllText(args[2], ShadowSteps.Data.LevelPackWriter.ToJson(pk)); Console.WriteLine("wrote schema 2: " + args[2] + " (" + pk.Levels.Count + " levels)"); return 0; }
+        if (args.Length >= 3 && args[0] == "--migrate") return Migrate(args[1], args[2], args.Length > 3 && args[3] == "v2rules");
         if (args.Length >= 6 && args[0] == "--search") return Search(args[1], int.Parse(args[2]), int.Parse(args[3]), int.Parse(args[4]), args[5], args.Length > 6 ? int.Parse(args[6]) : 10, args.Length > 7 ? int.Parse(args[8 - 1]) : 8);
         if (args.Length >= 2 && args[0] == "--solve") return PrintMetrics(args[1], true);
         string filter = args.Length > 0 ? args[0] : null;
@@ -67,6 +67,30 @@ public static class Runner
         foreach (var f in failures) Console.WriteLine(f + "\n");
         Console.WriteLine("passed=" + passed + " failed=" + failed + " skipped=" + skipped);
         return failed == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// Rewrites a level file (schema 1 or 2) as schema 2. Semantics are preserved (a V1 file keeps the V1 detection rule);
+    /// pass "v2rules" as the fourth argument to switch every level to the V2 detection rule, recorded in conversionNotes.
+    /// </summary>
+    private static int Migrate(string inPath, string outPath, bool v2Rules)
+    {
+        var pk = ShadowSteps.Data.LevelPackLoader.Parse(File.ReadAllText(inPath));
+        var levels = new List<ShadowSteps.Core.LevelDefinition>();
+        foreach (var l in pk.Levels)
+        {
+            if (v2Rules && l.Detection != ShadowSteps.Core.LevelDefinition.DefaultDetection)
+            {
+                var spec = l.ToSpec();
+                spec.Detection = ShadowSteps.Core.LevelDefinition.DefaultDetection;
+                spec.ConversionNotes.Add("detection rule changed from " + ShadowSteps.Core.DetectionRuleUtil.ToToken(l.Detection) + " to " + ShadowSteps.Core.DetectionRuleUtil.ToToken(spec.Detection) + " by --migrate v2rules");
+                levels.Add(ShadowSteps.Core.LevelDefinition.FromSpec(spec));
+            }
+            else levels.Add(l);
+        }
+        File.WriteAllText(outPath, ShadowSteps.Data.LevelPackWriter.ToJson(levels, pk.CoordinateSystem));
+        Console.WriteLine("wrote schema 2: " + outPath + " (" + levels.Count + " levels)");
+        return 0;
     }
 
     /// <summary>CLI helper: load any level file (schema 1 or 2), validate, solve and print metrics per level.</summary>

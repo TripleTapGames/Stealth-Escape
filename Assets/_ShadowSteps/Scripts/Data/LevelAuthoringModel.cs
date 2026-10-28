@@ -19,6 +19,7 @@ public sealed class LevelAuthoringModel
         public float NodeSpacing = 1f;
         public int Smoke, Emp, SmokeTurns = 2;
         public bool NoWait, NoUndo;
+        public DetectionRule Detection = LevelDefinition.DefaultDetection;
         public GridCoord Start = new GridCoord(0, 4), Exit = new GridCoord(4, 0);
         public bool HasKey, HasDoor;
         public GridCoord Key, Door;
@@ -75,7 +76,7 @@ public sealed class LevelAuthoringModel
                 Id = Id, Name = Name, World = World, Chapter = Chapter, Theme = string.IsNullOrEmpty(Theme) ? null : Theme, Hint = string.IsNullOrEmpty(Hint) ? null : Hint,
                 Width = Width, Height = Height, NodeSpacing = NodeSpacing, Start = Start, Exit = Exit,
                 Key = HasKey ? Key : (GridCoord?)null, Door = HasDoor ? Door : (GridCoord?)null,
-                SmokeCharges = Smoke, EmpCharges = Emp, SmokeTurns = SmokeTurns, NoWait = NoWait, NoUndo = NoUndo
+                SmokeCharges = Smoke, EmpCharges = Emp, SmokeTurns = SmokeTurns, NoWait = NoWait, NoUndo = NoUndo, Detection = Detection
             };
             s.NodeMask = new List<GridCoord>(Nodes);
             s.NodeMask.Sort((a, b) => a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
@@ -93,7 +94,7 @@ public sealed class LevelAuthoringModel
             {
                 Id = l.Id, Name = l.Name, World = l.World, Chapter = l.Chapter, Theme = l.Theme ?? "", Hint = l.Hint ?? "",
                 Width = l.Width, Height = l.Height, NodeSpacing = (float)l.NodeSpacing, Smoke = l.SmokeCharges, Emp = l.EmpCharges, SmokeTurns = l.SmokeTurns,
-                NoWait = l.NoWait, NoUndo = l.NoUndo, Start = l.Start, Exit = l.Exit, HasKey = l.HasKey, HasDoor = l.HasDoor,
+                NoWait = l.NoWait, NoUndo = l.NoUndo, Detection = l.Detection, Start = l.Start, Exit = l.Exit, HasKey = l.HasKey, HasDoor = l.HasDoor,
                 Key = l.Key ?? default, Door = l.Door ?? default
             };
             foreach (var n in l.Graph.Nodes()) m.Nodes.Add(n);

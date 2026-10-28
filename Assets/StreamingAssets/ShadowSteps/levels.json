@@ -254,6 +254,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 58 directed edges between cardinally adjacent walkable cells; 4 wall cells kept as wall nodes"]
     },
     {
@@ -497,6 +500,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 54 directed edges between cardinally adjacent walkable cells; 5 wall cells kept as wall nodes"]
     },
     {
@@ -724,6 +730,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 48 directed edges between cardinally adjacent walkable cells; 5 wall cells kept as wall nodes"]
     },
@@ -971,6 +980,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 54 directed edges between cardinally adjacent walkable cells; 5 wall cells kept as wall nodes"]
     },
     {
@@ -1214,6 +1226,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 50 directed edges between cardinally adjacent walkable cells; 5 wall cells kept as wall nodes"]
     },
@@ -1490,6 +1505,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 60 directed edges between cardinally adjacent walkable cells; 3 wall cells kept as wall nodes"]
     },
     {
@@ -1718,6 +1736,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 48 directed edges between cardinally adjacent walkable cells; 6 wall cells kept as wall nodes"]
     },
@@ -1970,6 +1991,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 52 directed edges between cardinally adjacent walkable cells; 5 wall cells kept as wall nodes"]
     },
@@ -2409,6 +2433,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 106 directed edges between cardinally adjacent walkable cells; 2 wall cells kept as wall nodes", "door (5, 4) converted to 3 locked incoming edges; door node occludes sight until the key is held"]
     },
     {
@@ -2770,6 +2797,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 78 directed edges between cardinally adjacent walkable cells; 6 wall cells kept as wall nodes", "door (1, 3) converted to 3 locked incoming edges; door node occludes sight until the key is held"]
     },
@@ -3204,6 +3234,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 110 directed edges between cardinally adjacent walkable cells; 2 wall cells kept as wall nodes"]
     },
     {
@@ -3609,6 +3642,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 100 directed edges between cardinally adjacent walkable cells; 3 wall cells kept as wall nodes"]
     },
@@ -4064,6 +4100,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 106 directed edges between cardinally adjacent walkable cells; 2 wall cells kept as wall nodes", "door (5, 4) converted to 3 locked incoming edges; door node occludes sight until the key is held"]
     },
     {
@@ -4481,6 +4520,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 104 directed edges between cardinally adjacent walkable cells; 2 wall cells kept as wall nodes"]
     },
     {
@@ -4883,6 +4925,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 98 directed edges between cardinally adjacent walkable cells; 4 wall cells kept as wall nodes"]
     },
     {
@@ -5246,6 +5291,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 76 directed edges between cardinally adjacent walkable cells; 8 wall cells kept as wall nodes", "door (2, 0) converted to 2 locked incoming edges; door node occludes sight until the key is held"]
     },
@@ -5760,6 +5808,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 126 directed edges between cardinally adjacent walkable cells; 8 wall cells kept as wall nodes"]
     },
@@ -6340,6 +6391,9 @@
         "smokeTurns": 2,
         "empTurns": 1
       },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
+      },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 148 directed edges between cardinally adjacent walkable cells; 3 wall cells kept as wall nodes", "V2 redesign (2026-10-28): patrol guard A route moved from row 0 to row 1 so it no longer shares node (2,0) with rotating guard C; reference shortest solution (14 moves) is unchanged"]
     },
     {
@@ -6850,6 +6904,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 118 directed edges between cardinally adjacent walkable cells; 7 wall cells kept as wall nodes", "door (6, 2) converted to 3 locked incoming edges; door node occludes sight until the key is held"]
     },
@@ -7447,6 +7504,9 @@
         "decoyCharges": 0,
         "smokeTurns": 2,
         "empTurns": 1
+      },
+      "rules": {
+        "detection": "beforeAndAfterGuardMove"
       },
       "conversionNotes": ["migrated from schema 1 (grid adjacency) to schema 2 (explicit edges)", "generated 146 directed edges between cardinally adjacent walkable cells; 3 wall cells kept as wall nodes", "door (2, 3) converted to 4 locked incoming edges; door node occludes sight until the key is held"]
     }

@@ -373,7 +373,7 @@ namespace ShadowSteps.UI
         {
             switch (result.Capture)
             {
-                case CaptureKind.Seen: TitleText.Text = "SPOTTED"; ReasonText.Text = "A guard's cone reached you."; break;
+                case CaptureKind.Seen: TitleText.Text = "SPOTTED"; ReasonText.Text = "You stayed in a guard's sight while it moved."; break;
                 case CaptureKind.Occupied: TitleText.Text = "CAUGHT"; ReasonText.Text = "A guard stepped onto your node."; break;
                 default: TitleText.Text = "CAUGHT"; ReasonText.Text = "You crossed paths with a guard."; break;
             }

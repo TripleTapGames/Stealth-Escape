@@ -22,7 +22,7 @@ namespace ShadowSteps.Tests.EditMode
             table.AddFromValidationJson(System.IO.File.ReadAllText(System.IO.Path.Combine(TestPaths.ProjectRoot, "Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json")));
             Assert.AreEqual(25, table.Count);
             Assert.AreEqual(8, table.ParFor(1));
-            Assert.AreEqual(14, table.ParFor(105));
+            Assert.AreEqual(12, table.ParFor(105)); // V2 detection rule par (was 14 under V1 detection)
             Assert.AreEqual(0, table.ParFor(999));
         }
 

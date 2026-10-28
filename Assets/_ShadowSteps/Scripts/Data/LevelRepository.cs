@@ -19,7 +19,7 @@ namespace ShadowSteps.Data
         private static readonly HashSet<string> KnownLegacyGuardKeys = new HashSet<string>
             { "mode", "route", "facing", "range", "step", "rotation" };
         private static readonly HashSet<string> KnownV2LevelKeys = new HashSet<string>
-            { "schemaVersion", "id", "name", "world", "chapter", "theme", "board", "player", "objective", "guards", "gadgets", "restrictions", "presentation", "scoring", "conversionNotes", "migratedFromSchema" };
+            { "schemaVersion", "id", "name", "world", "chapter", "theme", "board", "player", "objective", "guards", "gadgets", "restrictions", "rules", "presentation", "scoring", "conversionNotes", "migratedFromSchema" };
         private static readonly HashSet<string> KnownV2BoardKeys = new HashSet<string>
             { "width", "height", "nodeSpacing", "nodes", "nodeMask", "edges", "blockedEdges", "lockedEdges", "walls", "cover", "decor" };
         private static readonly HashSet<string> KnownV2GuardKeys = new HashSet<string>
@@ -218,6 +218,16 @@ namespace ShadowSteps.Data
                 s.NoWait = JsonAccess.OptionalBool(rr, "noWait", false, rp);
                 s.NoUndo = JsonAccess.OptionalBool(rr, "noUndo", false, rp);
             }
+            if (o.TryGetValue("rules", out var rulesV) && rulesV != null)
+            {
+                var ru = JsonAccess.AsObject(rulesV, path + ".rules");
+                string rup = path + ".rules";
+                foreach (var k in ru.Keys) if (k != "detection") warnings?.Add(rup + ": unknown field '" + k + "' ignored");
+                string token = JsonAccess.OptionalString(ru, "detection", DetectionRuleUtil.ToToken(LevelDefinition.DefaultDetection), rup);
+                if (!DetectionRuleUtil.TryParse(token, out var rule))
+                    throw new LevelDataException(rup + ".detection '" + token + "' is not one of " + DetectionRuleUtil.AfterToken + ", " + DetectionRuleUtil.BeforeAndAfterToken);
+                s.Detection = rule;
+            }
             if (o.TryGetValue("presentation", out var presV) && presV != null)
             {
                 var pr = JsonAccess.AsObject(presV, path + ".presentation");
@@ -365,6 +375,7 @@ namespace ShadowSteps.Data
             }
             foreach (var g in legacy.Guards)
                 if (g.MoveEvery != 1 || g.RotateEvery != 1) { s.ConversionNotes.Add("guard step " + g.MoveEvery + " mapped to moveEvery and rotateEvery"); break; }
+            s.ConversionNotes.Add("detection rule kept as " + DetectionRuleUtil.ToToken(s.Detection) + " (V1 semantics); set rules.detection to " + DetectionRuleUtil.BeforeAndAfterToken + " to adopt the V2 rule");
             return LevelDefinition.FromSpec(s);
         }
     }
@@ -454,6 +465,7 @@ namespace ShadowSteps.Data
                 if (l.NoUndo) r["noUndo"] = true;
                 o["restrictions"] = r;
             }
+            o["rules"] = new JsonObject().Set("detection", DetectionRuleUtil.ToToken(l.Detection));
             if (!string.IsNullOrEmpty(l.Hint) || !string.IsNullOrEmpty(l.Theme))
             {
                 var pr = new JsonObject();

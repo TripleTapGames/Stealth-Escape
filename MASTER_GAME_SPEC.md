@@ -20,7 +20,7 @@ Home -> Level Select -> Level Start (brief mechanic hint) -> Inspect board and n
 - Entire board and HUD must fit portrait screens; account for notches and Android gesture areas; no unreadable tiny text. Support a range of phone aspect ratios and 30+ fps on ordinary midrange devices.
 
 ### End conditions
-- Capture if guard occupies the player's destination after its turn, guard swaps edges with player, or cone has unobstructed line-of-sight to player's tile (except when Smoke active, occupancy still captures).
+- Capture if guard occupies the player's destination after its turn, guard swaps edges with player, or (V2 detection rule, 2026-10-28) the player's tile is inside an unobstructed cone both before and after the guards move (except when Smoke active, occupancy still captures). Schema 1 fixtures keep the V1 single after-move cone check via `rules.detection`.
 - Win when player reaches exit and key objective fulfilled (when a key exists), after all hazards for the turn resolve.
 - Win and loss are mutually exclusive per turn: capture precedes win.
 
@@ -28,7 +28,7 @@ Home -> Level Select -> Level Start (brief mechanic hint) -> Inspect board and n
 **Canonical source**: `reference/DESIGN.md` and `reference/build.py`. Mirror reference exactly, including unusual definitions. Do not alter V1 original level behavior for the sake of convention.
 - Logical origin (0,0) top-left; X east, Y south. Four directions: N=0, E=1, S=2, W=3.
 - Action set `N`, `E`, `S`, `W`, `WAIT`, `SMOKE`, `EMP`. Smoke/EMP keep player stationary and spend a turn and charge. WAIT spends turn without moving.
-- On valid action: player movement, key pickup/door unlocking; enemy phase advance unless EMP; simultaneous enemy destination and edge-swap capture; cone vision evaluation; win check. Smoke conceals on activation and following player action, then expires; it does *not* prevent guard occupancy capture. EMP freezes the **global** enemy phase for its activation action, but not vision.
+- On valid action: player movement, key pickup/door unlocking; enemy phase advance unless EMP; simultaneous enemy destination and edge-swap capture; cone vision evaluation (V2: seen before **and** after the guard move, see LEVEL_DESIGN_PARAMETERS.md §5.7); win check. Smoke conceals on activation and following player action, then expires; it does *not* prevent guard occupancy capture. EMP freezes the **global** enemy phase for its activation action, but not vision.
 - Cone: exact discrete grid rule `1 <= forward <= range && abs(lateral) <= forward`, sampled LoS and walls/locked doors block vision. Orientation/facing from canonical solver. Never use a physics raycast as the authoritative detector; physics can only visualize it.
 - Guard routes/facing behavior and cadence are defined by `reference/DESIGN.md`. Calculate all enemy states from shared logical turn/phase rather than by moving transforms.
 - Undo restores full snapshot: player, phase, key, gadgets, smoke lifetime, turn count, terminal state. Undo of a terminal move permitted if allowed by UX. Restart restores initial snapshot.

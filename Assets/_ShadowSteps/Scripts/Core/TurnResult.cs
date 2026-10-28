@@ -42,7 +42,7 @@ namespace ShadowSteps.Core
         Occupied,
         /// <summary>Guard and player exchanged nodes along the same edge.</summary>
         Swapped,
-        /// <summary>Player stands inside an unobstructed cone and is not concealed by smoke.</summary>
+        /// <summary>Player stands inside an unobstructed cone (per the level's <see cref="DetectionRule"/>) and is not concealed by smoke.</summary>
         Seen
     }
 

@@ -91,14 +91,38 @@ namespace ShadowSteps.Tests.EditMode
         }
 
         [Test]
-        public void ValidationV2_MovesEqualReferenceMoves_ForAll20()
+        public void ValidationV2_MovesNeverExceedReferenceMoves_ForAll20()
         {
-            // The migrated topology is movement-equivalent to V1, so shortest lengths must match the V1 reference
-            // (level 18's redesign happens to keep the same length; this test documents that measured fact).
+            // The migrated topology is movement-equivalent to V1 and the V2 detection rule is never stricter than V1
+            // (DetectionRuleTests), so V2 shortest lengths are at most the V1 reference lengths.
             var v2 = JsonAccess.AsArray(MiniJson.Parse(File.ReadAllText(TestPaths.PackagedValidationPath)), "validation_v2");
             var v1 = TestPaths.LoadReferenceSolutions();
             for (int i = 0; i < 20; i++)
-                Assert.AreEqual(v1[i].Moves, JsonAccess.AsInt(((JsonObject)v2[i])["moves"], "moves"), "level " + (i + 1));
+                Assert.LessOrEqual(JsonAccess.AsInt(((JsonObject)v2[i])["moves"], "moves"), v1[i].Moves, "level " + (i + 1));
+        }
+
+        [Test]
+        public void PackagedPack_MechanicNecessity_IsMeasuredUnderV2Detection()
+        {
+            // Measured with constrained solves under rules.detection = beforeAndAfterGuardMove (Docs/KNOWN_ISSUES.md #2).
+            var expectedWait = new HashSet<int> { 17 };
+            var expectedSmoke = new HashSet<int> { 17, 19 };
+            var expectedEmp = new HashSet<int>();
+            var expectedKey = new HashSet<int> { 9, 10, 13, 16, 19, 20 };
+            var wait = new HashSet<int>(); var smoke = new HashSet<int>(); var emp = new HashSet<int>(); var key = new HashSet<int>();
+            foreach (var level in TestPaths.LoadPackagedPack().Levels)
+            {
+                var m = LevelMetricsAnalyzer.Analyze(level);
+                Assert.IsTrue(m.ShortestWinTurns > 0, "level " + level.Id + " unsolvable");
+                if (m.WaitRequired) wait.Add(level.Id);
+                if (m.SmokeRequired) smoke.Add(level.Id);
+                if (m.EmpRequired) emp.Add(level.Id);
+                if (m.KeyRequired) key.Add(level.Id);
+            }
+            CollectionAssert.AreEquivalent(expectedWait, wait, "WAIT required");
+            CollectionAssert.AreEquivalent(expectedSmoke, smoke, "smoke required");
+            CollectionAssert.AreEquivalent(expectedEmp, emp, "EMP required");
+            CollectionAssert.AreEquivalent(expectedKey, key, "key required");
         }
     }
 }

@@ -58,6 +58,8 @@ namespace ShadowSteps.Core
         public bool NoUndo;
         public int MaxMoves;
         public string RequiredGadget;
+        /// <summary>Cone capture rule (schema 2 <c>rules.detection</c>). Schema 2 defaults to the V2 rule; schema 1 keeps the V1 rule.</summary>
+        public DetectionRule Detection = LevelDefinition.DefaultDetection;
         public string Hint;
         public int ParTurns;
         public List<int> StarThresholds = new List<int>();
@@ -102,6 +104,8 @@ namespace ShadowSteps.Core
         public const int CurrentSchemaVersion = 2;
         public const int DefaultSmokeTurns = 2;
         public const int DefaultEmpTurns = 1;
+        /// <summary>Rule used by schema 2 levels that do not state one.</summary>
+        public const DetectionRule DefaultDetection = DetectionRule.BeforeAndAfterGuardMove;
 
         public int SchemaVersion { get; }
         public int MigratedFromSchema { get; }
@@ -133,6 +137,8 @@ namespace ShadowSteps.Core
         public bool NoUndo { get; }
         public int MaxMoves { get; }
         public string RequiredGadget { get; }
+        /// <summary>How guard cones capture; see <see cref="DetectionRule"/>.</summary>
+        public DetectionRule Detection { get; }
         /// <summary>Optional short onboarding hint shown at level start.</summary>
         public string Hint { get; }
         public int ParTurns { get; }
@@ -158,7 +164,8 @@ namespace ShadowSteps.Core
             var s = new LevelSpec
             {
                 SchemaVersion = 1, Id = id, Name = name, Width = width, Height = height, Start = start, Exit = exit,
-                SmokeCharges = smokeCharges, EmpCharges = empCharges, Key = key, Door = door, Hint = hint
+                SmokeCharges = smokeCharges, EmpCharges = empCharges, Key = key, Door = door, Hint = hint,
+                Detection = DetectionRule.AfterGuardMove // V1 semantics: reference/build.py checks the cones once, after the guards move
             };
             if (walls != null) s.Walls.AddRange(walls);
             if (guards != null) s.Guards.AddRange(guards);
@@ -192,6 +199,7 @@ namespace ShadowSteps.Core
             NoUndo = s.NoUndo;
             MaxMoves = s.MaxMoves;
             RequiredGadget = s.RequiredGadget;
+            Detection = s.Detection;
             Hint = s.Hint;
             ParTurns = s.ParTurns;
             StarThresholds = new List<int>(s.StarThresholds);
@@ -240,7 +248,7 @@ namespace ShadowSteps.Core
                 SchemaVersion = SchemaVersion, MigratedFromSchema = MigratedFromSchema, Id = Id, Name = Name, World = World, Chapter = Chapter, Theme = Theme,
                 Width = Width, Height = Height, NodeSpacing = NodeSpacing, Start = Start, Exit = Exit, Key = Key, Door = Door,
                 SmokeCharges = SmokeCharges, EmpCharges = EmpCharges, DecoyCharges = DecoyCharges, SmokeTurns = SmokeTurns, EmpTurns = EmpTurns,
-                NoWait = NoWait, NoUndo = NoUndo, MaxMoves = MaxMoves, RequiredGadget = RequiredGadget, Hint = Hint, ParTurns = ParTurns
+                NoWait = NoWait, NoUndo = NoUndo, MaxMoves = MaxMoves, RequiredGadget = RequiredGadget, Detection = Detection, Hint = Hint, ParTurns = ParTurns
             };
             s.Walls.AddRange(Walls);
             s.Cover.AddRange(Cover);
@@ -258,7 +266,8 @@ namespace ShadowSteps.Core
             GridCoord? start = null, GridCoord? exit = null,
             IReadOnlyList<GridCoord> walls = null, IReadOnlyList<GuardDefinition> guards = null,
             int? smokeCharges = null, int? empCharges = null,
-            GridCoord? key = null, bool clearKey = false, GridCoord? door = null, bool clearDoor = false, string hint = null)
+            GridCoord? key = null, bool clearKey = false, GridCoord? door = null, bool clearDoor = false, string hint = null,
+            DetectionRule? detection = null)
         {
             bool topologyChanged = width.HasValue || height.HasValue || walls != null || door.HasValue || clearDoor;
             var s = ToSpec(keepExplicitEdges: !topologyChanged);
@@ -276,6 +285,7 @@ namespace ShadowSteps.Core
             if (clearKey) s.Key = null; else if (key.HasValue) s.Key = key;
             if (clearDoor) s.Door = null; else if (door.HasValue) s.Door = door;
             if (hint != null) s.Hint = hint;
+            if (detection.HasValue) s.Detection = detection.Value;
             return FromSpec(s);
         }
     }
