@@ -1,0 +1,1 @@
+Read CLAUDE.md and V2_CHANGE_CONTROL.md. Inspect Docs/V2_MIGRATION_AUDIT.md, Docs/PROGRESS.md, git status and test results. Resume the first incomplete V2 milestone in V2_IMPLEMENTATION_ROADMAP.md. Preserve prior work, run real tests, report exact results and unresolved manual Unity steps.

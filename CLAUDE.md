@@ -1,3 +1,18 @@
+# SHADOW STEPS — V2 AUTHORITATIVE INSTRUCTIONS
+
+**Effective revision:** V2 node-graph movement and 2D orthographic sprite presentation. **Do not rebuild from scratch.**
+
+## New reading order and authority
+1. `V2_CHANGE_CONTROL.md` — highest priority for V2 decisions and safe migration.
+2. `LEVEL_DESIGN_PARAMETERS.md` — node, edge, vision, difficulty, schema requirements.
+3. `MASTER_GAME_SPEC.md` — gameplay intent, with V2 superseding conflicting render/movement language.
+4. `IMPLEMENTATION_PLAN.md` — milestones, with `V2_IMPLEMENTATION_ROADMAP.md` superseding conflicting tasks.
+5. `reference/DESIGN.md`, `reference/build.py`, `reference/levels.json`, `reference/validation.json` — authoritative **legacy V1** behavior only, before migration. V1 solution claims do NOT prove V2 solvability.
+
+If Claude is working already: do NOT interrupt by deleting files or discarding uncommitted edits. Audit, checkpoint, produce a migration report, and implement in controlled increments. Preserve mechanics and game data where possible. Do not claim tasks/tests passed without running them.
+
+---
+
 # SHADOW STEPS — CLAUDE CODE PROJECT DIRECTIVES
 
 You are the lead engineer, technical designer, UI implementer, QA engineer, and build engineer for **Shadow Steps**, an original mobile portrait turn-based stealth puzzle game made in Unity. The user is a solo programmer building the whole product with AI assistance. Deliver working, tested game code and editor tooling, not just designs or pseudo-code.
@@ -10,7 +25,7 @@ You are the lead engineer, technical designer, UI implementer, QA engineer, and 
 5. `reference/build.py` — canonical pure Python simulation and breadth-first solver.
 6. `IMPLEMENTATION_PLAN.md` — checkpoints and acceptance tests.
 
-If you find a conflict between this handoff and the reference simulation: the reference simulation wins for the original twenty levels. Propose a migration for future mechanics rather than silently changing how old levels work.
+V2 supersedes V1 for new gameplay. Preserve legacy behavior for legacy tests and migrate old levels with versioned data, then revalidate.
 
 ## Operating protocol
 - First inspect the Unity project, engine version, installed packages, folder layout, and existing files. NEVER delete or overwrite user-authored systems without review.

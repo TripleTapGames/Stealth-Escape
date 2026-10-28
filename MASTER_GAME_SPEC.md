@@ -1,3 +1,5 @@
+> **V2 override (2026-10-28):** Use fixed-distance cardinal graph nodes, explicit connections, a top-down orthographic camera, and sprite-based 2D characters/environments. Any directions below referring to 3D miniature meshes, angled camera, tile-only adjacency, or primitive 3D final art are legacy V1 suggestions and superseded by `V2_CHANGE_CONTROL.md` and `LEVEL_DESIGN_PARAMETERS.md`. The original 20-level solver remains a legacy reference until migrated and revalidated.
+
 # Shadow Steps — Complete Production Game Design & AI Implementation Specification
 
 **Version:** 1.0 | **Date:** 2026-10-28 | **Product:** Original single-player mobile stealth-puzzle game | **Status:** AI implementation brief
