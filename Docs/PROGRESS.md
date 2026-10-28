@@ -199,3 +199,21 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 **Verified in Unity editor?** No (lock). **Verified on device?** No.
 
 **Next milestone:** V2 M5 — revalidate all 20 legacy levels as V2 content (level 18 overlap), export validation_v2.json.
+
+## 2026-10-28 — V2 M5 Revalidate all 20 legacy levels
+
+**Milestone:** V2 M5 — complete (gate: 20/20 V2-solvable with actual trace logs in `validation_v2.json`, replayed by tests).
+
+**What changed**
+- `Assets/StreamingAssets/ShadowSteps/levels.json` is now the **shipped schema-2 pack**: the 20 reference levels migrated to explicit edges (every cell a node, walls as wall nodes, bidirectional open edges, door = locked incoming edges + occluding node), with `migratedFromSchema: 1` and conversion notes on every level. `reference/levels.json` stays the untouched V1 fixture and remains the data for the V1 regression suite.
+- **Level 18 "Shift Change" redesigned** to satisfy the V2 guard-collision rule: patrol guard A's route moved from row 0 `(3,0)→(0,0)` to row 1 `(3,1)→(0,1)`; rotating guard C stays at (2,0). Measured: no overlap at any phase, shortest solution still 14 moves and byte-identical to the reference solution, 36 shortest solutions, WAIT/smoke/EMP not required. Three other variants were measured and rejected (moving C to (2,1) or (1,1): 15 moves and WAIT becomes required; shortening A: unsolvable).
+- `validation_v2.json`: fresh C# solver traces + metrics for ids 1–20 (`Tools/CoreTestRunner --export-validation`).
+- Runner `--migrate <in> <out>` writes any pack as schema 2.
+
+**Tests**
+- PackagedPackTests: packaged levels equal the migrated reference in topology, objects, guards and charges (except the documented level-18 route); level 18 passes the strict overlap check; no overlaps anywhere in the pack; every validation_v2 trace replays to a win with the exact move count and equals the current solver's path and explored-state count; the V2 shortest lengths equal the V1 reference lengths for all 20 (movement-equivalent topology).
+- V1 regression suite now reads `reference/levels.json` through the migrator; still 20/20 replays and 20/20 solver parities.
+
+**Measured V2 facts for the shipped 20** (same numbers as the M1 table, which was computed on the equivalent topology; level 18 re-measured after redesign): WAIT required on 2, 5, 9, 10, 17, 20; smoke required on 11, 17, 19, 20; EMP never required; key structurally required on 9, 10, 13, 16, 19, 20 (door levels).
+
+**Verified in Unity editor?** No (lock). **Next milestone:** V2 M6 presentation and UX (menus, level select, results, settings, audio, onboarding).

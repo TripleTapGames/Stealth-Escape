@@ -68,7 +68,9 @@ Legend: `[x]` done with evidence (see PROGRESS.md) · `[~]` implemented, verific
 - [x] AppServices merges tutorial + legacy packs
 
 ## V2 M5 — Revalidate all 20 legacy levels
-- [ ] Redesign level 18 (guard overlap) and any readability fixes; fresh V2 solver traces → validation_v2.json; document differences
+- [x] Shipped levels.json is schema 2 (migrated, conversion notes); level 18 redesigned (patrol to row 1, solution preserved)
+- [x] validation_v2.json with fresh C# traces + metrics; PackagedPackTests replay all 20
+- [ ] Readability pass on device (needs Unity/device session)
 
 ## V2 M6 — Presentation and UX
 - [ ] Home/Level Select/Results/Pause/Settings prefabs, onboarding, SFX, haptics toggles, safe area, resume handling

@@ -8,7 +8,7 @@ namespace ShadowSteps.Tests.EditMode
     public class LevelPackLoadingTests
     {
         [Test]
-        public void StreamingAssetsPack_Loads20ValidLevels()
+        public void ReferencePack_Loads20ValidLevels()
         {
             var pack = LevelPackLoader.ParseAndValidate(File.ReadAllText(TestPaths.LevelsJsonPath), out var report);
             Assert.AreEqual(1, pack.FormatVersion);
@@ -19,11 +19,12 @@ namespace ShadowSteps.Tests.EditMode
         }
 
         [Test]
-        public void StreamingAssetsPack_IsIdenticalToReferenceFile()
+        public void PackagedPack_IsSchema2_With20Levels()
         {
-            string packaged = File.ReadAllText(TestPaths.LevelsJsonPath);
-            string reference = File.ReadAllText(Path.Combine(TestPaths.ProjectRoot, "reference/levels.json"));
-            Assert.AreEqual(reference, packaged, "Assets/StreamingAssets/ShadowSteps/levels.json must stay byte-identical to reference/levels.json");
+            var pack = TestPaths.LoadPackagedPack();
+            Assert.AreEqual(2, pack.FormatVersion, "shipped levels.json must be schema 2");
+            Assert.AreEqual(20, pack.Levels.Count);
+            for (int i = 0; i < 20; i++) { Assert.AreEqual(i + 1, pack.Levels[i].Id); Assert.AreEqual(1, pack.Levels[i].MigratedFromSchema); }
         }
 
         [TestCase(1, "First Watch", 5, 5, 1)]

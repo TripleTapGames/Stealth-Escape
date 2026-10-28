@@ -64,3 +64,9 @@ The five V2 tutorial levels live in their own schema-2 file (`levels_tutorial_v2
 
 ## D-019 Authoring model lives in Data, the window only draws
 `LevelAuthoringModel` holds all editing rules (edge cycling, resize, auto edges, conversion) so they run under dotnet tests; the EditorWindow is a thin IMGUI layer. The random wall search in the runner is a designer aid and never ships content automatically: every candidate must be inspected and committed by hand.
+
+## D-020 Shipped pack is schema 2; the reference stays V1
+`Assets/StreamingAssets/ShadowSteps/levels.json` is generated (`--migrate`) from `reference/levels.json` plus the documented level-18 patch and is never hand-edited; `reference/` is immutable V1 evidence. If a legacy level is changed again, the change goes into the exported file via the Level Editor and the diff is recorded in PROGRESS.md and in that level's `conversionNotes`.
+
+## D-021 Level 18 redesign choice
+Among the measured variants, moving the patrol to row 1 was the only one that removed the overlap *and* preserved the original 14-move solution and gadget/WAIT profile. Visual readability of the top row (rotating guard alone) improves as a side effect.

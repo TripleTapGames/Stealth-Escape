@@ -9,7 +9,11 @@ namespace ShadowSteps.Tests.EditMode
     /// <summary>Locates project files without UnityEngine so the same tests run under Unity and under a plain dotnet runner.</summary>
     public static class TestPaths
     {
-        public const string LevelsRelative = "Assets/StreamingAssets/ShadowSteps/levels.json";
+        /// <summary>Legacy V1 reference data: the regression fixture for the V1 rule set (loaded through the migrator).</summary>
+        public const string LevelsRelative = "reference/levels.json";
+        /// <summary>Shipped schema-2 pack (migrated legacy levels, level 18 redesigned).</summary>
+        public const string PackagedRelative = "Assets/StreamingAssets/ShadowSteps/levels.json";
+        public const string PackagedValidationRelative = "Assets/StreamingAssets/ShadowSteps/validation_v2.json";
         public const string ValidationRelative = "reference/validation.json";
 
         private static string _root;
@@ -32,6 +36,15 @@ namespace ShadowSteps.Tests.EditMode
         }
 
         public static string LevelsJsonPath => Path.Combine(ProjectRoot, LevelsRelative);
+        public static string PackagedJsonPath => Path.Combine(ProjectRoot, PackagedRelative);
+        public static string PackagedValidationPath => Path.Combine(ProjectRoot, PackagedValidationRelative);
+
+        private static LevelPack _packaged;
+        public static LevelPack LoadPackagedPack()
+        {
+            if (_packaged == null) _packaged = LevelPackLoader.ParseAndValidate(File.ReadAllText(PackagedJsonPath), out _);
+            return _packaged;
+        }
         public static string ValidationJsonPath => Path.Combine(ProjectRoot, ValidationRelative);
 
         private static LevelPack _pack;

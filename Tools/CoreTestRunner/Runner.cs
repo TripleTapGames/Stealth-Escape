@@ -12,6 +12,7 @@ public static class Runner
     {
         if (args.Length >= 2 && args[0] == "--metrics") return PrintMetrics(args[1]);
         if (args.Length >= 3 && args[0] == "--export-validation") return ExportValidation(args[1], args[2]);
+        if (args.Length >= 3 && args[0] == "--migrate") { var pk = ShadowSteps.Data.LevelPackLoader.Parse(File.ReadAllText(args[1])); File.WriteAllText(args[2], ShadowSteps.Data.LevelPackWriter.ToJson(pk)); Console.WriteLine("wrote schema 2: " + args[2] + " (" + pk.Levels.Count + " levels)"); return 0; }
         if (args.Length >= 6 && args[0] == "--search") return Search(args[1], int.Parse(args[2]), int.Parse(args[3]), int.Parse(args[4]), args[5], args.Length > 6 ? int.Parse(args[6]) : 10, args.Length > 7 ? int.Parse(args[8 - 1]) : 8);
         if (args.Length >= 2 && args[0] == "--solve") return PrintMetrics(args[1], true);
         string filter = args.Length > 0 ? args[0] : null;
