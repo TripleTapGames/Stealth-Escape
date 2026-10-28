@@ -20,9 +20,10 @@ namespace ShadowSteps.Tests.EditMode
             var table = new ShadowSteps.Data.ParTable();
             table.AddFromValidationJson(System.IO.File.ReadAllText(TestPaths.PackagedValidationPath));
             table.AddFromValidationJson(System.IO.File.ReadAllText(System.IO.Path.Combine(TestPaths.ProjectRoot, "Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json")));
-            Assert.AreEqual(25, table.Count);
+            Assert.AreEqual(5, table.Count, "only levels solvable under the V2 detection rule carry a par (1, 4, 12, 14, 101)");
             Assert.AreEqual(8, table.ParFor(1));
-            Assert.AreEqual(12, table.ParFor(105)); // V2 detection rule par (was 14 under V1 detection)
+            Assert.AreEqual(11, table.ParFor(14));
+            Assert.AreEqual(0, table.ParFor(105), "unsolvable under beforeOrAfterGuardMove: no par");
             Assert.AreEqual(0, table.ParFor(999));
         }
 

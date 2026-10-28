@@ -264,7 +264,7 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 **Request:** after the player moves, capture only if the player is within enemy vision both before and after the enemies move.
 
 **Files**
-- Core: DetectionRule.cs (new enum + tokens), LevelDefinition.cs (`Detection` on LevelSpec/LevelDefinition, legacy ctor = `AfterGuardMove`, schema 2 default = `BeforeAndAfterGuardMove`, `With(detection:)`), RulesEngine.cs (cone check now requires a sighting at the pre-move poses as well as the post-move poses when the level uses the V2 rule; union across guards; `GetDangerCells` helper), TurnResult.cs (doc).
+- Core: DetectionRule.cs (new enum + tokens), LevelDefinition.cs (`Detection` on LevelSpec/LevelDefinition, legacy ctor = `AfterGuardMove`, schema 2 default = `BeforeOrAfterGuardMove`, `With(detection:)`), RulesEngine.cs (cone check now requires a sighting at the pre-move poses as well as the post-move poses when the level uses the V2 rule; union across guards; `GetDangerCells` helper), TurnResult.cs (doc).
 - Data: LevelRepository.cs (`rules.detection` parse/validate/write; migrator keeps V1 semantics and records it), LevelAuthoringModel.cs (field round trip).
 - Editor: ShadowStepsLevelEditorWindow.cs (Detection popup). UI: Screens.cs failure reason text.
 - Tools: Runner `--migrate <in> <out> [v2rules]`.
@@ -281,3 +281,24 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 **Manual steps:** Test Runner EditMode (expect 205) and PlayMode (10); play level 2 or 102 in Play mode and confirm that stepping into a cone which then turns away does not capture; optionally open Shadow Steps ▸ Level Editor and check the new Detection popup.
 
 **Next:** decide on KNOWN_ISSUES #16 (redesign tutorials 102/103 and gadget levels 11/14/20 under the new rule) and #17 (danger overlay).
+
+## 2026-10-28 — Detection rule corrected: seen before OR after the guard move (D-025 revised)
+
+**Request:** "after player move, if it is in cone range or in vision before the enemy moves or after, the player gets caught." The earlier "before and after" reading was wrong; this entry supersedes it.
+
+**Files**
+- Core: DetectionRule.cs (`BeforeOrAfterGuardMove`, token `beforeOrAfterGuardMove`), RulesEngine.cs (capture if seen at the pre-move poses or the post-move poses; captor = after-guard, else before-guard; `GetDangerCells` = current ∪ next cones).
+- Data: Progression.cs (ParTable skips `moves < 0`). Tools: Runner `--export-validation` records unsolvable levels with `moves: -1` and exit code 2 instead of refusing.
+- Data files: both packs state `rules.detection: beforeOrAfterGuardMove`; validation files regenerated (see impact).
+- Tests: DetectionRuleTests rewritten for OR (14 tests incl. "V2 never more lenient than V1" over all reachable states of the 20 levels); PackagedPackTests/TutorialPackTests/ProgressionTests assert the measured solvable sets and pars.
+- Docs: LEVEL_DESIGN_PARAMETERS.md §5.7, MASTER_GAME_SPEC.md, V2_CHANGE_CONTROL.md, DECISIONS D-025, KNOWN_ISSUES #2, #9, #16, #17, **#18 (blocking)**.
+
+**Measured impact (C# solver):** solvable under the rule: 1 (8), 4 (8), 12 (10), 14 (11, smoke required), 101 (8). Unsolvable: 2, 3, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17, 18, 19, 20, 102, 103, 104, 105. Traces of the V1 solutions show the capture at the first node entered while a guard is looking at it before it turns/moves (level 2 action 8, level 3 action 3, level 5 action 5). Reference parity under the V1 rule is unchanged (20/20).
+
+**Tests run:** `Tools/run_core_tests.sh` → 206 passed, 0 failed. `Tools/unity_compile_check.py` → 0 errors.
+
+**Verified in Unity editor?** No (editor lock). **Verified on device?** No.
+
+**Manual steps:** Test Runner EditMode/PlayMode; in Play mode on level 1 step into the fixed guard's cone (captured). Level 2 cannot be completed until it is redesigned.
+
+**Next (user decision, KNOWN_ISSUES #18):** redesign the 20 unsolvable levels for the new rule, or keep legacy levels on `afterGuardMove` per level.

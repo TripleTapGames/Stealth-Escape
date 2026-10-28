@@ -249,7 +249,7 @@ namespace ShadowSteps.Editor
             _model.SmokeTurns = EditorGUILayout.IntField("Smoke turns", _model.SmokeTurns);
             _model.NoWait = EditorGUILayout.Toggle("No WAIT", _model.NoWait);
             _model.NoUndo = EditorGUILayout.Toggle("No undo", _model.NoUndo);
-            _model.Detection = (DetectionRule)EditorGUILayout.EnumPopup(new GUIContent("Detection", "beforeAndAfterGuardMove (V2): seen before and after guards move. afterGuardMove (V1): seen after guards move."), _model.Detection);
+            _model.Detection = (DetectionRule)EditorGUILayout.EnumPopup(new GUIContent("Detection", "beforeOrAfterGuardMove (V2): seen before or after guards move. afterGuardMove (V1): seen after guards move."), _model.Detection);
             if (EditorGUI.EndChangeCheck()) _sim = null;
 
             EditorGUILayout.Space(8);

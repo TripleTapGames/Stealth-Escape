@@ -9,7 +9,7 @@ namespace ShadowSteps.Core
     ///   validate (node exists, traversable, edge exists, edge unlocked, charges) -> move / collect key -> advance global
     ///   phase (unless EMP) -> occupancy &amp; edge-swap capture -> cone vision (unless smoke) -> win check.
     /// Cone vision follows the level's <see cref="DetectionRule"/>: V1 levels capture when the moved guards see the
-    /// player's node; V2 levels capture only when that node was in vision both before and after the guards moved.
+    /// player's node; V2 levels capture when that node is in vision either before or after the guards move.
     /// Movement uses <see cref="LevelGraph"/> edges only; sight uses node occluders only (missing edges never occlude).
     /// </summary>
     public static class RulesEngine
@@ -78,13 +78,10 @@ namespace ShadowSteps.Core
             {
                 var blocked = VisionSystem.BlockedPredicate(level, hasKey);
                 int seenAfterBy = FirstGuardSeeing(guardsAfter, to, blocked);
-                if (seenAfterBy >= 0)
-                {
-                    // V2: the node must also have been lit before the guards moved (any guard). A guard that only
-                    // turns onto the player, or that the player only crosses in front of, does not capture.
-                    bool seenBefore = level.Detection == DetectionRule.AfterGuardMove || FirstGuardSeeing(guardsBefore, to, blocked) >= 0;
-                    if (seenBefore) { capture = CaptureKind.Seen; capturingGuard = seenAfterBy; }
-                }
+                // V2: a sighting at the pre-move poses also captures (the player walked into a cone that then turned away).
+                int seenBeforeBy = level.Detection == DetectionRule.BeforeOrAfterGuardMove ? FirstGuardSeeing(guardsBefore, to, blocked) : -1;
+                if (seenAfterBy >= 0) { capture = CaptureKind.Seen; capturingGuard = seenAfterBy; }
+                else if (seenBeforeBy >= 0) { capture = CaptureKind.Seen; capturingGuard = seenBeforeBy; }
             }
 
             // Win only when not captured.
@@ -105,17 +102,16 @@ namespace ShadowSteps.Core
 
         /// <summary>
         /// Nodes where a plain move or WAIT would be captured by sight on the next action, given the current state:
-        /// cones at the next phase, intersected with the current cones under <see cref="DetectionRule.BeforeAndAfterGuardMove"/>.
+        /// cones at the next phase, united with the current cones under <see cref="DetectionRule.BeforeOrAfterGuardMove"/>.
         /// Occupancy captures are not included. Use for "danger" overlays; the simulation itself never calls this.
         /// </summary>
         public static List<GridCoord> GetDangerCells(LevelDefinition level, GameState state)
         {
             var next = new GameState(state.PlayerPosition, (state.Phase + 1) % level.Period, state.HasKey, state.SmokeCharges, state.EmpCharges, 0, state.TurnCount, state.Outcome);
-            var after = GetAllVisionCells(level, next);
-            if (level.Detection == DetectionRule.AfterGuardMove) return after;
-            var before = new HashSet<GridCoord>(GetAllVisionCells(level, state));
-            var danger = new List<GridCoord>();
-            foreach (var c in after) if (before.Contains(c)) danger.Add(c);
+            var danger = GetAllVisionCells(level, next);
+            if (level.Detection == DetectionRule.AfterGuardMove) return danger;
+            var set = new HashSet<GridCoord>(danger);
+            foreach (var c in GetAllVisionCells(level, state)) if (set.Add(c)) danger.Add(c);
             return danger;
         }
 

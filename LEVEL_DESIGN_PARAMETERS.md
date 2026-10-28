@@ -76,7 +76,7 @@ These are *design briefs* and not new verified maps. Exact layouts must be creat
 4. Update deterministic guard phase (EMP skips phase advance on activation turn).
 5. Calculate all guard positions/facing simultaneously from the same snapshot/phase; reject overlapping guards according to authored collision policy (default: reject level in validator rather than invent dynamic AI).
 6. Check player/guard co-occupancy and edge swaps; fail if collided.
-7. Evaluate guard cones against the player's node, applying wall/closed-door/cover occlusion and Smoke concealment. Under the V2 rule (`rules.detection: "beforeAndAfterGuardMove"`, the schema 2 default) the player fails only if that node is inside some guard's cone **both** at the guard poses before step 4 and at the poses after it; a cone that only lands on the player as a guard turns or moves, or that the player only crosses in front of, does not capture. EMP keeps both poses identical, so a single sighting captures. `"afterGuardMove"` restores the V1 single after-move check and is what schema 1 files mean.
+7. Evaluate guard cones against the player's node, applying wall/closed-door/cover occlusion and Smoke concealment. Under the V2 rule (`rules.detection: "beforeOrAfterGuardMove"`, the schema 2 default) the player fails if that node is inside some guard's cone **either** at the guard poses before step 4 **or** at the poses after it: stepping into a cone is lethal even if the guard turns or moves away on the same turn. Levels must therefore offer nodes that are dark at the current phase and at the next one; "slip past as the guard turns" (the V1 timing trick) no longer exists. EMP keeps both poses identical. `"afterGuardMove"` restores the V1 single after-move check and is what schema 1 files mean.
 8. Check mission objectives, then exit/win. Decrement timed effects as specified and capture final state.
 9. Animate node-to-node movement; animation timing never changes outcome.
 
@@ -101,7 +101,7 @@ These are *design briefs* and not new verified maps. Exact layouts must be creat
     "visionRangeNodes": 2, "coneAngleDegrees": 90
   }],
   "gadgets": { "smokeCharges": 0, "empCharges": 0 },
-  "rules": { "detection": "beforeAndAfterGuardMove" },
+  "rules": { "detection": "beforeOrAfterGuardMove" },
   "presentation": { "theme": "gardenCompound" }
 }
 ```

@@ -66,7 +66,9 @@ namespace ShadowSteps.Data
             foreach (var item in arr)
             {
                 var o = (JsonObject)item;
-                _par[JsonAccess.AsInt(o["level"], "level")] = JsonAccess.AsInt(o["moves"], "moves");
+                int moves = JsonAccess.AsInt(o["moves"], "moves");
+                if (moves < 0) continue; // exported as unsolvable under the level's detection rule: no par, 1 star for any completion
+                _par[JsonAccess.AsInt(o["level"], "level")] = moves;
             }
         }
 

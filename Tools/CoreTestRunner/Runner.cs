@@ -166,10 +166,22 @@ public static class Runner
         var report = ShadowSteps.Core.LevelValidator.ValidatePack(pack.Levels);
         if (!report.IsValid) { Console.WriteLine(report.ToString()); return 1; }
         var list = new List<object>();
+        int unsolvable = 0;
         foreach (var level in pack.Levels)
         {
             var m = ShadowSteps.Core.LevelMetricsAnalyzer.Analyze(level);
-            if (m.ShortestWinTurns < 0) { Console.WriteLine("level " + level.Id + " unsolvable; not exporting"); return 1; }
+            if (m.ShortestWinTurns < 0)
+            {
+                // Recorded, not hidden: the game and the tests treat "moves": -1 as "no solution under rules.detection".
+                unsolvable++;
+                Console.WriteLine("level " + level.Id + " (" + level.Name + ") is UNSOLVABLE under " + ShadowSteps.Core.DetectionRuleUtil.ToToken(level.Detection) + "; exported with moves=-1");
+                list.Add(new ShadowSteps.Data.JsonObject()
+                    .Set("level", (long)level.Id).Set("name", level.Name).Set("moves", -1L).Set("actions", new List<object>())
+                    .Set("states_checked", (long)ShadowSteps.Core.Solver.Solve(level).StatesExplored).Set("period", (long)m.GuardCycleLcm)
+                    .Set("key_required", m.KeyRequired).Set("safe_node_ratio", Math.Round(m.SafeNodeRatio, 3))
+                    .Set("engine", "ShadowSteps C# solver, schema " + level.SchemaVersion + ", detection " + ShadowSteps.Core.DetectionRuleUtil.ToToken(level.Detection)));
+                continue;
+            }
             var solve = ShadowSteps.Core.Solver.Solve(level);
             var actions = new List<object>();
             foreach (var a in m.ShortestSolution) actions.Add(ShadowSteps.Core.GameActionUtil.ToToken(a));
@@ -180,13 +192,13 @@ public static class Runner
                 .Set("shortest_without_emp", (long)m.ShortestWithoutEmp).Set("shortest_without_gadgets", (long)m.ShortestWithoutGadgets)
                 .Set("key_required", m.KeyRequired).Set("safe_node_ratio", Math.Round(m.SafeNodeRatio, 3)).Set("branching", Math.Round(m.AverageBranchingFactor, 3))
                 .Set("shortest_solutions", (long)m.ShortestSolutionCount).Set("shortest_solutions_capped", m.ShortestSolutionCountCapped)
-                .Set("engine", "ShadowSteps C# solver, schema " + level.SchemaVersion + (level.MigratedFromSchema > 0 ? " (migrated from " + level.MigratedFromSchema + ")" : ""));
+                .Set("engine", "ShadowSteps C# solver, schema " + level.SchemaVersion + (level.MigratedFromSchema > 0 ? " (migrated from " + level.MigratedFromSchema + ")" : "") + ", detection " + ShadowSteps.Core.DetectionRuleUtil.ToToken(level.Detection));
             list.Add(o);
             Console.WriteLine(m + " | " + ShadowSteps.Core.GameActionUtil.ToTokenString(m.ShortestSolution));
         }
         File.WriteAllText(outPath, ShadowSteps.Data.MiniJson.Serialize(list, true) + "\n");
-        Console.WriteLine("wrote " + outPath);
-        return 0;
+        Console.WriteLine("wrote " + outPath + (unsolvable > 0 ? " with " + unsolvable + " UNSOLVABLE level(s)" : ""));
+        return unsolvable > 0 ? 2 : 0;
     }
 
     private static object Convert(object value, Type target)

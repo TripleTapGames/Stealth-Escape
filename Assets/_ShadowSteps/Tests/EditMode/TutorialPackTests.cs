@@ -6,7 +6,10 @@ using ShadowSteps.Data;
 
 namespace ShadowSteps.Tests.EditMode
 {
-    /// <summary>V2 gate D: the five authored tutorial levels load, validate, solve, and their exported traces replay to wins.</summary>
+    /// <summary>
+    /// V2 gate D: the five authored tutorial levels load and validate; exported traces replay to wins. Under the V2 detection
+    /// rule (D-025) only 101 is solvable; the others are recorded as unsolvable until redesigned (Docs/KNOWN_ISSUES.md #18).
+    /// </summary>
     public class TutorialPackTests
     {
         private const string PackRelative = "Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json";
@@ -45,6 +48,11 @@ namespace ShadowSteps.Tests.EditMode
                 int id = JsonAccess.AsInt(e["level"], "level");
                 var level = pack.FindById(id);
                 Assert.IsNotNull(level, "level " + id);
+                if (JsonAccess.AsInt(e["moves"], "moves") < 0)
+                {
+                    Assert.IsFalse(Solver.Solve(level).Found, "level " + id + " is recorded as unsolvable but the solver found a path; re-export validation_tutorial_v2.json");
+                    continue;
+                }
                 var tokens = new List<string>();
                 foreach (var t in (List<object>)e["actions"]) tokens.Add((string)t);
                 var actions = GameActionUtil.ParseSequence(tokens);
@@ -57,13 +65,13 @@ namespace ShadowSteps.Tests.EditMode
             }
         }
 
-        // Measured under rules.detection = beforeAndAfterGuardMove. Level 102 no longer forces WAIT and 103 has 14 shortest
-        // solutions under this rule (Docs/KNOWN_ISSUES.md #16): both need a redesign before their tutorial copy can claim otherwise.
+        // Measured under rules.detection = beforeOrAfterGuardMove: only 101 (fixed guard, period 1) survives the rule change;
+        // 102-105 were built around entering a cone as the guard turns away and need a redesign (Docs/KNOWN_ISSUES.md #18).
         [TestCase(101, 8, false, false, false, false, 5)]
-        [TestCase(102, 8, false, false, false, false, 1)]
-        [TestCase(103, 9, false, false, false, false, 14)]
-        [TestCase(104, 12, false, false, false, true, 2)]
-        [TestCase(105, 12, false, true, false, false, 3)]
+        [TestCase(102, -1, false, false, false, false, 0)]
+        [TestCase(103, -1, false, false, false, false, 0)]
+        [TestCase(104, -1, false, false, false, true, 0)]
+        [TestCase(105, -1, false, false, false, false, 0)]
         public void MechanicNecessity_IsMeasured(int id, int shortest, bool waitRequired, bool smokeRequired, bool empRequired, bool keyRequired, int shortestSolutions)
         {
             var m = LevelMetricsAnalyzer.Analyze(Pack().FindById(id));

@@ -225,7 +225,7 @@ namespace ShadowSteps.Data
                 foreach (var k in ru.Keys) if (k != "detection") warnings?.Add(rup + ": unknown field '" + k + "' ignored");
                 string token = JsonAccess.OptionalString(ru, "detection", DetectionRuleUtil.ToToken(LevelDefinition.DefaultDetection), rup);
                 if (!DetectionRuleUtil.TryParse(token, out var rule))
-                    throw new LevelDataException(rup + ".detection '" + token + "' is not one of " + DetectionRuleUtil.AfterToken + ", " + DetectionRuleUtil.BeforeAndAfterToken);
+                    throw new LevelDataException(rup + ".detection '" + token + "' is not one of " + DetectionRuleUtil.AfterToken + ", " + DetectionRuleUtil.BeforeOrAfterToken);
                 s.Detection = rule;
             }
             if (o.TryGetValue("presentation", out var presV) && presV != null)
@@ -375,7 +375,7 @@ namespace ShadowSteps.Data
             }
             foreach (var g in legacy.Guards)
                 if (g.MoveEvery != 1 || g.RotateEvery != 1) { s.ConversionNotes.Add("guard step " + g.MoveEvery + " mapped to moveEvery and rotateEvery"); break; }
-            s.ConversionNotes.Add("detection rule kept as " + DetectionRuleUtil.ToToken(s.Detection) + " (V1 semantics); set rules.detection to " + DetectionRuleUtil.BeforeAndAfterToken + " to adopt the V2 rule");
+            s.ConversionNotes.Add("detection rule kept as " + DetectionRuleUtil.ToToken(s.Detection) + " (V1 semantics); set rules.detection to " + DetectionRuleUtil.BeforeOrAfterToken + " to adopt the V2 rule");
             return LevelDefinition.FromSpec(s);
         }
     }

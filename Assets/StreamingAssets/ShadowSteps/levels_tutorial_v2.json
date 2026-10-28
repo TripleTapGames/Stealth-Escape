@@ -62,7 +62,7 @@
         "empCharges": 0
       },
       "rules": {
-        "detection": "beforeAndAfterGuardMove"
+        "detection": "beforeOrAfterGuardMove"
       },
       "presentation": {
         "tutorialHint": "Guards see in a cone. Walls block their sight."
@@ -125,7 +125,7 @@
         "empCharges": 0
       },
       "rules": {
-        "detection": "beforeAndAfterGuardMove"
+        "detection": "beforeOrAfterGuardMove"
       },
       "presentation": {
         "tutorialHint": "This guard turns clockwise every turn. WAIT for the right moment."
@@ -220,7 +220,7 @@
         "empCharges": 0
       },
       "rules": {
-        "detection": "beforeAndAfterGuardMove"
+        "detection": "beforeOrAfterGuardMove"
       },
       "presentation": {
         "tutorialHint": "Patrols walk back and forth. Cross behind them."
@@ -319,7 +319,7 @@
         "empCharges": 0
       },
       "rules": {
-        "detection": "beforeAndAfterGuardMove"
+        "detection": "beforeOrAfterGuardMove"
       },
       "presentation": {
         "tutorialHint": "The gold path is locked. Pick up the key first."
@@ -428,7 +428,7 @@
         "empCharges": 0
       },
       "rules": {
-        "detection": "beforeAndAfterGuardMove"
+        "detection": "beforeOrAfterGuardMove"
       },
       "presentation": {
         "tutorialHint": "Smoke hides you for two actions. Guards can still bump into you."

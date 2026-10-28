@@ -105,7 +105,7 @@ namespace ShadowSteps.Core
         public const int DefaultSmokeTurns = 2;
         public const int DefaultEmpTurns = 1;
         /// <summary>Rule used by schema 2 levels that do not state one.</summary>
-        public const DetectionRule DefaultDetection = DetectionRule.BeforeAndAfterGuardMove;
+        public const DetectionRule DefaultDetection = DetectionRule.BeforeOrAfterGuardMove;
 
         public int SchemaVersion { get; }
         public int MigratedFromSchema { get; }
