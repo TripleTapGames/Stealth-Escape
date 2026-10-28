@@ -15,22 +15,34 @@ namespace ShadowSteps.Tests.PlayMode
     {
         private GameSceneComposer _composer;
         private GameFlowController _flow;
-        private string _savePath;
-
+        
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            AppServices.ResetForTests();
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
-            yield return null;
-            var pack = LevelPackLoader.Parse(System.IO.File.ReadAllText(AppServices.LevelsPath));
-            AppServices.InstallLevels(pack);
+            yield return ResetScene();
             AppServices.PendingLevelId = 1;
             _composer = new GameObject("Composer").AddComponent<GameSceneComposer>();
             yield return null; yield return null;
             Assert.IsTrue(_composer.Ready);
             _flow = Object.FindObjectOfType<GameFlowController>();
             Assert.IsNotNull(_flow, "flow controller attaches to every composed Game scene");
+        }
+
+        private static IEnumerator ResetScene()
+        {
+            AppServices.ResetForTests();
+            foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
+            yield return null;
+            var root = TestRoot();
+            AppServices.InstallLevels(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json")), System.IO.File.ReadAllText(AppServices.LevelsPath) });
+            AppServices.InstallPars(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json")), System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_v2.json")) });
+            AppServices.InstallSaveForTests(new SaveData());
+        }
+
+        private static string TestRoot()
+        {
+            var dir = new System.IO.DirectoryInfo(Application.dataPath).Parent;
+            return dir.FullName;
         }
 
         private IEnumerator Play(params string[] tokens)
@@ -50,16 +62,19 @@ namespace ShadowSteps.Tests.PlayMode
             var results = _flow.Router.Get<ResultsScreen>();
             Assert.IsTrue(results.IsVisible);
             Assert.IsTrue(_composer.Session.InputLocked);
-            Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), "level 1 par is 8 when validation_v2.json is present: " + results.StarsText.Text);
+            Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), "level 1 par is 8 from validation_v2.json: " + results.StarsText.Text);
+            Assert.IsTrue(AppServices.Save.IsCompleted(1));
+            Assert.AreEqual(8, AppServices.Save.GetResult(1).BestTurns);
         }
 
         [UnityTest]
         public IEnumerator Capture_ShowsFailure_UndoRecovers()
         {
-            // Level 1: fixed guard at (2,0) facing N range 1 sees nothing on board; walk into it instead: (2,0) is occupied.
-            yield return Play("N", "N", "N", "N", "E"); // (1,0)
+            // Level 1: fixed guard at (2,0) facing N range 1 sees nothing on board; walk into its node instead (occupancy capture).
+            // (0,4) -> (0,3) -> (0,2) -> (1,2) -> (2,2) -> (2,1); (0,0) and (1,1) are walls.
+            yield return Play("N", "N", "E", "E", "N");
             Assert.IsFalse(_composer.Session.State.IsTerminal);
-            yield return Play("E"); // into the guard's node -> occupied
+            yield return Play("N"); // into (2,0), the guard's node -> occupied
             yield return null;
             var failure = _flow.Router.Get<FailureScreen>();
             Assert.IsTrue(failure.IsVisible);

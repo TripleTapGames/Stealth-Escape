@@ -168,6 +168,13 @@ namespace ShadowSteps.Runtime
             if (!SaveRepo.Save(Save)) Debug.LogError("[ShadowSteps] " + SaveRepo.LastMessage);
         }
 
+        /// <summary>Tests only: use an in-memory save (nothing is written to disk) so scenes do not touch the player's real save.</summary>
+        public static void InstallSaveForTests(SaveData data)
+        {
+            SaveRepo = null;
+            Save = data ?? new SaveData();
+        }
+
         /// <summary>Tests only: discard everything so the next scene re-initialises.</summary>
         public static void ResetForTests()
         {

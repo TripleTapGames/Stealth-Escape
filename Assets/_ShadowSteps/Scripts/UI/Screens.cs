@@ -186,7 +186,7 @@ namespace ShadowSteps.UI
                 string stars = result != null && result.Completed ? new string('★', Progression.Stars(result.BestTurns, par)) : "";
                 var btn = UiBuilder.CreateButton("Level " + level.Id, Grid, "", unlocked ? (result != null && result.Completed ? UiBuilder.ButtonAccent : UiBuilder.ButtonColor) : new Color(0.15f, 0.17f, 0.22f), 28f);
                 UiBuilder.RemoveComponent(btn.GetComponent<LayoutElement>());
-                btn.Label.Text = (unlocked ? "" : "🔒 ") + level.Id + "\n" + level.Name + (stars.Length > 0 ? "\n" + stars + (result != null ? "  best " + result.BestTurns : "") : "");
+                btn.Label.Text = (unlocked ? "" : "[locked] ") + level.Id + "\n" + level.Name + (stars.Length > 0 ? "\n" + stars + (result != null ? "  best " + result.BestTurns : "") : "");
                 btn.Interactable = unlocked;
                 int id = level.Id;
                 btn.Button.onClick.AddListener(() => OnLevelChosen?.Invoke(id));

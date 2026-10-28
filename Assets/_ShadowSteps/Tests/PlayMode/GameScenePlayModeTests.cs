@@ -17,18 +17,30 @@ namespace ShadowSteps.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            AppServices.ResetForTests();
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex >= 0 ? SceneManager.GetActiveScene().name : "InitTestScene", LoadSceneMode.Single);
-            yield return null;
-            // Fresh scene: everything is created by the composer.
-            var pack = LevelPackLoader.Parse(System.IO.File.ReadAllText(AppServices.LevelsPath));
-            AppServices.InstallLevels(pack);
+            yield return ResetScene();
             AppServices.PendingLevelId = 1;
             var go = new GameObject("Composer");
             _composer = go.AddComponent<GameSceneComposer>();
             yield return null;
             yield return null;
             Assert.IsTrue(_composer.Ready, "composer did not open a level: " + AppServices.LastError);
+        }
+
+        private static IEnumerator ResetScene()
+        {
+            AppServices.ResetForTests();
+            foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
+            yield return null;
+            var root = TestRoot();
+            AppServices.InstallLevels(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json")), System.IO.File.ReadAllText(AppServices.LevelsPath) });
+            AppServices.InstallPars(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json")), System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_v2.json")) });
+            AppServices.InstallSaveForTests(new SaveData());
+        }
+
+        private static string TestRoot()
+        {
+            var dir = new System.IO.DirectoryInfo(Application.dataPath).Parent;
+            return dir.FullName;
         }
 
         [UnityTest]
