@@ -319,7 +319,7 @@ Exhaustive check: the solver's explored-state counts for the unsolvable levels a
 
 **Measured:** pars 101–105 = 8, 9, 10, 11, 12; levels 1–20 = 8, 10, 9, 8, 10, 11, 11, 12, 12, 12, 11, 12, 13, 12, 15, 15, 16, 14, 20, 21. Tier averages 8.75 → 11 → 11.75 → 13.75 → 17.75. Every generated level has one shortest solution (19 has two). Generation time ≈ 100 s for both packs.
 
-**Tests run:** `Tools/run_core_tests.sh` → 207 passed, 0 failed. `Tools/unity_compile_check.py` → 0 errors. **Verified in Unity editor?** No. **Verified on device?** No.
+**Tests run:** `Tools/run_core_tests.sh` → 206 passed, 0 failed. `Tools/unity_compile_check.py` → 0 errors. **Verified in Unity editor?** No. **Verified on device?** No.
 
 **Manual steps:** Test Runner EditMode/PlayMode; play 101 → 105 → 1 → 20 in order and note where the par feels wrong; adjust the spec bands and regenerate.
 
