@@ -1,73 +1,58 @@
-# Shadow Steps — V2 migration audit (PRELIMINARY)
+# Shadow Steps — V2 migration audit
 
-**Status:** preliminary. Written on 2026-10-28 from the existing codebase (commits `439591b` M0, `5796da2` M1) and the V2 summary given in chat. The documents `V2_CHANGE_CONTROL.md`, `LEVEL_DESIGN_PARAMETERS.md`, `V2_IMPLEMENTATION_ROADMAP.md` and the updated `CLAUDE.md` were **not present** in the project, the handoff zip, or the user's Downloads/Desktop/Documents at the time of writing. Every classification below must be re-checked against those documents before implementation; open questions they must answer are listed in §5.
+**Date:** 2026-10-28 · **Checkpoint:** commit `a9b7ca7` (V2 docs installed) on top of `5796da2` (V1 M1 complete, 130 EditMode tests green via `Tools/run_core_tests.sh`).
+**Authority:** `V2_CHANGE_CONTROL.md` > `LEVEL_DESIGN_PARAMETERS.md` > `V2_IMPLEMENTATION_ROADMAP.md` > `MASTER_GAME_SPEC.md` > legacy reference (V1 data only).
 
-V2 summary as understood: (1) movement becomes fixed-distance, node-based, using explicit connections instead of implicit 4-neighbour grid adjacency; (2) presentation becomes top-down orthographic 2D sprite art; (3) level editor and JSON schema are updated; (4) all levels are revalidated under the new movement rules; (5) existing turn manager, enemy behaviours, gadgets and progression are preserved where compatible; nothing working is deleted or rewritten.
+## 0. State of the repository at audit time
+- Unity 2022.3.62f3, URP 14.0.12 (3D template, Performant/Balanced/HighFidelity renderers), legacy Input Manager, Android build target. No scenes, prefabs or MonoBehaviours have been written yet: the Runtime/UI/Editor assemblies contain only asmdefs.
+- Implemented and tested (engine-free): V1 rules engine, guard schedules, cone vision, undo session, BFS solver, JSON layer, level loader/writer (format_version 1), validator, save repository.
+- Uncommitted: `Assets/UniversalRenderPipelineGlobalSettings.asset` modified by the open Unity Editor (not by this work; left untouched). `.vscode/` is editor-generated and untracked.
+- Unity Editor GUI is open on the project, so batch-mode compile/tests are locked out; evidence so far is dotnet-based.
 
-## 1. What exists today (V1, all engine-free unless noted)
+## 1. Subsystem classification
 
-| Component | File | Depends on grid adjacency? | Notes |
-|---|---|---|---|
-| `GridCoord` | Scripts/Core/GridCoord.cs | `Neighbor(Direction)` is the only adjacency helper | Coordinates themselves remain valid as node positions |
-| `Direction`, `GameAction` | Core/Direction.cs, Core/GameAction.cs | Actions N/E/S/W are directions, not edges | Node graphs with ≤4 cardinal connections per node can keep these; otherwise the action set must change |
-| `GuardDefinition`, `GuardMode` | Core/GuardDefinition.cs | Route is a list of coords; validator requires consecutive route tiles to be orthogonally adjacent | Routes become node sequences; adjacency check becomes "connection exists" |
-| `LevelDefinition` | Core/LevelDefinition.cs | `IsWall`, `IsInside`, `AllCells()` | Needs a node/connection set; walls may become "no node" or "blocked connection" |
-| `LevelValidator` | Core/LevelValidator.cs | Reachability flood uses 4-neighbours; route adjacency | Replace the neighbour enumeration with connection lookup; everything else reusable |
-| `GuardSchedule` | Core/GuardSchedule.cs | None (pure index arithmetic on the route) | **Reusable as-is**, including ping-pong/loop/rotation/step and the phase-0 facing quirk |
-| `VisionSystem` | Core/VisionSystem.cs | Cone geometry in tile space; LoS samples cells on a centre-to-centre line and tests `isBlocked(cell)` | Reusable if nodes stay on an integer lattice and walls remain cells. If connections carry "sight blocked" flags or nodes are off-lattice, this needs a new LoS rule |
-| `GameState`, `TurnResult` | Core/GameState.cs, Core/TurnResult.cs | None | Reusable |
-| `RulesEngine` | Core/RulesEngine.cs | `Validate` computes target = `pos.Neighbor(dir)` and checks bounds/wall/door | Only the movement-target resolution changes; turn order (validate → move/key → phase → occupancy/swap → vision → win) is preserved |
-| `GameSession` (undo/restart/replay) | Core/GameSession.cs | None | Reusable |
-| `Solver` (BFS) | Core/Solver.cs | None directly; expands via `RulesEngine.Step` | Reusable; parity targets (validation.json) become invalid and must be regenerated under V2 rules |
-| `MiniJson`, `JsonAccess` | Data/MiniJson.cs | None | Reusable |
-| `LevelPackLoader` / `LevelPackWriter` | Data/LevelRepository.cs | Parses `size`, `walls`, `route` | Add `format_version: 2` parsing + a V1→V2 migration that synthesises connections from grid adjacency |
-| `SaveData` / `SaveRepository` | Data/SaveData.cs, Data/SaveRepository.cs | None | Reusable |
-| EditMode tests (130) | Tests/EditMode | Parity tests pin V1 behaviour | Keep as the V1 regression suite behind a V1 data path; add V2 suites |
-| Tooling | Tools/run_core_tests.sh, Tools/gen_meta.py, Tools/CoreTestRunner | None | Reusable |
-| Runtime / UI / Editor assemblies | asmdefs only | — | Nothing implemented yet, so the 3D graybox plan from M2 can be replaced by the 2D sprite plan with zero loss |
+| Subsystem | Files | Class | What changes | Tests affected |
+|---|---|---|---|---|
+| Coordinates, directions, actions | Core/GridCoord.cs, Core/Direction.cs, Core/GameAction.cs | **reuse** | None. V2 keeps integer lattice, origin top-left, cardinal-only moves, N/E/S/W/WAIT/SMOKE/EMP. | none |
+| Guard definition | Core/GuardDefinition.cs | **adapt** | Add `MoveEvery` / `RotateEvery` (V2 independent periods); V1 `step` maps to both. Mode names: V2 `pingPong`→Patrol, `moveRotate`→PatrolRotate (aliases in loader, enum unchanged). Add optional `Id`. | GuardScheduleTests (extend) |
+| Guard schedule | Core/GuardSchedule.cs | **adapt** | Generalise `q` into `qMove = phase / MoveEvery` and `qRot = phase / RotateEvery`; cycle = lcm(routeCycle·MoveEvery, 4·RotateEvery/gcd). Identical to V1 when both equal `step`. | parity suite must stay green |
+| Level definition | Core/LevelDefinition.cs | **adapt** | Add `Graph` (`LevelGraph`: node set, node kinds, directed typed edges), `NodeSpacing`, `SmokeTurns`, `EmpTurns`, `SchemaVersion`, metadata (world/chapter/theme/hint), `Cover`. Keep `Walls`, `Key`, `Door`, `Guards`, charges. | loader tests |
+| Graph model | Core/LevelGraph.cs (new) | **missing** | Nodes (existence + kind: walkable / wall / cover), edges keyed `(from,to)` with `EdgeType` open/locked/oneWay (switchable parsed but rejected until switches exist), auto-cardinal expansion with `blockedEdges`, canonical edge enumeration for export and previews. | new LevelGraphTests |
+| Rules engine | Core/RulesEngine.cs | **adapt** | Move validation becomes: target node exists → traversable → edge exists in that direction → edge not locked (or key held). Everything after validation (key pickup, phase advance, occupancy, swap, vision, win) is unchanged. Smoke duration from `SmokeTurns`. | RulesEngineTests (extend), parity suite |
+| Vision | Core/VisionSystem.cs | **adapt** | Keep the reference discrete cone and 12-sample LoS. Occluder predicate becomes walls ∪ locked door node ∪ sight-blocking cover. Missing edges never occlude (tested explicitly). | VisionSystemTests (extend) |
+| Game state / turn result / session | Core/GameState.cs, TurnResult.cs, GameSession.cs | **reuse** | Add `InvalidActionReason.NoEdge` / `NoNode`. Undo snapshot already covers all state. | none |
+| Solver | Core/Solver.cs | **adapt** | Already expands through `RulesEngine.Step`, so graph rules apply automatically. Add `AllowWait=false` option for the no-WAIT necessity check. | ReferenceParityTests (reinterpreted, see §3) |
+| Metrics | Core/LevelMetrics.cs (new) | **missing** | `shortestWinTurns`, `shortestWithoutWait/Smoke/EMP`, `guardCycleLCM`, `safeNodeRatio`, average branching factor along the optimum, capped uniqueness count. | new tests |
+| Validator | Core/LevelValidator.cs | **adapt** | Add: dangling/duplicate/non-adjacent edges, edges touching missing or wall nodes, start/exit on walkable nodes, guard route segments must be legal edges in travel direction, graph reachability over edges, guard-overlap simulation over one period (policy: error for schema 2, warning for migrated legacy levels). | LevelValidatorTests (extend) |
+| JSON layer | Data/MiniJson.cs | **reuse** | None. | none |
+| Level loader/writer | Data/LevelRepository.cs, Data/LevelDtos.cs | **adapt** | `schemaVersion: 2` parser (board/nodes/edges/blockedEdges/walls/cover, player/objective, guards with V2 field names, gadgets, restrictions, presentation, scoring). Keep `format_version: 1` parser as the legacy path. Writer exports canonical schema 2 with expanded edges. | LevelPackLoadingTests (extend) |
+| Legacy migration | Data/LegacyLevelMigrator.cs (new) | **missing** | V1→V2: every cell is a node; walls are wall nodes; bidirectional open edges between cardinally adjacent walkable nodes; edges *into* the door node are `locked` (unlocked by key); door node occludes while locked. Produces a conversion record per level. | new migration + equivalence tests |
+| Save system | Data/SaveData.cs, Data/SaveRepository.cs | **reuse** | Already versioned with backup. No in-progress-turn state is persisted, so no migration needed yet. | none |
+| EditMode test suite | Tests/EditMode/* | **reuse + extend** | Existing 130 tests become the legacy regression gate (gate F). New V2 suites added alongside. | — |
+| Tooling | Tools/run_core_tests.sh, Tools/gen_meta.py, Tools/CoreTestRunner | **reuse** | None. | — |
+| Presentation (3D primitive graybox plan) | not implemented | **replace** | Replaced before it existed by top-down orthographic 2D sprites (SpriteRenderer board on the XY plane, `world(x,y) = origin + (x·spacing, −y·spacing, 0)`). | PlayMode tests (new) |
+| Level editor | not implemented | **missing** | Node/edge/occluder authoring window with validate/solve/metrics, schema 2 import/export with backups. | editor round-trip tests |
+| Docs | Docs/* | **adapt** | PROGRESS/DECISIONS/KNOWN_ISSUES/TASKS re-baselined on the V2 roadmap. | — |
 
-## 2. Classification under the V2 summary
-
-### Reuse unchanged
-- GuardSchedule (schedules, period/lcm, rotation, step).
-- GameState, TurnResult, GameSession (undo/restart/replay/trace), Solver, MiniJson, SaveData, SaveRepository, test runner tooling, meta generator, asmdef layout.
-- Turn order and capture semantics (occupancy, edge swap, cone sight, smoke 2-action concealment, EMP phase freeze, key/door, capture-before-win).
-
-### Modify
-- `LevelDefinition`: add `Nodes` and `Connections` (explicit, directional or symmetric per V2 doc) alongside the existing fields; keep `Walls` for vision occlusion if V2 keeps them.
-- `RulesEngine.Validate/Step`: resolve a move by looking up the connection from the current node in the requested direction (or by edge id, see §5 Q1); keep every later step identical.
-- `LevelValidator`: node/connection integrity (both endpoints exist, no duplicate edges, symmetric pairs if required), route steps must follow connections, reachability over the graph.
-- `LevelPackLoader`/`Writer`: `format_version` 2 with migration from 1 (derive connections from 4-adjacency of non-wall cells so the 20 V1 levels load without hand edits).
-- `VisionSystem`: unchanged only if V2 keeps lattice coordinates and cell-based occlusion; otherwise see §5 Q3.
-- Tests: parity tests parameterised by rule-set version; new V2 fixtures.
-
-### Replace
-- `validation.json` for V1 is no longer evidence for V2. A V2 `validation_v2.json` must be regenerated by the updated solver (C#), and ideally cross-checked by an updated `reference/build.py` so two independent implementations agree.
-- The M2 plan for 3D primitive graybox presentation (never implemented): replaced by a 2D sprite presentation (SpriteRenderer-based board, orthographic camera on the XY plane, sorting layers).
-
-### Add
-- Node/connection data model and graph helpers (`NodeGraph`, adjacency lookup, edge enumeration) in Core.
-- V2 level editor: node painting, connection toggling, guard route authoring over connections, validation, solver, export with backup.
-- 2D presentation: tile/node sprites, connection lines, guard/player sprites, cone overlay drawn from `VisionSystem` cells, next-turn ghosts.
+## 2. Conflicts between V1 work and V2 contract, with resolutions
+1. **Door as node vs. locked edge.** V1 models the door as a tile that blocks player movement and sight until the key is held. V2 edges carry the lock. Resolution: legacy import converts the door into locked *incoming* edges plus a door node that occludes while locked. Guards keep walking through it (legacy levels 10 and 19 do), so guard route validation checks edge *existence and direction*, not lock state (recorded in DECISIONS).
+2. **Guard overlap.** V2 validator defaults to rejecting guards sharing a node at the same phase. Measured on the legacy pack with the reference scheduler: only level 18 ("Shift Change") overlaps (guard A walks over guard C at (2,0) on phases 1, 5, 7, 11). Resolution: migrated legacy levels get a warning; level 18 is flagged for redesign in V2 M5; schema-2 levels get an error.
+3. **Single `step` vs. `moveEvery`/`rotateEvery`.** Resolution: schedule generalised; legacy sets both from `step`; parity preserved by construction and by test.
+4. **Phase-0 facing quirk** of travel-facing guards (facing resets to authored at wrap). V2 says "preserve the reference formula where sensible". Resolution: preserved, because the legacy equivalence gate requires it; documented as a known quirk for designers.
+5. **Validation claims.** `validation.json` proves nothing for V2. Resolution: the parity suite is reframed as "legacy-mode equivalence of the migrated graph" (gate F); V2 traces are produced fresh by the C# solver in M5 and stored as `validation_v2.json`.
+6. **Renderer.** The URP 3D template stays; sprites render fine in the 3D renderer with an orthographic camera. URP 2D Renderer is adopted only after a compatibility test (change control).
 
 ## 3. Risks
-- **Rule drift**: changing adjacency changes which V1 solutions are legal. The 20 V1 levels are *not* validated for V2 until the V2 solver passes them. Expect some to become unsolvable or trivially different if connections are not simply 4-adjacency.
-- **Vision semantics**: if V2 wants sight to follow connections rather than cells, the sampled LoS must be redefined and the V1 parity suite will diverge by design.
-- **Action set**: if nodes may have more than four connections or non-cardinal ones, N/E/S/W actions and swipe input no longer map one-to-one; the input model must change.
+- Any divergence in the legacy conversion silently changes rules for the 20 levels; mitigated by re-running all 20 replays *and* the solver path/state-count parity through the graph engine.
+- `cover` with "traversable but blocks sight" creates nodes you can stand on but not see through; vision sampling treats such a node as an occluder even when the player stands on it (the endpoint is excluded, so the player's own node never hides them). Tested.
+- Guard overlap policy may reject future authored levels unexpectedly; the editor must show the offending phase and node.
+- Switchable edges and decoy are in the schema but not in the simulator; the loader rejects them with a clear message so no level can silently depend on them.
 
-## 4. Proposed order (to be reconciled with V2_IMPLEMENTATION_ROADMAP.md)
-1. Finalise this audit against the V2 documents.
-2. Core graph model + loader migration + validator; V1 levels load as V2 (connections synthesised).
-3. RulesEngine movement over connections; V2 solver run on all 20 levels; publish results (solvable / shortest length / gadget requirement) in PROGRESS.md.
-4. Decide, per `V2_CHANGE_CONTROL.md`, how to treat levels whose V2 result differs from V1.
-5. 2D sprite presentation and input; HUD; progression (unchanged systems).
-6. V2 level editor and schema export; two sandbox levels round-trip.
-
-## 5. Questions the V2 documents must answer before coding
-1. Are connections symmetric and cardinal (so N/E/S/W actions remain), or arbitrary edges selected by tapping a neighbouring node?
-2. Is a "fixed distance" always one connection per turn, and do guards traverse the same connection graph?
-3. Does vision stay a tile-space cone with cell occlusion, or does it follow connections/edges? What blocks sight in V2 (walls as cells, or missing connections)?
-4. Do walls still exist as cells, or are they expressed purely as absent nodes/connections?
-5. Is the V1 level pack to be migrated automatically (connections = 4-adjacency) and then re-solved, or re-authored by hand?
-6. What are the acceptance thresholds in `LEVEL_DESIGN_PARAMETERS.md` (board size, node count, solution length bands, gadget requirements)?
-7. JSON schema: exact field names for nodes/connections, `format_version` number, and whether V1 files must remain loadable.
+## 4. Ordered steps (no durations)
+1. **V2 M0** — this audit; checkpoint commits (`a9b7ca7`).
+2. **V2 M1** — `LevelGraph`, `EdgeType`, guard `MoveEvery/RotateEvery`, edge-based `RulesEngine.Validate`, occluder predicate, validator graph rules + overlap policy, `LegacyLevelMigrator`, schema-2 loader/writer, `LevelMetrics`, solver `AllowWait`. Tests: graph edges (missing/one-way/locked/duplicate/dangling), independence of edges and sight, guard route legality, schedule periods, legacy equivalence (20 replays + 20 solver parities through the graph engine), schema-2 round trip, metrics. Gate: all green under `Tools/run_core_tests.sh`, Unity Test Runner when the editor is available.
+3. **V2 M2** — 2D orthographic presentation (board/node/edge/character/cone sprite views, portrait camera fit, input, HUD) driven by `TurnResult`.
+4. **V2 M3** — schema-2 editor window, migration command with backups, round-trip tests.
+5. **V2 M4** — five new tutorial levels authored as explicit graphs, solved, constrained-solved, replayed.
+6. **V2 M5** — all 20 legacy levels revalidated as V2 (fresh traces), level 18 redesigned for the overlap rule, differences documented.
+7. **V2 M6/M7** — presentation polish, QA, builds.
