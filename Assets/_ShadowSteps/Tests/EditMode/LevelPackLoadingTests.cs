@@ -78,7 +78,8 @@ namespace ShadowSteps.Tests.EditMode
                     CollectionAssert.AreEqual(a.Guards[g].Route, b.Guards[g].Route);
                     Assert.AreEqual(a.Guards[g].Facing, b.Guards[g].Facing);
                     Assert.AreEqual(a.Guards[g].Range, b.Guards[g].Range);
-                    Assert.AreEqual(a.Guards[g].Step, b.Guards[g].Step);
+                    Assert.AreEqual(a.Guards[g].MoveEvery, b.Guards[g].MoveEvery);
+                    Assert.AreEqual(a.Guards[g].RotateEvery, b.Guards[g].RotateEvery);
                     Assert.AreEqual(a.Guards[g].Rotation, b.Guards[g].Rotation);
                 }
             }

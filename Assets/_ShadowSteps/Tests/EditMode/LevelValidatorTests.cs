@@ -12,7 +12,7 @@ namespace ShadowSteps.Tests.EditMode
             var report = LevelValidator.ValidatePack(TestPaths.LoadPack().Levels);
             Assert.IsTrue(report.IsValid, report.ToString());
             // Known authored design smells (guard routes crossing key/door tiles in levels 10, 16, 19) are warnings only.
-            Assert.AreEqual(3, report.WarningCount, report.ToString());
+            Assert.AreEqual(4, report.WarningCount, report.ToString()); // routes over key/door nodes (10, 16, 19) + legacy guard overlap (18)
         }
 
         [Test]
@@ -28,7 +28,7 @@ namespace ShadowSteps.Tests.EditMode
         {
             var r = LevelValidator.Validate(Make(4, 4, C(0, 3), C(3, 0), new[] { C(0, 3) }));
             Assert.IsFalse(r.IsValid);
-            StringAssert.Contains("overlaps wall", r.ToString());
+            StringAssert.Contains("non-traversable node", r.ToString());
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace ShadowSteps.Tests.EditMode
         {
             var r = LevelValidator.Validate(Make(4, 4, C(0, 3), C(3, 0), door: C(2, 2)));
             Assert.IsFalse(r.IsValid);
-            StringAssert.Contains("key and door", r.ToString());
+            StringAssert.Contains("door without key", r.ToString());
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace ShadowSteps.Tests.EditMode
             var g = Guard(GuardMode.Patrol, Direction.North, 1, C(1, 1), C(3, 1));
             var r = LevelValidator.Validate(Make(4, 4, C(0, 3), C(3, 0), guards: new[] { g }));
             Assert.IsFalse(r.IsValid);
-            StringAssert.Contains("orthogonally adjacent", r.ToString());
+            StringAssert.Contains("cardinally adjacent", r.ToString());
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace ShadowSteps.Tests.EditMode
             var g = Guard(GuardMode.Loop, Direction.North, 1, C(1, 1), C(2, 1), C(3, 1));
             var r = LevelValidator.Validate(Make(5, 5, C(0, 4), C(4, 0), guards: new[] { g }));
             Assert.IsFalse(r.IsValid);
-            StringAssert.Contains("loop route must close", r.ToString());
+            StringAssert.Contains("route (closing)", r.ToString());
         }
 
         [Test]

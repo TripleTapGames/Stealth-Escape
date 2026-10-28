@@ -32,3 +32,26 @@ Single JSON file in `Application.persistentDataPath/shadowsteps_save.json`, writ
 
 ## D-009 Product naming
 The Unity project folder/product name is still "Stealth Escape" from project creation. Code, scenes and assets use the game name "Shadow Steps". `productName`, bundle ids and icons are changed together in M8 so a half-renamed build never ships.
+
+## V2 decisions
+
+## D-010 Legacy door becomes locked incoming edges plus an occluding node
+V1 modelled the door as a tile that blocks the player and sight until the key is held. V2 edges carry locks, so `LevelGraph.BuildLegacyGrid` locks every edge *into* the door node and `LevelDefinition.Door` keeps the node as a sight occluder while the key is not held. Edges *out* of the door stay open. This reproduces V1 exactly (proved by the 20/20 replay and solver parity) and is the shape the migrator exports.
+
+## D-011 Guard routes need edges, not permissions
+A guard segment is legal when an edge exists in the travel direction (ping-pong routes also need the reverse edge, loops need the closing edge). Locks are ignored for guards: legacy levels 10 and 19 patrol through the door node. Guards moving through walls or missing nodes are errors.
+
+## D-012 Guard overlap policy
+Two guards sharing a node at the same phase is an **error** for schema-2 levels (LEVEL_DESIGN_PARAMETERS §5 default: reject rather than invent AI) and a **warning** for migrated legacy levels, because level 18 ("Shift Change") does it at phases 1, 5, 7, 11. Level 18 is scheduled for redesign in V2 M5.
+
+## D-013 Independent cadences generalise the legacy step
+`moveEvery` and `rotateEvery` replace the single `step`. Position uses `phase / moveEvery`, scheduled rotation uses `phase / rotateEvery`, travel facing derives from the previous movement update. With both equal to `step` the schedule and the period are identical to reference/build.py (tested for all 20 levels), so the phase-0 facing reset quirk is preserved.
+
+## D-014 Schema 2 shape and loader policy
+Root `schemaVersion: 2` with `levels[]` (or a single level object for editor exports). Board: `width`, `height`, `nodeSpacing`, `nodes`, `walls`, `cover[{pos, traversable}]`, `edges` = `"autoCardinalExceptBlocked"` with `blockedEdges`/`lockedEdges`, or an explicit `[{from, to, type: open|locked|oneWay, bidirectional}]` list. The writer always exports the explicit expanded list. Unknown fields warn; unsupported features (switchable edges, switches, decoy charges, cone angles other than 90, objectives other than reachExit) are rejected with a path so no content can depend on them silently. Legacy `format_version: 1` files still load and are migrated in memory with conversion notes that are exported with the level.
+
+## D-015 Vision occluders are nodes only
+`VisionSystem.BlockedPredicate` tests node flags (walls, cover) plus the locked door. Edges are never consulted, which satisfies "a missing edge stops movement but does not block sight" and is covered by a dedicated test.
+
+## D-016 Restrictions actually simulated
+`noWait` is enforced by `RulesEngine.Validate` (so the solver honours it). `maxMoves`, `noUndo`, `requiredGadget` are stored for UI/analysis only; the validator warns that `maxMoves` is not enforced. `smokeTurns` is configurable (default 2); `empTurns` must be 1.

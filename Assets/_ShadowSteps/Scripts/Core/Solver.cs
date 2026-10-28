@@ -8,6 +8,8 @@ namespace ShadowSteps.Core
         public int MaxStates = 250000;
         public bool AllowSmoke = true;
         public bool AllowEmp = true;
+        /// <summary>False runs the "shortestWithoutWait" necessity check (LEVEL_DESIGN_PARAMETERS.md §3).</summary>
+        public bool AllowWait = true;
     }
 
     public sealed class SolverResult
@@ -22,12 +24,13 @@ namespace ShadowSteps.Core
 
     /// <summary>
     /// Breadth-first shortest-solution search. Port of <c>solve()</c> in reference/build.py, but driven by
-    /// <see cref="RulesEngine.Step"/> so the solver and the game can never disagree. Action expansion order and
-    /// queue discipline match the reference so the returned path is identical to validation.json.
+    /// <see cref="RulesEngine.Step"/> so the solver and the game can never disagree (graph edges, locks, cover and
+    /// restrictions are all honoured automatically). Action expansion order and queue discipline match the
+    /// reference so the returned path is identical to validation.json for legacy levels.
     /// </summary>
     public static class Solver
     {
-        private readonly struct Key : IEquatable<Key>
+        internal readonly struct Key : IEquatable<Key>
         {
             public readonly GridCoord Pos; public readonly int Phase; public readonly bool HasKey;
             public readonly int Smoke; public readonly int Emp; public readonly int Cloud;
@@ -45,15 +48,23 @@ namespace ShadowSteps.Core
             }
         }
 
-        public static SolverResult Solve(LevelDefinition level, SolverOptions options = null)
+        public static GameState InitialStateFor(LevelDefinition level, SolverOptions options)
         {
-            options = options ?? new SolverOptions();
-            var result = new SolverResult { Period = level.Period };
             var init = RulesEngine.CreateInitialState(level);
             if (!options.AllowSmoke || !options.AllowEmp)
                 init = new GameState(init.PlayerPosition, init.Phase, init.HasKey,
                     options.AllowSmoke ? init.SmokeCharges : 0, options.AllowEmp ? init.EmpCharges : 0,
                     init.SmokeRemaining, init.TurnCount, init.Outcome);
+            return init;
+        }
+
+        public static bool IsWin(LevelDefinition level, GameState s) => s.PlayerPosition == level.Exit && (!level.HasDoor || s.HasKey);
+
+        public static SolverResult Solve(LevelDefinition level, SolverOptions options = null)
+        {
+            options = options ?? new SolverOptions();
+            var result = new SolverResult { Period = level.Period };
+            var init = InitialStateFor(level, options);
 
             var queue = new Queue<GameState>();
             var back = new Dictionary<Key, Key>();
@@ -66,7 +77,7 @@ namespace ShadowSteps.Core
             {
                 var s = queue.Dequeue();
                 var sk = new Key(s);
-                if (s.PlayerPosition == level.Exit && (!level.HasDoor || s.HasKey))
+                if (IsWin(level, s))
                 {
                     var path = new List<GameAction>();
                     var k = sk;
@@ -79,6 +90,7 @@ namespace ShadowSteps.Core
                 }
                 foreach (var a in GameActionUtil.ReferenceOrder)
                 {
+                    if (a == GameAction.Wait && !options.AllowWait) continue;
                     var r = RulesEngine.Step(level, s, a);
                     if (!r.IsValid || r.Captured) continue;
                     var nk = new Key(r.StateAfter);

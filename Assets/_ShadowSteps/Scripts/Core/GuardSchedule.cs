@@ -24,18 +24,20 @@ namespace ShadowSteps.Core
     }
 
     /// <summary>
-    /// Pure function from (guard definition, global phase) to pose. This is a line-by-line port of
-    /// <c>guard_at</c> and <c>period</c> in reference/build.py. Do not "improve" it: the 20 shipped levels
-    /// and their validated solutions depend on these exact semantics (including the facing reset at phase 0
-    /// for travel-facing guards after the period wraps).
+    /// Pure function from (guard definition, global phase) to pose. Generalises <c>guard_at</c>/<c>period</c> from
+    /// reference/build.py with independent movement and rotation cadences (V2 moveEvery/rotateEvery). When both cadences
+    /// equal the legacy <c>step</c> the result is identical to the reference, including the facing reset at phase 0
+    /// for travel-facing guards after the period wraps. Do not "improve" that quirk: the legacy levels depend on it.
     /// </summary>
     public static class GuardSchedule
     {
         public static GuardPose Evaluate(GuardDefinition g, int phase)
         {
             if (phase < 0) throw new ArgumentOutOfRangeException(nameof(phase), "phase must be >= 0");
-            int step = Math.Max(1, g.Step);
-            int q = phase / step;
+            int moveEvery = Math.Max(1, g.MoveEvery);
+            int rotateEvery = Math.Max(1, g.RotateEvery);
+            int qMove = phase / moveEvery;
+            int qRot = phase / rotateEvery;
             var route = g.Route;
 
             switch (g.Mode)
@@ -44,27 +46,27 @@ namespace ShadowSteps.Core
                     return new GuardPose(route[0], g.Facing, g.Range);
 
                 case GuardMode.Rotate:
-                    return new GuardPose(route[0], DirectionUtil.Rotate(g.Facing, q * g.Rotation), g.Range);
+                    return new GuardPose(route[0], DirectionUtil.Rotate(g.Facing, qRot * g.Rotation), g.Range);
 
                 case GuardMode.Patrol:
                 case GuardMode.PatrolRotate:
                 case GuardMode.Loop:
                 {
-                    var pos = PositionAtIndex(g, q);
+                    var pos = PositionAtIndex(g, qMove);
                     Direction facing;
                     if (g.Mode == GuardMode.PatrolRotate)
                     {
-                        facing = DirectionUtil.Rotate(g.Facing, q * g.Rotation);
+                        facing = DirectionUtil.Rotate(g.Facing, qRot * g.Rotation);
                     }
-                    else if (q == 0)
+                    else if (qMove == 0)
                     {
                         facing = g.Facing;
                     }
                     else
                     {
                         // Reference: prev = guard_at(g, max(t-step, 0)); facing = direction of (pos - prev) if cardinal else authored facing.
-                        int prevPhase = Math.Max(phase - step, 0);
-                        var prev = PositionAtIndex(g, prevPhase / step);
+                        int prevPhase = Math.Max(phase - moveEvery, 0);
+                        var prev = PositionAtIndex(g, prevPhase / moveEvery);
                         var d = DirectionUtil.FromDelta(pos.X - prev.X, pos.Y - prev.Y);
                         facing = d ?? g.Facing;
                     }
@@ -89,21 +91,37 @@ namespace ShadowSteps.Core
         private static GridCoord PositionAtIndex(GuardDefinition g, int q) =>
             g.Route[RouteIndex(g.Mode, g.Route.Count, q)];
 
-        /// <summary>Cycle length of one guard's schedule (reference period() per-guard term).</summary>
-        public static int GuardCycle(GuardDefinition g)
+        /// <summary>Number of phases after which the guard's position repeats.</summary>
+        public static int MoveCycle(GuardDefinition g)
         {
             int n = g.Route.Count;
-            int s = Math.Max(1, g.Step);
-            int z;
+            int m = Math.Max(1, g.MoveEvery);
             switch (g.Mode)
             {
-                case GuardMode.Fixed: z = 1; break;
-                case GuardMode.Rotate: z = 4 * s / Gcd(4, Math.Abs(g.Rotation)); break;
-                case GuardMode.Loop: z = n * s; break;
-                default: z = Math.Max(1, 2 * n - 2) * s; break;
+                case GuardMode.Fixed:
+                case GuardMode.Rotate: return m; // position never changes; cadence kept so lcm matches the reference for Rotate
+                case GuardMode.Loop: return n * m;
+                default: return Math.Max(1, 2 * n - 2) * m;
             }
-            if (g.Mode == GuardMode.PatrolRotate) z = Lcm(z, 4 * s / Gcd(4, Math.Abs(g.Rotation)));
-            return z;
+        }
+
+        /// <summary>Number of phases after which the guard's facing repeats (for scheduled rotation).</summary>
+        public static int RotationCycle(GuardDefinition g)
+        {
+            int r = Math.Max(1, g.RotateEvery);
+            return 4 * r / Gcd(4, Math.Abs(g.Rotation));
+        }
+
+        /// <summary>Cycle length of one guard's full schedule (reference period() per-guard term when cadences are uniform).</summary>
+        public static int GuardCycle(GuardDefinition g)
+        {
+            switch (g.Mode)
+            {
+                case GuardMode.Fixed: return 1;
+                case GuardMode.Rotate: return RotationCycle(g);
+                case GuardMode.PatrolRotate: return Lcm(MoveCycle(g), RotationCycle(g));
+                default: return MoveCycle(g);
+            }
         }
 
         /// <summary>Global period: least common multiple of all guard cycles (1 when there are no guards).</summary>

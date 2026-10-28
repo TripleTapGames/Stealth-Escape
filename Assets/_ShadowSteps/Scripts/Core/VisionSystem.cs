@@ -6,8 +6,9 @@ namespace ShadowSteps.Core
     /// <summary>
     /// Authoritative discrete cone-of-vision rules. Port of <c>cone_visible</c> in reference/build.py.
     /// A cell is in the geometric cone when 1 &lt;= forward &lt;= range and |lateral| &lt;= forward in the guard's
-    /// facing frame. Line of sight is then sampled from tile centre to tile centre (12 samples per tile of
-    /// Chebyshev distance); any sampled cell other than the endpoints that is blocked occludes the target.
+    /// facing frame. Line of sight is then sampled from node centre to node centre (12 samples per node of
+    /// Chebyshev distance); any sampled node other than the endpoints that occludes blocks the target.
+    /// Occluders are nodes (walls, cover, the locked door); edges never occlude (V2 contract).
     /// Never replace this with a physics raycast: presentation may visualise it, but this function decides.
     /// </summary>
     public static class VisionSystem
@@ -51,32 +52,34 @@ namespace ShadowSteps.Core
             return ConeVisible(guard, target, _ => false) && target != guard.Position;
         }
 
+        /// <summary>Occluder predicate for a level: wall/cover nodes always, the legacy door node only while the key is not held.</summary>
+        public static Func<GridCoord, bool> BlockedPredicate(LevelDefinition level, bool hasKey)
+        {
+            bool doorBlocks = level.HasDoor && !hasKey;
+            var door = level.Door ?? default;
+            var graph = level.Graph;
+            return c => graph.BlocksSight(c) || (doorBlocks && c == door);
+        }
+
         /// <summary>
-        /// Every board cell the guard currently sees, excluding its own tile. Deterministic row-major order.
-        /// Blocking cells: walls, plus the door while the player has no key.
+        /// Every existing node the guard currently sees, excluding its own node, in row-major order.
+        /// Non-existent positions (holes in the node mask) are skipped: there is nothing to stand on there.
         /// </summary>
-        public static List<GridCoord> GetVisionCells(LevelDefinition level, GuardPose guard, bool doorBlocks)
+        public static List<GridCoord> GetVisionCells(LevelDefinition level, GuardPose guard, bool hasKey)
         {
             var cells = new List<GridCoord>();
-            Func<GridCoord, bool> blocked = c => level.IsWall(c) || (doorBlocks && level.IsDoor(c));
+            var blocked = BlockedPredicate(level, hasKey);
             int r = guard.Range;
-            // Only cells within the bounding box of the cone can qualify; iterate rows for stable ordering.
             int minY = Math.Max(0, guard.Position.Y - r), maxY = Math.Min(level.Height - 1, guard.Position.Y + r);
             int minX = Math.Max(0, guard.Position.X - r), maxX = Math.Min(level.Width - 1, guard.Position.X + r);
             for (int y = minY; y <= maxY; y++)
                 for (int x = minX; x <= maxX; x++)
                 {
                     var c = new GridCoord(x, y);
-                    if (c == guard.Position) continue;
+                    if (c == guard.Position || !level.Graph.HasNode(c)) continue;
                     if (ConeVisible(guard, c, blocked)) cells.Add(c);
                 }
             return cells;
-        }
-
-        public static Func<GridCoord, bool> BlockedPredicate(LevelDefinition level, bool hasKey)
-        {
-            bool doorBlocks = level.HasDoor && !hasKey;
-            return c => level.IsWall(c) || (doorBlocks && level.IsDoor(c));
         }
     }
 }

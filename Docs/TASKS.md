@@ -29,40 +29,47 @@ Legend: `[x]` done with evidence (see PROGRESS.md) · `[~]` implemented, verific
 - [x] Parity: all 20 validation.json solutions win with exact turn count; solver reproduces exact path and explored-state count for all 20
 - [x] Constrained-solve report of truly required gadgets (documented in DECISIONS.md)
 
-## M2 — Unity graybox level
-- [ ] BoardTheme ScriptableObject (prefabs, colours, tile size)
-- [ ] Tile/wall/exit/key/door/player/guard prefabs (primitives)
-- [ ] BoardPresenter (pooled instances, rebuild per level)
-- [ ] Vision overlay + guard facing arrow + route markers + next-turn ghost
-- [ ] GameSessionController (events, input lock, undo/restart)
-- [ ] InputController (swipe, tap adjacent, keyboard), no double input
-- [ ] TurnAnimationCoordinator (move/rotate tweens, capture/win feedback)
-- [ ] CameraFitter (orthographic, portrait, safe area)
-- [ ] Minimal HUD (turns, charges, WAIT/SMOKE/EMP/UNDO/RESTART)
-- [ ] Game scene bootstraps level 1 standalone in editor
-- [ ] PlayMode test: scene loads, board matches level 1, HUD reflects state
+## V1 M2–M8 — superseded by the V2 roadmap below (V2_CHANGE_CONTROL.md)
 
-## M3 — All 20 levels and progression
-- [ ] App services (level catalog, save, settings) + Bootstrap scene
-- [ ] Home, Level Select (lock/complete/best), Results, Failure, Pause/Settings prefabs
-- [ ] Unlock sequencing + best-turn save
-- [ ] Tutorial hints (data-driven), invalid-action feedback
-- [ ] Debug level selector (editor/dev builds only)
+# V2 roadmap (V2_IMPLEMENTATION_ROADMAP.md)
 
-## M4 — Level authoring tools
-- [ ] ShadowStepsLevelEditorWindow (paint, place, guards, charges, validate, step, export with backup)
-- [ ] LevelValidationMenu (validate pack, solve all, report)
-- [ ] Two sandbox levels in a separate non-shipping pack; round-trip test
+## V2 M0 — Audit and checkpoint
+- [x] Docs/V2_MIGRATION_AUDIT.md with reuse/adapt/replace/missing per file
+- [x] Checkpoint commits; no source lost; V1 suite green before changes
 
-## M5 — Original art and animation kit
-- [ ] ART_BIBLE.md, materials/palette, procedural meshes, guard silhouettes by mode
-- [ ] Move/rotate/capture/clear effects, reduced-motion path
+## V2 M1 — Pure C# graph gameplay
+- [x] LevelGraph / Edge / EdgeType / NodeInfo / LevelGraphBuilder (explicit directed cardinal edges, node mask, uniform nodeSpacing)
+- [x] LevelSpec + LevelDefinition schema-2 fields (cover, cadences, gadgets turns, restrictions, scoring, metadata)
+- [x] GuardSchedule with independent moveEvery/rotateEvery (legacy-identical when uniform)
+- [x] RulesEngine movement over edges (NoEdge / locked / missing node), noWait, configurable smokeTurns
+- [x] VisionSystem occluders = nodes only; edges never block sight
+- [x] LevelValidator: dangling/self-loop/non-adjacent edges, edges into walls, route edge legality (ping-pong reverse, loop closing), locked edges need key, guard overlap policy, reachability over edges, issue positions for editor highlighting
+- [x] Legacy migration (schema 1 → 2) with conversion notes; schema-2 loader and canonical writer; legacy writer retained
+- [x] LevelMetricsAnalyzer (shortest, no-WAIT/no-smoke/no-EMP/no-gadgets, period, safe-node ratio, branching, uniqueness)
+- [x] Tests: 169 passing incl. 20/20 legacy replays + 20/20 solver parity through the graph engine and after schema-2 round trip
+- [~] Unity Test Runner execution (editor lock)
 
-## M6 — Full UI, onboarding, sound, UX
-- [ ] Final screens, onboarding sequence, generated SFX, audio/haptics toggles, resume handling
+## V2 M2 — 2D orthographic rendering
+- [ ] BoardView/NodeView/EdgeView/CharacterView/VisionOverlay sprite prefabs (generated originals, no external art)
+- [ ] world(x,y) = origin + (x·spacing, −y·spacing, 0); moves are exactly nodeSpacing and end on nodes
+- [ ] Orthographic camera portrait fit with safe area; URP 3D renderer kept unless 2D renderer proves compatible
+- [ ] GameSessionController + TurnAnimationCoordinator driven by TurnResult; input (swipe/tap/keyboard) with lock during animation
+- [ ] HUD (turns, charges, WAIT/SMOKE/EMP/UNDO/RESTART) as prefab; vision overlay equals VisionSystem cells
+- [ ] PlayMode tests: scene loads level, node positions, overlay membership, no movement distance variance
 
-## M7 — QA and optimisation
-- [ ] Full EditMode/PlayMode in Unity, device checks, allocation audit, issue log
+## V2 M3 — Level schema/editor migration
+- [ ] ShadowStepsLevelEditorWindow: node/wall/cover painting, edge toggle (open/locked/oneWay), route drawing, guard params, start/exit/key/door, charges, validate/solve/metrics, import/export schema 2 with backups
+- [ ] Migration command for legacy packs (writes schema-2 file + backup of the original)
+- [ ] Editor round-trip tests
 
-## M8 — Android RC and iOS export
-- [ ] Bundle id, icons/splash, IL2CPP/ARM64, AAB build script, store placeholders, privacy policy placeholder
+## V2 M4 — First five tutorial levels
+- [ ] Author exact graphs per LEVEL_DESIGN_PARAMETERS §4; solve; constrained solves; replay tests; no fabricated labels
+
+## V2 M5 — Revalidate all 20 legacy levels
+- [ ] Redesign level 18 (guard overlap) and any readability fixes; fresh V2 solver traces → validation_v2.json; document differences
+
+## V2 M6 — Presentation and UX
+- [ ] Home/Level Select/Results/Pause/Settings prefabs, onboarding, SFX, haptics toggles, safe area, resume handling
+
+## V2 M7 — QA and release
+- [ ] Unity EditMode/PlayMode runs, device checks, Android AAB, iOS export, store placeholders

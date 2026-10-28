@@ -6,11 +6,18 @@ namespace ShadowSteps.Core
     {
         None,
         GameOver,
+        /// <summary>Target position is outside the board or has no node.</summary>
         OutOfBounds,
+        /// <summary>Target node exists but cannot be stood on (wall or solid cover).</summary>
         Wall,
+        /// <summary>No edge leads from the current node to the target in that direction (V2 explicit connections).</summary>
+        NoEdge,
+        /// <summary>The edge (or legacy door) is locked and the key is not held.</summary>
         LockedDoor,
         NoSmokeCharge,
-        NoEmpCharge
+        NoEmpCharge,
+        /// <summary>The level forbids WAIT (restriction noWait).</summary>
+        WaitDisabled
     }
 
     public readonly struct ActionValidation
@@ -31,9 +38,9 @@ namespace ShadowSteps.Core
     public enum CaptureKind
     {
         None,
-        /// <summary>A guard's destination tile is the player's tile.</summary>
+        /// <summary>A guard's destination node is the player's node.</summary>
         Occupied,
-        /// <summary>Guard and player exchanged tiles along the same edge.</summary>
+        /// <summary>Guard and player exchanged nodes along the same edge.</summary>
         Swapped,
         /// <summary>Player stands inside an unobstructed cone and is not concealed by smoke.</summary>
         Seen
