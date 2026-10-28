@@ -1,0 +1,19 @@
+{
+    "name": "ShadowSteps.UI",
+    "rootNamespace": "ShadowSteps.UI",
+    "references": [
+        "ShadowSteps.Core",
+        "ShadowSteps.Data",
+        "ShadowSteps.Runtime",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

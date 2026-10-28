@@ -1,0 +1,22 @@
+{
+    "name": "ShadowSteps.Editor",
+    "rootNamespace": "ShadowSteps.Editor",
+    "references": [
+        "ShadowSteps.Core",
+        "ShadowSteps.Data",
+        "ShadowSteps.Runtime",
+        "ShadowSteps.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

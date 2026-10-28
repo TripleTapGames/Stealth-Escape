@@ -1,0 +1,25 @@
+{
+    "name": "ShadowSteps.Tests.EditMode",
+    "rootNamespace": "ShadowSteps.Tests.EditMode",
+    "references": [
+        "ShadowSteps.Core",
+        "ShadowSteps.Data",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

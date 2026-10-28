@@ -1,0 +1,1627 @@
+{
+  "format_version": 1,
+  "coordinate_system": "origin top-left, x right, y down",
+  "levels": [
+    {
+      "id": 1,
+      "name": "First Watch",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              2,
+              0
+            ]
+          ],
+          "facing": 0,
+          "range": 1,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 2,
+      "name": "Clockwork Eye",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              3,
+              0
+            ]
+          ],
+          "facing": 3,
+          "range": 1,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 3,
+      "name": "The Corridor",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "facing": 0,
+          "range": 1,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 4,
+      "name": "Double Rhythm",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "facing": 1,
+          "range": 1,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 5,
+      "name": "Two Watchers",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              2,
+              1
+            ]
+          ],
+          "facing": 2,
+          "range": 1,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              3,
+              4
+            ]
+          ],
+          "facing": 3,
+          "range": 1,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 6,
+      "name": "Crossing Paths",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "facing": 3,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              3,
+              4
+            ]
+          ],
+          "facing": 3,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 7,
+      "name": "Square Route",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "loop",
+          "route": [
+            [
+              3,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ]
+          ],
+          "facing": 0,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 8,
+      "name": "Side Step",
+      "size": [
+        5,
+        5
+      ],
+      "start": [
+        0,
+        4
+      ],
+      "exit": [
+        4,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "facing": 0,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              4,
+              4
+            ]
+          ],
+          "facing": 0,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 9,
+      "name": "The Brass Key",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              4,
+              3
+            ]
+          ],
+          "facing": 1,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              4,
+              1
+            ]
+          ],
+          "facing": 0,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": [
+        2,
+        5
+      ],
+      "door": [
+        5,
+        4
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Locked Timing",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              0
+            ]
+          ],
+          "facing": 1,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              1,
+              5
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              3
+            ]
+          ],
+          "facing": 1,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": [
+        4,
+        4
+      ],
+      "door": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Smoke Passage",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "facing": 3,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              3,
+              4
+            ]
+          ],
+          "facing": 3,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 1,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 12,
+      "name": "Power Cut",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "loop",
+          "route": [
+            [
+              1,
+              4
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              5
+            ],
+            [
+              1,
+              5
+            ]
+          ],
+          "facing": 1,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              4,
+              5
+            ]
+          ],
+          "facing": 0,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 1,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 13,
+      "name": "Guarded Vault",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              3,
+              5
+            ]
+          ],
+          "facing": 0,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ]
+          ],
+          "facing": 3,
+          "range": 2,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              2,
+              5
+            ]
+          ],
+          "facing": 3,
+          "range": 2,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": [
+        2,
+        3
+      ],
+      "door": [
+        5,
+        4
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Smoke and Mirrors",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "loop",
+          "route": [
+            [
+              1,
+              4
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              5
+            ],
+            [
+              1,
+              5
+            ]
+          ],
+          "facing": 0,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              0,
+              2
+            ]
+          ],
+          "facing": 1,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 1,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 15,
+      "name": "Blackout Window",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              4,
+              4
+            ],
+            [
+              5,
+              4
+            ]
+          ],
+          "facing": 2,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              5,
+              4
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              1
+            ]
+          ],
+          "facing": 1,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 1,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 16,
+      "name": "The Service Door",
+      "size": [
+        6,
+        6
+      ],
+      "start": [
+        0,
+        5
+      ],
+      "exit": [
+        5,
+        0
+      ],
+      "walls": [
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              3,
+              4
+            ]
+          ],
+          "facing": 2,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              5,
+              3
+            ]
+          ],
+          "facing": 3,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "loop",
+          "route": [
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              1,
+              4
+            ]
+          ],
+          "facing": 2,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "key": [
+        0,
+        3
+      ],
+      "door": [
+        2,
+        0
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Three Blind Angles",
+      "size": [
+        7,
+        7
+      ],
+      "start": [
+        0,
+        6
+      ],
+      "exit": [
+        6,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              2,
+              2
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "facing": 3,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              1,
+              0
+            ]
+          ],
+          "facing": 0,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              3,
+              3
+            ]
+          ],
+          "facing": 3,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 1,
+      "emp": 0,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 18,
+      "name": "Shift Change",
+      "size": [
+        7,
+        7
+      ],
+      "start": [
+        0,
+        6
+      ],
+      "exit": [
+        6,
+        0
+      ],
+      "walls": [
+        [
+          1,
+          6
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol",
+          "route": [
+            [
+              3,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "facing": 0,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "loop",
+          "route": [
+            [
+              6,
+              6
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              5,
+              5
+            ],
+            [
+              6,
+              5
+            ]
+          ],
+          "facing": 2,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              2,
+              0
+            ]
+          ],
+          "facing": 1,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        }
+      ],
+      "smoke": 0,
+      "emp": 1,
+      "key": null,
+      "door": null
+    },
+    {
+      "id": 19,
+      "name": "High Security",
+      "size": [
+        7,
+        7
+      ],
+      "start": [
+        0,
+        6
+      ],
+      "exit": [
+        6,
+        0
+      ],
+      "walls": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          5
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "loop",
+          "route": [
+            [
+              5,
+              2
+            ],
+            [
+              6,
+              2
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              5,
+              3
+            ]
+          ],
+          "facing": 2,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              2,
+              0
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              0
+            ]
+          ],
+          "facing": 1,
+          "range": 3,
+          "step": 1,
+          "rotation": -1
+        },
+        {
+          "mode": "fixed",
+          "route": [
+            [
+              1,
+              2
+            ]
+          ],
+          "facing": 3,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 1,
+      "emp": 0,
+      "key": [
+        0,
+        3
+      ],
+      "door": [
+        6,
+        2
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Final Extraction",
+      "size": [
+        7,
+        7
+      ],
+      "start": [
+        0,
+        6
+      ],
+      "exit": [
+        6,
+        0
+      ],
+      "walls": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          5,
+          3
+        ]
+      ],
+      "guards": [
+        {
+          "mode": "patrol_rotate",
+          "route": [
+            [
+              6,
+              4
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "facing": 2,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "loop",
+          "route": [
+            [
+              5,
+              6
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              5,
+              5
+            ]
+          ],
+          "facing": 1,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        },
+        {
+          "mode": "rotate",
+          "route": [
+            [
+              1,
+              0
+            ]
+          ],
+          "facing": 1,
+          "range": 3,
+          "step": 1,
+          "rotation": 1
+        }
+      ],
+      "smoke": 1,
+      "emp": 1,
+      "key": [
+        1,
+        3
+      ],
+      "door": [
+        2,
+        3
+      ]
+    }
+  ]
+}

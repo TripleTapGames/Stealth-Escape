@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>/tmp/shadowsteps_coretests/obj/</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>/tmp/shadowsteps_coretests/obj/</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>

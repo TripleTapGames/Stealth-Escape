@@ -1,0 +1,17 @@
+{
+    "name": "ShadowSteps.Runtime",
+    "rootNamespace": "ShadowSteps.Runtime",
+    "references": [
+        "ShadowSteps.Core",
+        "ShadowSteps.Data"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

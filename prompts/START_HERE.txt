@@ -1,0 +1,16 @@
+You are implementing Shadow Steps, my complete original Unity mobile stealth strategy game. I am building the game primarily with Claude Code, and I want you to implement it end to end in this Unity repository.
+
+FIRST read these project documents IN ORDER:
+1. CLAUDE.md
+2. MASTER_GAME_SPEC.md
+3. reference/DESIGN.md
+4. reference/levels.json
+5. reference/validation.json
+6. reference/build.py
+7. IMPLEMENTATION_PLAN.md
+
+Key decisions are fixed: square grid, portrait mobile, 90-degree discrete cone vision, deterministic one-action/one-turn enemy progression, Smoke and EMP gadgets, 20 validated reference levels. Preserve reference simulation parity and existing project files. Use Unity 2022.3.62f1 if creating a new project, or use the existing project's configured version.
+
+Act as the lead implementation engineer. Inspect the repository first, create a granular task checklist and implement M0 then M1 in small working commits/steps. Write actual code, scenes and tests. Run whatever checks this environment supports. Do not say 'done' without evidence; if Unity is unavailable, say what remains unverified and provide exact editor actions. Maintain Docs/PROGRESS.md, Docs/DECISIONS.md and Docs/KNOWN_ISSUES.md.
+
+After M0 and M1 are confirmed, proceed sequentially through M2–M8. At every milestone report changed files, concrete tests/results, manual steps and next priority. Do not substitute designs or screenshots for a working Unity implementation. Do not ask me to choose art style/framework again unless a genuine blocking technical decision exists; use the specified defaults.
