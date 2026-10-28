@@ -238,3 +238,23 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 **Manual steps:** Shadow Steps ▸ Setup ▸ Generate All; (optional) Setup ▸ Import TextMeshPro essentials for TMP text; open Bootstrap.unity and press Play; walk Home → Level Select → level 101 → win → Results → Next; Test Runner PlayMode (10 tests).
 
 **Next:** V2 M7 QA/optimisation and release configuration.
+
+## 2026-10-28 — V2 M7 QA tooling and V2 M8 release configuration
+
+**Milestone:** V2 M7 — tooling complete, device QA pending; V2 M8 — configuration and build pipeline complete, no build produced yet (editor lock, no signing credentials).
+
+**Files**
+- Editor/BuildMenu.cs — Shadow Steps ▸ Build ▸ Android AAB (release) / Android APK (development) / iOS Xcode project / Apply release player settings. Signing comes only from environment variables `SS_KEYSTORE_PATH`, `SS_KEYSTORE_PASS`, `SS_KEY_ALIAS`, `SS_KEY_PASS`; without them a debug-signed build is produced and a warning is logged. Headless entry points for CI.
+- Tools/run_unity_tests.sh — headless EditMode/PlayMode runs with NUnit XML summaries into Docs/Reports (refuses to run while the editor holds the lock).
+- Tools/build_android.sh — headless AAB/APK build.
+- ProjectSettings/ProjectSettings.asset — productName "Shadow Steps", companyName "Triple Tap Games", bundle id `com.tripletapgames.shadowsteps` (Android/iOS/Standalone), portrait only, IL2CPP for Android and iOS, ARM64 only. **Caveat:** the Unity Editor was open while this file was edited; if the editor rewrites ProjectSettings on exit, re-run Shadow Steps ▸ Build ▸ Apply release player settings (it re-applies all of the above except bundle ids and company name, which are checked by the release checklist).
+- Docs/RELEASE_CHECKLIST.md, Docs/Store/PLAY_LISTING_PLACEHOLDER.md, Docs/Store/icon_placeholder_512.png (+ copy in Assets/_ShadowSteps/Art), Assets/_ShadowSteps/Art/ART_BIBLE.md.
+
+**QA status**
+- Automated: 191 EditMode tests (dotnet) green; 10 PlayMode tests written (scene fidelity, overlay parity, move distance, HUD, camera fit, win/failure/pause flow); Unity compile check 0 errors.
+- Allocation/performance: vision is recomputed only on state change and previews; overlay cells are pooled; sprites are generated once and cached; no per-frame allocations in Update paths except the input poll. No profiler evidence yet (needs device).
+- Not done (requires a Unity session or device): Unity Test Runner execution, Play-in-editor walk-through, device checks in RELEASE_CHECKLIST.md, any build.
+
+**Verified in Unity editor?** No. **Verified on device?** No. **Store submission:** not started; placeholders only.
+
+**Next action for the user:** close the Unity Editor (or focus it and run the Test Runner), then `Tools/run_unity_tests.sh All` and `Tools/build_android.sh apk`; install the APK on a phone and work through the device QA list.

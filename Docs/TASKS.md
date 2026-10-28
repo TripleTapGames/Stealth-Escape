@@ -80,5 +80,12 @@ Legend: `[x]` done with evidence (see PROGRESS.md) · `[~]` implemented, verific
 - [x] Resume guard on input; safe-area fitting on all screens
 - [~] Unity run of PlayMode flow tests; device checks
 
-## V2 M7 — QA and release
-- [ ] Unity EditMode/PlayMode runs, device checks, Android AAB, iOS export, store placeholders
+## V2 M7 — QA
+- [x] Headless Unity test script with XML summary (Tools/run_unity_tests.sh)
+- [x] PlayMode suites for scene fidelity and game flow
+- [ ] Unity Test Runner run (editor lock) · [ ] device QA list in RELEASE_CHECKLIST.md · [ ] profiler pass on a midrange phone
+
+## V2 M8 — Release
+- [x] Player settings (name, company, bundle ids, portrait, IL2CPP, ARM64), BuildMenu + headless build script, signing from environment only
+- [x] Release checklist, Play listing placeholder, icon placeholder, art bible
+- [ ] App icon assignment in Player Settings · [ ] upload keystore · [ ] AAB on internal test track · [ ] iOS archive · [ ] privacy policy page

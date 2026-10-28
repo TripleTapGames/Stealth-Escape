@@ -15,4 +15,6 @@
 | 11 | open | ui | TextMeshPro essential resources are not imported in the project, so UI text falls back to the legacy Text component until Shadow Steps ▸ Setup ▸ Import TextMeshPro essentials is run. | Run the menu once; prefabs regenerate with TMP automatically. |
 | 12 | open | release | Privacy policy URL in SettingsScreen is a placeholder; no analytics/ads SDKs are included (offline only). | Replace before store submission. |
 | 13 | info | platform | Haptics use `Handheld.Vibrate()` only (single pulse on capture/win); no fine-grained haptics API. | Acceptable for V1; revisit if a haptics package is added. |
+| 14 | open | settings | ProjectSettings.asset was edited while the Unity Editor had the project open; the editor may write stale values back on exit. | After reopening, verify Player Settings (name, bundle id, portrait, IL2CPP, ARM64) or run Shadow Steps ▸ Build ▸ Apply release player settings. |
+| 15 | open | release | No Android/iOS build has been produced yet; no keystore exists in the environment. | Follow Docs/RELEASE_CHECKLIST.md. |
 
