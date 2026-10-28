@@ -1,0 +1,423 @@
+{
+  "schemaVersion": 2,
+  "coordinateSystem": "origin top-left, x right, y down",
+  "levels": [
+    {
+      "schemaVersion": 2,
+      "id": 101,
+      "name": "Behind the Watcher",
+      "world": 1,
+      "chapter": 0,
+      "board": {
+        "width": 5,
+        "height": 5,
+        "nodeSpacing": 1.0,
+        "edges": "autoCardinalExceptBlocked",
+        "walls": [
+          [
+            2,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            3,
+            2
+          ]
+        ]
+      },
+      "player": {
+        "start": [
+          0,
+          4
+        ]
+      },
+      "objective": {
+        "type": "reachExit",
+        "exit": [
+          4,
+          0
+        ]
+      },
+      "guards": [
+        {
+          "id": "g1",
+          "movementMode": "fixed",
+          "route": [
+            [
+              2,
+              2
+            ]
+          ],
+          "facing": "S",
+          "rotationStep": 1,
+          "visionRangeNodes": 2,
+          "coneAngleDegrees": 90
+        }
+      ],
+      "gadgets": {
+        "smokeCharges": 0,
+        "empCharges": 0
+      },
+      "presentation": {
+        "tutorialHint": "Guards see in a cone. Walls block their sight."
+      }
+    },
+    {
+      "schemaVersion": 2,
+      "id": 102,
+      "name": "Clockwise Window",
+      "world": 1,
+      "chapter": 0,
+      "board": {
+        "width": 5,
+        "height": 5,
+        "nodeSpacing": 1.0,
+        "edges": "autoCardinalExceptBlocked",
+        "walls": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ]
+      },
+      "player": {
+        "start": [
+          0,
+          4
+        ]
+      },
+      "objective": {
+        "type": "reachExit",
+        "exit": [
+          4,
+          0
+        ]
+      },
+      "guards": [
+        {
+          "id": "g1",
+          "movementMode": "rotate",
+          "route": [
+            [
+              2,
+              2
+            ]
+          ],
+          "facing": "S",
+          "rotationStep": 1,
+          "rotateEvery": 1,
+          "visionRangeNodes": 2,
+          "coneAngleDegrees": 90
+        }
+      ],
+      "gadgets": {
+        "smokeCharges": 0,
+        "empCharges": 0
+      },
+      "presentation": {
+        "tutorialHint": "This guard turns clockwise every turn. WAIT for the right moment."
+      }
+    },
+    {
+      "schemaVersion": 2,
+      "id": 103,
+      "name": "Crossing Time",
+      "world": 1,
+      "chapter": 0,
+      "board": {
+        "width": 6,
+        "height": 5,
+        "nodeSpacing": 1.0,
+        "edges": "autoCardinalExceptBlocked",
+        "walls": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            4
+          ]
+        ]
+      },
+      "player": {
+        "start": [
+          0,
+          4
+        ]
+      },
+      "objective": {
+        "type": "reachExit",
+        "exit": [
+          5,
+          0
+        ]
+      },
+      "guards": [
+        {
+          "id": "g1",
+          "movementMode": "pingPong",
+          "route": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              4,
+              2
+            ]
+          ],
+          "facing": "E",
+          "rotationStep": 1,
+          "moveEvery": 1,
+          "visionRangeNodes": 2,
+          "coneAngleDegrees": 90
+        }
+      ],
+      "gadgets": {
+        "smokeCharges": 0,
+        "empCharges": 0
+      },
+      "presentation": {
+        "tutorialHint": "Patrols walk back and forth. Cross behind them."
+      }
+    },
+    {
+      "schemaVersion": 2,
+      "id": 104,
+      "name": "Locked Route",
+      "world": 1,
+      "chapter": 0,
+      "board": {
+        "width": 6,
+        "height": 6,
+        "nodeSpacing": 1.0,
+        "edges": "autoCardinalExceptBlocked",
+        "walls": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            5
+          ]
+        ],
+        "lockedEdges": [
+          [
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              0
+            ]
+          ]
+        ]
+      },
+      "player": {
+        "start": [
+          0,
+          5
+        ]
+      },
+      "objective": {
+        "type": "reachExit",
+        "exit": [
+          5,
+          0
+        ],
+        "key": [
+          3,
+          5
+        ]
+      },
+      "guards": [
+        {
+          "id": "g1",
+          "movementMode": "rotate",
+          "route": [
+            [
+              2,
+              2
+            ]
+          ],
+          "facing": "W",
+          "rotationStep": -1,
+          "rotateEvery": 1,
+          "visionRangeNodes": 2,
+          "coneAngleDegrees": 90
+        }
+      ],
+      "gadgets": {
+        "smokeCharges": 0,
+        "empCharges": 0
+      },
+      "presentation": {
+        "tutorialHint": "The gold path is locked. Pick up the key first."
+      }
+    },
+    {
+      "schemaVersion": 2,
+      "id": 105,
+      "name": "Cloud Corridor",
+      "world": 1,
+      "chapter": 0,
+      "board": {
+        "width": 7,
+        "height": 6,
+        "nodeSpacing": 1.0,
+        "edges": "autoCardinalExceptBlocked",
+        "walls": [
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            6,
+            3
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            6,
+            2
+          ]
+        ]
+      },
+      "player": {
+        "start": [
+          0,
+          5
+        ]
+      },
+      "objective": {
+        "type": "reachExit",
+        "exit": [
+          6,
+          0
+        ]
+      },
+      "guards": [
+        {
+          "id": "g1",
+          "movementMode": "fixed",
+          "route": [
+            [
+              3,
+              1
+            ]
+          ],
+          "facing": "S",
+          "rotationStep": 1,
+          "visionRangeNodes": 2,
+          "coneAngleDegrees": 90
+        },
+        {
+          "id": "g2",
+          "movementMode": "pingPong",
+          "route": [
+            [
+              1,
+              5
+            ],
+            [
+              2,
+              5
+            ],
+            [
+              3,
+              5
+            ]
+          ],
+          "facing": "E",
+          "rotationStep": 1,
+          "moveEvery": 1,
+          "visionRangeNodes": 2,
+          "coneAngleDegrees": 90
+        }
+      ],
+      "gadgets": {
+        "smokeCharges": 1,
+        "empCharges": 0
+      },
+      "presentation": {
+        "tutorialHint": "Smoke hides you for two actions. Guards can still bump into you."
+      }
+    }
+  ]
+}

@@ -277,6 +277,9 @@ namespace ShadowSteps.Core
             return Flood(level, level.Start, level.Key.Value, false) && Flood(level, level.Key.Value, level.Exit, true);
         }
 
+        /// <summary>Can the exit be reached from the start without ever using a locked edge (guards ignored)?</summary>
+        public static bool IsReachableWithoutLocks(LevelDefinition level) => Flood(level, level.Start, level.Exit, false);
+
         private static bool Flood(LevelDefinition level, GridCoord from, GridCoord to, bool locksOpen)
         {
             var seen = new HashSet<GridCoord> { from };

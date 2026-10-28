@@ -58,12 +58,14 @@ Legend: `[x]` done with evidence (see PROGRESS.md) · `[~]` implemented, verific
 - [ ] PlayMode tests: scene loads level, node positions, overlay membership, no movement distance variance
 
 ## V2 M3 — Level schema/editor migration
-- [ ] ShadowStepsLevelEditorWindow: node/wall/cover painting, edge toggle (open/locked/oneWay), route drawing, guard params, start/exit/key/door, charges, validate/solve/metrics, import/export schema 2 with backups
-- [ ] Migration command for legacy packs (writes schema-2 file + backup of the original)
-- [ ] Editor round-trip tests
+- [x] ShadowStepsLevelEditorWindow: node/wall/cover painting, edge toggle (open/locked/oneWay), route drawing, guard params, start/exit/key/door, charges, validate/solve/metrics, one-turn simulation, import/export schema 2 with backups
+- [x] Migration command for legacy packs (Shadow Steps ▸ Levels ▸ Export packaged levels as schema 2, with backup)
+- [x] Editor round-trip tests (LevelAuthoringModelTests over all 25 levels)
+- [~] Click-through of the window in a Unity session (editor lock)
 
 ## V2 M4 — First five tutorial levels
-- [ ] Author exact graphs per LEVEL_DESIGN_PARAMETERS §4; solve; constrained solves; replay tests; no fabricated labels
+- [x] Authored 101–105 as explicit graphs; solved; constrained solves prove WAIT (102), smoke (105), key (104); traces exported and replayed in tests
+- [x] AppServices merges tutorial + legacy packs
 
 ## V2 M5 — Revalidate all 20 legacy levels
 - [ ] Redesign level 18 (guard overlap) and any readability fixes; fresh V2 solver traces → validation_v2.json; document differences

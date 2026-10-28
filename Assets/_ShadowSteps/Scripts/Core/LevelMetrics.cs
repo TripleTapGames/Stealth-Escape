@@ -12,6 +12,8 @@ namespace ShadowSteps.Core
         public int ShortestWithoutSmoke = -1;
         public int ShortestWithoutEmp = -1;
         public int ShortestWithoutGadgets = -1;
+        /// <summary>True when the exit cannot be reached over unlocked edges alone (guards ignored), i.e. the key is structurally required.</summary>
+        public bool KeyRequired;
         public int GuardCycleLcm;
         public int TraversableNodes;
         public int SafeNodesAtStart;
@@ -34,7 +36,7 @@ namespace ShadowSteps.Core
                    " noEmp=" + F(ShortestWithoutEmp) + " noGadgets=" + F(ShortestWithoutGadgets) + " period=" + GuardCycleLcm +
                    " safeNodeRatio=" + SafeNodeRatio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) +
                    " branching=" + AverageBranchingFactor.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) +
-                   " shortestSolutions=" + ShortestSolutionCount + (ShortestSolutionCountCapped ? "+" : "");
+                   " shortestSolutions=" + ShortestSolutionCount + (ShortestSolutionCountCapped ? "+" : "") + (KeyRequired ? " keyRequired" : "");
         }
     }
 
@@ -50,6 +52,7 @@ namespace ShadowSteps.Core
             m.ShortestWithoutSmoke = Len(Solver.Solve(level, new SolverOptions { AllowSmoke = false, MaxStates = maxStates }));
             m.ShortestWithoutEmp = Len(Solver.Solve(level, new SolverOptions { AllowEmp = false, MaxStates = maxStates }));
             m.ShortestWithoutGadgets = Len(Solver.Solve(level, new SolverOptions { AllowSmoke = false, AllowEmp = false, MaxStates = maxStates }));
+            m.KeyRequired = level.HasKey && (level.HasDoor || !LevelValidator.IsReachableWithoutLocks(level));
 
             // Safe-node ratio at the initial state (phase 0, no key): traversable nodes neither occupied nor seen.
             var init = RulesEngine.CreateInitialState(level);

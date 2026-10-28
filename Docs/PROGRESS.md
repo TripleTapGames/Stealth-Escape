@@ -125,3 +125,77 @@ These numbers describe the *migrated* legacy topology (full grid adjacency). The
 **Manual steps for user:** focus Unity so it imports the new scripts; expect zero compile errors; Window ▸ General ▸ Test Runner ▸ EditMode ▸ Run All, expected 169 passed.
 
 **Next milestone:** V2 M2 — top-down orthographic 2D sprite presentation (board/node/edge/character/cone views, portrait camera fit, input, HUD).
+
+## 2026-10-28 — V2 M2 2D orthographic rendering
+
+**Milestone:** V2 M2 — implemented and compile-verified; runtime behaviour verified only by code review and PlayMode test design (Unity run pending, see below).
+
+**Files created**
+- Runtime: BoardLayout.cs, SpriteFactory.cs (procedural original sprites), BoardTheme.cs (ScriptableObject), Views.cs (NodeView, EdgeView, PropView, CharacterView, VisionOverlay), BoardView.cs, TurnAnimationCoordinator.cs, GameSessionController.cs, InputController.cs, CameraFitter.cs, AppServices.cs (LevelCatalog, save), GameSceneComposer.cs (composition root, IGameHud, GameHudFactory)
+- UI: UiBuilder.cs (UiText with TMP/legacy fallback, UiButton, SafeAreaFitter), GameHudController.cs
+- Editor: ShadowStepsSetupMenu.cs (theme asset, HUD prefab, Game scene, build settings, TMP essentials import), LevelValidationMenu.cs (validate / solve + metrics report / schema-2 export with backup)
+- Scenes/Game.unity (hand-written minimal scene: Main Camera + GameSceneComposer), added to EditorBuildSettings
+- Tests/PlayMode/GameScenePlayModeTests.cs
+- Tools/unity_compile_check.py
+
+**Design points**
+- `world(x,y) = origin + (x·spacing, −y·spacing, 0)`; camera is orthographic, rotation identity, looking down −Z. `CameraFitter` fits the board into the band between the HUD bars and inside the safe area for any portrait aspect.
+- Every move tween starts and ends on node centres; the final frame is always `BoardView.SyncToState(result.StateAfter)`, so animation can never author state. Reduced motion snaps.
+- The cone overlay is fed by `RulesEngine.GetAllVisionCells`; previews use the same `RulesEngine.Preview`.
+- HUD and scene are built from code (`BuildHierarchy`, `GameSceneComposer.BuildScene`) and the editor menu saves the same hierarchy as a prefab, so prefab and runtime fallback never diverge.
+- TextMeshPro is used when its essential resources are imported; otherwise legacy `Text` is used so the scene still runs. Menu: Shadow Steps ▸ Setup ▸ Import TextMeshPro essentials.
+
+**Tests run**
+- `python3 -I Tools/unity_compile_check.py`: Core + Data + Runtime + UI + Editor + EditMode + PlayMode sources compile against the Unity 2022.3.62f3 managed DLLs with the project's defines: **0 errors**.
+- `Tools/run_core_tests.sh`: 169 passed (unchanged).
+- Editor log evidence (`~/Library/Logs/Unity/Editor.log`): the open editor imported all asmdefs and compiled ShadowSteps.Core/Data/Tests.EditMode ("Tundra build success") at the M1 state; Runtime/UI/Editor had no scripts at that time.
+
+**Verified in Unity editor?** Not yet for M2 code (editor lock). **Verified on device?** No.
+
+**Manual steps for user**
+1. Focus Unity so it recompiles; Console must show no errors.
+2. Shadow Steps ▸ Setup ▸ Generate All (creates BoardTheme.asset, GameHud.prefab, rewrites Game.unity with references).
+3. Open Assets/_ShadowSteps/Scenes/Game.unity and press Play: level 1 renders top-down; arrows/WASD or swipes move; Space waits; Z undoes; R restarts.
+4. Window ▸ General ▸ Test Runner ▸ PlayMode ▸ Run All (7 tests) and EditMode ▸ Run All (169 tests).
+
+**Next milestone:** V2 M3 level editor + schema migration command.
+
+## 2026-10-28 — V2 M3 Level schema/editor migration
+
+**Milestone:** V2 M3 — implemented; editing rules unit-tested with dotnet; the EditorWindow UI itself is compile-verified only (needs an editor session to click through).
+
+**Files**
+- Editor/ShadowStepsLevelEditorWindow.cs — Shadow Steps ▸ Level Editor: tools Node / Wall / Cover / Edge / Start / Exit / Key / Door / Route, edge cycle none → open → one-way → locked → none, guard list (mode, facing, range, rotation step, moveEvery, rotateEvery, route drawing with right-click to pop), level fields, gadgets, restrictions, Validate, Solve + Metrics (prints necessity flags), one-turn simulation (N/E/S/W/WAIT/SMOKE/EMP/Undo/Reset with the live cone overlay), Import JSON (schema 1 or 2), Export JSON (schema 2, timestamped backup if the file exists), edit undo stack.
+- Data/LevelAuthoringModel.cs — the engine-free editing model behind the window (round trip, CycleEdge, AutoEdges, Resize).
+- Editor/LevelValidationMenu.cs — Validate packaged levels.json; Solve all + write Docs/Reports/solver_metrics.md; Export packaged levels as schema 2 to levels_v2.json with a backup (the original is never replaced).
+- Tests/EditMode/LevelAuthoringModelTests.cs.
+
+**Tests run:** `Tools/run_core_tests.sh` — see M4 entry for the combined count. Round trip of all 25 levels (20 legacy + 5 tutorial) through the authoring model and through JSON preserves topology, walls, guards and the solver's path.
+
+**Manual steps:** open Shadow Steps ▸ Level Editor, Import JSON → Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json, click Validate and Solve + Metrics, step the simulation. Export to a new file and re-import.
+
+## 2026-10-28 — V2 M4 First five tutorial levels
+
+**Milestone:** V2 M4 — complete (gate: five freshly solved levels with exported traces and replay tests).
+
+**Files**
+- Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json (ids 101–105, schema 2, authored as explicit graphs via `autoCardinalExceptBlocked` + walls + one locked edge)
+- Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json (fresh C# solver traces + metrics; produced by `Tools/CoreTestRunner --export-validation`)
+- Tools/level_metrics.sh, Runner `--metrics / --solve / --search / --export-validation` modes (designer tooling, not shipped)
+- Runtime/AppServices.cs loads the tutorial pack before levels.json (catalog = 101–105, then 1–20)
+- Tests/EditMode/TutorialPackTests.cs
+
+**Measured facts (C# solver, every claim below is a test assertion)**
+| id | name | board | guards | shortest | no WAIT | no smoke | key required | shortest solutions | lesson |
+|---|---|---|---|---|---|---|---|---|---|
+| 101 | Behind the Watcher | 5×5 | 1 fixed | 8 | 8 | 8 | — | 5 | cone occlusion: the right-hand route is a visible trap |
+| 102 | Clockwise Window | 5×5 | 1 rotate | 9 | **unsolvable** | 9 | — | 1 | WAIT is strictly required |
+| 103 | Crossing Time | 6×5 | 1 ping-pong | 9 | 9 | 9 | — | 2 | cross the patrol row at the safe phase |
+| 104 | Locked Route | 6×6 | 1 rotate | 12 | 12 | 12 | **yes** (exit only via locked edge) | 2 | key before the locked path |
+| 105 | Cloud Corridor | 7×6 | 1 fixed + 1 ping-pong | 14 | 14 | **unsolvable** | — | 3 | smoke is strictly required (one unavoidable seen node) |
+
+Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 actions" target band in LEVEL_DESIGN_PARAMETERS §3 (they sit in the Easy/Medium bands). Both are kept because the mechanic necessity is proven; shortening them is a playtest decision. Level 102 has a unique shortest solution, which is tight for a tutorial; 101/103 offer 5 and 2.
+
+**Verified in Unity editor?** No (lock). **Verified on device?** No.
+
+**Next milestone:** V2 M5 — revalidate all 20 legacy levels as V2 content (level 18 overlap), export validation_v2.json.

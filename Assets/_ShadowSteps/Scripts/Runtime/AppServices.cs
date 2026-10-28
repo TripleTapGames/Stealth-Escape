@@ -30,6 +30,8 @@ namespace ShadowSteps.Runtime
     public static class AppServices
     {
         public const string LevelsRelativePath = "ShadowSteps/levels.json";
+        /// <summary>Packs loaded in catalog order. Missing optional packs are skipped; duplicate ids are an error.</summary>
+        public static readonly string[] PackRelativePaths = { "ShadowSteps/levels_tutorial_v2.json", "ShadowSteps/levels.json" };
         public const string SaveFileName = "shadowsteps_save.json";
 
         public static LevelCatalog Levels { get; private set; }
@@ -41,6 +43,7 @@ namespace ShadowSteps.Runtime
         public static int PendingLevelId { get; set; }
 
         public static string LevelsPath => Path.Combine(Application.streamingAssetsPath, LevelsRelativePath);
+        public static string PackPath(string relative) => Path.Combine(Application.streamingAssetsPath, relative);
         public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
 
         /// <summary>Synchronous initialisation. Works wherever StreamingAssets is a plain folder (editor, desktop). Returns false on Android (use <see cref="InitializeAsync"/>).</summary>
@@ -50,7 +53,9 @@ namespace ShadowSteps.Runtime
             try
             {
                 if (!File.Exists(LevelsPath)) { LastError = "levels.json not found at " + LevelsPath; return false; }
-                InstallLevels(File.ReadAllText(LevelsPath));
+                var texts = new List<string>();
+                foreach (var rel in PackRelativePaths) { var p = PackPath(rel); if (File.Exists(p)) texts.Add(File.ReadAllText(p)); }
+                InstallLevels(texts);
                 InstallSave();
                 return true;
             }
@@ -66,29 +71,40 @@ namespace ShadowSteps.Runtime
         public static IEnumerator InitializeAsync(Action<bool> done)
         {
             if (IsInitialized) { done?.Invoke(true); yield break; }
-            string uri = LevelsPath.Contains("://") ? LevelsPath : "file://" + LevelsPath;
-            using (var req = UnityWebRequest.Get(uri))
+            var texts = new List<string>();
+            foreach (var rel in PackRelativePaths)
             {
-                yield return req.SendWebRequest();
-                if (req.result != UnityWebRequest.Result.Success)
+                string path = PackPath(rel);
+                string uri = path.Contains("://") ? path : "file://" + path;
+                using (var req = UnityWebRequest.Get(uri))
                 {
-                    LastError = "could not read levels.json: " + req.error;
-                    Debug.LogError("[ShadowSteps] " + LastError);
-                    done?.Invoke(false);
-                    yield break;
+                    yield return req.SendWebRequest();
+                    if (req.result != UnityWebRequest.Result.Success)
+                    {
+                        if (rel == LevelsRelativePath)
+                        {
+                            LastError = "could not read levels.json: " + req.error;
+                            Debug.LogError("[ShadowSteps] " + LastError);
+                            done?.Invoke(false);
+                            yield break;
+                        }
+                        Debug.Log("[ShadowSteps] optional pack " + rel + " not present (" + req.error + ")");
+                        continue;
+                    }
+                    texts.Add(req.downloadHandler.text);
                 }
-                try
-                {
-                    InstallLevels(req.downloadHandler.text);
-                    InstallSave();
-                }
-                catch (Exception e)
-                {
-                    LastError = e.Message;
-                    Debug.LogError("[ShadowSteps] initialisation failed: " + e);
-                    done?.Invoke(false);
-                    yield break;
-                }
+            }
+            try
+            {
+                InstallLevels(texts);
+                InstallSave();
+            }
+            catch (Exception e)
+            {
+                LastError = e.Message;
+                Debug.LogError("[ShadowSteps] initialisation failed: " + e);
+                done?.Invoke(false);
+                yield break;
             }
             done?.Invoke(true);
         }
@@ -105,7 +121,21 @@ namespace ShadowSteps.Runtime
             Debug.Log("[ShadowSteps] loaded " + Levels.Count + " levels (schema " + pack.FormatVersion + ")");
         }
 
-        private static void InstallLevels(string json) => InstallLevels(LevelPackLoader.Parse(json));
+        /// <summary>Parses several pack files and merges them in order into one catalog.</summary>
+        public static void InstallLevels(IReadOnlyList<string> jsonTexts)
+        {
+            var merged = new List<LevelDefinition>();
+            var warnings = new List<string>();
+            int format = 0;
+            foreach (var json in jsonTexts)
+            {
+                var pack = LevelPackLoader.Parse(json);
+                merged.AddRange(pack.Levels);
+                warnings.AddRange(pack.Warnings);
+                format = Math.Max(format, pack.FormatVersion);
+            }
+            InstallLevels(new LevelPack(format, "origin top-left, x right, y down", merged, warnings));
+        }
 
         private static void InstallSave()
         {
