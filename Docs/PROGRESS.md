@@ -306,3 +306,21 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 ## 2026-10-28 — Solvability check under the corrected rule
 
 Exhaustive check: the solver's explored-state counts for the unsolvable levels are 1–1124 against a 250,000 budget, so "unsolvable" is a full-state-space result, not a timeout. Added `--reach` to the runner (`Tools/level_reach.sh`): per level, an ASCII map of every node the player can ever stand on under the level's detection rule plus the fringe nodes where every entry attempt is a capture. Result on the shipped packs: solvable 1, 4, 12, 14, 101; on 13, 16 and 17 the start node is inside a cone at phase 0 (only 1 reachable node); on 8 the two patrol cones cover both exits from the start corner; the other levels dead-end at the first guard crossing. No content changed.
+
+## 2026-10-28 — Level generator and regenerated content for the V2 detection rule (D-026)
+
+**Request:** change the level generator, fix the unsolvable levels, and build a good progression/learning curve under the new rule.
+
+**Files**
+- Tools/CoreTestRunner/Generator.cs (new, `--generate <spec> <out> [--verbose]`): spec-driven randomised search validated by the real engine (validator, solver, constrained solves, uniqueness, reach ratio, guards-matter, door as exit chokepoint, idle penalty). Tools/LevelSpecs/tutorial_v2.json and world1_v2.json (curriculum specs, seed 20261028). Tools/generate_levels.sh (regenerate + re-export). Runner `--reach` from the previous entry is the review tool.
+- Content: levels.json (20 levels: 1 and 4 kept, 18 generated), levels_tutorial_v2.json (101 kept, 102–105 generated), validation_v2.json, validation_tutorial_v2.json (fresh traces, all solvable).
+- Tests: PackagedPackTests rewritten (valid/warning-free, 1 and 4 = reference, traces replay + solver parity, tier averages rise, measured necessity sets, gadget/key placement per curriculum); TutorialPackTests measured cases + hint check; ProgressionTests pars.
+- Docs: LEVEL_CURRICULUM.md (new), DECISIONS D-026, KNOWN_ISSUES #2, #9, #18 resolved, #19 (EMP no-op).
+
+**Measured:** pars 101–105 = 8, 9, 10, 11, 12; levels 1–20 = 8, 10, 9, 8, 10, 11, 11, 12, 12, 12, 11, 12, 13, 12, 15, 15, 16, 14, 20, 21. Tier averages 8.75 → 11 → 11.75 → 13.75 → 17.75. Every generated level has one shortest solution (19 has two). Generation time ≈ 100 s for both packs.
+
+**Tests run:** `Tools/run_core_tests.sh` → 207 passed, 0 failed. `Tools/unity_compile_check.py` → 0 errors. **Verified in Unity editor?** No. **Verified on device?** No.
+
+**Manual steps:** Test Runner EditMode/PlayMode; play 101 → 105 → 1 → 20 in order and note where the par feels wrong; adjust the spec bands and regenerate.
+
+**Next:** decide KNOWN_ISSUES #19 (EMP semantics) and #17 (danger overlay), then device playtest of the curve.

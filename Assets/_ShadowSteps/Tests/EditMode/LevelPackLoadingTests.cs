@@ -24,7 +24,12 @@ namespace ShadowSteps.Tests.EditMode
             var pack = TestPaths.LoadPackagedPack();
             Assert.AreEqual(2, pack.FormatVersion, "shipped levels.json must be schema 2");
             Assert.AreEqual(20, pack.Levels.Count);
-            for (int i = 0; i < 20; i++) { Assert.AreEqual(i + 1, pack.Levels[i].Id); Assert.AreEqual(1, pack.Levels[i].MigratedFromSchema); }
+            for (int i = 0; i < 20; i++)
+            {
+                Assert.AreEqual(i + 1, pack.Levels[i].Id);
+                // Only 1 and 4 are kept from the migrated reference; the rest are generated schema-2 levels (D-026).
+                Assert.AreEqual(i + 1 == 1 || i + 1 == 4 ? 1 : 0, pack.Levels[i].MigratedFromSchema, "level " + (i + 1));
+            }
         }
 
         [TestCase(1, "First Watch", 5, 5, 1)]

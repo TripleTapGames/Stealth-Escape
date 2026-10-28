@@ -65,7 +65,7 @@ The five V2 tutorial levels live in their own schema-2 file (`levels_tutorial_v2
 ## D-019 Authoring model lives in Data, the window only draws
 `LevelAuthoringModel` holds all editing rules (edge cycling, resize, auto edges, conversion) so they run under dotnet tests; the EditorWindow is a thin IMGUI layer. The random wall search in the runner is a designer aid and never ships content automatically: every candidate must be inspected and committed by hand.
 
-## D-020 Shipped pack is schema 2; the reference stays V1
+## D-020 Shipped pack is schema 2; the reference stays V1 (superseded by D-026 for content)
 `Assets/StreamingAssets/ShadowSteps/levels.json` is generated (`--migrate`) from `reference/levels.json` plus the documented level-18 patch and is never hand-edited; `reference/` is immutable V1 evidence. If a legacy level is changed again, the change goes into the exported file via the Level Editor and the diff is recorded in PROGRESS.md and in that level's `conversionNotes`.
 
 ## D-021 Level 18 redesign choice
@@ -89,3 +89,8 @@ The rule is stored on the level (`rules.detection`: `beforeOrAfterGuardMove` | `
 - `--migrate` preserves semantics (a V1 file converts to `afterGuardMove` with a conversion note) and `--migrate … v2rules` opts into the V2 rule.
 
 Consequence: V2 is never more lenient than V1 (tested over the reachable state space of all 20 levels). The V1-era content relied on entering a cone as the guard turned away, so under the V2 rule only levels 1, 4, 12, 14 and tutorial 101 remain solvable; the rest are recorded as unsolvable (`"moves": -1`) in the validation files and carry no par. Content redesign is a separate task (KNOWN_ISSUES #18). The validation export now records unsolvable levels instead of refusing, so the shipped data always states the truth under the active rule.
+
+## D-026 Content is generated from curriculum specs by the C# engine; the V1 reference is history only
+The before-or-after detection rule (D-025) left 20 of 25 levels unsolvable, so the shipped packs are now produced by `Tools/CoreTestRunner/Generator.cs` from `Tools/LevelSpecs/*.json`: per level a size, guard templates (mode, range, cadence, route length), gadget charges, key/door, wall/cover/one-way counts, a required mechanic and a par band. The generator randomises within those ranges (deterministic seed) and keeps the best candidate that the real validator, solver and constrained solves accept, scoring for a unique shortest solution, a par in the upper half of the band, little dead space and no long idles. Levels 1 and 4 are kept from the migrated reference because they already fit the curve; 101 is kept as authored. `reference/levels.json` remains V1 evidence for the engine port and is no longer the source of the shipped content. The curriculum and all measured numbers are in `Docs/LEVEL_CURRICULUM.md`; the tests assert the measured mechanic sets so any regeneration is a deliberate change.
+
+Why a generator rather than hand-authoring: 20 levels under a new rule needed to be provably solvable with proven mechanic necessity and a monotonic curve; the solver is the only reliable judge of that, and the specs make the design intent reviewable. Hand polish still happens in the Level Editor (export, edit, re-validate).

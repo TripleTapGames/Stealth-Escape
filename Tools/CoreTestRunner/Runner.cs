@@ -16,6 +16,7 @@ public static class Runner
         if (args.Length >= 6 && args[0] == "--search") return Search(args[1], int.Parse(args[2]), int.Parse(args[3]), int.Parse(args[4]), args[5], args.Length > 6 ? int.Parse(args[6]) : 10, args.Length > 7 ? int.Parse(args[8 - 1]) : 8);
         if (args.Length >= 2 && args[0] == "--solve") return PrintMetrics(args[1], true);
         if (args.Length >= 2 && args[0] == "--reach") return PrintReachability(args[1]);
+        if (args.Length >= 3 && args[0] == "--generate") return Generator.Run(args[1], args[2], args.Length > 3 && args[3] == "--verbose");
         string filter = args.Length > 0 ? args[0] : null;
         var asm = Assembly.GetExecutingAssembly();
         int passed = 0, failed = 0, skipped = 0;
