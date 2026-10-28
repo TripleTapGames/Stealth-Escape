@@ -1,5 +1,6 @@
 using System.Collections;
 using ShadowSteps.Core;
+using ShadowSteps.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -16,8 +17,10 @@ namespace ShadowSteps.Runtime
         public BoardTheme Theme;
         [Tooltip("HUD prefab (must contain a component implementing IGameHud). Leave empty to build the default HUD at runtime.")]
         public GameObject HudPrefab;
-        [Tooltip("Level to open when the scene is started directly in the editor and no level was requested.")]
-        public int DebugLevelId = 1;
+        [Tooltip("Optional UiPrefabSet asset (ScriptableObject from the UI assembly) with screen/HUD prefabs.")]
+        public ScriptableObject UiPrefabs;
+        [Tooltip("Level to open when the scene is started directly in the editor and no level was requested (0 = first unfinished).")]
+        public int DebugLevelId = 0;
 
         public Camera BoardCamera { get; private set; }
         public BoardView Board { get; private set; }
@@ -44,9 +47,9 @@ namespace ShadowSteps.Runtime
                     yield break;
                 }
             }
-            int id = AppServices.PendingLevelId > 0 ? AppServices.PendingLevelId : (AppServices.Save != null && AppServices.Save.LastPlayedLevelId > 0 ? AppServices.Save.LastPlayedLevelId : DebugLevelId);
+            int id = AppServices.PendingLevelId > 0 ? AppServices.PendingLevelId : DebugLevelId;
             AppServices.PendingLevelId = 0;
-            var level = AppServices.Levels.ById(id) ?? AppServices.Levels.ByIndex(0);
+            var level = (id > 0 ? AppServices.Levels.ById(id) : null) ?? Progression.FirstUnfinished(AppServices.Levels, AppServices.Save);
             OpenLevel(level);
         }
 
@@ -75,6 +78,7 @@ namespace ShadowSteps.Runtime
             var boardGo = new GameObject("Board");
             Board = boardGo.AddComponent<BoardView>();
             Board.Theme = Theme != null ? Theme : BoardTheme.CreateRuntimeDefault();
+            Board.HighContrastCones = AppServices.Save != null && AppServices.Save.Settings.ColorBlindAssist;
             BoardCamera.backgroundColor = Board.Theme.Background;
 
             var fitter = BoardCamera.GetComponent<CameraFitter>() ?? BoardCamera.gameObject.AddComponent<CameraFitter>();
@@ -109,7 +113,14 @@ namespace ShadowSteps.Runtime
                 if (factory != null) Hud = factory(this);
             }
             Hud?.Bind(Session);
+            GameSceneHooks.OnComposed?.Invoke(this);
         }
+    }
+
+    /// <summary>Lets higher-level assemblies (UI flow) attach to every composed Game scene without a Runtime→UI reference.</summary>
+    public static class GameSceneHooks
+    {
+        public static System.Action<GameSceneComposer> OnComposed;
     }
 
     /// <summary>What the Game scene needs from any HUD implementation. The UI assembly registers a factory for the default HUD.</summary>

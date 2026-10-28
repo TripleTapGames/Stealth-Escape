@@ -12,3 +12,7 @@
 | 8 | resolved | content | The shipped 20 levels now carry fresh V2 traces in `validation_v2.json` (C# solver) replayed by PackagedPackTests. `reference/validation.json` remains V1-only evidence. | Keep `validation_v2.json` regenerated whenever levels.json changes. |
 | 9 | design | content | Tutorial levels 104 (12 moves) and 105 (14 moves) exceed the "Tutorial 4–9 actions" target band; 102 has a unique shortest solution. Mechanic necessity is proven; pacing is a playtest decision. | Revisit after human playtest; shorten with the level editor and re-export traces. |
 | 10 | info | tooling | The random wall search (`--search`) keeps authored edges and only adds walls; it cannot propose new one-way/locked edges or guard routes. | Author those by hand in the Level Editor. |
+| 11 | open | ui | TextMeshPro essential resources are not imported in the project, so UI text falls back to the legacy Text component until Shadow Steps ▸ Setup ▸ Import TextMeshPro essentials is run. | Run the menu once; prefabs regenerate with TMP automatically. |
+| 12 | open | release | Privacy policy URL in SettingsScreen is a placeholder; no analytics/ads SDKs are included (offline only). | Replace before store submission. |
+| 13 | info | platform | Haptics use `Handheld.Vibrate()` only (single pulse on capture/win); no fine-grained haptics API. | Acceptable for V1; revisit if a haptics package is added. |
+

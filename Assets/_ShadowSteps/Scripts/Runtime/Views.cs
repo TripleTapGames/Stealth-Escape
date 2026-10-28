@@ -254,6 +254,15 @@ namespace ShadowSteps.Runtime
             Clear();
         }
 
+        private Sprite _sprite;
+
+        /// <summary>Changes the cell glyph (e.g. hatched cross for high-contrast mode). Applies to subsequent Show calls.</summary>
+        public void SetSprite(Sprite sprite)
+        {
+            _sprite = sprite;
+            foreach (var sr in _pool) sr.sprite = sprite;
+        }
+
         public void Show(IEnumerable<GridCoord> cells, Color color)
         {
             Clear();
@@ -277,7 +286,7 @@ namespace ShadowSteps.Runtime
         private SpriteRenderer Acquire()
         {
             foreach (var sr in _pool) if (!sr.gameObject.activeSelf) return sr;
-            var n = ViewUtil.MakeSprite(transform, "Cell", _theme.ConeCellOrDefault, _theme.Cone, 1f, BoardSorting.Cone);
+            var n = ViewUtil.MakeSprite(transform, "Cell", _sprite != null ? _sprite : _theme.ConeCellOrDefault, _theme.Cone, 1f, BoardSorting.Cone);
             _pool.Add(n);
             return n;
         }

@@ -87,6 +87,13 @@ namespace ShadowSteps.UI
             return ui;
         }
 
+        /// <summary>Removes a component correctly both in play mode and while generating prefabs in the editor.</summary>
+        public static void RemoveComponent(Component c)
+        {
+            if (c == null) return;
+            if (Application.isPlaying) Object.Destroy(c); else Object.DestroyImmediate(c);
+        }
+
         public static HorizontalLayoutGroup HorizontalRow(RectTransform rt, float spacing = 16f, float padding = 16f)
         {
             var layout = rt.gameObject.AddComponent<HorizontalLayoutGroup>();

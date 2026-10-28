@@ -217,3 +217,24 @@ Observations (design, not proven fun): 104 and 105 exceed the "Tutorial 4–9 ac
 **Measured V2 facts for the shipped 20** (same numbers as the M1 table, which was computed on the equivalent topology; level 18 re-measured after redesign): WAIT required on 2, 5, 9, 10, 17, 20; smoke required on 11, 17, 19, 20; EMP never required; key structurally required on 9, 10, 13, 16, 19, 20 (door levels).
 
 **Verified in Unity editor?** No (lock). **Next milestone:** V2 M6 presentation and UX (menus, level select, results, settings, audio, onboarding).
+
+## 2026-10-28 — V2 M6 Presentation and UX
+
+**Milestone:** V2 M6 — implemented and compile-verified; behaviour covered by PlayMode tests that still need a Unity run.
+
+**Files**
+- UI: UIScreen.cs (UIScreen base + ScreenRouter stack with modal input locking and reduced-motion fades), Screens.cs (UiPrefabSet, HomeScreen, LevelSelectScreen, SettingsScreen, PauseScreen, ResultsScreen, FailureScreen, OnboardingScreen — each self-builds via BuildHierarchy and is also saved as a prefab by the setup menu), GameFlowController.cs (session events → results/failure/onboarding, win recording, next level, audio/haptics, pause), MenuSceneComposer.cs (Home scene root), GameHudController.cs (+ pause button)
+- Runtime: BootstrapController.cs (loads packs/pars/save then opens Home; visible error on failure), AudioService.cs (procedural original SFX: footstep, tick, rotate, gadget, alert, unlock, clear, tap, error; generated ambient loop; toggles), HapticsService, InputController resume guard (swallows input for 0.35 s after focus/pause), BoardView high-contrast cone mode, GameSceneHooks (UI attaches to any composed Game scene)
+- Data: Progression.cs (LevelCatalog, Progression: unlock by catalog order, stars = par / par+2 / any, RecordWin; ParTable from validation files)
+- Scenes: Bootstrap.unity, Home.unity (hand-written minimal scenes; setup menu regenerates them with prefab references); build settings Bootstrap → Home → Game
+- Tests: ProgressionTests (EditMode), GameFlowPlayModeTests (win → results + lock, capture → failure → undo, pause lock)
+
+**Flow:** Bootstrap → Home (Play = first unfinished level, Level Select grid with lock/complete/stars/best, Settings modal) → Game (HUD, pause, results with stars/par/next, failure with undo/retry, first-time onboarding card from the level hint + control hint, settings in pause). Settings persist immediately (music, SFX, haptics, reduced motion, high-contrast cones); the privacy policy button opens a placeholder URL.
+
+**Tests run:** `Tools/run_core_tests.sh` → 191 passed. `Tools/unity_compile_check.py` → 0 errors.
+
+**Verified in Unity editor?** No (lock). **Verified on device?** No.
+
+**Manual steps:** Shadow Steps ▸ Setup ▸ Generate All; (optional) Setup ▸ Import TextMeshPro essentials for TMP text; open Bootstrap.unity and press Play; walk Home → Level Select → level 101 → win → Results → Next; Test Runner PlayMode (10 tests).
+
+**Next:** V2 M7 QA/optimisation and release configuration.

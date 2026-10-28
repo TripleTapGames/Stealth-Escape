@@ -9,19 +9,6 @@ using UnityEngine.Networking;
 
 namespace ShadowSteps.Runtime
 {
-    /// <summary>Read-only access to the loaded level pack plus lookups by id/index.</summary>
-    public sealed class LevelCatalog
-    {
-        public LevelPack Pack { get; }
-        public IReadOnlyList<LevelDefinition> Levels => Pack.Levels;
-        public int Count => Pack.Levels.Count;
-        public LevelCatalog(LevelPack pack) { Pack = pack; }
-        public LevelDefinition ById(int id) => Pack.FindById(id);
-        public LevelDefinition ByIndex(int index) => index >= 0 && index < Count ? Pack.Levels[index] : null;
-        public int IndexOf(int id) => Pack.IndexOf(id);
-        public LevelDefinition NextAfter(int id) { int i = IndexOf(id); return i >= 0 ? ByIndex(i + 1) : null; }
-    }
-
     /// <summary>
     /// Process-wide services (level catalog, save data). Initialised once by the Bootstrap flow or lazily by any scene
     /// that is started directly in the editor. Kept deliberately small: no DI container, just a static entry point that
@@ -39,8 +26,14 @@ namespace ShadowSteps.Runtime
         public static SaveData Save { get; private set; }
         public static bool IsInitialized => Levels != null && Save != null;
         public static string LastError { get; private set; }
-        /// <summary>Level id the Game scene should open next (set by menus; 0 = use the save's last played level).</summary>
+        /// <summary>Level id the Game scene should open next (set by menus; 0 = first unfinished level).</summary>
         public static int PendingLevelId { get; set; }
+        /// <summary>Which menu screen the Home scene should open (null = Home).</summary>
+        public static string PendingMenu { get; set; }
+        public const string MenuLevelSelect = "levels";
+        /// <summary>Solver par per level from the validation files (empty when the files are missing).</summary>
+        public static ParTable Pars { get; private set; } = new ParTable();
+        public static readonly string[] ValidationRelativePaths = { "ShadowSteps/validation_tutorial_v2.json", "ShadowSteps/validation_v2.json" };
 
         public static string LevelsPath => Path.Combine(Application.streamingAssetsPath, LevelsRelativePath);
         public static string PackPath(string relative) => Path.Combine(Application.streamingAssetsPath, relative);
@@ -56,6 +49,9 @@ namespace ShadowSteps.Runtime
                 var texts = new List<string>();
                 foreach (var rel in PackRelativePaths) { var p = PackPath(rel); if (File.Exists(p)) texts.Add(File.ReadAllText(p)); }
                 InstallLevels(texts);
+                var pars = new List<string>();
+                foreach (var rel in ValidationRelativePaths) { var p = PackPath(rel); if (File.Exists(p)) pars.Add(File.ReadAllText(p)); }
+                InstallPars(pars);
                 InstallSave();
                 return true;
             }
@@ -94,9 +90,20 @@ namespace ShadowSteps.Runtime
                     texts.Add(req.downloadHandler.text);
                 }
             }
+            var parTexts = new List<string>();
+            foreach (var rel in ValidationRelativePaths)
+            {
+                string path = PackPath(rel);
+                using (var req = UnityWebRequest.Get(path.Contains("://") ? path : "file://" + path))
+                {
+                    yield return req.SendWebRequest();
+                    if (req.result == UnityWebRequest.Result.Success) parTexts.Add(req.downloadHandler.text);
+                }
+            }
             try
             {
                 InstallLevels(texts);
+                InstallPars(parTexts);
                 InstallSave();
             }
             catch (Exception e)
@@ -137,6 +144,17 @@ namespace ShadowSteps.Runtime
             InstallLevels(new LevelPack(format, "origin top-left, x right, y down", merged, warnings));
         }
 
+        public static void InstallPars(IReadOnlyList<string> validationJsonTexts)
+        {
+            var table = new ParTable();
+            foreach (var json in validationJsonTexts)
+            {
+                try { table.AddFromValidationJson(json); }
+                catch (Exception e) { Debug.LogWarning("[ShadowSteps] validation file ignored: " + e.Message); }
+            }
+            Pars = table;
+        }
+
         private static void InstallSave()
         {
             SaveRepo = new SaveRepository(SavePath);
@@ -153,7 +171,7 @@ namespace ShadowSteps.Runtime
         /// <summary>Tests only: discard everything so the next scene re-initialises.</summary>
         public static void ResetForTests()
         {
-            Levels = null; SaveRepo = null; Save = null; LastError = null; PendingLevelId = 0;
+            Levels = null; SaveRepo = null; Save = null; LastError = null; PendingLevelId = 0; PendingMenu = null; Pars = new ParTable();
         }
     }
 }

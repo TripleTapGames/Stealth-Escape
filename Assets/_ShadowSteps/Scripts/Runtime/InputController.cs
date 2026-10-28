@@ -30,11 +30,25 @@ namespace ShadowSteps.Runtime
         private bool _pointerStartedOverUi;
         private Vector2 _pointerStart;
 
+        private float _ignoreUntil;
+
         private float Dpi => Screen.dpi > 0 ? Screen.dpi : 160f;
+
+        /// <summary>After the app returns from background, swallow input briefly so the resume tap never becomes a move.</summary>
+        private void OnApplicationPause(bool paused)
+        {
+            if (!paused) { _ignoreUntil = Time.unscaledTime + 0.35f; _pointerDown = false; _gestureConsumed = false; }
+        }
+
+        private void OnApplicationFocus(bool focus)
+        {
+            if (focus) { _ignoreUntil = Time.unscaledTime + 0.35f; _pointerDown = false; _gestureConsumed = false; }
+        }
 
         private void Update()
         {
             if (Session == null) return;
+            if (Time.unscaledTime < _ignoreUntil) return;
             HandlePointer();
             if (KeyboardEnabled) HandleKeyboard();
         }

@@ -13,6 +13,8 @@ namespace ShadowSteps.Runtime
     {
         [Tooltip("Optional. Leave empty to use the runtime default theme.")]
         public BoardTheme Theme;
+        [Tooltip("Accessibility: draw cones with a hatched glyph and stronger alpha instead of colour alone.")]
+        public bool HighContrastCones;
 
         public LevelDefinition Level { get; private set; }
         public BoardLayout Layout { get; private set; }
@@ -159,7 +161,10 @@ namespace ShadowSteps.Runtime
         /// <summary>Cone overlay for the current state, straight from <see cref="RulesEngine.GetAllVisionCells"/>.</summary>
         public void ShowVision(GameState state)
         {
-            Vision.Show(RulesEngine.GetAllVisionCells(Level, state), ActiveTheme.Cone);
+            var color = ActiveTheme.Cone;
+            if (HighContrastCones) color.a = Mathf.Max(color.a, 0.75f);
+            Vision.SetSprite(HighContrastCones ? SpriteFactory.Cross() : ActiveTheme.ConeCellOrDefault);
+            Vision.Show(RulesEngine.GetAllVisionCells(Level, state), color);
         }
 
         /// <summary>Shows where guards will stand/look after the given action (ghost tokens + preview cones). Same rules as the game.</summary>

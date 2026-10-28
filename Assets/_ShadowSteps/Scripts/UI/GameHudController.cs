@@ -23,6 +23,7 @@ namespace ShadowSteps.UI
         public UiButton EmpButton;
         public UiButton UndoButton;
         public UiButton RestartButton;
+        public UiButton PauseButton;
         public RectTransform TopBar;
         public RectTransform BottomBar;
 
@@ -52,9 +53,12 @@ namespace ShadowSteps.UI
             TopBar = UiBuilder.CreatePanel("TopBar", safe, UiBuilder.PanelColor);
             UiBuilder.Anchor(TopBar, 0f, 0.88f, 1f, 1f);
             TitleText = UiBuilder.CreateText("Title", TopBar, "Level", 44f, TextAnchor.MiddleLeft, true);
-            UiBuilder.Anchor(TitleText.Rect, 0.03f, 0.5f, 0.7f, 1f);
+            UiBuilder.Anchor(TitleText.Rect, 0.03f, 0.5f, 0.6f, 1f);
             TurnText = UiBuilder.CreateText("Turns", TopBar, "Turn 0", 40f, TextAnchor.MiddleRight);
-            UiBuilder.Anchor(TurnText.Rect, 0.6f, 0.5f, 0.97f, 1f);
+            UiBuilder.Anchor(TurnText.Rect, 0.5f, 0.5f, 0.84f, 1f);
+            PauseButton = UiBuilder.CreateButton("Pause", TopBar, "II", UiBuilder.ButtonColor, 40f);
+            UiBuilder.RemoveComponent(PauseButton.GetComponent<LayoutElement>());
+            UiBuilder.Anchor((RectTransform)PauseButton.transform, 0.86f, 0.52f, 0.98f, 0.98f);
             KeyText = UiBuilder.CreateText("Key", TopBar, "", 32f, TextAnchor.MiddleLeft);
             UiBuilder.Anchor(KeyText.Rect, 0.03f, 0f, 0.5f, 0.5f);
             MessageText = UiBuilder.CreateText("Message", TopBar, "", 32f, TextAnchor.MiddleRight);
@@ -78,6 +82,9 @@ namespace ShadowSteps.UI
             UndoButton.SetLabel("UNDO"); RestartButton.SetLabel("RESTART");
         }
 
+        /// <summary>Raised when the player taps the pause button; the flow controller decides what to show.</summary>
+        public event System.Action PauseRequested;
+
         public void Bind(GameSessionController session)
         {
             if (_session != null) Unbind();
@@ -93,6 +100,7 @@ namespace ShadowSteps.UI
             EmpButton.Button.onClick.AddListener(() => _session.TrySubmit(GameAction.Emp));
             UndoButton.Button.onClick.AddListener(() => _session.Undo());
             RestartButton.Button.onClick.AddListener(() => _session.Restart());
+            PauseButton.Button.onClick.AddListener(() => PauseRequested?.Invoke());
             if (_session.HasLevel) { OnLevelLoaded(_session.Level); OnStateChanged(_session.State); }
         }
 
@@ -104,7 +112,7 @@ namespace ShadowSteps.UI
             _session.ActionRejected -= OnActionRejected;
             _session.LevelWon -= OnLevelWon;
             _session.PlayerCaptured -= OnCaptured;
-            foreach (var b in new[] { WaitButton, SmokeButton, EmpButton, UndoButton, RestartButton }) b.Button.onClick.RemoveAllListeners();
+            foreach (var b in new[] { WaitButton, SmokeButton, EmpButton, UndoButton, RestartButton, PauseButton }) b.Button.onClick.RemoveAllListeners();
         }
 
         private void OnDestroy() { if (_session != null) Unbind(); }

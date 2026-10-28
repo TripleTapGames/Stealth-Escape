@@ -70,3 +70,12 @@ The five V2 tutorial levels live in their own schema-2 file (`levels_tutorial_v2
 
 ## D-021 Level 18 redesign choice
 Among the measured variants, moving the patrol to row 1 was the only one that removed the overlap *and* preserved the original 14-move solution and gadget/WAIT profile. Visual readability of the top row (rotating guard alone) improves as a side effect.
+
+## D-022 Unlocking by catalog order
+Unlock state is derived from completion records and the catalog order (`Progression.IsUnlocked`): a level is open when it is first in the catalog or its predecessor is completed. `SaveData.HighestUnlockedLevelId` is still written for compatibility but no longer decides anything, so packs can be reordered without migrating saves.
+
+## D-023 Screens self-build; prefabs are generated from the same code
+Every screen implements `BuildHierarchy()`; `UiPrefabSet.Create<T>` instantiates the prefab when assigned and otherwise builds the screen at runtime. The setup menu generates the prefabs by calling the same method, so designers can restyle prefabs in the editor while the fallback keeps the game runnable without any generated assets (important for tests and for a fresh checkout).
+
+## D-024 Procedural audio until licensed assets exist
+`AudioService` synthesises short tones and an ambient pad at startup (original, licence-free). Clips are addressed by the `Sfx` enum so real recordings can replace them later without touching callers. Audio never influences simulation.

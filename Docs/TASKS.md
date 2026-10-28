@@ -73,7 +73,12 @@ Legend: `[x]` done with evidence (see PROGRESS.md) · `[~]` implemented, verific
 - [ ] Readability pass on device (needs Unity/device session)
 
 ## V2 M6 — Presentation and UX
-- [ ] Home/Level Select/Results/Pause/Settings prefabs, onboarding, SFX, haptics toggles, safe area, resume handling
+- [x] Home / Level Select / Settings / Pause / Results / Failure / Onboarding screens (self-building + prefab generation), ScreenRouter with modal input lock
+- [x] Bootstrap + Home scenes, build order Bootstrap → Home → Game
+- [x] Progression (catalog-order unlock, stars vs par from validation files), win recording + persistence
+- [x] Procedural SFX + ambient loop, music/SFX/haptics/reduced-motion/high-contrast toggles persisted
+- [x] Resume guard on input; safe-area fitting on all screens
+- [~] Unity run of PlayMode flow tests; device checks
 
 ## V2 M7 — QA and release
 - [ ] Unity EditMode/PlayMode runs, device checks, Android AAB, iOS export, store placeholders
