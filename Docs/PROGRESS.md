@@ -363,3 +363,7 @@ Exhaustive check: the solver's explored-state counts for the unsolvable levels a
 
 **Next:** Unity run and device QA (handover M5/M6 acceptance), then retire the V2 core/packs (D-027, KNOWN_ISSUES #23/#25).
 
+## 2026-10-29 — First Unity run: Home PLAY button dead (fixed)
+
+Editor log of the user's Play attempt: Bootstrap loaded 30 stages and the save, opened Home, no errors, then nothing. Cause: the rewritten `MenuSceneComposer` no longer created an `EventSystem`, so uGUI received no taps in the Home scene. Fix: `UiBuilder.CreateCanvas` now calls `EnsureEventSystem()` (every canvas, every scene) and `MenuSceneComposer` calls it too; `MenuScenePlayModeTests` asserts the EventSystem and the wired PLAY action. Compile check 0 errors. Unity Play-mode verification still pending on the user's side.
+
