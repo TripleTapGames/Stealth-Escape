@@ -29,6 +29,7 @@ namespace ShadowSteps.UI
 
         public void Build()
         {
+            UiBuilder.EnsureEventSystem(); // without it no button in the menu receives taps (the PLAY button was dead)
             var canvas = UiBuilder.CreateCanvas("MenuCanvas", 10);
             Router = canvas.gameObject.AddComponent<ScreenRouter>();
             Router.ReducedMotion = AppServices.Save != null && AppServices.Save.Settings.ReducedMotion;

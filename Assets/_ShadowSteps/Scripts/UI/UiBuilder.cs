@@ -20,6 +20,7 @@ namespace ShadowSteps.UI
 
         public static Canvas CreateCanvas(string name, int sortOrder = 0)
         {
+            EnsureEventSystem();
             var go = new GameObject(name);
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -31,6 +32,16 @@ namespace ShadowSteps.UI
             scaler.matchWidthOrHeight = 0.5f;
             go.AddComponent<GraphicRaycaster>();
             return canvas;
+        }
+
+        /// <summary>uGUI only receives taps/clicks through an EventSystem; every canvas builder calls this so no scene can forget it.</summary>
+        public static void EnsureEventSystem()
+        {
+            if (!Application.isPlaying) return;
+            if (UnityEngine.EventSystems.EventSystem.current != null || Object.FindObjectOfType<UnityEngine.EventSystems.EventSystem>() != null) return;
+            var es = new GameObject("EventSystem");
+            es.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         }
 
         public static RectTransform CreateRect(string name, Transform parent)
