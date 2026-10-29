@@ -1,0 +1,236 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/><title>Shadow Steps — 30-Level Playtest — Movement Direction Update</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#123b54;background:#e9f9f6;font-size:14px}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% -16%,#d2fff0 0%,#e8f6fb 62%,#e4eef7 100%)}button{font:inherit;cursor:pointer;border:0}button:disabled{cursor:default;opacity:.43}.wrap{max-width:700px;margin:auto;min-height:100dvh;padding:14px clamp(10px,3vw,24px) 18px;display:flex;flex-direction:column;gap:10px}.top{display:flex;justify-content:space-between;gap:8px;align-items:center}.logo{font-size:clamp(21px,5vw,31px);font-weight:1000;letter-spacing:-1.4px;color:#165a93;text-shadow:0 2px 0 #fff}.logo span{color:#39b69c}.tag{color:#39819a;font-size:11px;font-weight:800;letter-spacing:1px}.btn{background:white;color:#205477;padding:9px 13px;border-radius:13px;font-weight:800;border:1px solid #c4e4e8;box-shadow:0 3px 0 #d1e4e6}.btn:active,.act:active{transform:translateY(2px);box-shadow:none}.btn.primary{background:#267ccc;color:#fff;border-color:#267ccc;box-shadow:0 3px 0 #11508a}.levelhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.name{font-size:20px;font-weight:900;letter-spacing:-.4px;color:#174867}.lesson{color:#5e8697;font-size:12px;line-height:1.45;min-height:30px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.stat{border:1px solid #b9dde3;border-radius:13px;background:#ffffffcc;padding:9px 4px;text-align:center;box-shadow:0 3px 0 #d0e6e9}.stat small{font-size:10px;font-weight:800;color:#6590a1;display:block;letter-spacing:.3px}.stat b{font-size:21px;color:#20547d;letter-spacing:-.5px}.stat.star b{color:#bd801f}.ribbon{display:flex;gap:8px;min-height:23px;justify-content:space-between;align-items:center;color:#5b8295;font-size:12px;font-weight:750}.ghost{color:#24877e}.alarm{background:#ffdb9b;color:#9b490a;border-radius:9px;padding:3px 10px;font-weight:900}.board-shell{background:#bde9e5;border:2px solid #8bbfc7;box-shadow:0 7px 0 #a5ced4,0 14px 30px #40869a23;border-radius:20px;display:flex;align-items:center;justify-content:center;flex:1;min-height:180px;padding:10px;position:relative;overflow:hidden}.board{display:block;max-width:100%;max-height:min(57dvh,590px);aspect-ratio:var(--aspect);width:auto;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 3px 3px #386a7d26)}.notice{text-align:center;min-height:37px;padding:8px 10px;background:#ffffffb8;border:1px solid #c5e6e7;color:#2b7086;border-radius:11px;font-size:12px;font-weight:750;display:flex;align-items:center;justify-content:center}.direction-legend{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;font-size:10px;font-weight:700;color:#507a8e}.direction-badge{background:#0e607b;color:white;padding:3px 6px;border-radius:6px;font-weight:850}.turn-badge{color:#af6532;font-weight:950;font-size:15px;margin-left:5px}.notice.warning{background:#ffe9db;border-color:#f5c1ab;color:#a14237}.notice.good{background:#dcf9e8;color:#26775a;border-color:#b2e9c3}.actions{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:9px}.act{display:flex;align-items:center;justify-content:center;flex-direction:column;border:1px solid #b2d6dc;background:#fff;border-radius:16px;padding:11px 6px;min-height:62px;box-shadow:0 4px 0 #bfd6dc;color:#245d7e;font-size:13px;font-weight:850}.act b{font-size:23px;line-height:26px}.act.wait{background:linear-gradient(180deg,#48a4e2,#257ccb);border-color:#267ab5;color:#fff;box-shadow:0 4px 0 #145b9a}.act.active{border:2px solid #27b69f;background:#d2fff3;box-shadow:0 4px 0 #2eaf9b}.footer{display:flex;justify-content:space-between;gap:9px;align-items:center;font-size:11px;color:#618c9d}.shade{position:fixed;inset:0;background:#0b3554aa;z-index:8;display:none;align-items:center;justify-content:center;padding:15px;backdrop-filter:blur(5px)}.shade.show{display:flex}.modal{background:#f0fbfa;border:2px solid #b5e5e6;border-radius:24px;box-shadow:0 15px 0 #173d5052,0 26px 70px #093c5950;max-width:550px;width:100%;max-height:85dvh;overflow:auto;padding:20px}.modal h2{margin:0 0 7px;font-size:25px;color:#1e587b}.modal p{color:#62889b;line-height:1.5;margin:4px 0 15px}.picker{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:13px 0}.lvbtn{border:1px solid #b3d5d9;background:#fff;border-radius:11px;padding:12px 2px;font-weight:850;color:#275c77}.lvbtn.active{background:#287fc2;color:#fff;border-color:#287fc2}.lvbtn strong{display:block;font-size:11px}.lvbtn span{display:block;font-size:10px;opacity:.7}.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.btnrow .btn{flex:1}.small{font-size:11px;color:#7195a5}.testbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.testlabel{font-size:10px;font-weight:800;color:#6896a2;letter-spacing:.4px}.fade{animation:fade .19s ease-out}@keyframes fade{from{opacity:.35;transform:scale(.98)}to{opacity:1;transform:scale(1)}}@media(max-height:670px){.wrap{gap:6px;padding-top:8px;padding-bottom:6px}.stat{padding:5px}.stat b{font-size:17px}.act{padding:6px;min-height:53px}.board{max-height:49dvh}.lesson{min-height:0}}@media(min-width:800px){.wrap{max-width:600px}}
+</style></head>
+<body><main class="wrap"><div class="top"><div><div class="logo">SHADOW <span>STEPS</span></div><div class="tag">INTERACTIVE PLAYTEST · 5 FTUE + 25 LEVELS</div></div><button class="btn" id="pickerOpen">☷ Levels</button></div>
+<div class="levelhead"><div><div id="levelName" class="name"></div><div class="lesson" id="lesson"></div></div><button class="btn" id="restart" title="Retry this level">↻ Retry</button></div>
+<div class="stats"><div class="stat"><small>ACTIONS</small><b id="actions">0</b></div><div class="stat star"><small>⭐⭐⭐ TARGET</small><b id="three">≤ 0</b></div><div class="stat star"><small>⭐⭐ TARGET</small><b id="two">≤ 0</b></div></div>
+<div class="ribbon"><span id="ghost">Ready to escape</span><span id="alarm"></span></div>
+<div class="board-shell"><svg id="board" class="board" role="img" aria-label="Playable turn-based stealth puzzle board"></svg></div>
+<div class="notice" id="notice">Tap a neighboring node or swipe anywhere on the board.</div><div class="direction-legend"><span class="direction-badge">→ NEXT</span> Moving guard’s next step <span class="turn-badge">↻ / ↺</span> Rotating guard/camera direction <span class="turn-badge">⇆</span> Sweeping camera</div>
+<div class="actions"><button class="act" id="smoke"><b>☁</b><span>SMOKE <span id="smokeCount">0</span></span></button><button class="act wait" id="wait"><b>⌛</b><span>WAIT</span></button><button class="act" id="emp"><b>ϟ</b><span>EMP <span id="empCount">0</span></span></button></div>
+<div class="testbar"><span class="testlabel">PLAYTEST CONTROLS (NOT RELEASE UI)</span><div><button class="btn" id="undo" title="Developer testing only">↶ Test Undo</button> <button class="btn" id="resetAll" title="Reset all progress">Reset</button></div></div>
+<div class="footer"><span>Tap / swipe = 1 step · Hold = preview</span><span id="progress">0 / 30</span></div></main>
+<div class="shade" id="pickerShade"><div class="modal"><h2>Choose a level</h2><p>All 30 levels are unlocked here for testing. The release game will use sequential progression.</p><div class="small">FIRST-TIME USER EXPERIENCE</div><div class="picker" id="ftuePicker"></div><div class="small">MAIN LEVELS</div><div class="picker" id="mainPicker"></div><div class="btnrow"><button class="btn" id="pickerClose">Close</button></div></div></div>
+<div class="shade" id="endShade"><div class="modal" style="text-align:center"><h2 id="endTitle"></h2><p id="endMessage"></p><div id="endStars" style="font-size:35px;margin:10px 0"></div><div class="btnrow"><button class="btn" id="endRetry">↻ Retry</button><button class="btn primary" id="endNext">Next Level →</button></div><div class="btnrow"><button class="btn" id="endLevels">Choose Level</button></div></div></div>
+<script>
+/* ENGINE */
+const DIRS=[[0,-1],[1,0],[0,1],[-1,0]], DN=['N','E','S','W'];
+function at(p){return p[0]+','+p[1]}
+function same(a,b){return a[0]===b[0]&&a[1]===b[1]}
+function eq(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+function edgeID(a,b){return [at(a),at(b)].sort().join('|')}
+function inside(L,p){return p[0]>=0&&p[0]<L.w&&p[1]>=0&&p[1]<L.h}
+function floor(L,p){return inside(L,p)&&L.rows[p[1]][p[0]]!=='#'}
+function wall(L,p){return !floor(L,p)}
+function add(p,d){return [p[0]+DIRS[d][0],p[1]+DIRS[d][1]]}
+function camDir(c,t){const first=DN.indexOf(c.dir);if(c.type==='rot')return (first+(c.ccw?-t:t)%4+4*1000)%4;if(c.type==='sweep')return Math.floor(t/2)%2? (first+(c.ccw?-1:1)+4)%4:first;return first}
+function guardAt(g,t){if(g.type==='static'||g.type==='rot')return {p:g.at,dir:g.type==='rot'?(DN.indexOf(g.dir)+(g.ccw?-t:t)%4+4000)%4:DN.indexOf(g.dir)};
+ let route=g.path;let n=route.length, period=g.type==='loop'?n:2*(n-1), k=(t+g.offset)%period;
+ let current=g.type==='loop'?k:(k<n?k:period-k), prevk=(t+g.offset-1+period)%period, prev=g.type==='loop'?prevk:(prevk<n?prevk:period-prevk), nextk=(t+g.offset+1)%period,next=g.type==='loop'?nextk:(nextk<n?nextk:period-nextk);
+ let p=route[current],from=route[prev];let d=DIRS.findIndex(q=>p[0]-from[0]===q[0]&&p[1]-from[1]===q[1]);if(d<0){let q=route[next];d=DIRS.findIndex(v=>q[0]-p[0]===v[0]&&q[1]-p[1]===v[1]);}return {p,dir:Math.max(0,d)};
+}
+function cellsAlong(a,b){return null}
+// Conservative segment/rectangle intersection: touching an edge or corner counts as blocked.
+function hitsRect(a,b,x,y){const EPS=1e-8;let t0=0,t1=1;let bounds=[[x-.5,x+.5],[y-.5,y+.5]];for(let axis=0;axis<2;axis++){const delta=b[axis]-a[axis],lo=bounds[axis][0],hi=bounds[axis][1];if(Math.abs(delta)<EPS){if(a[axis]<lo-EPS||a[axis]>hi+EPS)return false;}else{let u=(lo-a[axis])/delta,v=(hi-a[axis])/delta;if(u>v)[u,v]=[v,u];t0=Math.max(t0,u);t1=Math.min(t1,v);if(t0>t1+EPS)return false;}}return t1>=-EPS&&t0<=1+EPS}
+function segmentsMeet(a,b,c,d){const x1=a[0],y1=a[1],x2=b[0],y2=b[1],x3=c[0],y3=c[1],x4=d[0],y4=d[1];let cross=(u,v,w)=> (v[0]-u[0])*(w[1]-u[1])-(v[1]-u[1])*(w[0]-u[0]);let s1=cross(a,b,c),s2=cross(a,b,d),s3=cross(c,d,a),s4=cross(c,d,b);return s1*s2<=1e-9&&s3*s4<=1e-9&&Math.max(Math.min(x1,x2),Math.min(x3,x4))<=Math.min(Math.max(x1,x2),Math.max(x3,x4))+1e-8&&Math.max(Math.min(y1,y2),Math.min(y3,y4))<=Math.min(Math.max(y1,y2),Math.max(y3,y4))+1e-8}
+function obstructed(L,s,a,b){for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++){if(L.rows[y][x]!=='#')continue; // Source may be inside wall only for cameras; camera origins are offset onto free side.
+ if(hitsRect(a,b,x,y))return true;}
+ for(let i=0;i<(L.doors||[]).length;i++){let door=L.doors[i];if(s.open&(1<<i))continue;let p=door.a,q=door.b;let mid=[(p[0]+q[0])/2,(p[1]+q[1])/2],dx=q[0]-p[0],dy=q[1]-p[1],v=[-dy*.48,dx*.48];if(segmentsMeet(a,b,[mid[0]-v[0],mid[1]-v[1]],[mid[0]+v[0],mid[1]+v[1]]))return true;}
+ return false}
+function smoked(s,p){return s.smokes.some(c=>same(c.p,p))}
+function guardSees(L,s,g){let {p,dir}=g;if(smoked(s,p))return false;for(let k=1;k<=2;k++){let q=[p[0]+DIRS[dir][0]*k,p[1]+DIRS[dir][1]*k];if(!inside(L,q)||obstructed(L,s,p,q)||smoked(s,q))return (same(s.p,q)&&!obstructed(L,s,p,q))?false:false;if(same(s.p,q))return true;}return false}
+function guardVision(L,s,g){let out=[];let {p,dir}=g;if(smoked(s,p))return out;for(let k=1;k<=2;k++){let q=[p[0]+DIRS[dir][0]*k,p[1]+DIRS[dir][1]*k];if(!floor(L,q)||obstructed(L,s,p,q)||smoked(s,q))break;out.push(q);}return out}
+function camPos(c){let d=DN.indexOf(c.mountDir||c.dir),v=DIRS[d];return [c.wall[0]+v[0]*.501,c.wall[1]+v[1]*.501]}
+function camVision(L,s,c,t,allowDisabled=false){if(!allowDisabled&&s.emps.some(e=>e.id===L.cams.indexOf(c)))return [];let origin=camPos(c),d=camDir(c,t),v=DIRS[d],side=[-v[1],v[0]],out=[];let cent=[Math.round(origin[0]),Math.round(origin[1])];for(let forward=1;forward<=2;forward++)for(let lane=-1;lane<=1;lane++){let p=[cent[0]+v[0]*forward+side[0]*lane,cent[1]+v[1]*forward+side[1]*lane];if(!floor(L,p))continue;if(obstructed(L,s,origin,p))continue;if(s.smokes.some(cl=>hitsRect(origin,p,cl.p[0],cl.p[1])))continue;out.push(p);}return out}
+function cameraSees(L,s,t){for(let i=0;i<(L.cams||[]).length;i++){if(s.emps.some(e=>e.id===i))continue;if(camVision(L,s,L.cams[i],t).some(q=>same(q,s.p)))return true;}return false}
+function occupants(L,t){return (L.guards||[]).map(g=>guardAt(g,t))}
+function begin(L){return {p:[...L.start],t:0,key:false,open:0,smokes:[],emps:[],smokeLeft:L.smoke||0,empLeft:L.emp||0,alarm:-1,alarmEver:false,result:'',cause:''}}
+function attempt(L,st,action){let s={...st,p:[...st.p],smokes:st.smokes.map(x=>({...x,p:[...x.p]})),emps:st.emps.map(x=>({...x}))};if(s.result)return {state:s,valid:false};const bad=(why)=>({state:s,valid:false,why});if(action.type==='smoke'){let p=action.p;if(!s.smokeLeft||!floor(L,p)||Math.max(Math.abs(p[0]-s.p[0]),Math.abs(p[1]-s.p[1]))>1||smoked(s,p)||obstructed(L,s,s.p,p))return bad('Cannot place Smoke there');s.smokeLeft--;s.smokes.push({p:[...p],left:2});return {state:s,valid:true,free:true}}if(action.type==='emp'){let id=action.id;if(!s.empLeft||!L.cams||!L.cams[id]||s.emps.some(e=>e.id===id))return bad('Camera unavailable');s.empLeft--;s.emps.push({id,left:2});return {state:s,valid:true,free:true}}let old=s.p, target=old;if(action.type==='move'){target=add(old,action.dir);if(!floor(L,target))return bad('Blocked');if(L.cuts?.includes(edgeID(old,target)))return bad('No connection');let doorId=(L.doors||[]).findIndex(d=>edgeID(d.a,d.b)===edgeID(old,target));if(doorId>=0&&!(s.open&(1<<doorId))){if(!s.key)return bad('A key is required');s.open|=(1<<doorId)}s.p=target;}else if(action.type!=='wait')return bad('Unknown action');
+ // Key pickup takes place upon entry, before enemy resolution.
+ if(L.key&&same(s.p,L.key))s.key=true;
+ const oldG=occupants(L,s.t),nextG=occupants(L,s.t+1);let fail=(cause)=>{s.result='caught';s.cause=cause;return {state:s,valid:true}};
+ if(oldG.some(g=>same(g.p,s.p)))return fail('Guard collision');
+ if(oldG.some(g=>guardVision(L,s,g).some(q=>same(q,s.p))))return fail('Guard saw you before moving');
+ let activated=false;const trigger=()=>{if(s.alarm<0){s.alarm=L.budget||4;s.alarmEver=true;activated=true;}};
+ if(cameraSees(L,s,s.t))trigger();
+ if(nextG.some((g,i)=>same(g.p,s.p)||(same(oldG[i].p,s.p)&&same(g.p,old))))return fail('Guard collision');
+ if(nextG.some(g=>guardVision(L,s,g).some(q=>same(q,s.p))))return fail('Guard saw you after moving');
+ if(cameraSees(L,s,s.t+1))trigger();
+ s.t++;
+ if(s.alarm>=0&&!activated)s.alarm--;
+ // Victory is after the whole normal enemy update, before expiring gadget checks.
+ if(same(s.p,L.exit)){s.result='win';return {state:s,valid:true}};
+ s.smokes=s.smokes.map(v=>({...v,left:v.left-1})).filter(v=>v.left>0);
+ s.emps=s.emps.map(v=>({...v,left:v.left-1})).filter(v=>v.left>0);
+ if(nextG.some(g=>guardVision(L,s,g).some(q=>same(q,s.p))))return fail('Smoke expired — guard spotted you');
+ if(cameraSees(L,s,s.t))trigger();
+ if(s.alarm===0){s.result='lockdown';s.cause='Lockdown timer expired';}
+ return {state:s,valid:true};}
+function stateHash(s){return [at(s.p),s.t,s.key?1:0,s.open,s.smokeLeft,s.empLeft,s.smokes.map(z=>at(z.p)+':'+z.left).sort().join(';'),s.emps.map(z=>z.id+':'+z.left).sort().join(';'),s.alarm,s.alarmEver?1:0].join('/')}
+function solve(L,{noSmoke=false,noEMP=false,ghost=false,maxTurns=30,limit=130000}={}){let front=[begin(L)],seen=new Set(),visited=0;front[0].smokeLeft=noSmoke?0:front[0].smokeLeft;front[0].empLeft=noEMP?0:front[0].empLeft;
+ for(let t=0;t<=maxTurns;t++){
+  let expanded=[],queue=[...front];for(let qi=0;qi<queue.length;qi++){
+   let s=queue[qi],h=stateHash(s);if(seen.has(h))continue;seen.add(h);visited++;if(visited>limit)return {status:'limit',visited};expanded.push(s);
+   if(s.smokeLeft){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){let p=[s.p[0]+dx,s.p[1]+dy],v=attempt(L,s,{type:'smoke',p});if(v.valid)queue.push(v.state)}}
+   if(s.empLeft)for(let i=0;i<(L.cams||[]).length;i++){let v=attempt(L,s,{type:'emp',id:i});if(v.valid)queue.push(v.state)}
+  }
+  let next=[];for(let s of expanded)for(let action of [{type:'wait'},...DIRS.map((_,dir)=>({type:'move',dir}))]){let v=attempt(L,s,action);if(!v.valid)continue;if(ghost&&v.state.alarmEver)continue;if(v.state.result==='win')return {status:'win',optimal:v.state.t,visited};if(!v.state.result)next.push(v.state)}front=next;if(!front.length)return {status:'none',visited};
+ }
+ return {status:'max',visited};}
+const API={DIRS,DN,at,same,edgeID,inside,floor,add,camDir,guardAt,obstructed,guardVision,camVision,begin,attempt,solve};
+
+
+/* LEVEL DATA */
+
+function build(title,rows,opt={}){
+ let start=null,exit=null,key=null,guards=[],a=rows.map((r,y)=>[...r].map((ch,x)=>{if(ch==='P'){start=[x,y];return '.'}if(ch==='E'){exit=[x,y];return '.'}if(ch==='K'){key=[x,y];return '.'}if(ch==='S'){guards.push({type:'static',at:[x,y],dir:opt.staticDir||'S'});return '.'}if(ch==='R'){guards.push({type:'rot',at:[x,y],dir:opt.rotateDir||'E',ccw:!!opt.ccw});return '.'}return ch}).join(''));
+ let L={title,rows:a,w:a[0].length,h:a.length,start,exit,key,guards:[...guards,...(opt.guards||[])],cams:opt.cams||[],doors:opt.doors||[],cuts:opt.cuts||[],smoke:opt.smoke||0,emp:opt.emp||0,budget:opt.budget||4,intro:opt.intro||'',group:opt.group||'Main'};
+ if(opt.split!==undefined){for(let y=0;y<L.h;y++){let p=[opt.split,y],q=[opt.split+1,y];if(a[y][p[0]]!=='#'&&a[y][q[0]]!=='#'&&!(L.doors||[]).some(d=>edgeID(d.a,d.b)===edgeID(p,q)))L.cuts.push(edgeID(p,q))}}
+ return L;
+}
+const FTUE=[
+ build('First Steps',['P..E'],{group:'FTUE',intro:'Tap an adjacent node or swipe to move one step. Reach the green exit!'}),
+ build('Follow the Lines',['P..','##.','E..'],{group:'FTUE',intro:'You can move only along connected nodes. Find the route around the walls.'}),
+ build('Stay Out of Sight',['..S..','.....','P...E','.....','.....'],{group:'FTUE',staticDir:'S',intro:'Red outlines show guard vision. Guards see two nodes straight ahead.'}),
+ build('Watch the Rotation',['.....','..R..','P...E','.....','.....'],{group:'FTUE',intro:'Rotating guards turn 90° after each action. Use WAIT to change their direction.'}),
+ build('Moving Patrol',['.....','.....','P...E','.....','.....'],{group:'FTUE',intro:'Moving guards reach the final corridor node before reversing. The cyan NEXT arrow shows their upcoming step.',guards:[{type:'bounce',path:[[2,1],[2,2],[2,3]],offset:0}]})
+];
+const MAIN=[
+ build('Safe Side',['......','..S...','P....E','......'],{staticDir:'S',intro:'Plan your route around a stationary guard.'}),
+ build('Clockwise',['......','...R..','P....E','......'],{intro:'Wait and watch the rotating guard.'}),
+ build('One Step Ahead',['......','......','P....E','......'],{guards:[{type:'bounce',path:[[3,1],[3,2],[3,3]],offset:0}],intro:'A patrol can cross your route. Watch both detection phases.'}),
+ build('Double Trouble',['.......','..R....','P.....E','.......','....S..'],{staticDir:'N',intro:'Two guards watch different lanes.'}),
+ build('Corner Patrol',['.......','.......','P.....E','.......','.......'],{guards:[{type:'loop',path:[[3,1],[4,1],[4,2],[4,3],[3,3],[2,3],[2,2],[2,1]],offset:0}],intro:'Route patrols turn naturally at corners.'}),
+ build('Narrow Crossing',['.......','.......','P.....E','.......','.......'],{guards:[{type:'bounce',path:[[2,1],[2,2],[2,3]],offset:0},{type:'bounce',path:[[4,3],[4,2],[4,1]],offset:0}],intro:'Multiple patrols move together each action.'}),
+ build('Crossroads',['.......','...R...','P.....E','.......','...S...'],{staticDir:'N',intro:'The safest route is not always the shortest.'}),
+ build('Predict the Return',['.......','.......','P.....E','.......','.......'],{guards:[{type:'bounce',path:[[2,1],[2,2],[2,3]],offset:1},{type:'rot',at:[4,1],dir:'W'}],intro:'The cyan NEXT badge shows a patrol’s next move, including its reversal at the end node.'}),
+ build('Around the Loop',['.......','.......','P.....E','.......','.......'],{guards:[{type:'loop',path:[[3,0],[4,0],[4,1],[4,2],[3,2],[2,2],[2,1],[2,0]],offset:0},{type:'rot',at:[5,3],dir:'N'}],intro:'Time your crossing with a looping patrol.'}),
+ build('Patrol Junction',['.......','.......','P.....E','.......','.......'],{guards:[{type:'bounce',path:[[1,1],[2,1],[3,1],[4,1],[5,1]],offset:0},{type:'bounce',path:[[4,3],[4,2],[4,1]],offset:0}],intro:'Guards never occupy the same node at a turn boundary.'}),
+ build('Find the Key',['.......','...#...','P.K....','...#...','......E'],{doors:[{a:[3,2],b:[4,2]}],split:3,intro:'Walk onto the key, then physically cross the locked connection.'}),
+ build('Key Detour',['.......','.......','P......','.......','..K...E'],{doors:[{a:[4,4],b:[5,4]}],split:4,intro:'The key is reusable; collecting it does not open the lock remotely.'}),
+ build('Door as Cover',['.......','...#...','P.K...E','...#...','.......'],{doors:[{a:[3,2],b:[4,2]}],split:3,guards:[{type:'rot',at:[5,1],dir:'W'}],intro:'A closed door blocks sight. Opening it can expose you.'}),
+ build('Unlock at the Right Time',['.......','...#...','P.K...E','...#...','.......'],{doors:[{a:[3,2],b:[4,2]}],split:3,guards:[{type:'rot',at:[5,2],dir:'N'}],intro:'Plan the guard phase before crossing the locked door.'}),
+ build('Protected Corridor',['.......','...#...','P.K...E','...#...','.......'],{doors:[{a:[3,2],b:[4,2]}],split:3,guards:[{type:'bounce',path:[[5,1],[5,2],[5,3]],offset:0}],intro:'Enemy patrols never cross locked-door connections.'}),
+ build('Camera Basics',['###.###','#.....#','#.....#','#P...E#','#######'],{cams:[{wall:[3,0],mountDir:'S',dir:'S',type:'fixed'}],budget:5,intro:'Amber vision starts a lockdown, not immediate capture.'}),
+ build('Race the Alarm',['#######','#.....#','#.....#','#P...E#','#######'],{cams:[{wall:[6,2],mountDir:'W',dir:'W',type:'fixed'}],budget:3,intro:'Escape before the lockdown action counter reaches zero.'}),
+ build('Rotating Security',['###.###','#.....#','#.....#','#P...E#','#######'],{cams:[{wall:[3,0],mountDir:'S',dir:'S',type:'rot'}],budget:3,intro:'Wall cameras rotate every action, even when facing a wall.'}),
+ build('Sweep Window',['###.###','#.....#','#.....#','#P...E#','#######'],{cams:[{wall:[3,0],mountDir:'S',dir:'S',type:'sweep',ccw:true}],budget:2,intro:'Sweeping cameras hold each direction for two actions.'}),
+ build('Risky Shortcut',['#######','#.....#','#.###.#','#.....#','#P...E#','#######'],{cams:[{wall:[6,3],mountDir:'W',dir:'W',type:'fixed'}],budget:2,intro:'Try a faster alarm route or a slower Ghost escape.'}),
+ build('Smoke Screen',['#######','###S###','P.....E','#######'],{staticDir:'S',smoke:1,intro:'Tap Smoke, then tap a nearby node. Smoke blocks vision for two actions.'}),
+ build('Cloud Timing',['.......','.......','P.....E','.......','.......'],{smoke:1,guards:[{type:'bounce',path:[[3,1],[3,2],[3,3]],offset:0}],intro:'Smoke stays on its node while guards keep moving.'}),
+ build('EMP Training',['#######','#######','P...E##','#######'],{cams:[{wall:[4,1],mountDir:'S',dir:'W',type:'fixed'}],emp:1,budget:1,intro:'Tap EMP and select a wall camera. It is disabled for two actions.'}),
+ build('Security Gap',['#######','#.....#','#.....#','#P...E#','#######'],{cams:[{wall:[6,2],mountDir:'W',dir:'W',type:'sweep',ccw:true}],emp:1,budget:1,intro:'The EMP expires after two counted actions, then the camera rechecks vision.'}),
+ build('Final Extraction',['######','###S##','PK..E#','######'],{doors:[{a:[1,2],b:[2,2]}],guards:[],cams:[{wall:[4,1],mountDir:'S',dir:'W',type:'fixed'}],smoke:1,emp:1,budget:1,intro:'Combine keys, Smoke, EMP and the security countdown to escape.'})
+];
+const LEVELS=[...FTUE,...MAIN];LEVELS.forEach((L,i)=>{L.id=i+1;L.group=i<5?'FTUE':'Main';L.label=i<5?'FTUE '+(i+1):'Level '+(i-4)});
+// A straight ping-pong guard patrols to the *last accessible node* on its
+// authored straight corridor, rather than stopping one node short of an open end.
+// It never passes missing connections, physical walls, or locked-door edges.
+function extendStraightPatrols(L){
+ for(const g of L.guards||[]){
+  if(g.type!=='bounce'||!g.path||g.path.length<2)continue;
+  const p0=g.path[0],p1=g.path[1],v=[p1[0]-p0[0],p1[1]-p0[1]];
+  if(Math.abs(v[0])+Math.abs(v[1])!==1)continue;
+  if(!g.path.every((p,i)=>i===0||(p[0]-g.path[i-1][0]===v[0]&&p[1]-g.path[i-1][1]===v[1])))continue;
+  const canPass=(a,b)=>floor(L,b)&&!L.cuts.includes(edgeID(a,b))&&!(L.doors||[]).some(d=>edgeID(d.a,d.b)===edgeID(a,b));
+  const start=g.path[0],end=g.path[g.path.length-1],prefix=[],suffix=[];
+  let last=start;
+  while(true){let n=[last[0]-v[0],last[1]-v[1]];if(!canPass(last,n))break;prefix.unshift(n);last=n;}
+  last=end;
+  while(true){let n=[last[0]+v[0],last[1]+v[1]];if(!canPass(last,n))break;suffix.push(n);last=n;}
+  g.path=[...prefix,...g.path,...suffix];
+  // Preserve the guard's authored starting position whenever we prepend nodes.
+  g.offset=(g.offset||0)+prefix.length;
+ }
+}
+LEVELS.forEach(extendStraightPatrols);
+
+
+
+/* PLAYTEST SOLVER METADATA */
+const PARS=[3, 6, 6, 5, 5, 9, 5, 7, 10, 6, 9, 10, 7, 8, 9, 8, 8, 6, 11, 8, 4, 4, 4, 6, 4, 6, 6, 4, 4, 4];
+const GHOST_FLAGS=[false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, true, false, true, false, false, false, true, true];
+const completed=new Map();let index=0,L=LEVELS[0],S=begin(L),history=[],mode='move',preview=null,holdTimer=null,pointer=null,lock=false,noticeTimer=null;
+const $=(id)=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function threshold3(p){return p+Math.max(1,Math.min(3,Math.floor(p/10)))}
+function threshold2(p){return p+Math.max(2,Math.ceil(.30*p))}
+function save(){try{localStorage.setItem('ss_playtest_30_results',JSON.stringify([...completed]))}catch(e){}}
+try{const saved=JSON.parse(localStorage.getItem('ss_playtest_30_results')||'[]');saved.forEach(([k,v])=>completed.set(k,v))}catch(e){}
+function tell(txt,type=''){let n=$('notice');n.textContent=txt;n.className='notice '+type;}
+function setLevel(idx){index=(idx+LEVELS.length)%LEVELS.length;L=LEVELS[index];S=begin(L);history=[];mode='move';preview=null;lock=false;$('pickerShade').classList.remove('show');$('endShade').classList.remove('show');tell(L.intro||'Find a safe route to the exit.');draw();}
+function noteProgress(){let wins=[...completed.values()].filter(x=>x.won).length;$('progress').textContent=wins+' / '+LEVELS.length+' completed';}
+function draw(){let par=PARS[index],haveCam=L.cams.length>0,ghostAllowed=haveCam&&GHOST_FLAGS[index];$('levelName').textContent=L.label+' · '+L.title;$('lesson').textContent=L.intro||'';$('actions').textContent=S.t;$('three').textContent='≤ '+threshold3(par);$('two').textContent='≤ '+threshold2(par);$('ghost').textContent=!haveCam?'No cameras in this level':!ghostAllowed?'Ghost unavailable for this puzzle':S.alarmEver?'👻 Ghost lost':'👻 Ghost available';$('ghost').className=ghostAllowed&&!S.alarmEver?'ghost':'';$('alarm').textContent=S.alarm>=0?'🚨 LOCKDOWN · '+S.alarm+' actions left':'';$('alarm').className=S.alarm>=0?'alarm':'';$('smokeCount').textContent='×'+S.smokeLeft;$('empCount').textContent='×'+S.empLeft;$('smoke').disabled=S.smokeLeft===0||!!S.result;$('emp').disabled=S.empLeft===0||!L.cams.length||!!S.result;$('wait').disabled=!!S.result;$('smoke').classList.toggle('active',mode==='smoke');$('emp').classList.toggle('active',mode==='emp');$('undo').disabled=!history.length;$('board').style.setProperty('--aspect',L.w+'/'+L.h);renderBoard();noteProgress();}
+const svgNS='http://www.w3.org/2000/svg',CELL=72;
+function svgEl(type,attrs={},parent=$('board')){let el=document.createElementNS(svgNS,type);Object.keys(attrs).forEach(k=>el.setAttribute(k,attrs[k]));parent.appendChild(el);return el}
+function label(x,y,t,size=12,color='#fff',weight=800,extra={}){let el=svgEl('text',{x,y,'font-size':size,fill:color,'font-weight':weight,'text-anchor':'middle','dominant-baseline':'middle',...extra});el.textContent=t;return el}
+function center(p){return [p[0]*CELL+CELL/2,p[1]*CELL+CELL/2]}
+function dist(p,q){return Math.hypot(p[0]-q[0],p[1]-q[1])}
+function currentDanger(s=L?S:null){let gv=new Set(),cv=new Set();occupants(L,s.t).forEach(g=>guardVision(L,s,g).forEach(q=>gv.add(at(q))));L.cams.forEach((c,i)=>camVision(L,s,c,s.t).forEach(q=>cv.add(at(q))));return {gv,cv}}
+function drawTurnMarker(x,y,ccw,palette='guard',kind='rot'){let styles=palette==='camera'?{fill:'#fff6dd',stroke:'#b97f17',text:'#845710'}:{fill:'#ffffff',stroke:'#c55259',text:'#a12b39'};svgEl('circle',{cx:x,cy:y,r:11,fill:styles.fill,stroke:styles.stroke,'stroke-width':2});label(x,y+1,kind==='sweep'?'⇆':(ccw?'↺':'↻'),13,styles.text,900)}
+function drawNextStepMarker(x,y,dir){
+ const arrows=['↑','→','↓','←'];
+ // Offset the badge above/right of the guard so it does not replace their facing arrow.
+ const cx=x+(x>L.w*CELL-62?-25:24),cy=y+(y<55?24:-23);
+ svgEl('rect',{x:cx-17,y:cy-15,width:34,height:30,rx:9,fill:'#0e607b',stroke:'#edffff','stroke-width':2.5});
+ label(cx,cy+1,arrows[dir],22,'#ffffff',900);
+ // A visible 'NEXT' tab explains that this is a future step, not current facing.
+ svgEl('rect',{x:cx-16,y:cy+17,width:32,height:12,rx:5,fill:'#e6faff',stroke:'#0c6786','stroke-width':1});
+ label(cx,cy+23,'NEXT',8,'#07506b',950);
+}
+function drawCameraFan(c,s,t,kind){let vis=camVision(L,s,c,t);if(!vis.length)return;let originGrid=camPos(c),origin=originGrid.map(v=>v*CELL+CELL/2),d=camDir(c,t),v=DIRS[d],side=[-v[1],v[0]],base=[Math.round(originGrid[0]),Math.round(originGrid[1])];let lanes=[],forwards=[];vis.forEach(p=>{let dx=p[0]-base[0],dy=p[1]-base[1];lanes.push(dx*side[0]+dy*side[1]);forwards.push(dx*v[0]+dy*v[1])});let minLane=Math.min(...lanes)-.55,maxLane=Math.max(...lanes)+.55,minForward=Math.max(.30,Math.min(...forwards)-.45),maxForward=Math.max(...forwards)+.55;let pt=(f,l)=>[origin[0]+(v[0]*f+side[0]*l)*CELL,origin[1]+(v[1]*f+side[1]*l)*CELL];let p1=pt(minForward,minLane),p2=pt(maxForward,minLane),p3=pt(maxForward,maxLane),p4=pt(minForward,maxLane);let dash=kind==='preview'?'8 6':'none';svgEl('path',{d:`M${origin[0]} ${origin[1]} L${p1[0]} ${p1[1]} L${p2[0]} ${p2[1]} L${p3[0]} ${p3[1]} L${p4[0]} ${p4[1]} Z`,fill:'#f6c765','fill-opacity':kind==='preview'?'.10':'.15',stroke:'#d9a033','stroke-width':kind==='preview'?2.5:2,'stroke-dasharray':dash,'stroke-linejoin':'round'});vis.forEach(p=>{let [x,y]=center(p);svgEl('line',{x1:origin[0],y1:origin[1],x2:x,y2:y,stroke:'#ebb04c','stroke-width':1.6,'stroke-opacity':kind==='preview'?'.18':'.22','stroke-dasharray':dash})});svgEl('circle',{cx:origin[0],cy:origin[1],r:kind==='preview'?6:7,fill:'#ffe4a6',stroke:'#d09522','stroke-width':2,'stroke-dasharray':dash})}
+function addVision(s,t,kind,outer=false){L.cams.forEach(c=>drawCameraFan(c,s,t,kind));let gvs=[],cvs=[];occupants(L,t).forEach(g=>guardVision(L,s,g).forEach(p=>gvs.push(p)));L.cams.forEach(c=>camVision(L,s,c,t).forEach(p=>cvs.push(p)));const nodes=new Map();gvs.forEach(p=>{let k=at(p),o=nodes.get(k)||{};o.guard=true;nodes.set(k,o)});cvs.forEach(p=>{let k=at(p),o=nodes.get(k)||{};o.cam=true;nodes.set(k,o)});nodes.forEach((o,k)=>{let p=k.split(',').map(Number),[x,y]=center(p);let fill=o.guard&&o.cam?'#f2b45c':o.guard?'#f66d70':'#edb750';svgEl('rect',{x:x-32,y:y-32,width:64,height:64,rx:10,fill:fill,'fill-opacity':kind==='preview'?'.08':'.12'});if(o.guard)svgEl('circle',{cx:x,cy:y,r:kind==='preview'?24:23,fill:'none',stroke:'#e85a60','stroke-width':kind==='preview'?3:3.5,'stroke-dasharray':kind==='preview'?'6 4':'none'});if(o.cam)svgEl('circle',{cx:x,cy:y,r:o.guard?16.5:23,fill:'none',stroke:'#d99e30','stroke-width':kind==='preview'?2.8:3.2,'stroke-dasharray':kind==='preview'?'6 4':'none'});});}
+function renderBoard(){let svg=$('board');svg.replaceChildren();svg.setAttribute('viewBox',`0 0 ${L.w*CELL} ${L.h*CELL}`);svg.style.aspectRatio=`${L.w}/${L.h}`;
+ svgEl('rect',{width:L.w*CELL,height:L.h*CELL,fill:'#acdcd3',rx:10});
+ for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++){let isWall=L.rows[y][x]==='#',z=x*CELL,k=y*CELL;svgEl('rect',{x:z+1,y:k+1,width:CELL-2,height:CELL-2,rx:6,fill:isWall?'#7f9cba':((x+y)%2?'#b5e6dc':'#a3dbd2'),stroke:isWall?'#6686a7':'#83c6c0','stroke-width':1});if(isWall){svgEl('rect',{x:z+4,y:k+3,width:CELL-8,height:12,rx:4,fill:'#a9c1d7','fill-opacity':'.65'});svgEl('path',{d:`M${z+5} ${k+CELL-9} H${z+CELL-6}`,stroke:'#536f95','stroke-width':3,'stroke-opacity':'.55'})}}
+ let st=S;
+ // Movement lines reflect every existing connection; walls do not stand in for missing edges.
+ for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++)if(floor(L,[x,y]))for(let d of [1,2]){let p=[x,y],q=add(p,d);if(!floor(L,q)||L.cuts.includes(edgeID(p,q)))continue;let [a,b]=center(p),[c,e]=center(q);let doorId=L.doors.findIndex(z=>edgeID(z.a,z.b)===edgeID(p,q));let locked=doorId>=0&&!(S.open&(1<<doorId));let adjacent=same(st.p,p)||same(st.p,q);svgEl('line',{x1:a,y1:b,x2:c,y2:e,stroke:adjacent&&!locked?'#37b8d0':'#6e9dad','stroke-width':adjacent&&!locked?7:4,'stroke-linecap':'round','stroke-opacity':locked?'.55':'.85'});if(doorId>=0){let mx=(a+c)/2,my=(b+e)/2,v=d===1?{width:12,height:55}:{width:55,height:12};svgEl('rect',{x:mx-v.width/2,y:my-v.height/2,...v,rx:4,fill:locked?'#e2a75f':'#77bfaf',stroke:locked?'#a67331':'#388976','stroke-width':2});if(locked)label(mx,my,'🔒',14);}}
+ // Visibility is governed by real game rules and visualized as soft tint + outlined node danger.
+ addVision(S,S.t,'current');
+ if(preview){let a=preview.action,v=attempt(L,S,a);if(v.valid&&!v.free){let s=v.state;let phase=preview.phase==='old'?S.t:S.t+1;addVision(s,phase,'preview');let [px,py]=center(s.p);svgEl('circle',{cx:px,cy:py,r:30,fill:'none',stroke:s.result==='caught'?'#e84c51':s.alarmEver&&!S.alarmEver?'#d89e32':'#239a7a','stroke-width':5,'stroke-dasharray':'8 5'});}}
+ // floor nodes
+ for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++)if(floor(L,[x,y])){let p=[x,y],node=center(p),adj=Math.abs(p[0]-S.p[0])+Math.abs(p[1]-S.p[1])===1&&!L.cuts.includes(edgeID(p,S.p)),door=L.doors.find(d=>edgeID(d.a,d.b)===edgeID(p,S.p)),open=door?S.open&(1<<L.doors.indexOf(door)):true;if(adj&&!open&&!S.key)adj=false;svgEl('circle',{cx:node[0],cy:node[1],r:adj&&mode==='move'?11:7,fill:adj?'#54d7e6':'#e2f8f4',stroke:adj?'#138caf':'#75b5b8','stroke-width':adj?3:2});}
+ // keys and exit
+ if(L.key&&!S.key){let p=center(L.key);svgEl('circle',{cx:p[0],cy:p[1],r:21,fill:'#f6cb63',stroke:'#c08c36','stroke-width':3});label(p[0],p[1]+1,'⚿',27,'#72511e')}
+ {let p=center(L.exit);svgEl('circle',{cx:p[0],cy:p[1],r:25,fill:'#40b87e',stroke:'#d8ffb5','stroke-width':4});label(p[0],p[1]+2,'⚑',25,'#ffffff')}
+ // Cameras are wall-mounted and do not occupy movement nodes
+ L.cams.forEach((c,i)=>{let body=camPos(c).map(v=>v*CELL+CELL/2),wallPt=center(c.wall),disabled=S.emps.find(e=>e.id===i),d=camDir(c,S.t),vec=DIRS[d],side=[-vec[1],vec[0]],bodyFill=disabled?'#6ddde1':'#f4c468',bodyStroke=disabled?'#1e7581':'#996d1a';svgEl('circle',{cx:wallPt[0],cy:wallPt[1],r:9,fill:'#6c86a0',stroke:'#dbe9f2','stroke-width':2});svgEl('line',{x1:wallPt[0],y1:wallPt[1],x2:body[0]-vec[0]*8,y2:body[1]-vec[1]*8,stroke:'#88a7bb','stroke-width':6,'stroke-linecap':'round'});svgEl('circle',{cx:body[0],cy:body[1],r:14,fill:bodyFill,stroke:bodyStroke,'stroke-width':2.5});svgEl('path',{d:`M${body[0]+side[0]*7-vec[0]*5} ${body[1]+side[1]*7-vec[1]*5} L${body[0]+side[0]*7+vec[0]*12} ${body[1]+side[1]*7+vec[1]*12} L${body[0]-side[0]*7+vec[0]*12} ${body[1]-side[1]*7+vec[1]*12} L${body[0]-side[0]*7-vec[0]*5} ${body[1]-side[1]*7-vec[1]*5} Z`,fill:bodyFill,stroke:bodyStroke,'stroke-width':2,'stroke-linejoin':'round'});svgEl('circle',{cx:body[0]+vec[0]*17,cy:body[1]+vec[1]*17,r:5.5,fill:disabled?'#cfffff':'#5f4313',stroke:'#fff7ce','stroke-width':2});svgEl('path',{d:`M${body[0]+vec[0]*26+side[0]*5} ${body[1]+vec[1]*26+side[1]*5} L${body[0]+vec[0]*33} ${body[1]+vec[1]*33} L${body[0]+vec[0]*26-side[0]*5} ${body[1]+vec[1]*26-side[1]*5} Z`,fill:disabled?'#9feef1':'#e49c2d','fill-opacity':disabled?'.7':'.85'});if(c.type==='rot'||c.type==='sweep')drawTurnMarker(body[0]+18,body[1]-18,!!c.ccw,'camera',c.type==='sweep'?'sweep':'rot');if(disabled){svgEl('circle',{cx:body[0]+20,cy:body[1]-22,r:11,fill:'#d3ffff',stroke:'#15818b','stroke-width':2});label(body[0]+20,body[1]-21,disabled.left,12,'#10545e')}});
+ // Cloud needs to hide guard vision without obscuring movement node or direction.
+ S.smokes.forEach(c=>{let [x,y]=center(c.p);svgEl('circle',{cx:x,cy:y,r:31,fill:'#c6eced','fill-opacity':'.83',stroke:'#4da5b3','stroke-width':2,'stroke-dasharray':'6 4'});for(let q of [[-13,1,13],[2,-10,15],[15,3,12]])svgEl('circle',{cx:x+q[0],cy:y+q[1],r:q[2],fill:'#ecfbf7','fill-opacity':'.78'});label(x+22,y-23,c.left,13,'#256477')});
+ // Guards, always visually above clouds so their occupancy cannot be mistaken.
+ occupants(L,S.t).forEach((g,i)=>{let [x,y]=center(g.p),d=DIRS[g.dir];svgEl('circle',{cx:x,cy:y,r:21,fill:'#f27972',stroke:'#fff0d5','stroke-width':3});svgEl('circle',{cx:x,cy:y-3,r:12,fill:'#ffb0a0'});svgEl('rect',{x:x-12,y:y-15,width:24,height:7,rx:3,fill:'#a94055'});svgEl('path',{d:`M${x+d[0]*9} ${y+d[1]*9} L${x+d[0]*31+d[1]*7} ${y+d[1]*31-d[0]*7} L${x+d[0]*31-d[1]*7} ${y+d[1]*31+d[0]*7} Z`,fill:'#8e253c',stroke:'#fff4e4','stroke-width':1.5});if(L.guards[i].type==='rot')drawTurnMarker(x+19,y-19,!!L.guards[i].ccw,'guard','rot');
+ if(L.guards[i].type==='bounce'||L.guards[i].type==='loop'){
+  // The facing chevron on the guard shows its *current* direction.
+  // This cyan badge shows the NEXT move, including endpoint reversals/corners.
+  const future=guardAt(L.guards[i],S.t+1),dir=DIRS.findIndex(v=>future.p[0]-g.p[0]===v[0]&&future.p[1]-g.p[1]===v[1]);
+  if(dir>=0)drawNextStepMarker(x,y,dir);
+ }});
+ // Player (stylized little spy)
+ {let [x,y]=center(S.p);svgEl('ellipse',{cx:x,cy:y+6,rx:22,ry:18,fill:'#2d76b9',stroke:'#ffffff','stroke-width':3});svgEl('circle',{cx:x,cy:y-1,r:15,fill:'#f1cca4',stroke:'#285d9d','stroke-width':3});svgEl('rect',{x:x-21,y:y-18,width:42,height:10,rx:5,fill:'#2868ae'});svgEl('rect',{x:x-14,y:y-27,width:28,height:14,rx:6,fill:'#337ece'});svgEl('rect',{x:x-9,y:y-3,width:18,height:5,rx:2,fill:'#284a67'});}
+ if(mode==='smoke'||mode==='emp'){svgEl('rect',{x:1,y:1,width:L.w*CELL-2,height:L.h*CELL-2,rx:9,stroke:'#26c6ae','stroke-width':5,fill:'#21cbb2','fill-opacity':'.035','pointer-events':'none'});if(mode==='smoke'){for(let y=0;y<L.h;y++)for(let x=0;x<L.w;x++){let p=[x,y];if(!validSmokeTarget(p))continue;let [a,b]=center(p);svgEl('circle',{cx:a,cy:b,r:27,fill:'#34d9b1','fill-opacity':'.14',stroke:'#11ab9a','stroke-width':4,'stroke-dasharray':'6 3','pointer-events':'none'})}}else L.cams.forEach(c=>{let id=L.cams.indexOf(c);if(S.emps.some(e=>e.id===id))return;let [a,b]=camPos(c).map(v=>v*CELL+CELL/2);svgEl('circle',{cx:a,cy:b,r:27,fill:'none',stroke:'#1ac5d8','stroke-width':5,'stroke-dasharray':'6 4','pointer-events':'none'})})}
+}
+function validSmokeTarget(p){return S.smokeLeft>0&&floor(L,p)&&Math.max(Math.abs(p[0]-S.p[0]),Math.abs(p[1]-S.p[1]))<=1&&!smoked(S,p)&&!obstructed(L,S,S.p,p)}
+function act(action){if(S.result||lock)return;let x=attempt(L,S,action);if(!x.valid){tell(x.why||'That action is not available.','warning');return}history.push(S);S=x.state;mode='move';preview=null;lock=true;draw();if(x.free){lock=false;tell(action.type==='smoke'?'Smoke deployed (no turn spent).':'Camera disabled (no turn spent).','good');return}if(S.result){let end=S.result;setTimeout(()=>{lock=false;openEnd(end)},end==='caught'?400:250)}else{setTimeout(()=>{lock=false;draw()},120);tell(S.alarm>=0?'🚨 Lockdown active. Escape before the counter expires.':'Action resolved. Watch enemy facing and vision.',S.alarm>=0?'warning':'');}}
+function openEnd(type){let win=type==='win';$('endTitle').textContent=win?'🎉 Escaped!':type==='lockdown'?'🚨 Security Lockdown!':'🚫 Busted!';let par=PARS[index],stars=S.t<=threshold3(par)?3:S.t<=threshold2(par)?2:1;let ghost=win&&GHOST_FLAGS[index]&&!S.alarmEver;let gMsg=ghost?' · 👻 Ghost earned!':'';$('endStars').textContent=win?'⭐'.repeat(stars)+'☆'.repeat(3-stars):'💥';$('endMessage').textContent=win?`Completed in ${S.t} actions. ${stars} star${stars===1?'':'s'}!${gMsg}`:S.cause||'Try another route.';if(win){let old=completed.get(index)||{won:false,stars:0,ghost:false};completed.set(index,{won:true,stars:Math.max(stars,old.stars),ghost:old.ghost||ghost});save();}$('endNext').style.display=index<LEVELS.length-1?'':'none';$('endShade').classList.add('show');draw();}
+function startMode(m){if(lock||S.result)return;if(m==='smoke'&&!S.smokeLeft)return;if(m==='emp'&&(!S.empLeft||!L.cams.length))return;mode=mode===m?'move':m;preview=null;tell(mode==='move'?'Movement mode. Tap or swipe to move.':m==='smoke'?'SMOKE MODE — Tap a glowing node. Tap Smoke again to cancel.':'EMP MODE — Tap a highlighted camera. Tap EMP again to cancel.');draw();}
+function rawToBoard(e){let svg=$('board'),matrix=svg.getScreenCTM();if(!matrix)return [0,0];let pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;let local=pt.matrixTransform(matrix.inverse());return [local.x/CELL-.5,local.y/CELL-.5]}
+function chosenNode(raw){let x=Math.round(raw[0]),y=Math.round(raw[1]),dx=raw[0]-x,dy=raw[1]-y;if(Math.hypot(dx,dy)>.45)return null;return [x,y]}
+function selectedCamera(raw){let p=[(raw[0]+.5)*CELL,(raw[1]+.5)*CELL],candidates=L.cams.map((c,id)=>({id,dist:dist(p,camPos(c).map(v=>v*CELL+CELL/2))})).filter(v=>v.dist<36&&!S.emps.some(e=>e.id===v.id)).sort((a,b)=>a.dist-b.dist);if(candidates.length>1&&candidates[1].dist-candidates[0].dist<8)return null;return candidates.length?candidates[0].id:null}
+function moveNode(p){if(!p)return tell('Tap a neighboring node, or swipe in a direction.','warning');let delta=[p[0]-S.p[0],p[1]-S.p[1]],dir=DIRS.findIndex(v=>v[0]===delta[0]&&v[1]===delta[1]);if(dir<0)return tell('You can move only one connected node per action.','warning');act({type:'move',dir})}
+function tapBoard(raw){if(lock||S.result)return;if(mode==='smoke'){let p=chosenNode(raw);if(p&&validSmokeTarget(p))act({type:'smoke',p});else tell('Smoke target is out of range or blocked.','warning');return}if(mode==='emp'){let id=selectedCamera(raw);if(id!==null)act({type:'emp',id});else tell('Select a wall-mounted camera with a cyan ring.','warning');return}moveNode(chosenNode(raw))}
+function previewMove(raw){if(mode!=='move'||lock||S.result)return;let p=chosenNode(raw);if(!p)return;let delta=[p[0]-S.p[0],p[1]-S.p[1]],dir=DIRS.findIndex(v=>v[0]===delta[0]&&v[1]===delta[1]);if(dir<0)return;let action={type:'move',dir},v=attempt(L,S,action);if(!v.valid){tell(v.why||'Blocked action.','warning');return}preview={action,phase:'after'};let s=v.state;tell(s.result==='caught'?'PREVIEW: '+s.cause:s.result==='lockdown'?'PREVIEW: Lockdown expires':s.alarmEver&&!S.alarmEver?'PREVIEW: Camera alarm will activate':s.result==='win'?'PREVIEW: Safe escape!':'PREVIEW: Safe next action',''+(s.result?'warning':'good'));draw();}
+const board=$('board');board.addEventListener('pointerdown',e=>{if(lock||S.result)return;if(e.button!==0&&e.pointerType==='mouse')return;pointer={id:e.pointerId,raw:rawToBoard(e),x:e.clientX,y:e.clientY,time:Date.now(),moved:false,held:false};try{board.setPointerCapture(e.pointerId)}catch(err){}if(mode==='move'){holdTimer=setTimeout(()=>{if(pointer&&!pointer.moved){pointer.held=true;previewMove(pointer.raw)}},390)}});
+board.addEventListener('pointermove',e=>{if(!pointer||e.pointerId!==pointer.id)return;let delta=Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y);if(delta>15){pointer.moved=true;clearTimeout(holdTimer)}});
+function endPointer(e){if(!pointer||e.pointerId!==pointer.id)return;clearTimeout(holdTimer);let pp=pointer;pointer=null;if(pp.held){preview=null;tell('Preview closed. No action spent.');draw();return}if(mode!=='move'){if(!pp.moved)tapBoard(pp.raw);return}let dx=e.clientX-pp.x,dy=e.clientY-pp.y;if(Math.hypot(dx,dy)>26){let ratio=Math.max(Math.abs(dx),Math.abs(dy))/Math.max(1,Math.min(Math.abs(dx),Math.abs(dy)));if(ratio<1.30){tell('Swipe horizontally or vertically.','warning');return}let dir=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0);act({type:'move',dir});}else if(!pp.moved)tapBoard(pp.raw)}
+board.addEventListener('pointerup',endPointer);board.addEventListener('pointercancel',()=>{clearTimeout(holdTimer);pointer=null;preview=null;draw()});
+$('smoke').onclick=()=>startMode('smoke');$('emp').onclick=()=>startMode('emp');$('wait').onclick=()=>{if(mode!=='move'){mode='move';tell('Targeting cancelled.');draw()}else act({type:'wait'})};
+$('restart').onclick=()=>setLevel(index);$('undo').onclick=()=>{if(!history.length)return;S=history.pop();mode='move';preview=null;lock=false;$('endShade').classList.remove('show');tell('Test Undo restored the previous state (developer tool only).');draw()};
+$('resetAll').onclick=()=>{if(!confirm('Clear all playtest completion results?'))return;completed.clear();save();noteProgress();tell('Playtest records reset.');};
+function levelButton(i){let L=LEVELS[i],b=document.createElement('button');b.className='lvbtn'+(i===index?' active':'');let done=completed.get(i);b.innerHTML=`<strong>${i<5?'F'+(i+1):i-4}</strong><span>${done?.won?'✓ '+(done.stars||1)+'★':'Play'}</span>`;b.title=L.title;b.onclick=()=>setLevel(i);return b}
+function openPicker(){$('ftuePicker').replaceChildren(...LEVELS.slice(0,5).map((_,i)=>levelButton(i)));$('mainPicker').replaceChildren(...LEVELS.slice(5).map((_,i)=>levelButton(i+5)));$('endShade').classList.remove('show');$('pickerShade').classList.add('show')}
+$('pickerOpen').onclick=openPicker;$('pickerClose').onclick=()=>$('pickerShade').classList.remove('show');$('endLevels').onclick=openPicker;$('endRetry').onclick=()=>setLevel(index);$('endNext').onclick=()=>setLevel(index+1);
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('pickerShade').classList.contains('show'))$('pickerShade').classList.remove('show');else if(mode!=='move'){mode='move';tell('Targeting cancelled.');draw()}return}if($('pickerShade').classList.contains('show')||$('endShade').classList.contains('show'))return;let dirs={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3,w:0,d:1,s:2,a:3};if(e.key in dirs){e.preventDefault();act({type:'move',dir:dirs[e.key]})}else if(e.key===' '){e.preventDefault();act({type:'wait'})}});
+setLevel(0);
+</script></body></html>

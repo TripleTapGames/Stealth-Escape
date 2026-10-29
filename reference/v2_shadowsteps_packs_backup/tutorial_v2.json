@@ -1,0 +1,24 @@
+{
+  "seed": 20261028,
+  "world": 1,
+  "chapter": 0,
+  "levels": [
+    { "id": 101, "name": "Behind the Watcher", "copyFrom": "Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json" },
+    { "id": 102, "name": "Clockwise Window", "width": 5, "height": 5, "walls": [2, 4],
+      "guards": [ { "mode": "rotate", "range": 2, "rotateEvery": 2 } ],
+      "require": "wait", "moves": [6, 9], "maxSolutions": 3,
+      "hint": "This guard turns every second move. Red nodes are lit now or on the guard's next look: never step onto one. WAIT to let the cone pass." },
+    { "id": 103, "name": "Crossing Time", "width": 6, "height": 5, "walls": [2, 5],
+      "guards": [ { "mode": "pingPong", "range": 1, "routeLength": [3, 4] } ],
+      "require": "wait", "moves": [7, 10], "maxSolutions": 3,
+      "hint": "The patrol walks back and forth and looks where it walks. Cross its lane only when it is heading away from you." },
+    { "id": 104, "name": "Locked Route", "width": 6, "height": 6, "walls": [3, 6], "key": true,
+      "guards": [ { "mode": "rotate", "range": 2, "rotateEvery": 2 } ],
+      "require": "key", "moves": [8, 12], "maxSolutions": 4,
+      "hint": "The door is locked. Collect the key first; the door node also blocks the guard's sight until you hold the key." },
+    { "id": 105, "name": "Cloud Corridor", "width": 7, "height": 6, "walls": [3, 7], "smoke": 1,
+      "guards": [ { "mode": "fixed", "range": 3 }, { "mode": "pingPong", "range": 1, "routeLength": [3, 4] } ],
+      "require": "smoke", "moves": [8, 12], "maxSolutions": 4,
+      "hint": "Smoke hides you for this action and the next one, but a guard walking onto your node still catches you." }
+  ]
+}

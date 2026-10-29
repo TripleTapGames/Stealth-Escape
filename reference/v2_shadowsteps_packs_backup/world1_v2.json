@@ -1,0 +1,653 @@
+{
+  "seed": 20261028,
+  "world": 1,
+  "chapter": 1,
+  "levels": [
+    {
+      "id": 1,
+      "name": "First Watch",
+      "copyFrom": "Assets/StreamingAssets/ShadowSteps/levels.json"
+    },
+    {
+      "id": 2,
+      "name": "Clockwork Eye",
+      "width": 5,
+      "height": 5,
+      "walls": [
+        3,
+        5
+      ],
+      "guards": [
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        8,
+        11
+      ],
+      "maxSolutions": 2
+    },
+    {
+      "id": 3,
+      "name": "The Corridor",
+      "width": 5,
+      "height": 5,
+      "walls": [
+        3,
+        6
+      ],
+      "guards": [
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            4
+          ]
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        8,
+        11
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 4,
+      "name": "Double Rhythm",
+      "copyFrom": "Assets/StreamingAssets/ShadowSteps/levels.json"
+    },
+    {
+      "id": 5,
+      "name": "Two Watchers",
+      "width": 5,
+      "height": 5,
+      "walls": [
+        2,
+        4
+      ],
+      "cover": [
+        1,
+        2
+      ],
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 1,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "none",
+      "moves": [
+        8,
+        11
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 6,
+      "name": "Crossing Paths",
+      "width": 6,
+      "height": 5,
+      "walls": [
+        2,
+        5
+      ],
+      "guards": [
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            4
+          ]
+        },
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            2,
+            3
+          ],
+          "moveEvery": 2
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        9,
+        12
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 7,
+      "name": "Square Route",
+      "width": 6,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "guards": [
+        {
+          "mode": "loop",
+          "range": 2,
+          "loopWidth": 3,
+          "loopHeight": 2
+        },
+        {
+          "mode": "fixed",
+          "range": 2
+        }
+      ],
+      "moves": [
+        9,
+        13
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 8,
+      "name": "Side Step",
+      "width": 6,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "oneWay": [
+        1,
+        2
+      ],
+      "guards": [
+        {
+          "mode": "pingPong",
+          "range": 2,
+          "routeLength": [
+            3,
+            4
+          ],
+          "moveEvery": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 1,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        9,
+        13
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 9,
+      "name": "The Brass Key",
+      "width": 6,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "key": true,
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "key",
+      "moves": [
+        10,
+        14
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 10,
+      "name": "Locked Timing",
+      "width": 6,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "key": true,
+      "guards": [
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            4
+          ]
+        },
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            4
+          ],
+          "moveEvery": 2
+        }
+      ],
+      "require": [
+        "key",
+        "wait"
+      ],
+      "moves": [
+        11,
+        15
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 11,
+      "name": "Smoke Passage",
+      "width": 6,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "smoke": 1,
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 3
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "smoke",
+      "moves": [
+        10,
+        14
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 12,
+      "name": "Power Cut",
+      "width": 6,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "emp": 1,
+      "guards": [
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 1
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "fixed",
+          "range": 2
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        11,
+        15
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 13,
+      "name": "Guarded Vault",
+      "width": 7,
+      "height": 6,
+      "walls": [
+        4,
+        8
+      ],
+      "key": true,
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            4
+          ]
+        }
+      ],
+      "require": "key",
+      "moves": [
+        12,
+        16
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 14,
+      "name": "Smoke and Mirrors",
+      "width": 7,
+      "height": 6,
+      "walls": [
+        3,
+        6
+      ],
+      "cover": [
+        2,
+        3
+      ],
+      "smoke": 1,
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 3
+        },
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            4
+          ]
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "smoke",
+      "moves": [
+        12,
+        16
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 15,
+      "name": "Blackout Window",
+      "width": 7,
+      "height": 7,
+      "walls": [
+        4,
+        8
+      ],
+      "emp": 1,
+      "guards": [
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 1
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            5
+          ]
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        12,
+        17
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 16,
+      "name": "The Service Door",
+      "width": 7,
+      "height": 7,
+      "walls": [
+        4,
+        8
+      ],
+      "key": true,
+      "smoke": 1,
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 3
+        },
+        {
+          "mode": "pingPong",
+          "range": 2,
+          "routeLength": [
+            3,
+            4
+          ]
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        }
+      ],
+      "require": "key",
+      "moves": [
+        13,
+        18
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 17,
+      "name": "Three Blind Angles",
+      "width": 7,
+      "height": 7,
+      "walls": [
+        3,
+        6
+      ],
+      "cover": [
+        2,
+        3
+      ],
+      "guards": [
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 3,
+          "rotateEvery": 1
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        14,
+        19
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 18,
+      "name": "Shift Change",
+      "width": 7,
+      "height": 7,
+      "walls": [
+        4,
+        8
+      ],
+      "guards": [
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            4,
+            5
+          ]
+        },
+        {
+          "mode": "pingPong",
+          "range": 2,
+          "routeLength": [
+            3,
+            4
+          ],
+          "moveEvery": 2
+        },
+        {
+          "mode": "loop",
+          "range": 1,
+          "loopWidth": 3,
+          "loopHeight": 2
+        }
+      ],
+      "require": "wait",
+      "moves": [
+        14,
+        20
+      ],
+      "maxSolutions": 3
+    },
+    {
+      "id": 19,
+      "name": "High Security",
+      "width": 8,
+      "height": 7,
+      "walls": [
+        5,
+        9
+      ],
+      "key": true,
+      "smoke": 1,
+      "guards": [
+        {
+          "mode": "fixed",
+          "range": 3
+        },
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "pingPong",
+          "range": 1,
+          "routeLength": [
+            3,
+            5
+          ]
+        },
+        {
+          "mode": "pingPong",
+          "range": 2,
+          "routeLength": [
+            3,
+            4
+          ],
+          "moveEvery": 2
+        }
+      ],
+      "require": [
+        "key",
+        "smoke"
+      ],
+      "moves": [
+        16,
+        22
+      ],
+      "maxSolutions": 4
+    },
+    {
+      "id": 20,
+      "name": "Final Extraction",
+      "width": 8,
+      "height": 7,
+      "walls": [
+        5,
+        9
+      ],
+      "cover": [
+        1,
+        2
+      ],
+      "oneWay": [
+        2,
+        3
+      ],
+      "key": true,
+      "smoke": 1,
+      "emp": 1,
+      "guards": [
+        {
+          "mode": "rotate",
+          "range": 2,
+          "rotateEvery": 2
+        },
+        {
+          "mode": "rotate",
+          "range": 3,
+          "rotateEvery": 1
+        },
+        {
+          "mode": "pingPong",
+          "range": 2,
+          "routeLength": [
+            3,
+            5
+          ]
+        },
+        {
+          "mode": "loop",
+          "range": 1,
+          "loopWidth": 2,
+          "loopHeight": 3
+        }
+      ],
+      "require": "key",
+      "moves": [
+        18,
+        26
+      ],
+      "maxSolutions": 4
+    }
+  ]
+}

@@ -17,6 +17,10 @@ public static class Runner
         if (args.Length >= 2 && args[0] == "--solve") return PrintMetrics(args[1], true);
         if (args.Length >= 2 && args[0] == "--reach") return PrintReachability(args[1]);
         if (args.Length >= 3 && args[0] == "--generate") return Generator.Run(args[1], args[2], args.Length > 3 && args[3] == "--verbose");
+        if (args.Length >= 3 && args[0] == "--v3-import") return V3Tools.Import(args[1], args[2], args.Length > 3 ? args[3] : null);
+        if (args.Length >= 2 && args[0] == "--v3-validate") return V3Tools.Validate(args[1]);
+        if (args.Length >= 3 && args[0] == "--v3-export-validation") return V3Tools.ExportValidation(args[1], args[2]);
+        if (args.Length >= 3 && args[0] == "--v3-trace") return V3Tools.Trace(args[1], args[2]);
         string filter = args.Length > 0 ? args[0] : null;
         var asm = Assembly.GetExecutingAssembly();
         int passed = 0, failed = 0, skipped = 0;

@@ -1,0 +1,11 @@
+You are working INSIDE my existing Unity Shadow Steps repository in VS Code.
+
+Read SHADOW_STEPS_CLAUDE_CODE_HANDOVER.md completely. The latest approved game rules are in that handover; the old RULES_AND_GENERATOR_REFERENCE_LEGACY.md describes an outdated engine and must not override our decisions.
+
+Read shadow_steps_30_level_playtest_v3.html and levels_v3_playtest_reference.json to see the latest 5 FTUE + 25 main levels, guard NEXT movement arrow, 2-turn camera sweeping, full-corridor ping-pong endpoints, targeted free Smoke/EMP, and browser visuals. These are REFERENCE IMPLEMENTATIONS, not a replacement for Unity. playtest_validation_report.json confirms internal browser solver parity for all 30 levels, not Unity parity.
+
+FIRST inspect the current codebase and report which scripts, level schema, prefabs, UI and tests can be reused versus migrated. THEN implement incrementally with deterministic automated tests. Reuse the existing Unity stack rather than generating a new Unity project or blindly porting the HTML. Preserve stable working systems and back up original level data.
+
+Priority: (1) deterministic turn logic/vision/door/camera/gadgets, (2) solver and validator, (3) import 30 levels with revalidated solutions/pars, (4) portrait touch input + accurate surveillance/NEXT markers, (5) progression/retry/scoring and QA.
+
+DO NOT finalize art assets or start final art production yet. Use modular placeholders. No hints/checkpoints/production Undo/monetization/endless mode/switches for launch. Be transparent about what runs and what is still incomplete.

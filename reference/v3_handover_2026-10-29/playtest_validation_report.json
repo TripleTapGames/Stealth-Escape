@@ -1,0 +1,277 @@
+{
+  "checked": "2026-10-29",
+  "solverScope": "Browser v3 rules, max 30 counted actions, 130,000 states; occupancy checked turns 0..119.",
+  "levels": [
+    {
+      "id": "FTUE-1",
+      "status": "win",
+      "optimal": 3,
+      "recordedPar": 3,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 6
+    },
+    {
+      "id": "FTUE-2",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 21
+    },
+    {
+      "id": "FTUE-3",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 53
+    },
+    {
+      "id": "FTUE-4",
+      "status": "win",
+      "optimal": 5,
+      "recordedPar": 5,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 36
+    },
+    {
+      "id": "FTUE-5",
+      "status": "win",
+      "optimal": 5,
+      "recordedPar": 5,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 38
+    },
+    {
+      "id": "LEVEL-1",
+      "status": "win",
+      "optimal": 9,
+      "recordedPar": 9,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 84
+    },
+    {
+      "id": "LEVEL-2",
+      "status": "win",
+      "optimal": 5,
+      "recordedPar": 5,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 37
+    },
+    {
+      "id": "LEVEL-3",
+      "status": "win",
+      "optimal": 7,
+      "recordedPar": 7,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 67
+    },
+    {
+      "id": "LEVEL-4",
+      "status": "win",
+      "optimal": 10,
+      "recordedPar": 10,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 126
+    },
+    {
+      "id": "LEVEL-5",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 64
+    },
+    {
+      "id": "LEVEL-6",
+      "status": "win",
+      "optimal": 9,
+      "recordedPar": 9,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 117
+    },
+    {
+      "id": "LEVEL-7",
+      "status": "win",
+      "optimal": 10,
+      "recordedPar": 10,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 128
+    },
+    {
+      "id": "LEVEL-8",
+      "status": "win",
+      "optimal": 7,
+      "recordedPar": 7,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 77
+    },
+    {
+      "id": "LEVEL-9",
+      "status": "win",
+      "optimal": 8,
+      "recordedPar": 8,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 105
+    },
+    {
+      "id": "LEVEL-10",
+      "status": "win",
+      "optimal": 9,
+      "recordedPar": 9,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 129
+    },
+    {
+      "id": "LEVEL-11",
+      "status": "win",
+      "optimal": 8,
+      "recordedPar": 8,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 190
+    },
+    {
+      "id": "LEVEL-12",
+      "status": "win",
+      "optimal": 8,
+      "recordedPar": 8,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 145
+    },
+    {
+      "id": "LEVEL-13",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 92
+    },
+    {
+      "id": "LEVEL-14",
+      "status": "win",
+      "optimal": 11,
+      "recordedPar": 11,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 327
+    },
+    {
+      "id": "LEVEL-15",
+      "status": "win",
+      "optimal": 8,
+      "recordedPar": 8,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 182
+    },
+    {
+      "id": "LEVEL-16",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 34
+    },
+    {
+      "id": "LEVEL-17",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 22
+    },
+    {
+      "id": "LEVEL-18",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 31
+    },
+    {
+      "id": "LEVEL-19",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 55
+    },
+    {
+      "id": "LEVEL-20",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 22
+    },
+    {
+      "id": "LEVEL-21",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 118
+    },
+    {
+      "id": "LEVEL-22",
+      "status": "win",
+      "optimal": 6,
+      "recordedPar": 6,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 1280
+    },
+    {
+      "id": "LEVEL-23",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 33
+    },
+    {
+      "id": "LEVEL-24",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 68
+    },
+    {
+      "id": "LEVEL-25",
+      "status": "win",
+      "optimal": 4,
+      "recordedPar": 4,
+      "match": true,
+      "overlapErrors": [],
+      "visited": 247
+    }
+  ],
+  "passed": true
+}

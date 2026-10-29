@@ -1,0 +1,1650 @@
+{
+  "format": "ShadowSteps-browser-playtest-v3",
+  "status": "playtest reference only, not a Unity production schema",
+  "source": "shadow_steps_30_level_playtest_v3.html",
+  "exportedOn": "2026-10-29",
+  "levelCount": 30,
+  "levels": [
+    {
+      "title": "First Steps",
+      "rows": [
+        "...."
+      ],
+      "w": 4,
+      "h": 1,
+      "start": [
+        0,
+        0
+      ],
+      "exit": [
+        3,
+        0
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Tap an adjacent node or swipe to move one step. Reach the green exit!",
+      "group": "FTUE",
+      "id": 1,
+      "label": "FTUE 1",
+      "par": 3,
+      "ghostOffered": false
+    },
+    {
+      "title": "Follow the Lines",
+      "rows": [
+        "...",
+        "##.",
+        "..."
+      ],
+      "w": 3,
+      "h": 3,
+      "start": [
+        0,
+        0
+      ],
+      "exit": [
+        0,
+        2
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "You can move only along connected nodes. Find the route around the walls.",
+      "group": "FTUE",
+      "id": 2,
+      "label": "FTUE 2",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "Stay Out of Sight",
+      "rows": [
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        "....."
+      ],
+      "w": 5,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        4,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "static",
+          "at": [
+            2,
+            0
+          ],
+          "dir": "S"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Red outlines show guard vision. Guards see two nodes straight ahead.",
+      "group": "FTUE",
+      "id": 3,
+      "label": "FTUE 3",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "Watch the Rotation",
+      "rows": [
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        "....."
+      ],
+      "w": 5,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        4,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "rot",
+          "at": [
+            2,
+            1
+          ],
+          "dir": "E",
+          "ccw": false
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Rotating guards turn 90° after each action. Use WAIT to change their direction.",
+      "group": "FTUE",
+      "id": 4,
+      "label": "FTUE 4",
+      "par": 5,
+      "ghostOffered": false
+    },
+    {
+      "title": "Moving Patrol",
+      "rows": [
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        "....."
+      ],
+      "w": 5,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        4,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "offset": 1
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Moving guards reach the final corridor node before reversing. The cyan NEXT arrow shows their upcoming step.",
+      "group": "FTUE",
+      "id": 5,
+      "label": "FTUE 5",
+      "par": 5,
+      "ghostOffered": false
+    },
+    {
+      "title": "Safe Side",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......"
+      ],
+      "w": 6,
+      "h": 4,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        5,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "static",
+          "at": [
+            2,
+            1
+          ],
+          "dir": "S"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Plan your route around a stationary guard.",
+      "group": "Main",
+      "id": 6,
+      "label": "Level 1",
+      "par": 9,
+      "ghostOffered": false
+    },
+    {
+      "title": "Clockwise",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......"
+      ],
+      "w": 6,
+      "h": 4,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        5,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "rot",
+          "at": [
+            3,
+            1
+          ],
+          "dir": "E",
+          "ccw": false
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Wait and watch the rotating guard.",
+      "group": "Main",
+      "id": 7,
+      "label": "Level 2",
+      "par": 5,
+      "ghostOffered": false
+    },
+    {
+      "title": "One Step Ahead",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......"
+      ],
+      "w": 6,
+      "h": 4,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        5,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "offset": 1
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "A patrol can cross your route. Watch both detection phases.",
+      "group": "Main",
+      "id": 8,
+      "label": "Level 3",
+      "par": 7,
+      "ghostOffered": false
+    },
+    {
+      "title": "Double Trouble",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "rot",
+          "at": [
+            2,
+            1
+          ],
+          "dir": "E",
+          "ccw": false
+        },
+        {
+          "type": "static",
+          "at": [
+            4,
+            4
+          ],
+          "dir": "N"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Two guards watch different lanes.",
+      "group": "Main",
+      "id": 9,
+      "label": "Level 4",
+      "par": 10,
+      "ghostOffered": false
+    },
+    {
+      "title": "Corner Patrol",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "loop",
+          "path": [
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "offset": 0
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Route patrols turn naturally at corners.",
+      "group": "Main",
+      "id": 10,
+      "label": "Level 5",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "Narrow Crossing",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "offset": 1
+        },
+        {
+          "type": "bounce",
+          "path": [
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              0
+            ]
+          ],
+          "offset": 1
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Multiple patrols move together each action.",
+      "group": "Main",
+      "id": 11,
+      "label": "Level 6",
+      "par": 9,
+      "ghostOffered": false
+    },
+    {
+      "title": "Crossroads",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "rot",
+          "at": [
+            3,
+            1
+          ],
+          "dir": "E",
+          "ccw": false
+        },
+        {
+          "type": "static",
+          "at": [
+            3,
+            4
+          ],
+          "dir": "N"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "The safest route is not always the shortest.",
+      "group": "Main",
+      "id": 12,
+      "label": "Level 7",
+      "par": 10,
+      "ghostOffered": false
+    },
+    {
+      "title": "Predict the Return",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ]
+          ],
+          "offset": 2
+        },
+        {
+          "type": "rot",
+          "at": [
+            4,
+            1
+          ],
+          "dir": "W"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "The cyan NEXT badge shows a patrol’s next move, including its reversal at the end node.",
+      "group": "Main",
+      "id": 13,
+      "label": "Level 8",
+      "par": 7,
+      "ghostOffered": false
+    },
+    {
+      "title": "Around the Loop",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "loop",
+          "path": [
+            [
+              3,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              0
+            ]
+          ],
+          "offset": 0
+        },
+        {
+          "type": "rot",
+          "at": [
+            5,
+            3
+          ],
+          "dir": "N"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Time your crossing with a looping patrol.",
+      "group": "Main",
+      "id": 14,
+      "label": "Level 9",
+      "par": 8,
+      "ghostOffered": false
+    },
+    {
+      "title": "Patrol Junction",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              6,
+              1
+            ]
+          ],
+          "offset": 1
+        },
+        {
+          "type": "bounce",
+          "path": [
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              0
+            ]
+          ],
+          "offset": 1
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Guards never occupy the same node at a turn boundary.",
+      "group": "Main",
+      "id": 15,
+      "label": "Level 10",
+      "par": 9,
+      "ghostOffered": false
+    },
+    {
+      "title": "Find the Key",
+      "rows": [
+        ".......",
+        "...#...",
+        ".......",
+        "...#...",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        4
+      ],
+      "key": [
+        2,
+        2
+      ],
+      "guards": [],
+      "cams": [],
+      "doors": [
+        {
+          "a": [
+            3,
+            2
+          ],
+          "b": [
+            4,
+            2
+          ]
+        }
+      ],
+      "cuts": [
+        "3,0|4,0",
+        "3,4|4,4"
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Walk onto the key, then physically cross the locked connection.",
+      "group": "Main",
+      "id": 16,
+      "label": "Level 11",
+      "par": 8,
+      "ghostOffered": false
+    },
+    {
+      "title": "Key Detour",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        4
+      ],
+      "key": [
+        2,
+        4
+      ],
+      "guards": [],
+      "cams": [],
+      "doors": [
+        {
+          "a": [
+            4,
+            4
+          ],
+          "b": [
+            5,
+            4
+          ]
+        }
+      ],
+      "cuts": [
+        "4,0|5,0",
+        "4,1|5,1",
+        "4,2|5,2",
+        "4,3|5,3"
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "The key is reusable; collecting it does not open the lock remotely.",
+      "group": "Main",
+      "id": 17,
+      "label": "Level 12",
+      "par": 8,
+      "ghostOffered": false
+    },
+    {
+      "title": "Door as Cover",
+      "rows": [
+        ".......",
+        "...#...",
+        ".......",
+        "...#...",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": [
+        2,
+        2
+      ],
+      "guards": [
+        {
+          "type": "rot",
+          "at": [
+            5,
+            1
+          ],
+          "dir": "W"
+        }
+      ],
+      "cams": [],
+      "doors": [
+        {
+          "a": [
+            3,
+            2
+          ],
+          "b": [
+            4,
+            2
+          ]
+        }
+      ],
+      "cuts": [
+        "3,0|4,0",
+        "3,4|4,4"
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "A closed door blocks sight. Opening it can expose you.",
+      "group": "Main",
+      "id": 18,
+      "label": "Level 13",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "Unlock at the Right Time",
+      "rows": [
+        ".......",
+        "...#...",
+        ".......",
+        "...#...",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": [
+        2,
+        2
+      ],
+      "guards": [
+        {
+          "type": "rot",
+          "at": [
+            5,
+            2
+          ],
+          "dir": "N"
+        }
+      ],
+      "cams": [],
+      "doors": [
+        {
+          "a": [
+            3,
+            2
+          ],
+          "b": [
+            4,
+            2
+          ]
+        }
+      ],
+      "cuts": [
+        "3,0|4,0",
+        "3,4|4,4"
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Plan the guard phase before crossing the locked door.",
+      "group": "Main",
+      "id": 19,
+      "label": "Level 14",
+      "par": 11,
+      "ghostOffered": false
+    },
+    {
+      "title": "Protected Corridor",
+      "rows": [
+        ".......",
+        "...#...",
+        ".......",
+        "...#...",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": [
+        2,
+        2
+      ],
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              5,
+              0
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              4
+            ]
+          ],
+          "offset": 1
+        }
+      ],
+      "cams": [],
+      "doors": [
+        {
+          "a": [
+            3,
+            2
+          ],
+          "b": [
+            4,
+            2
+          ]
+        }
+      ],
+      "cuts": [
+        "3,0|4,0",
+        "3,4|4,4"
+      ],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Enemy patrols never cross locked-door connections.",
+      "group": "Main",
+      "id": 20,
+      "label": "Level 15",
+      "par": 8,
+      "ghostOffered": false
+    },
+    {
+      "title": "Camera Basics",
+      "rows": [
+        "###.###",
+        "#.....#",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        1,
+        3
+      ],
+      "exit": [
+        5,
+        3
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            3,
+            0
+          ],
+          "mountDir": "S",
+          "dir": "S",
+          "type": "fixed"
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 5,
+      "intro": "Amber vision starts a lockdown, not immediate capture.",
+      "group": "Main",
+      "id": 21,
+      "label": "Level 16",
+      "par": 4,
+      "ghostOffered": true
+    },
+    {
+      "title": "Race the Alarm",
+      "rows": [
+        "#######",
+        "#.....#",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        1,
+        3
+      ],
+      "exit": [
+        5,
+        3
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            6,
+            2
+          ],
+          "mountDir": "W",
+          "dir": "W",
+          "type": "fixed"
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 3,
+      "intro": "Escape before the lockdown action counter reaches zero.",
+      "group": "Main",
+      "id": 22,
+      "label": "Level 17",
+      "par": 4,
+      "ghostOffered": false
+    },
+    {
+      "title": "Rotating Security",
+      "rows": [
+        "###.###",
+        "#.....#",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        1,
+        3
+      ],
+      "exit": [
+        5,
+        3
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            3,
+            0
+          ],
+          "mountDir": "S",
+          "dir": "S",
+          "type": "rot"
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 3,
+      "intro": "Wall cameras rotate every action, even when facing a wall.",
+      "group": "Main",
+      "id": 23,
+      "label": "Level 18",
+      "par": 4,
+      "ghostOffered": true
+    },
+    {
+      "title": "Sweep Window",
+      "rows": [
+        "###.###",
+        "#.....#",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        1,
+        3
+      ],
+      "exit": [
+        5,
+        3
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            3,
+            0
+          ],
+          "mountDir": "S",
+          "dir": "S",
+          "type": "sweep",
+          "ccw": true
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 2,
+      "intro": "Sweeping cameras hold each direction for two actions.",
+      "group": "Main",
+      "id": 24,
+      "label": "Level 19",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "Risky Shortcut",
+      "rows": [
+        "#######",
+        "#.....#",
+        "#.###.#",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "w": 7,
+      "h": 6,
+      "start": [
+        1,
+        4
+      ],
+      "exit": [
+        5,
+        4
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            6,
+            3
+          ],
+          "mountDir": "W",
+          "dir": "W",
+          "type": "fixed"
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 0,
+      "budget": 2,
+      "intro": "Try a faster alarm route or a slower Ghost escape.",
+      "group": "Main",
+      "id": 25,
+      "label": "Level 20",
+      "par": 4,
+      "ghostOffered": true
+    },
+    {
+      "title": "Smoke Screen",
+      "rows": [
+        "#######",
+        "###.###",
+        ".......",
+        "#######"
+      ],
+      "w": 7,
+      "h": 4,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "static",
+          "at": [
+            3,
+            1
+          ],
+          "dir": "S"
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 1,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Tap Smoke, then tap a nearby node. Smoke blocks vision for two actions.",
+      "group": "Main",
+      "id": 26,
+      "label": "Level 21",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "Cloud Timing",
+      "rows": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "guards": [
+        {
+          "type": "bounce",
+          "path": [
+            [
+              3,
+              0
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "offset": 1
+        }
+      ],
+      "cams": [],
+      "doors": [],
+      "cuts": [],
+      "smoke": 1,
+      "emp": 0,
+      "budget": 4,
+      "intro": "Smoke stays on its node while guards keep moving.",
+      "group": "Main",
+      "id": 27,
+      "label": "Level 22",
+      "par": 6,
+      "ghostOffered": false
+    },
+    {
+      "title": "EMP Training",
+      "rows": [
+        "#######",
+        "#######",
+        ".....##",
+        "#######"
+      ],
+      "w": 7,
+      "h": 4,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        4,
+        2
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            4,
+            1
+          ],
+          "mountDir": "S",
+          "dir": "W",
+          "type": "fixed"
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 1,
+      "budget": 1,
+      "intro": "Tap EMP and select a wall camera. It is disabled for two actions.",
+      "group": "Main",
+      "id": 28,
+      "label": "Level 23",
+      "par": 4,
+      "ghostOffered": false
+    },
+    {
+      "title": "Security Gap",
+      "rows": [
+        "#######",
+        "#.....#",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "w": 7,
+      "h": 5,
+      "start": [
+        1,
+        3
+      ],
+      "exit": [
+        5,
+        3
+      ],
+      "key": null,
+      "guards": [],
+      "cams": [
+        {
+          "wall": [
+            6,
+            2
+          ],
+          "mountDir": "W",
+          "dir": "W",
+          "type": "sweep",
+          "ccw": true
+        }
+      ],
+      "doors": [],
+      "cuts": [],
+      "smoke": 0,
+      "emp": 1,
+      "budget": 1,
+      "intro": "The EMP expires after two counted actions, then the camera rechecks vision.",
+      "group": "Main",
+      "id": 29,
+      "label": "Level 24",
+      "par": 4,
+      "ghostOffered": true
+    },
+    {
+      "title": "Final Extraction",
+      "rows": [
+        "######",
+        "###.##",
+        ".....#",
+        "######"
+      ],
+      "w": 6,
+      "h": 4,
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        4,
+        2
+      ],
+      "key": [
+        1,
+        2
+      ],
+      "guards": [
+        {
+          "type": "static",
+          "at": [
+            3,
+            1
+          ],
+          "dir": "S"
+        }
+      ],
+      "cams": [
+        {
+          "wall": [
+            4,
+            1
+          ],
+          "mountDir": "S",
+          "dir": "W",
+          "type": "fixed"
+        }
+      ],
+      "doors": [
+        {
+          "a": [
+            1,
+            2
+          ],
+          "b": [
+            2,
+            2
+          ]
+        }
+      ],
+      "cuts": [],
+      "smoke": 1,
+      "emp": 1,
+      "budget": 1,
+      "intro": "Combine keys, Smoke, EMP and the security countdown to escape.",
+      "group": "Main",
+      "id": 30,
+      "label": "Level 25",
+      "par": 4,
+      "ghostOffered": true
+    }
+  ]
+}
