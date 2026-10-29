@@ -27,6 +27,11 @@ namespace ShadowSteps.UI
         public UiButton PauseButton;
         public RectTransform TopBar;
         public RectTransform BottomBar;
+        [Tooltip("Full-screen light-red flash shown when a camera spots the player; pulses softly while the lockdown runs.")]
+        public Image AlertOverlay;
+        public Color AlertColor = new Color(1f, 0.35f, 0.35f, 1f);
+        public float AlertBlinkAlpha = 0.38f;
+        public float AlertPulseAlpha = 0.12f;
 
         private GameSessionController _session;
         private float _messageUntil;
@@ -47,6 +52,12 @@ namespace ShadowSteps.UI
         /// <summary>Creates the child hierarchy and wires the serialized fields. Safe to call on an empty object with a Canvas.</summary>
         public void BuildHierarchy()
         {
+            var alert = UiBuilder.CreatePanel("AlertOverlay", transform, new Color(1f, 0.35f, 0.35f, 0f));
+            UiBuilder.Anchor(alert, 0f, 0f, 1f, 1f);
+            AlertOverlay = alert.GetComponent<Image>();
+            AlertOverlay.raycastTarget = false; // never swallows taps
+            alert.SetAsFirstSibling();
+
             var safe = UiBuilder.CreateRect("SafeArea", transform);
             UiBuilder.Anchor(safe, 0f, 0f, 1f, 1f);
             safe.gameObject.AddComponent<SafeAreaFitter>();
@@ -149,6 +160,7 @@ namespace ShadowSteps.UI
             SmokeButton.SetCount(state.SmokeCharges);
             EmpButton.SetCount(state.EmpCharges);
             SetButtons(true);
+            SyncAlertPulse(state);
         }
 
         private void OnModeChanged(InputMode mode)
@@ -190,10 +202,63 @@ namespace ShadowSteps.UI
             }
         }
 
+        private Coroutine _alertRoutine;
+        private bool _blinking;
+
+        /// <summary>Three quick blinks on detection, then a soft pulse for as long as the lockdown countdown runs.</summary>
+        private void StartAlertBlink()
+        {
+            if (AlertOverlay == null) return;
+            if (_alertRoutine != null) StopCoroutine(_alertRoutine);
+            _alertRoutine = StartCoroutine(AlertRoutine(blink: true));
+        }
+
+        private void SyncAlertPulse(StageState state)
+        {
+            if (AlertOverlay == null || _blinking) return;
+            bool pulse = state.AlarmActive && !state.IsTerminal;
+            if (pulse && _alertRoutine == null) _alertRoutine = StartCoroutine(AlertRoutine(blink: false));
+            else if (!pulse && _alertRoutine != null) { StopCoroutine(_alertRoutine); _alertRoutine = null; SetAlertAlpha(0f); }
+        }
+
+        private System.Collections.IEnumerator AlertRoutine(bool blink)
+        {
+            bool reduced = Runtime.AppServices.Save != null && Runtime.AppServices.Save.Settings.ReducedMotion;
+            if (blink)
+            {
+                _blinking = true;
+                if (reduced) { SetAlertAlpha(AlertBlinkAlpha * 0.6f); yield return new WaitForSecondsRealtime(0.6f); }
+                else
+                    for (int i = 0; i < 3; i++)
+                    {
+                        yield return FadeAlert(0f, AlertBlinkAlpha, 0.12f);
+                        yield return FadeAlert(AlertBlinkAlpha, 0f, 0.2f);
+                    }
+                _blinking = false;
+            }
+            var state = _session != null ? _session.State : null;
+            if (state == null || !state.AlarmActive || state.IsTerminal) { SetAlertAlpha(0f); _alertRoutine = null; yield break; }
+            if (reduced) { SetAlertAlpha(AlertPulseAlpha * 0.5f); _alertRoutine = null; yield break; }
+            while (true)
+            {
+                yield return FadeAlert(0f, AlertPulseAlpha, 0.6f);
+                yield return FadeAlert(AlertPulseAlpha, 0f, 0.6f);
+            }
+        }
+
+        private System.Collections.IEnumerator FadeAlert(float from, float to, float seconds)
+        {
+            float t = 0f;
+            while (t < seconds) { t += Time.unscaledDeltaTime; SetAlertAlpha(Mathf.Lerp(from, to, Mathf.Clamp01(t / seconds))); yield return null; }
+            SetAlertAlpha(to);
+        }
+
+        private void SetAlertAlpha(float a) { if (AlertOverlay == null) return; var c = AlertColor; c.a = a; AlertOverlay.color = c; }
+
         private void OnWon(ActionOutcome o) => ShowMessage("Escaped in " + o.After.T + " actions", 0f);
         private void OnCaught(ActionOutcome o) => ShowMessage("Busted: " + o.After.Cause, 0f);
         private void OnLockedDown(ActionOutcome o) => ShowMessage("Security lockdown: time ran out", 0f);
-        private void OnAlarm(ActionOutcome o) => ShowMessage("Alarm! " + o.After.Alarm + " actions to escape", 3f);
+        private void OnAlarm(ActionOutcome o) { ShowMessage("Alarm! " + o.After.Alarm + " actions to escape", 3f); StartAlertBlink(); }
 
         public void ShowMessage(string message) => ShowMessage(message, 1.8f);
 
