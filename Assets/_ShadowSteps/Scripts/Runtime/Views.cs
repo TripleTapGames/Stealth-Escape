@@ -53,6 +53,7 @@ namespace ShadowSteps.Runtime
         public bool IsWall { get; private set; }
         private SpriteRenderer _sprite;
         private SpriteRenderer _outline;
+        private SpriteRenderer _reachRing;
         private BoardTheme _theme;
 
         public void Setup(GridCoord coord, bool isWall, BoardTheme theme, float spacing)
@@ -62,7 +63,10 @@ namespace ShadowSteps.Runtime
             {
                 _outline = ViewUtil.MakeSprite(transform, "Outline", SpriteFactory.RoundedSquare(), theme.WallOutline, 1f, BoardSorting.Node - 1);
                 _sprite = ViewUtil.MakeSprite(transform, "Sprite", SpriteFactory.Circle(), theme.Node, 1f, BoardSorting.Node);
+                _reachRing = ViewUtil.MakeSprite(transform, "Reachable", SpriteFactory.Ring(), theme.NodeReachable, 1f, BoardSorting.Node + 1);
+                _reachRing.gameObject.SetActive(false);
             }
+            _reachRing.transform.localScale = Vector3.one * theme.NodeRadius * 2.4f * spacing;
             if (isWall)
             {
                 _outline.gameObject.SetActive(true);
@@ -78,8 +82,8 @@ namespace ShadowSteps.Runtime
             }
         }
 
-        /// <summary>Cyan = traversable from the player's node right now (reachable, not "safe").</summary>
-        public void SetReachable(bool reachable) { if (!IsWall) _sprite.color = reachable ? _theme.NodeReachable : _theme.Node; }
+        /// <summary>Cyan ring = traversable from the player's node right now (reachable, not "safe"). A ring, so it never looks like a token.</summary>
+        public void SetReachable(bool reachable) { if (!IsWall) _reachRing.gameObject.SetActive(reachable); }
     }
 
     /// <summary>A connection between two adjacent floor nodes; door connections carry a padlock that opens.</summary>
@@ -155,7 +159,7 @@ namespace ShadowSteps.Runtime
         public GridCoord Coord { get; private set; }
         public Direction Facing { get; private set; }
 
-        private SpriteRenderer _body, _arrow, _next, _nextRing, _rotation, _rotationArrow;
+        private SpriteRenderer _body, _outline, _arrow, _next, _nextRing, _rotation, _rotationArrow;
         private Color _baseColor;
         private float _baseAlpha = 1f;
         private float _spacing = 1f;
@@ -164,6 +168,10 @@ namespace ShadowSteps.Runtime
         {
             IsPlayer = true;
             Build(theme, spacing, theme.PlayerOrDefault, theme.Player, false);
+            // The player is the one token without a facing arrow: larger, bright body, dark outline so it never blends with path rings.
+            _body.transform.localScale = Vector3.one * theme.PlayerSize * spacing;
+            _outline.transform.localScale = Vector3.one * theme.PlayerSize * theme.CharacterOutline * spacing;
+            _outline.color = theme.PlayerOutline;
         }
 
         public void SetupGuard(int index, GuardSpec spec, BoardTheme theme, float spacing, bool ghost)
@@ -177,6 +185,7 @@ namespace ShadowSteps.Runtime
             {
                 _baseAlpha = theme.GhostAlpha;
                 ViewUtil.SetAlpha(_body, _baseAlpha); ViewUtil.SetAlpha(_arrow, _baseAlpha);
+                _outline.gameObject.SetActive(false);
                 _body.sortingOrder = BoardSorting.Ghost; _arrow.sortingOrder = BoardSorting.Ghost + 1;
             }
         }
@@ -186,6 +195,7 @@ namespace ShadowSteps.Runtime
             _baseColor = color; _spacing = spacing;
             if (_body == null)
             {
+                _outline = ViewUtil.MakeSprite(transform, "Outline", body, theme.GuardOutline, 1f, BoardSorting.Character - 1);
                 _body = ViewUtil.MakeSprite(transform, "Body", body, color, 1f, BoardSorting.Character);
                 _arrow = ViewUtil.MakeSprite(transform, "Facing", theme.ArrowOrDefault, theme.FacingArrow, 1f, BoardSorting.Arrow);
                 _nextRing = ViewUtil.MakeSprite(transform, "NextRing", SpriteFactory.Circle(), theme.NextMarker, 1f, BoardSorting.Marker);
@@ -197,6 +207,8 @@ namespace ShadowSteps.Runtime
             }
             _body.sprite = body; _body.color = color;
             _body.transform.localScale = Vector3.one * theme.CharacterSize * spacing;
+            _outline.sprite = body; _outline.color = theme.GuardOutline;
+            _outline.transform.localScale = Vector3.one * theme.CharacterSize * theme.CharacterOutline * spacing;
             _arrow.gameObject.SetActive(arrow);
             _arrow.transform.localScale = Vector3.one * theme.FacingArrowSize * spacing;
             _nextRing.gameObject.SetActive(false);

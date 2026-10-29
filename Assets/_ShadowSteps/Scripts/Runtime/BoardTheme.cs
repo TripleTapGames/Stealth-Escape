@@ -16,6 +16,8 @@ namespace ShadowSteps.Runtime
         public float ConnectionWidth = 0.07f;
         public float WallSize = 0.96f;
         public float CharacterSize = 0.58f;
+        public float PlayerSize = 0.68f;
+        public float CharacterOutline = 1.22f;
         public float FacingArrowSize = 0.26f;
         public float MarkerSize = 0.22f;
         public float PropSize = 0.46f;
@@ -26,7 +28,7 @@ namespace ShadowSteps.Runtime
         [Header("Board colours")]
         public Color Background = new Color(0.07f, 0.09f, 0.13f);
         public Color Node = new Color(0.22f, 0.27f, 0.36f);
-        public Color NodeReachable = new Color(0.30f, 0.75f, 0.85f);
+        public Color NodeReachable = new Color(0.30f, 0.85f, 0.95f, 0.95f);
         public Color Connection = new Color(0.33f, 0.39f, 0.50f);
         public Color ConnectionReachable = new Color(0.45f, 0.85f, 0.95f);
         public Color Wall = new Color(0.12f, 0.14f, 0.19f);
@@ -37,7 +39,9 @@ namespace ShadowSteps.Runtime
         public Color DoorOpen = new Color(0.45f, 0.75f, 0.60f);
 
         [Header("Characters and markers")]
-        public Color Player = new Color(0.30f, 0.85f, 0.95f);
+        public Color Player = new Color(0.98f, 0.98f, 1.00f);
+        public Color PlayerOutline = new Color(0.05f, 0.07f, 0.10f);
+        public Color GuardOutline = new Color(0.05f, 0.07f, 0.10f, 0.9f);
         public Color GuardStatic = new Color(0.90f, 0.35f, 0.35f);
         public Color GuardRotating = new Color(0.95f, 0.50f, 0.30f);
         public Color GuardPatrol = new Color(0.85f, 0.30f, 0.55f);
