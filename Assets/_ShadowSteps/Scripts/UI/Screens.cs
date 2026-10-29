@@ -202,7 +202,7 @@ namespace ShadowSteps.UI
 
     public sealed class SettingsScreen : UIScreen
     {
-        public UiButton MusicButton, SfxButton, HapticsButton, ReducedMotionButton, ColorAssistButton, PrivacyButton, CloseButton;
+        public UiButton MusicButton, SfxButton, HapticsButton, ReducedMotionButton, ColorAssistButton, UnlockAllButton, PrivacyButton, CloseButton;
         public UiText CreditsText;
         public Action OnClose;
         public Action<SettingsData> OnChanged;
@@ -218,6 +218,7 @@ namespace ShadowSteps.UI
             HapticsButton = UiBuilder.CreateButton("Haptics", card, "HAPTICS", UiBuilder.ButtonColor, 34f);
             ReducedMotionButton = UiBuilder.CreateButton("ReducedMotion", card, "REDUCED MOTION", UiBuilder.ButtonColor, 34f);
             ColorAssistButton = UiBuilder.CreateButton("ColorAssist", card, "HIGH-CONTRAST CONES", UiBuilder.ButtonColor, 34f);
+            UnlockAllButton = UiBuilder.CreateButton("UnlockAll", card, "UNLOCK ALL STAGES (DEV)", UiBuilder.ButtonDanger, 30f);
             PrivacyButton = UiBuilder.CreateButton("Privacy", card, "PRIVACY POLICY (placeholder)", UiBuilder.ButtonColor, 28f);
             CreditsText = ScreenLayout.Line(card, "Credits", "Shadow Steps — original design, code, art and audio by Triple Tap Games.\nNo third-party assets.", 24f);
             CloseButton = UiBuilder.CreateButton("Close", card, "CLOSE", UiBuilder.ButtonAccent, 38f);
@@ -234,6 +235,7 @@ namespace ShadowSteps.UI
             HapticsButton.Button.onClick.AddListener(() => Toggle(s => s.HapticsOn = !s.HapticsOn));
             ReducedMotionButton.Button.onClick.AddListener(() => Toggle(s => s.ReducedMotion = !s.ReducedMotion));
             ColorAssistButton.Button.onClick.AddListener(() => Toggle(s => s.ColorBlindAssist = !s.ColorBlindAssist));
+            UnlockAllButton.Button.onClick.AddListener(ToggleUnlockAll);
             PrivacyButton.Button.onClick.AddListener(() => Application.OpenURL(PrivacyPolicyUrl));
             CloseButton.Button.onClick.AddListener(() => OnClose?.Invoke());
         }
@@ -251,10 +253,25 @@ namespace ShadowSteps.UI
             Refresh();
         }
 
+        /// <summary>Development playtest only (handover §1): every stage selectable. Hidden in release builds; the flag is ignored there too.</summary>
+        public static bool DevOptionsAvailable => Application.isEditor || Debug.isDebugBuild;
+
+        private void ToggleUnlockAll()
+        {
+            var save = AppServices.Save;
+            if (save == null || !DevOptionsAvailable) return;
+            save.DebugUnlockAll = !save.DebugUnlockAll;
+            AppServices.PersistSave();
+            Refresh();
+        }
+
         protected override void OnShown() => Refresh();
 
         private void Refresh()
         {
+            var save = AppServices.Save;
+            UnlockAllButton.gameObject.SetActive(DevOptionsAvailable);
+            UnlockAllButton.Label.Text = "UNLOCK ALL STAGES (DEV): " + (save != null && save.DebugUnlockAll ? "ON" : "OFF");
             var s = AppServices.Save?.Settings ?? new SettingsData();
             MusicButton.Label.Text = "MUSIC: " + (s.MusicOn ? "ON" : "OFF");
             SfxButton.Label.Text = "SOUND EFFECTS: " + (s.SfxOn ? "ON" : "OFF");

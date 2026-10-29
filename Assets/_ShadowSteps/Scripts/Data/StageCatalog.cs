@@ -24,13 +24,16 @@ namespace ShadowSteps.Data
     /// </summary>
     public static class StageProgression
     {
+        /// <summary>Set by the runtime to true only in the editor / development builds; release builds ignore the saved flag.</summary>
+        public static bool DebugUnlockAllowed = true;
+
         public static bool IsUnlocked(StageCatalog catalog, SaveData save, int stageId)
         {
             int index = catalog.IndexOf(stageId);
             if (index < 0) return false;
             if (index == 0) return true;
             if (save == null) return false;
-            if (save.DebugUnlockAll) return true;
+            if (save.DebugUnlockAll && DebugUnlockAllowed) return true;
             return save.IsCompleted(catalog.ByIndex(index - 1).Id);
         }
 

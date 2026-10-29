@@ -24,7 +24,8 @@ namespace ShadowSteps.Data
             var root = new JsonObject()
                 .Set("version", (long)d.Version)
                 .Set("highest_unlocked_level_id", (long)d.HighestUnlockedLevelId)
-                .Set("last_played_level_id", (long)d.LastPlayedLevelId);
+                .Set("last_played_level_id", (long)d.LastPlayedLevelId)
+                .Set("debug_unlock_all", d.DebugUnlockAll);
             var results = new List<object>();
             var ids = new List<int>(d.Results.Keys);
             ids.Sort();
@@ -54,6 +55,7 @@ namespace ShadowSteps.Data
             d.Version = SaveData.CurrentVersion;
             d.HighestUnlockedLevelId = Math.Max(1, JsonAccess.OptionalInt(root, "highest_unlocked_level_id", 1, "save"));
             d.LastPlayedLevelId = Math.Max(1, JsonAccess.OptionalInt(root, "last_played_level_id", 1, "save"));
+            d.DebugUnlockAll = JsonAccess.OptionalBool(root, "debug_unlock_all", false, "save");
             if (root.TryGetValue("results", out var rv) && rv != null)
             {
                 var arr = JsonAccess.AsArray(rv, "save.results");

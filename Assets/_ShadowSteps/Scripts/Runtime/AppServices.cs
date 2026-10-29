@@ -102,6 +102,7 @@ namespace ShadowSteps.Runtime
 
         private static void InstallSave()
         {
+            StageProgression.DebugUnlockAllowed = Application.isEditor || Debug.isDebugBuild;
             SaveRepo = new SaveRepository(SavePath);
             Save = SaveRepo.Load();
             Debug.Log("[ShadowSteps] save: " + SaveRepo.LastLoadStatus + " (" + SaveRepo.LastMessage + ")");
