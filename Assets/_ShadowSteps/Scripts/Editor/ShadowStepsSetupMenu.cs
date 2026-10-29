@@ -76,6 +76,7 @@ namespace ShadowSteps.Editor
             set.ResultsScreen = SaveScreenPrefab<ResultsScreen>();
             set.FailureScreen = SaveScreenPrefab<FailureScreen>();
             set.OnboardingScreen = SaveScreenPrefab<OnboardingScreen>();
+            set.AlarmPopupScreen = SaveScreenPrefab<AlarmPopupScreen>();
             EditorUtility.SetDirty(set);
             AssetDatabase.SaveAssets();
             return set;

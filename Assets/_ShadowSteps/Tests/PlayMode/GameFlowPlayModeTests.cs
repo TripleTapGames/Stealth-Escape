@@ -87,7 +87,16 @@ namespace ShadowSteps.Tests.PlayMode
         {
             yield return Open(22); // LEVEL-17 Race the Alarm: budget 3, forced alarm
             yield return Play("E");  // alarm triggered at (2,3)
+            yield return null;
             Assert.IsTrue(_composer.Session.State.AlarmActive);
+            var popup = _flow.Router.Get<AlarmPopupScreen>();
+            Assert.IsTrue(popup.IsVisible, "camera detection shows the countdown popup");
+            StringAssert.Contains("3 actions", popup.BodyText.Text);
+            Assert.IsTrue(_composer.Session.InputLocked);
+            popup.OnDismiss();
+            yield return null;
+            Assert.IsFalse(popup.IsVisible);
+            Assert.IsFalse(_composer.Session.InputLocked);
             yield return Play("WAIT", "WAIT", "WAIT"); // budget runs out away from the exit
             yield return null;
             var failure = _flow.Router.Get<FailureScreen>();

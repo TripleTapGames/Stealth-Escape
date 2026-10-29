@@ -48,6 +48,7 @@ namespace ShadowSteps.UI
             var results = Router.Register(set.Create<ResultsScreen>(canvas.transform, set.ResultsScreen));
             var failure = Router.Register(set.Create<FailureScreen>(canvas.transform, set.FailureScreen));
             var onboarding = Router.Register(set.Create<OnboardingScreen>(canvas.transform, set.OnboardingScreen));
+            var alarm = Router.Register(set.Create<AlarmPopupScreen>(canvas.transform, set.AlarmPopupScreen));
 
             pause.OnResume = () => Router.Pop();
             pause.OnRestart = () => { Router.PopAllModals(); Session.Retry(); };
@@ -66,6 +67,7 @@ namespace ShadowSteps.UI
             failure.OnRetry = () => { Router.PopAllModals(); Session.Retry(); };
             failure.OnLevelSelect = GoToLevelSelect;
             onboarding.OnDismiss = () => Router.Pop();
+            alarm.OnDismiss = () => { if (Router.Current == alarm) Router.Pop(); };
 
             Router.ModalStateChanged += open => { if (Session != null) Session.InputLocked = open; };
 
@@ -76,7 +78,7 @@ namespace ShadowSteps.UI
             Session.Won += OnWon;
             Session.Caught += OnCaught;
             Session.LockedDown += OnLockedDown;
-            Session.AlarmTriggered += o => { AudioService.Instance?.Play(Sfx.Alert); HapticsService.Pulse(); };
+            Session.AlarmTriggered += OnAlarmTriggered;
             Session.UndoPerformed += () => AudioService.Instance?.Play(Sfx.Tap);
             Session.Retried += () => AudioService.Instance?.Play(Sfx.Tap);
 
@@ -134,6 +136,15 @@ namespace ShadowSteps.UI
             }
             var next = catalog?.NextAfter(stage.Id);
             Router.Push<ResultsScreen>().Present(stage, actions, best, newBest, ghostEarned, ghostEver, next != null);
+        }
+
+        /// <summary>First camera detection of the attempt: sound, haptic and the countdown popup (unless the same action already ended the stage).</summary>
+        private void OnAlarmTriggered(ActionOutcome o)
+        {
+            AudioService.Instance?.Play(Sfx.Alert);
+            HapticsService.Pulse();
+            if (o.Terminal) return; // results/failure screens take over
+            Router.Push<AlarmPopupScreen>().Present(o.After.Alarm);
         }
 
         private void OnCaught(ActionOutcome o)
