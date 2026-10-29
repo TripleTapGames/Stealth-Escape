@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ShadowSteps.Core;
 using ShadowSteps.Data;
 using ShadowSteps.Runtime;
+using ShadowSteps.V3;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -105,8 +105,8 @@ namespace ShadowSteps.UI
 
         protected override void OnShown()
         {
-            var save = AppServices.Save; var catalog = AppServices.Levels;
-            ProgressText.Text = catalog != null && save != null ? save.CompletedCount() + " / " + catalog.Count + " levels cleared" : "";
+            var save = AppServices.Save; var catalog = AppServices.Stages;
+            ProgressText.Text = catalog != null && save != null ? save.CompletedCount() + " / " + catalog.Count + " stages cleared" : "";
             VersionText.Text = "v" + Application.version;
         }
     }
@@ -175,20 +175,22 @@ namespace ShadowSteps.UI
         {
             foreach (var b in _buttons) Destroy(b);
             _buttons.Clear();
-            var catalog = AppServices.Levels; var save = AppServices.Save;
+            var catalog = AppServices.Stages; var save = AppServices.Save;
             if (catalog == null) return;
             ProgressText.Text = (save?.CompletedCount() ?? 0) + "/" + catalog.Count;
-            foreach (var level in catalog.Levels)
+            foreach (var stage in catalog.Stages)
             {
-                bool unlocked = Progression.IsUnlocked(catalog, save, level.Id);
-                var result = save?.GetResult(level.Id);
-                int par = AppServices.Pars.ParFor(level.Id);
-                string stars = result != null && result.Completed ? new string('★', Progression.Stars(result.BestTurns, par)) : "";
-                var btn = UiBuilder.CreateButton("Level " + level.Id, Grid, "", unlocked ? (result != null && result.Completed ? UiBuilder.ButtonAccent : UiBuilder.ButtonColor) : new Color(0.15f, 0.17f, 0.22f), 28f);
+                bool unlocked = StageProgression.IsUnlocked(catalog, save, stage.Id);
+                var result = save?.GetResult(stage.Id);
+                bool done = result != null && result.Completed;
+                string stars = done ? new string('★', Mathf.Max(1, result.BestStars)) : "";
+                var btn = UiBuilder.CreateButton("Stage " + stage.Id, Grid, "", unlocked ? (done ? UiBuilder.ButtonAccent : UiBuilder.ButtonColor) : new Color(0.15f, 0.17f, 0.22f), 26f);
                 UiBuilder.RemoveComponent(btn.GetComponent<LayoutElement>());
-                btn.Label.Text = (unlocked ? "" : "[locked] ") + level.Id + "\n" + level.Name + (stars.Length > 0 ? "\n" + stars + (result != null ? "  best " + result.BestTurns : "") : "");
+                string label = stage.Code.Replace("LEVEL-", "Level ").Replace("FTUE-", "FTUE ");
+                btn.Label.Text = (unlocked ? "" : "[locked] ") + label + "\n" + stage.Title
+                    + (done ? "\n" + stars + "  best " + result.BestTurns + (result.Ghost ? "  [ghost]" : "") : "");
                 btn.Interactable = unlocked;
-                int id = level.Id;
+                int id = stage.Id;
                 btn.Button.onClick.AddListener(() => OnLevelChosen?.Invoke(id));
                 _buttons.Add(btn.gameObject);
             }
@@ -297,18 +299,19 @@ namespace ShadowSteps.UI
 
     public sealed class ResultsScreen : UIScreen
     {
-        public UiText TurnsText, BestText, StarsText;
+        public UiText ActionsText, BestText, StarsText, GhostText;
         public UiButton NextButton, ReplayButton, LevelSelectButton;
         public Action OnNext, OnReplay, OnLevelSelect;
 
         public override void BuildHierarchy()
         {
             IsModal = true;
-            var card = ScreenLayout.Card(this, "EXTRACTED", 0.84f, 0.62f);
+            var card = ScreenLayout.Card(this, "ESCAPED", 0.84f, 0.66f);
             StarsText = ScreenLayout.Line(card, "Stars", "", 60f);
-            TurnsText = ScreenLayout.Line(card, "Turns", "", 34f);
-            BestText = ScreenLayout.Line(card, "Best", "", 30f);
-            NextButton = UiBuilder.CreateButton("Next", card, "NEXT LEVEL", UiBuilder.ButtonAccent, 40f);
+            ActionsText = ScreenLayout.Line(card, "Actions", "", 32f);
+            GhostText = ScreenLayout.Line(card, "Ghost", "", 28f);
+            BestText = ScreenLayout.Line(card, "Best", "", 28f);
+            NextButton = UiBuilder.CreateButton("Next", card, "NEXT STAGE", UiBuilder.ButtonAccent, 40f);
             ReplayButton = UiBuilder.CreateButton("Replay", card, "REPLAY", UiBuilder.ButtonColor, 36f);
             LevelSelectButton = UiBuilder.CreateButton("Levels", card, "LEVEL SELECT", UiBuilder.ButtonColor, 36f);
             Wire();
@@ -326,14 +329,15 @@ namespace ShadowSteps.UI
 
         protected override void Awake() { base.Awake(); Wire(); }
 
-        public void Present(int turns, int best, int par, bool newBest, bool hasNext)
+        public void Present(Stage stage, int actions, int best, bool newBest, bool ghostEarned, bool ghostEver, bool hasNext)
         {
-            int stars = Progression.Stars(turns, par);
+            int stars = StageScoring.Stars(actions, stage.Par);
             StarsText.Text = new string('★', stars) + new string('☆', 3 - stars);
-            TurnsText.Text = turns + " turns" + (par > 0 ? "  ·  par " + par : "");
+            ActionsText.Text = actions + " actions   ·   3★ ≤ " + stage.ThreeStarActions + "   2★ ≤ " + stage.TwoStarActions;
+            GhostText.Text = !stage.GhostOffered ? "" : ghostEarned ? "Ghost earned: no alarm!" : ghostEver ? "Ghost already earned" : "Alarm triggered: no Ghost this time";
             BestText.Text = newBest ? "New best!" : "Best " + best;
             NextButton.Interactable = hasNext;
-            NextButton.Label.Text = hasNext ? "NEXT LEVEL" : "ALL CLEAR";
+            NextButton.Label.Text = hasNext ? "NEXT STAGE" : "ALL CLEAR";
         }
     }
 
@@ -348,11 +352,11 @@ namespace ShadowSteps.UI
         public override void BuildHierarchy()
         {
             IsModal = true;
-            var card = ScreenLayout.Card(this, "SPOTTED", 0.84f, 0.5f);
+            var card = ScreenLayout.Card(this, "BUSTED", 0.84f, 0.5f);
             TitleText = card.Find("Title").GetComponent<UiText>();
-            ReasonText = ScreenLayout.Line(card, "Reason", "", 32f);
-            UndoButton = UiBuilder.CreateButton("Undo", card, "UNDO LAST MOVE", UiBuilder.ButtonAccent, 38f);
-            RetryButton = UiBuilder.CreateButton("Retry", card, "RESTART", UiBuilder.ButtonColor, 36f);
+            ReasonText = ScreenLayout.Line(card, "Reason", "", 30f);
+            RetryButton = UiBuilder.CreateButton("Retry", card, "RETRY", UiBuilder.ButtonAccent, 38f);
+            UndoButton = UiBuilder.CreateButton("Undo", card, "UNDO (DEBUG)", UiBuilder.ButtonColor, 30f);
             LevelSelectButton = UiBuilder.CreateButton("Levels", card, "LEVEL SELECT", UiBuilder.ButtonColor, 36f);
             Wire();
         }
@@ -369,13 +373,26 @@ namespace ShadowSteps.UI
 
         protected override void Awake() { base.Awake(); Wire(); }
 
-        public void Present(TurnResult result)
+        /// <summary>Cause-revealing text; the debug undo button is shown only in development (handover: no production Undo).</summary>
+        public void Present(ActionOutcome o, bool debugUndoAvailable)
         {
-            switch (result.Capture)
+            UndoButton.gameObject.SetActive(debugUndoAvailable);
+            if (o.Lockdown)
             {
-                case CaptureKind.Seen: TitleText.Text = "SPOTTED"; ReasonText.Text = "A guard's cone reached you."; break;
-                case CaptureKind.Occupied: TitleText.Text = "CAUGHT"; ReasonText.Text = "A guard stepped onto your node."; break;
-                default: TitleText.Text = "CAUGHT"; ReasonText.Text = "You crossed paths with a guard."; break;
+                TitleText.Text = "SECURITY LOCKDOWN";
+                ReasonText.Text = "The alarm countdown reached zero before you escaped.";
+                return;
+            }
+            TitleText.Text = "BUSTED";
+            switch (o.CaptureCause)
+            {
+                case CaptureCause.Collision:
+                case CaptureCause.Swap:
+                    ReasonText.Text = o.CapturePhase == CapturePhase.BeforeEnemyUpdate ? "You stepped onto a guard." : "A guard walked into you."; break;
+                default:
+                    ReasonText.Text = o.CapturePhase == CapturePhase.BeforeEnemyUpdate ? "A guard saw you before it moved."
+                        : o.CapturePhase == CapturePhase.AfterGadgetExpiry ? "The smoke cleared and a guard spotted you."
+                        : "A guard saw you after it moved."; break;
             }
         }
     }

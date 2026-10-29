@@ -31,7 +31,7 @@ namespace ShadowSteps.Data
             foreach (var id in ids)
             {
                 var r = d.Results[id];
-                results.Add(new JsonObject().Set("level_id", (long)id).Set("completed", r.Completed).Set("best_turns", (long)r.BestTurns));
+                results.Add(new JsonObject().Set("level_id", (long)id).Set("completed", r.Completed).Set("best_turns", (long)r.BestTurns).Set("best_stars", (long)r.BestStars).Set("ghost", r.Ghost));
             }
             root["results"] = results;
             root["settings"] = new JsonObject()
@@ -62,7 +62,8 @@ namespace ShadowSteps.Data
                     string p = "save.results[" + i + "]";
                     var o = JsonAccess.AsObject(arr[i], p);
                     int id = JsonAccess.RequireInt(o, "level_id", p);
-                    d.Results[id] = new LevelResult(JsonAccess.OptionalBool(o, "completed", false, p), JsonAccess.OptionalInt(o, "best_turns", 0, p));
+                    d.Results[id] = new LevelResult(JsonAccess.OptionalBool(o, "completed", false, p), JsonAccess.OptionalInt(o, "best_turns", 0, p),
+                        JsonAccess.OptionalInt(o, "best_stars", 0, p), JsonAccess.OptionalBool(o, "ghost", false, p));
                 }
             }
             if (root.TryGetValue("settings", out var sv) && sv != null)

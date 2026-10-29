@@ -1,6 +1,6 @@
-using ShadowSteps.Core;
 using ShadowSteps.Data;
 using ShadowSteps.Runtime;
+using ShadowSteps.V3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,8 +8,8 @@ namespace ShadowSteps.UI
 {
     /// <summary>
     /// Owns the in-game screen stack (pause, settings, results, failure, onboarding) and reacts to session events:
-    /// records wins, plays sounds/haptics, locks input while a modal is open, and navigates between levels/scenes.
-    /// Created automatically for every Game scene through <see cref="GameSceneHooks"/>.
+    /// records wins (best actions, stars, Ghost), plays sounds/haptics, locks input while a modal is open, and
+    /// navigates between stages/scenes. Created automatically for every Game scene through <see cref="GameSceneHooks"/>.
     /// </summary>
     public sealed class GameFlowController : MonoBehaviour
     {
@@ -22,7 +22,6 @@ namespace ShadowSteps.UI
 
         private GameSessionController Session => Composer.Session;
         private GameHudController _hud;
-        private int _lastWinTurns;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Register()
@@ -51,7 +50,7 @@ namespace ShadowSteps.UI
             var onboarding = Router.Register(set.Create<OnboardingScreen>(canvas.transform, set.OnboardingScreen));
 
             pause.OnResume = () => Router.Pop();
-            pause.OnRestart = () => { Router.PopAllModals(); Session.Restart(); };
+            pause.OnRestart = () => { Router.PopAllModals(); Session.Retry(); };
             pause.OnSettings = () => Router.Push<SettingsScreen>();
             pause.OnLevelSelect = GoToLevelSelect;
             settings.OnClose = () => Router.Pop();
@@ -59,96 +58,104 @@ namespace ShadowSteps.UI
             {
                 Router.ReducedMotion = s.ReducedMotion;
                 if (Composer.Animator != null) Composer.Animator.ReducedMotion = s.ReducedMotion;
-                if (Composer.Board != null && Composer.Board.IsBuilt) { Composer.Board.HighContrastCones = s.ColorBlindAssist; Composer.Board.SyncToState(Session.State); }
             };
-            results.OnNext = NextLevel;
-            results.OnReplay = () => { Router.PopAllModals(); Session.Restart(); };
+            results.OnNext = NextStage;
+            results.OnReplay = () => { Router.PopAllModals(); Session.Retry(); };
             results.OnLevelSelect = GoToLevelSelect;
-            failure.OnUndo = () => { Router.PopAllModals(); Session.Undo(); };
-            failure.OnRetry = () => { Router.PopAllModals(); Session.Restart(); };
+            failure.OnUndo = () => { Router.PopAllModals(); Session.DebugUndo(); };
+            failure.OnRetry = () => { Router.PopAllModals(); Session.Retry(); };
             failure.OnLevelSelect = GoToLevelSelect;
             onboarding.OnDismiss = () => Router.Pop();
 
             Router.ModalStateChanged += open => { if (Session != null) Session.InputLocked = open; };
 
-            Session.LevelLoaded += OnLevelLoaded;
-            Session.TurnStarted += OnTurnStarted;
-            Session.TurnCompleted += OnTurnCompleted;
+            Session.StageLoaded += OnStageLoaded;
+            Session.ActionStarted += OnActionStarted;
+            Session.ActionCompleted += OnActionCompleted;
             Session.ActionRejected += (a, r) => AudioService.Instance?.Play(Sfx.Error);
-            Session.LevelWon += OnLevelWon;
-            Session.PlayerCaptured += OnCaptured;
-            Session.UndoPerformed += r => AudioService.Instance?.Play(Sfx.Tap);
-            Session.Restarted += () => AudioService.Instance?.Play(Sfx.Tap);
+            Session.Won += OnWon;
+            Session.Caught += OnCaught;
+            Session.LockedDown += OnLockedDown;
+            Session.AlarmTriggered += o => { AudioService.Instance?.Play(Sfx.Alert); HapticsService.Pulse(); };
+            Session.UndoPerformed += () => AudioService.Instance?.Play(Sfx.Tap);
+            Session.Retried += () => AudioService.Instance?.Play(Sfx.Tap);
 
             _hud = Composer.Hud as GameHudController;
             if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
             AudioService.Ensure();
         }
 
-        private void OnLevelLoaded(LevelDefinition level)
+        private void OnStageLoaded(Stage stage)
         {
             Router.PopAllModals();
             var save = AppServices.Save;
-            string key = "level:" + level.Id;
-            if (save != null && !save.HasSeenTutorial(key) && !string.IsNullOrEmpty(level.Hint))
+            string key = "stage:" + stage.Id;
+            if (save != null && !save.HasSeenTutorial(key) && !string.IsNullOrEmpty(stage.Intro))
             {
-                string body = level.Hint;
-                if (!save.HasSeenTutorial("controls")) { body = "Swipe or tap an adjacent node to move. Use WAIT to let guards move.\n\n" + body; save.MarkTutorialSeen("controls"); }
                 save.MarkTutorialSeen(key);
                 AppServices.PersistSave();
-                Router.Push<OnboardingScreen>().Present(body);
+                Router.Push<OnboardingScreen>().Present(stage.Intro);
             }
         }
 
-        private void OnTurnStarted(TurnResult r)
+        private void OnActionStarted(ActionOutcome o)
         {
             var audio = AudioService.Instance;
             if (audio == null) return;
-            if (r.SmokeDeployed || r.EmpDeployed) audio.Play(Sfx.Gadget);
-            else if (r.PlayerMoved) audio.Play(Sfx.Footstep);
+            if (o.Free) audio.Play(Sfx.Gadget);
+            else if (o.PlayerFrom != o.PlayerTo) audio.Play(Sfx.Footstep);
             else audio.Play(Sfx.Tick);
-            if (r.KeyCollected) audio.Play(Sfx.Unlock);
+            if (o.KeyCollected || o.DoorOpened >= 0) audio.Play(Sfx.Unlock);
         }
 
-        private void OnTurnCompleted(TurnResult r)
+        private void OnActionCompleted(ActionOutcome o)
         {
-            bool guardRotated = false;
-            for (int i = 0; i < r.GuardsBefore.Count; i++) if (r.GuardsBefore[i].Facing != r.GuardsAfter[i].Facing) guardRotated = true;
-            if (guardRotated && !r.IsTerminal) AudioService.Instance?.Play(Sfx.Rotate);
+            if (o.Free || o.Terminal) return;
+            bool guardTurned = false;
+            for (int i = 0; i < o.GuardsBefore.Length; i++) if (o.GuardsBefore[i].Facing != o.GuardsAfter[i].Facing) guardTurned = true;
+            if (guardTurned) AudioService.Instance?.Play(Sfx.Rotate);
         }
 
-        private void OnLevelWon(TurnResult r)
+        private void OnWon(ActionOutcome o)
         {
             AudioService.Instance?.Play(Sfx.Clear);
             HapticsService.Pulse();
-            var catalog = AppServices.Levels; var save = AppServices.Save;
-            int turns = r.StateAfter.TurnCount;
-            int best = turns;
-            bool newBest = true;
+            var catalog = AppServices.Stages; var save = AppServices.Save;
+            var stage = Session.Stage;
+            int actions = o.After.T;
+            bool ghostEarned = stage.GhostOffered && !o.After.AlarmEver;
+            bool newBest = true; int best = actions; bool ghostEver = ghostEarned;
             if (catalog != null && save != null)
             {
-                newBest = Progression.RecordWin(catalog, save, Session.Level.Id, turns);
-                best = save.GetResult(Session.Level.Id).BestTurns;
+                newBest = StageProgression.RecordWin(catalog, save, stage, actions, ghostEarned);
+                var r = save.GetResult(stage.Id);
+                best = r.BestTurns; ghostEver = r.Ghost;
                 AppServices.PersistSave();
             }
-            _lastWinTurns = turns;
-            var next = catalog?.NextAfter(Session.Level.Id);
-            Router.Push<ResultsScreen>().Present(turns, best, AppServices.Pars.ParFor(Session.Level.Id), newBest, next != null);
+            var next = catalog?.NextAfter(stage.Id);
+            Router.Push<ResultsScreen>().Present(stage, actions, best, newBest, ghostEarned, ghostEver, next != null);
         }
 
-        private void OnCaptured(TurnResult r)
+        private void OnCaught(ActionOutcome o)
         {
             AudioService.Instance?.Play(Sfx.Alert);
             HapticsService.Pulse();
-            Router.Push<FailureScreen>().Present(r);
+            Router.Push<FailureScreen>().Present(o, Session.DebugUndoEnabled);
         }
 
-        private void NextLevel()
+        private void OnLockedDown(ActionOutcome o)
         {
-            var next = AppServices.Levels?.NextAfter(Session.Level.Id);
+            AudioService.Instance?.Play(Sfx.Alert);
+            HapticsService.Pulse();
+            Router.Push<FailureScreen>().Present(o, Session.DebugUndoEnabled);
+        }
+
+        private void NextStage()
+        {
+            var next = AppServices.Stages?.NextAfter(Session.Stage.Id);
             if (next == null) { GoToLevelSelect(); return; }
             Router.PopAllModals();
-            Composer.OpenLevel(next);
+            Composer.OpenStage(next);
         }
 
         private void GoToLevelSelect()

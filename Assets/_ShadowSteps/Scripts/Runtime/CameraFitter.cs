@@ -30,7 +30,7 @@ namespace ShadowSteps.Runtime
         private void LateUpdate()
         {
             if (Board == null || !Board.IsBuilt) return;
-            int hash = Board.Level.GetHashCode() ^ Board.Layout.Width * 31 ^ Board.Layout.Height * 1031;
+            int hash = Board.Stage.GetHashCode() ^ Board.Layout.Width * 31 ^ Board.Layout.Height * 1031;
             if (Screen.width == _lastW && Screen.height == _lastH && hash == _lastBoardHash) return;
             Fit();
             _lastW = Screen.width; _lastH = Screen.height; _lastBoardHash = hash;

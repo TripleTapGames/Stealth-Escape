@@ -3,27 +3,27 @@ using NUnit.Framework;
 using ShadowSteps.Core;
 using ShadowSteps.Data;
 using ShadowSteps.Runtime;
+using ShadowSteps.V3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace ShadowSteps.Tests.PlayMode
 {
-    /// <summary>V2 gate E/M2: the composed Game scene renders the logical board faithfully and moves exactly one node spacing.</summary>
+    /// <summary>V3 M5: the composed Game scene renders the logical stage faithfully, moves exactly one node, and overlays equal the shared geometry.</summary>
     public class GameScenePlayModeTests
     {
         private GameSceneComposer _composer;
 
-        [UnitySetUp]
-        public IEnumerator SetUp()
+        private IEnumerator Open(int stageId)
         {
             yield return ResetScene();
-            AppServices.PendingLevelId = 1;
+            AppServices.PendingStageId = stageId;
             var go = new GameObject("Composer");
             _composer = go.AddComponent<GameSceneComposer>();
             yield return null;
             yield return null;
-            Assert.IsTrue(_composer.Ready, "composer did not open a level: " + AppServices.LastError);
+            Assert.IsTrue(_composer.Ready, "composer did not open a stage: " + AppServices.LastError);
         }
 
         private static IEnumerator ResetScene()
@@ -31,108 +31,129 @@ namespace ShadowSteps.Tests.PlayMode
             AppServices.ResetForTests();
             foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
             yield return null;
-            var root = TestRoot();
-            AppServices.InstallLevels(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json")), System.IO.File.ReadAllText(AppServices.LevelsPath) });
-            AppServices.InstallPars(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json")), System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_v2.json")) });
+            AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
             AppServices.InstallSaveForTests(new SaveData());
         }
 
-        private static string TestRoot()
+        private IEnumerator WaitIdle()
         {
-            var dir = new System.IO.DirectoryInfo(Application.dataPath).Parent;
-            return dir.FullName;
-        }
-
-        [UnityTest]
-        public IEnumerator Level1_BoardMatchesDefinition()
-        {
-            var board = _composer.Board;
-            var level = board.Level;
-            Assert.AreEqual(1, level.Id);
-            Assert.AreEqual(level.Graph.NodeCount, board.Nodes.Count);
-            foreach (var node in board.Nodes)
-                Assert.AreEqual(board.Layout.WorldPosition(node.Coord), node.transform.position, "node " + node.Coord);
-            Assert.AreEqual(level.Guards.Count, board.Guards.Count);
-            Assert.AreEqual(board.Layout.WorldPosition(level.Start), board.Player.transform.position);
-            Assert.AreEqual(board.Layout.WorldPosition(level.Exit), board.ExitProp.transform.position);
-            // One drawn edge per undirected pair.
-            int pairs = 0;
-            foreach (var e in level.Graph.Edges) if (level.Graph.HasEdge(e.To, e.From)) pairs++; else pairs += 2;
-            Assert.AreEqual(pairs / 2, board.Edges.Count);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator VisionOverlay_EqualsRulesEngineCells()
-        {
-            var board = _composer.Board;
-            var expected = RulesEngine.GetAllVisionCells(board.Level, _composer.Session.State);
-            CollectionAssert.AreEquivalent(expected, board.Vision.ShownCells);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator Move_TravelsExactlyOneNodeSpacing_AndUpdatesHud()
-        {
-            var session = _composer.Session;
-            var board = _composer.Board;
-            var before = board.Player.transform.position;
-            Assert.IsTrue(session.TrySubmit(GameAction.North));
-            Assert.IsFalse(session.TrySubmit(GameAction.North), "input must be refused while the turn animates");
             float timeout = Time.time + 3f;
-            while (session.IsBusy && Time.time < timeout) yield return null;
-            Assert.IsFalse(session.IsBusy);
+            while (_composer.Session.IsBusy && Time.time < timeout) yield return null;
+            Assert.IsFalse(_composer.Session.IsBusy);
+        }
+
+        [UnityTest]
+        public IEnumerator Ftue3_BoardMatchesStage_AndOverlaysEqualSight()
+        {
+            yield return Open(3); // Stay Out of Sight: static guard at (2,0) facing S
+            var board = _composer.Board; var stage = board.Stage; var state = _composer.Session.State;
+            Assert.AreEqual("FTUE-3", stage.Code);
+            Assert.AreEqual(stage.Width * stage.Height, board.Nodes.Count);
+            foreach (var node in board.Nodes) Assert.AreEqual(board.Layout.WorldPosition(node.Coord), node.transform.position, "node " + node.Coord);
+            Assert.AreEqual(stage.Guards.Count, board.Guards.Count);
+            Assert.AreEqual(board.Layout.WorldPosition(stage.Start), board.Player.transform.position);
+            Assert.AreEqual(board.Layout.WorldPosition(stage.Exit), board.ExitProp.transform.position);
+            int connections = 0;
+            foreach (var a in stage.FloorNodes()) { if (stage.IsConnected(a, a.Neighbor(Direction.East))) connections++; if (stage.IsConnected(a, a.Neighbor(Direction.South))) connections++; }
+            Assert.AreEqual(connections, board.Connections.Count);
+            var expected = Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[0], 0));
+            CollectionAssert.AreEquivalent(expected, board.GuardVision.ShownCells);
+            CollectionAssert.AreEqual(new[] { new GridCoord(2, 1), new GridCoord(2, 2) }, expected);
+        }
+
+        [UnityTest]
+        public IEnumerator Move_TravelsExactlyOneNode_AndCountsOneAction()
+        {
+            yield return Open(1);
+            var session = _composer.Session; var board = _composer.Board;
+            var before = board.Player.transform.position;
+            Assert.IsTrue(session.TrySubmit(StageAction.Move(Direction.East)));
+            Assert.IsFalse(session.TrySubmit(StageAction.Move(Direction.East)), "input must be refused while the action animates");
+            yield return WaitIdle();
             var after = board.Player.transform.position;
             Assert.AreEqual(board.Layout.NodeSpacing, Vector3.Distance(before, after), 1e-4f);
-            Assert.AreEqual(board.Layout.WorldPosition(session.State.PlayerPosition), after);
-            Assert.AreEqual(1, session.State.TurnCount);
+            Assert.AreEqual(board.Layout.WorldPosition(session.State.Player), after);
+            Assert.AreEqual(1, session.State.T);
             var hud = _composer.Hud as ShadowSteps.UI.GameHudController;
             Assert.IsNotNull(hud);
-            Assert.AreEqual("Turn 1", hud.TurnText.Text);
-            CollectionAssert.AreEquivalent(RulesEngine.GetAllVisionCells(board.Level, session.State), board.Vision.ShownCells);
+            Assert.AreEqual("Actions 1", hud.ActionsText.Text);
         }
 
         [UnityTest]
-        public IEnumerator InvalidMove_DoesNotAnimateOrAdvance()
+        public IEnumerator InvalidMove_IsFree_AndDoesNotAnimate()
         {
+            yield return Open(1);
             var session = _composer.Session;
-            Assert.IsFalse(session.TrySubmit(GameAction.South)); // off the board from (0,4)
+            Assert.IsFalse(session.TrySubmit(StageAction.Move(Direction.North))); // off the 4x1 board
             Assert.IsFalse(session.IsBusy);
-            Assert.AreEqual(0, session.State.TurnCount);
+            Assert.AreEqual(0, session.State.T);
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator UndoAndRestart_ResyncBoard()
+        public IEnumerator SolverSolution_WinsThroughTheSceneController_WithParActions()
         {
+            yield return Open(8); // LEVEL-3 One Step Ahead: WAIT WAIT E E E E E
             var session = _composer.Session;
-            var board = _composer.Board;
-            session.TrySubmit(GameAction.North);
-            while (session.IsBusy) yield return null;
-            Assert.IsTrue(session.Undo());
-            Assert.AreEqual(board.Layout.WorldPosition(board.Level.Start), board.Player.transform.position);
-            session.TrySubmit(GameAction.North);
-            while (session.IsBusy) yield return null;
-            session.Restart();
-            Assert.AreEqual(0, session.State.TurnCount);
-            Assert.AreEqual(board.Layout.WorldPosition(board.Level.Start), board.Player.transform.position);
+            var solved = StageSolver.Solve(session.Stage);
+            foreach (var a in solved.Actions)
+            {
+                Assert.IsTrue(session.TrySubmit(a), "action " + a);
+                yield return WaitIdle();
+            }
+            Assert.AreEqual(StageResult.Won, session.State.Result);
+            Assert.AreEqual(session.Stage.Par, session.State.T);
         }
 
         [UnityTest]
-        public IEnumerator ReferenceSolution_WinsThroughTheSceneController()
+        public IEnumerator Retry_RestoresTheInitialState()
         {
-            var session = _composer.Session;
-            foreach (var token in new[] { "N", "N", "E", "E", "N", "E", "N", "E" })
-            {
-                Assert.IsTrue(session.TrySubmit(GameActionUtil.Parse(token)), "action " + token);
-                while (session.IsBusy) yield return null;
-            }
-            Assert.AreEqual(GameOutcome.Won, session.State.Outcome);
+            yield return Open(1);
+            var session = _composer.Session; var board = _composer.Board;
+            session.TrySubmit(StageAction.Move(Direction.East));
+            yield return WaitIdle();
+            session.Retry();
+            Assert.AreEqual(0, session.State.T);
+            Assert.AreEqual(board.Layout.WorldPosition(board.Stage.Start), board.Player.transform.position);
+            Assert.AreEqual(0, session.HistoryDepth);
+        }
+
+        [UnityTest]
+        public IEnumerator SmokeTargeting_IsAFreeAction_AndNeverMovesThePlayer()
+        {
+            yield return Open(26); // LEVEL-21 Smoke Screen
+            var session = _composer.Session; var board = _composer.Board;
+            Assert.AreEqual(InputMode.SmokeTarget, session.ToggleMode(InputMode.SmokeTarget));
+            Assert.IsTrue(board.Targets.ShownCells.Count > 0, "valid smoke targets are highlighted");
+            Assert.IsFalse(session.TapNode(new GridCoord(5, 2)), "far node is not a valid target; mode stays");
+            Assert.AreEqual(InputMode.SmokeTarget, session.Mode);
+            Assert.IsTrue(session.TapNode(new GridCoord(1, 2)));
+            yield return WaitIdle();
+            Assert.AreEqual(0, session.State.T, "deployment is free");
+            Assert.AreEqual(session.Stage.Start, session.State.Player);
+            Assert.AreEqual(InputMode.Move, session.Mode, "returns to movement after deployment");
+            Assert.AreEqual(1, session.State.Clouds.Count);
+        }
+
+        [UnityTest]
+        public IEnumerator CameraStage_ShowsAmberFootprint_AndEmpDisablesIt()
+        {
+            yield return Open(28); // LEVEL-23 EMP Training
+            var session = _composer.Session; var board = _composer.Board;
+            Assert.AreEqual(1, board.Cameras.Count);
+            CollectionAssert.AreEquivalent(Sight.CameraVision(session.Stage, session.State, 0, 0), board.CameraVision.ShownCells);
+            Assert.AreEqual(InputMode.EmpTarget, session.ToggleMode(InputMode.EmpTarget));
+            Assert.IsTrue(session.TapCamera(0));
+            yield return WaitIdle();
+            Assert.AreEqual(0, session.State.T);
+            Assert.IsTrue(session.State.IsCameraDisabled(0));
+            Assert.AreEqual(0, board.CameraVision.ShownCells.Count, "disabled camera shows no active hazard");
         }
 
         [UnityTest]
         public IEnumerator Camera_IsTopDownOrthographic_AndBoardFitsViewport()
         {
+            yield return Open(21); // LEVEL-16, 7 columns with wall cameras
             var cam = _composer.BoardCamera;
             Assert.IsTrue(cam.orthographic);
             Assert.AreEqual(Quaternion.identity, cam.transform.rotation);

@@ -1,60 +1,55 @@
 using System.IO;
 using System.Text;
-using ShadowSteps.Core;
 using ShadowSteps.Data;
+using ShadowSteps.V3;
 using UnityEditor;
 using UnityEngine;
 
-namespace ShadowSteps.Editor
+namespace ShadowSteps.EditorTools
 {
-    /// <summary>Editor commands over the packaged level data: validate, solve, metrics, migration export. Never edits the shipped file in place.</summary>
+    /// <summary>Editor entry points for the V3 stage pack: structural + solver validation and scoring re-export.</summary>
     public static class LevelValidationMenu
     {
-        public const string PackagedLevels = "Assets/StreamingAssets/ShadowSteps/levels.json";
-        public const string ReportsFolder = "Docs/Reports";
+        public const string PackagedStages = "Assets/StreamingAssets/ShadowSteps/levels_v3.json";
+        public const string PackagedValidation = "Assets/StreamingAssets/ShadowSteps/validation_v3.json";
+        public const string ReportPath = "Docs/Reports/stage_validation_v3.txt";
 
-        [MenuItem("Shadow Steps/Levels/Validate packaged levels.json")]
+        [MenuItem("Shadow Steps/Stages/Validate packaged levels_v3.json (structure + solver)")]
         public static void ValidatePackaged()
         {
-            var pack = LevelPackLoader.Parse(File.ReadAllText(PackagedLevels));
-            var report = LevelValidator.ValidatePack(pack.Levels);
-            foreach (var w in pack.Warnings) Debug.LogWarning(w);
-            Debug.Log("[ShadowSteps] " + pack.Levels.Count + " levels, " + report.ErrorCount + " errors, " + report.WarningCount + " warnings\n" + report);
-        }
-
-        [MenuItem("Shadow Steps/Levels/Solve all and write metrics report")]
-        public static void SolveAll()
-        {
-            var pack = LevelPackLoader.Parse(File.ReadAllText(PackagedLevels));
+            var pack = StageJson.Parse(File.ReadAllText(PackagedStages));
             var sb = new StringBuilder();
-            sb.AppendLine("# Solver metrics (" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm") + ")");
-            sb.AppendLine();
-            sb.AppendLine("| level | name | shortest | no WAIT | no smoke | no EMP | period | safe ratio | branching | shortest solutions | solution |");
-            sb.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|");
-            foreach (var l in pack.Levels)
+            int invalid = 0;
+            foreach (var s in pack.Stages)
             {
-                var m = LevelMetricsAnalyzer.Analyze(l);
-                string F(int v) => v < 0 ? "unsolvable" : v.ToString();
-                sb.AppendLine("| " + l.Id + " | " + l.Name + " | " + F(m.ShortestWinTurns) + " | " + F(m.ShortestWithoutWait) + " | " + F(m.ShortestWithoutSmoke) + " | " + F(m.ShortestWithoutEmp) +
-                              " | " + m.GuardCycleLcm + " | " + m.SafeNodeRatio.ToString("0.00") + " | " + m.AverageBranchingFactor.ToString("0.00") + " | " + m.ShortestSolutionCount + (m.ShortestSolutionCountCapped ? "+" : "") +
-                              " | `" + GameActionUtil.ToTokenString(m.ShortestSolution) + "` |");
+                var m = new StageMetrics();
+                var r = StageValidator.Validate(s, null, m);
+                if (!r.IsValid) invalid++;
+                sb.AppendLine((r.IsValid ? "valid   " : "INVALID ") + m);
+                if (!r.IsValid || r.WarningCount > 0) sb.Append(r.ToString());
             }
-            Directory.CreateDirectory(ReportsFolder);
-            string path = Path.Combine(ReportsFolder, "solver_metrics.md");
-            File.WriteAllText(path, sb.ToString());
-            Debug.Log("[ShadowSteps] wrote " + path + "\n" + sb);
+            Directory.CreateDirectory(Path.GetDirectoryName(ReportPath));
+            File.WriteAllText(ReportPath, sb.ToString());
+            Debug.Log("[ShadowSteps] " + pack.Stages.Count + " stages, " + invalid + " invalid. Report: " + ReportPath + "\n" + sb);
         }
 
-        [MenuItem("Shadow Steps/Levels/Export packaged levels as schema 2 (with backup)")]
-        public static void ExportSchema2()
+        [MenuItem("Shadow Steps/Stages/Re-export scoring into levels_v3.json (with backup)")]
+        public static void ReexportScoring()
         {
-            var pack = LevelPackLoader.Parse(File.ReadAllText(PackagedLevels));
-            string backup = PackagedLevels + "." + System.DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".bak";
-            File.Copy(PackagedLevels, backup, true);
-            string outPath = Path.Combine(Path.GetDirectoryName(PackagedLevels), "levels_v2.json");
-            File.WriteAllText(outPath, LevelPackWriter.ToJson(pack));
+            var pack = StageJson.Parse(File.ReadAllText(PackagedStages));
+            string backup = PackagedStages + "." + System.DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".bak";
+            File.Copy(PackagedStages, backup, true);
+            var updated = new System.Collections.Generic.List<Stage>();
+            foreach (var s in pack.Stages)
+            {
+                var m = StageMetrics.Analyze(s);
+                var b = s.ToBuilder();
+                b.Par = m.Par; b.ThreeStarActions = m.ThreeStar; b.TwoStarActions = m.TwoStar; b.GhostOffered = m.GhostOffered;
+                updated.Add(b.Build());
+            }
+            File.WriteAllText(PackagedStages, StageJson.ToJson(updated));
             AssetDatabase.Refresh();
-            Debug.Log("[ShadowSteps] exported " + outPath + " (backup of original at " + backup + "). The packaged levels.json was not replaced.");
+            Debug.Log("[ShadowSteps] scoring re-exported for " + updated.Count + " stages (backup " + backup + "). Run Tools/CoreTestRunner --v3-export-validation to refresh validation_v3.json.");
         }
     }
 }

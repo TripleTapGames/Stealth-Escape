@@ -1,28 +1,29 @@
-using ShadowSteps.Core;
 using ShadowSteps.Runtime;
+using ShadowSteps.V3;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ShadowSteps.UI
 {
     /// <summary>
-    /// Gameplay HUD: level title, turn counter, key state, hint/message line and the action buttons
-    /// (WAIT, SMOKE, EMP, UNDO, RESTART). It only reads <see cref="GameSessionController"/> state and forwards taps;
-    /// buttons disable while a turn animates or when the action is invalid. Build once with <see cref="BuildHierarchy"/>
+    /// Gameplay HUD (handover §8): stage title, Actions count, exact 3★/2★ targets, Ghost status when offered, alarm
+    /// countdown, gadget charges with targeting-mode toggles, WAIT, RETRY, pause, and a debug-only UNDO. It only reads
+    /// <see cref="GameSessionController"/> state and forwards taps. Build once with <see cref="BuildHierarchy"/>
     /// (used both by the prefab generator and at runtime when no prefab exists).
     /// </summary>
     public sealed class GameHudController : MonoBehaviour, IGameHud
     {
         [Header("Wired by BuildHierarchy or the prefab")]
         public UiText TitleText;
-        public UiText TurnText;
-        public UiText KeyText;
+        public UiText ActionsText;
+        public UiText TargetsText;
+        public UiText StatusText;
         public UiText MessageText;
         public UiButton WaitButton;
         public UiButton SmokeButton;
         public UiButton EmpButton;
+        public UiButton RetryButton;
         public UiButton UndoButton;
-        public UiButton RestartButton;
         public UiButton PauseButton;
         public RectTransform TopBar;
         public RectTransform BottomBar;
@@ -51,18 +52,20 @@ namespace ShadowSteps.UI
             safe.gameObject.AddComponent<SafeAreaFitter>();
 
             TopBar = UiBuilder.CreatePanel("TopBar", safe, UiBuilder.PanelColor);
-            UiBuilder.Anchor(TopBar, 0f, 0.88f, 1f, 1f);
-            TitleText = UiBuilder.CreateText("Title", TopBar, "Level", 44f, TextAnchor.MiddleLeft, true);
-            UiBuilder.Anchor(TitleText.Rect, 0.03f, 0.5f, 0.6f, 1f);
-            TurnText = UiBuilder.CreateText("Turns", TopBar, "Turn 0", 40f, TextAnchor.MiddleRight);
-            UiBuilder.Anchor(TurnText.Rect, 0.5f, 0.5f, 0.84f, 1f);
-            PauseButton = UiBuilder.CreateButton("Pause", TopBar, "II", UiBuilder.ButtonColor, 40f);
+            UiBuilder.Anchor(TopBar, 0f, 0.86f, 1f, 1f);
+            TitleText = UiBuilder.CreateText("Title", TopBar, "Stage", 40f, TextAnchor.MiddleLeft, true);
+            UiBuilder.Anchor(TitleText.Rect, 0.03f, 0.62f, 0.7f, 1f);
+            PauseButton = UiBuilder.CreateButton("Pause", TopBar, "II", UiBuilder.ButtonColor, 36f);
             UiBuilder.RemoveComponent(PauseButton.GetComponent<LayoutElement>());
-            UiBuilder.Anchor((RectTransform)PauseButton.transform, 0.86f, 0.52f, 0.98f, 0.98f);
-            KeyText = UiBuilder.CreateText("Key", TopBar, "", 32f, TextAnchor.MiddleLeft);
-            UiBuilder.Anchor(KeyText.Rect, 0.03f, 0f, 0.5f, 0.5f);
-            MessageText = UiBuilder.CreateText("Message", TopBar, "", 32f, TextAnchor.MiddleRight);
-            UiBuilder.Anchor(MessageText.Rect, 0.4f, 0f, 0.97f, 0.5f);
+            UiBuilder.Anchor((RectTransform)PauseButton.transform, 0.86f, 0.62f, 0.98f, 0.98f);
+            ActionsText = UiBuilder.CreateText("Actions", TopBar, "Actions 0", 34f, TextAnchor.MiddleLeft, true);
+            UiBuilder.Anchor(ActionsText.Rect, 0.03f, 0.32f, 0.4f, 0.62f);
+            TargetsText = UiBuilder.CreateText("Targets", TopBar, "", 28f, TextAnchor.MiddleRight);
+            UiBuilder.Anchor(TargetsText.Rect, 0.4f, 0.32f, 0.97f, 0.62f);
+            StatusText = UiBuilder.CreateText("Status", TopBar, "", 28f, TextAnchor.MiddleLeft);
+            UiBuilder.Anchor(StatusText.Rect, 0.03f, 0f, 0.45f, 0.32f);
+            MessageText = UiBuilder.CreateText("Message", TopBar, "", 26f, TextAnchor.MiddleRight);
+            UiBuilder.Anchor(MessageText.Rect, 0.4f, 0f, 0.97f, 0.32f);
 
             BottomBar = UiBuilder.CreatePanel("BottomBar", safe, UiBuilder.PanelColor);
             UiBuilder.Anchor(BottomBar, 0f, 0f, 1f, 0.2f);
@@ -76,10 +79,10 @@ namespace ShadowSteps.UI
 
             var row2 = UiBuilder.CreateRect("SystemRow", BottomBar);
             UiBuilder.HorizontalRow(row2, 14f, 0f);
-            UndoButton = UiBuilder.CreateButton("Undo", row2, "UNDO", UiBuilder.ButtonColor);
-            RestartButton = UiBuilder.CreateButton("Restart", row2, "RESTART", UiBuilder.ButtonDanger);
+            RetryButton = UiBuilder.CreateButton("Retry", row2, "RETRY", UiBuilder.ButtonDanger);
+            UndoButton = UiBuilder.CreateButton("Undo", row2, "UNDO (DEBUG)", UiBuilder.ButtonColor, 28f);
             WaitButton.SetLabel("WAIT"); SmokeButton.SetLabel("SMOKE"); EmpButton.SetLabel("EMP");
-            UndoButton.SetLabel("UNDO"); RestartButton.SetLabel("RESTART");
+            RetryButton.SetLabel("RETRY"); UndoButton.SetLabel("UNDO (DEBUG)");
         }
 
         /// <summary>Raised when the player taps the pause button; the flow controller decides what to show.</summary>
@@ -90,81 +93,107 @@ namespace ShadowSteps.UI
             if (_session != null) Unbind();
             _session = session;
             _session.StateChanged += OnStateChanged;
-            _session.LevelLoaded += OnLevelLoaded;
-            _session.TurnStarted += OnTurnStarted;
+            _session.StageLoaded += OnStageLoaded;
+            _session.ActionStarted += OnActionStarted;
             _session.ActionRejected += OnActionRejected;
-            _session.LevelWon += OnLevelWon;
-            _session.PlayerCaptured += OnCaptured;
-            WaitButton.Button.onClick.AddListener(() => _session.TrySubmit(GameAction.Wait));
-            SmokeButton.Button.onClick.AddListener(() => _session.TrySubmit(GameAction.Smoke));
-            EmpButton.Button.onClick.AddListener(() => _session.TrySubmit(GameAction.Emp));
-            UndoButton.Button.onClick.AddListener(() => _session.Undo());
-            RestartButton.Button.onClick.AddListener(() => _session.Restart());
+            _session.ModeChanged += OnModeChanged;
+            _session.Won += OnWon;
+            _session.Caught += OnCaught;
+            _session.LockedDown += OnLockedDown;
+            _session.AlarmTriggered += OnAlarm;
+            WaitButton.Button.onClick.AddListener(() => { if (_session.Mode == InputMode.Move) _session.TrySubmit(StageAction.Wait); });
+            SmokeButton.Button.onClick.AddListener(() => _session.ToggleMode(InputMode.SmokeTarget));
+            EmpButton.Button.onClick.AddListener(() => _session.ToggleMode(InputMode.EmpTarget));
+            RetryButton.Button.onClick.AddListener(() => _session.Retry());
+            UndoButton.Button.onClick.AddListener(() => _session.DebugUndo());
             PauseButton.Button.onClick.AddListener(() => PauseRequested?.Invoke());
-            if (_session.HasLevel) { OnLevelLoaded(_session.Level); OnStateChanged(_session.State); }
+            UndoButton.gameObject.SetActive(_session.DebugUndoEnabled);
+            if (_session.HasStage) { OnStageLoaded(_session.Stage); OnStateChanged(_session.State); }
         }
 
         private void Unbind()
         {
             _session.StateChanged -= OnStateChanged;
-            _session.LevelLoaded -= OnLevelLoaded;
-            _session.TurnStarted -= OnTurnStarted;
+            _session.StageLoaded -= OnStageLoaded;
+            _session.ActionStarted -= OnActionStarted;
             _session.ActionRejected -= OnActionRejected;
-            _session.LevelWon -= OnLevelWon;
-            _session.PlayerCaptured -= OnCaptured;
-            foreach (var b in new[] { WaitButton, SmokeButton, EmpButton, UndoButton, RestartButton, PauseButton }) b.Button.onClick.RemoveAllListeners();
+            _session.ModeChanged -= OnModeChanged;
+            _session.Won -= OnWon;
+            _session.Caught -= OnCaught;
+            _session.LockedDown -= OnLockedDown;
+            _session.AlarmTriggered -= OnAlarm;
+            foreach (var b in new[] { WaitButton, SmokeButton, EmpButton, RetryButton, UndoButton, PauseButton }) b.Button.onClick.RemoveAllListeners();
         }
 
         private void OnDestroy() { if (_session != null) Unbind(); }
 
-        private void OnLevelLoaded(LevelDefinition level)
+        private void OnStageLoaded(Stage stage)
         {
-            TitleText.Text = level.Id + ". " + level.Name;
-            _hint = level.Hint;
+            TitleText.Text = stage.Code.Replace("LEVEL-", "Level ").Replace("FTUE-", "FTUE ") + " · " + stage.Title;
+            TargetsText.Text = stage.Par > 0 ? "3★ ≤ " + stage.ThreeStarActions + "   2★ ≤ " + stage.TwoStarActions : "";
+            _hint = stage.Intro;
             ShowMessage(_hint ?? string.Empty, 0f);
         }
 
-        private void OnTurnStarted(TurnResult r) => SetButtons(false);
+        private void OnActionStarted(ActionOutcome o) => SetButtons(false);
 
-        private void OnStateChanged(GameState state)
+        private void OnStateChanged(StageState state)
         {
-            TurnText.Text = "Turn " + state.TurnCount;
-            var level = _session.Level;
-            KeyText.Text = level.HasKey ? (state.HasKey ? "Key: collected" : "Key: needed") : string.Empty;
+            ActionsText.Text = "Actions " + state.T;
+            var stage = _session.Stage;
+            string status = "";
+            if (state.AlarmActive) status = "LOCKDOWN: " + state.Alarm + " left";
+            else if (stage.GhostOffered) status = state.AlarmEver ? "Ghost lost" : "Ghost possible";
+            if (stage.Key.HasValue) status += (status.Length > 0 ? "  ·  " : "") + (state.HasKey ? "Key ✓" : "Key needed");
+            StatusText.Text = status;
             SmokeButton.SetCount(state.SmokeCharges);
             EmpButton.SetCount(state.EmpCharges);
             SetButtons(true);
         }
 
+        private void OnModeChanged(InputMode mode)
+        {
+            var state = _session.State;
+            SmokeButton.SetLabel(mode == InputMode.SmokeTarget ? "SMOKE: pick node (tap to cancel)" : "SMOKE");
+            EmpButton.SetLabel(mode == InputMode.EmpTarget ? "EMP: pick camera (tap to cancel)" : "EMP");
+            if (state != null) { SmokeButton.SetCount(state.SmokeCharges); EmpButton.SetCount(state.EmpCharges); }
+            if (mode == InputMode.SmokeTarget) ShowMessage("Tap a highlighted node to drop smoke (free action).", 0f);
+            else if (mode == InputMode.EmpTarget) ShowMessage("Tap a highlighted camera to disable it (free action).", 0f);
+            else if (_messageUntil == float.MaxValue) ShowMessage(_hint ?? string.Empty, 0f);
+        }
+
         private void SetButtons(bool enabled)
         {
             var state = _session.State;
-            var level = _session.Level;
+            var stage = _session.Stage;
             bool playing = enabled && state != null && !state.IsTerminal;
-            WaitButton.Interactable = playing && !level.NoWait;
+            WaitButton.Interactable = playing;
             SmokeButton.Interactable = playing && state.SmokeCharges > 0;
-            EmpButton.Interactable = playing && state.EmpCharges > 0;
-            UndoButton.Interactable = enabled && _session.Session != null && _session.Session.CanUndo && !level.NoUndo;
-            RestartButton.Interactable = enabled;
+            EmpButton.Interactable = playing && state.EmpCharges > 0 && stage.Cameras.Count > 0;
+            RetryButton.Interactable = enabled;
+            UndoButton.Interactable = enabled && _session.DebugUndoEnabled && _session.HistoryDepth > 0;
         }
 
-        private void OnActionRejected(GameAction action, InvalidActionReason reason)
+        private void OnActionRejected(StageAction action, RejectReason reason)
         {
             switch (reason)
             {
-                case InvalidActionReason.NoEdge: ShowMessage("No path that way"); break;
-                case InvalidActionReason.Wall: ShowMessage("Blocked"); break;
-                case InvalidActionReason.OutOfBounds: ShowMessage("Nothing there"); break;
-                case InvalidActionReason.LockedDoor: ShowMessage("Locked: find the key"); break;
-                case InvalidActionReason.NoSmokeCharge: ShowMessage("No smoke left"); break;
-                case InvalidActionReason.NoEmpCharge: ShowMessage("No EMP left"); break;
-                case InvalidActionReason.WaitDisabled: ShowMessage("Waiting is disabled here"); break;
-                case InvalidActionReason.GameOver: ShowMessage("Undo or restart"); break;
+                case RejectReason.Blocked: ShowMessage("Blocked"); break;
+                case RejectReason.NoConnection: ShowMessage("No connection that way"); break;
+                case RejectReason.KeyRequired: ShowMessage("Locked: find the key first"); break;
+                case RejectReason.NoSmokeCharge: ShowMessage("No smoke left"); break;
+                case RejectReason.BadSmokeTarget: ShowMessage("Cannot place smoke there"); break;
+                case RejectReason.NoEmpCharge: ShowMessage("No EMP left"); break;
+                case RejectReason.BadCamera: ShowMessage("Pick a camera"); break;
+                case RejectReason.CameraAlreadyDisabled: ShowMessage("That camera is already disabled"); break;
+                case RejectReason.GameOver: ShowMessage("Retry the stage"); break;
             }
         }
 
-        private void OnLevelWon(TurnResult r) => ShowMessage("Extracted in " + r.StateAfter.TurnCount + " turns", 0f);
-        private void OnCaptured(TurnResult r) => ShowMessage(r.Capture == CaptureKind.Seen ? "Spotted! Undo or restart" : "Caught! Undo or restart", 0f);
+        private void OnWon(ActionOutcome o) => ShowMessage("Escaped in " + o.After.T + " actions", 0f);
+        private void OnCaught(ActionOutcome o) => ShowMessage("Busted: " + o.After.Cause, 0f);
+        private void OnLockedDown(ActionOutcome o) => ShowMessage("Security lockdown: time ran out", 0f);
+        private void OnAlarm(ActionOutcome o) => ShowMessage("Alarm! " + o.After.Alarm + " actions to escape", 3f);
 
         public void ShowMessage(string message) => ShowMessage(message, 1.8f);
 

@@ -2,12 +2,14 @@ using System.Collections;
 using ShadowSteps.Data;
 using ShadowSteps.Runtime;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 namespace ShadowSteps.UI
 {
-    /// <summary>Composition root of the Home scene: Home, Level Select and Settings screens on one canvas.</summary>
+    /// <summary>
+    /// Composition root of the Home scene: Home, Level Select and Settings screens in one canvas. Opens the requested
+    /// stage by setting <see cref="AppServices.PendingStageId"/> and loading the Game scene.
+    /// </summary>
     public sealed class MenuSceneComposer : MonoBehaviour
     {
         public UiPrefabSet Prefabs;
@@ -22,30 +24,11 @@ namespace ShadowSteps.UI
                 yield return AppServices.InitializeAsync(r => ok = r);
                 if (!ok) { Debug.LogError("[ShadowSteps] cannot start menu: " + AppServices.LastError); yield break; }
             }
-            AudioService.Ensure();
             Build();
-            Ready = true;
         }
 
         public void Build()
         {
-            if (FindObjectOfType<EventSystem>() == null)
-            {
-                var es = new GameObject("EventSystem");
-                es.AddComponent<EventSystem>();
-                es.AddComponent<StandaloneInputModule>();
-            }
-            var cam = Camera.main;
-            if (cam == null)
-            {
-                var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
-                cam = camGo.AddComponent<Camera>();
-                camGo.AddComponent<AudioListener>();
-            }
-            cam.orthographic = true;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.07f, 0.09f, 0.13f);
-
             var canvas = UiBuilder.CreateCanvas("MenuCanvas", 10);
             Router = canvas.gameObject.AddComponent<ScreenRouter>();
             Router.ReducedMotion = AppServices.Save != null && AppServices.Save.Settings.ReducedMotion;
@@ -53,25 +36,25 @@ namespace ShadowSteps.UI
             var home = Router.Register(set.Create<HomeScreen>(canvas.transform, set.HomeScreen));
             var levels = Router.Register(set.Create<LevelSelectScreen>(canvas.transform, set.LevelSelectScreen));
             var settings = Router.Register(set.Create<SettingsScreen>(canvas.transform, set.SettingsScreen));
-
-            home.OnPlay = () => OpenLevel(Progression.FirstUnfinished(AppServices.Levels, AppServices.Save).Id);
+            home.OnPlay = () => OpenStage(StageProgression.FirstUnfinished(AppServices.Stages, AppServices.Save).Id);
             home.OnLevelSelect = () => Router.Push<LevelSelectScreen>();
             home.OnSettings = () => Router.Push<SettingsScreen>();
             levels.OnBack = () => Router.Pop();
-            levels.OnLevelChosen = OpenLevel;
+            levels.OnLevelChosen = OpenStage;
             settings.OnClose = () => Router.Pop();
             settings.OnChanged = s => Router.ReducedMotion = s.ReducedMotion;
-
+            AudioService.Ensure();
             Router.Replace<HomeScreen>();
             if (AppServices.PendingMenu == AppServices.MenuLevelSelect) Router.Push<LevelSelectScreen>();
             AppServices.PendingMenu = null;
+            Ready = true;
         }
 
-        public void OpenLevel(int id)
+        public void OpenStage(int id)
         {
-            if (!Progression.IsUnlocked(AppServices.Levels, AppServices.Save, id)) return;
+            if (!StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, id)) return;
             AudioService.Instance?.Play(Sfx.Tap);
-            AppServices.PendingLevelId = id;
+            AppServices.PendingStageId = id;
             SceneManager.LoadScene(GameFlowController.GameSceneName);
         }
     }

@@ -324,3 +324,42 @@ Exhaustive check: the solver's explored-state counts for the unsolvable levels a
 **Manual steps:** Test Runner EditMode/PlayMode; play 101 → 105 → 1 → 20 in order and note where the par feels wrong; adjust the spec bands and regenerate.
 
 **Next:** decide KNOWN_ISSUES #19 (EMP semantics) and #17 (danger overlay), then device playtest of the curve.
+
+## 2026-10-29 — V3 handover: M0 audit, M1 canonical core, M2 gadgets/alarm/score, M3 solver/validator, M4 30-level import
+
+**Handover:** `reference/v3_handover_2026-10-29/` (SHADOW_STEPS_CLAUDE_CODE_HANDOVER.md is the rules authority). Audit: `Docs/V3_MIGRATION_AUDIT.md`. V2 packs and specs backed up to `reference/v2_shadowsteps_packs_backup/`.
+
+**Files**
+- Core/V3: Stage.cs (Stage, StageBuilder, GuardSpec, CameraSpec, DoorSpec, EdgeKey), Tracks.cs (GuardTrack incl. NEXT step, CameraTrack), Sight.cs (HitsRect/SegmentsMeet/Obstructed shared by guards, cameras and smoke throws; 2-node guard LOS; 3×2 camera footprint), StageState.cs (immutable; T = counted actions; clouds, EMPs, door bitmask, alarm, alarmEver), StageRules.cs (TryApply in the §3.1 order, ActionOutcome with capture phase/cause, StageReplay), StageSolver.cs (layered 0-1 BFS with free-gadget closure, StageScoring provisional formula, StageMetrics incl. mandatory-gadget and alarm-free solves), StageValidator.cs (§11 checks: board, cameras on walls facing floor, routes guard-passable and door-free, full-cycle overlap with swaps allowed, start safety, solver gates, Ghost/forced-alarm, endpoint-extension warning).
+- Data/StageJson.cs: schema 3 read/write; BrowserLevelImporter (camera notch → wall).
+- Tools: V3Tools.cs (`--v3-import <browser> <out> [validation]`, `--v3-validate`, `--v3-export-validation`, `--v3-trace`).
+- Content: `Assets/StreamingAssets/ShadowSteps/levels_v3.json` (30 stages, solver scoring), `validation_v3.json` (traces + metrics).
+- Tests: Tests/EditMode/V3 (V3TestKit, V3TrackTests, V3SightTests, V3RulesTests, V3CameraAlarmTests, V3GadgetTests, V3SolverTests, V3PackParityTests) — the §13 fixtures plus 30-level parity.
+
+**Measured (C# solver):** 30/30 pars equal the browser pars and `playtest_validation_report.json`; Ghost offered on 16, 18, 20, 24, 25 (equal to browser); forced alarm on 17, 19, 23; smoke mandatory on 21 and 25; EMP mandatory on 23 and 25; no guard overlaps over any full cycle; all solver paths replay to wins with exactly par counted actions.
+
+**Tests run:** `Tools/run_core_tests.sh` → 260 passed, 0 failed (54 new). `Tools/unity_compile_check.py` → 0 errors.
+
+**Verified in Unity editor?** No (editor lock). **Verified on device?** No.
+
+**Next:** M5 runtime/UI migration to the V3 engine (board, guards with facing + NEXT markers, wall cameras with footprint, smoke/EMP targeting modes, alarm HUD, retry without undo), then M6 progression/persistence of stars + Ghost.
+
+## 2026-10-29 — V3 M5 runtime/UI migration and M6 progression (compile-verified, Unity run pending)
+
+**Files**
+- Data: StageCatalog.cs (StageCatalog, StageProgression: unlock by catalog order, stars via StageScoring, RecordWin with Ghost), SaveData/SaveRepository (BestStars, Ghost, DebugUnlockAll; optional JSON fields, old saves load).
+- Runtime (rewritten on `ShadowSteps.V3`): BoardTheme (hazard/camera/marker colours), Views (NodeView floor/wall, ConnectionView with door padlock, PropView, CharacterView with facing + cyan NEXT marker + rotation marker, CameraView on the wall face with lens/sweep marker/disabled pips/EMP highlight, CloudView with pips, VisionOverlay fill+border), BoardView (connections from the stage graph, guard red / camera amber overlays from `Sight`, reachable cyan nodes, smoke targets, camera highlight, one-action preview with ghosts and outcome marker), TurnAnimationCoordinator (player first; guards/cameras only if the update happened; expiry flash; win/lockdown pulses), GameSessionController (TryApply, modes Move/SmokeTarget/EmpTarget, TapNode/TapCamera, Retry, debug-only undo), InputController (tap/swipe/long-press preview state machine, gadget modes never move), GameSceneComposer, AppServices (loads `levels_v3.json` only), CameraFitter.
+- UI: GameHudController (Actions, 3★/2★ targets, Ghost/alarm/key status, gadget mode toggles, RETRY, debug UNDO), GameFlowController (results with stars/Ghost/best, failure with cause + phase, lockdown, onboarding from stage intro), Screens (LevelSelect with stars/best/ghost, Results, Failure), MenuSceneComposer.
+- Editor: LevelValidationMenu → Shadow Steps ▸ Stages ▸ Validate / Re-export scoring.
+- Tests: PlayMode rewritten (8 scene tests: board fidelity + overlay parity on FTUE-3, one-node move + HUD, free invalid move, solver path wins with par actions on LEVEL-3, retry, smoke targeting free action, EMP disables camera footprint, camera fit on a 7-column camera stage; 4 flow tests: win → results/stars/unlock, capture → failure cause → retry, lockdown failure + Ghost on LEVEL-16, pause lock).
+
+**Scope boundaries honoured:** no hints, no checkpoints, no production undo (debug builds only), no monetisation, no final art (procedural placeholders through BoardTheme).
+
+**Tests run:** `Tools/run_core_tests.sh` → 260 passed, 0 failed. `Tools/unity_compile_check.py` → 0 errors (Core, Data, Runtime, UI, Editor, EditMode, PlayMode).
+
+**Verified in Unity editor?** No (editor lock). **Verified on device?** No.
+
+**Manual steps:** close the Unity Editor; `Tools/run_unity_tests.sh All`; open Bootstrap.unity, Play: Home → Level Select → FTUE 1; on FTUE 3 long-press an adjacent node to see the preview; on Level 21 tap SMOKE then a cyan node; on Level 23 tap EMP then the camera; confirm NEXT markers on Level 3 / 5 and the amber footprint on Level 16.
+
+**Next:** Unity run and device QA (handover M5/M6 acceptance), then retire the V2 core/packs (D-027, KNOWN_ISSUES #23/#25).
+

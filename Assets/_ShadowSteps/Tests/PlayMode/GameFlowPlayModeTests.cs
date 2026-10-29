@@ -4,99 +4,118 @@ using ShadowSteps.Core;
 using ShadowSteps.Data;
 using ShadowSteps.Runtime;
 using ShadowSteps.UI;
+using ShadowSteps.V3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace ShadowSteps.Tests.PlayMode
 {
-    /// <summary>V2 M6: win → results + save, capture → failure, pause locks input, undo from failure works.</summary>
+    /// <summary>V3 M5/M6: win → results + save (stars, Ghost), capture → failure → retry, lockdown → failure, pause locks input.</summary>
     public class GameFlowPlayModeTests
     {
         private GameSceneComposer _composer;
         private GameFlowController _flow;
-        
-        [UnitySetUp]
-        public IEnumerator SetUp()
+
+        private IEnumerator Open(int stageId)
         {
-            yield return ResetScene();
-            AppServices.PendingLevelId = 1;
+            AppServices.ResetForTests();
+            foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
+            yield return null;
+            AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
+            AppServices.InstallSaveForTests(new SaveData());
+            AppServices.PendingStageId = stageId;
             _composer = new GameObject("Composer").AddComponent<GameSceneComposer>();
             yield return null; yield return null;
             Assert.IsTrue(_composer.Ready);
             _flow = Object.FindObjectOfType<GameFlowController>();
             Assert.IsNotNull(_flow, "flow controller attaches to every composed Game scene");
-        }
-
-        private static IEnumerator ResetScene()
-        {
-            AppServices.ResetForTests();
-            foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
+            _flow.Router.PopAllModals(); // dismiss the onboarding card
             yield return null;
-            var root = TestRoot();
-            AppServices.InstallLevels(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/levels_tutorial_v2.json")), System.IO.File.ReadAllText(AppServices.LevelsPath) });
-            AppServices.InstallPars(new[] { System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_tutorial_v2.json")), System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/StreamingAssets/ShadowSteps/validation_v2.json")) });
-            AppServices.InstallSaveForTests(new SaveData());
-        }
-
-        private static string TestRoot()
-        {
-            var dir = new System.IO.DirectoryInfo(Application.dataPath).Parent;
-            return dir.FullName;
         }
 
         private IEnumerator Play(params string[] tokens)
         {
             foreach (var t in tokens)
             {
-                Assert.IsTrue(_composer.Session.TrySubmit(GameActionUtil.Parse(t)), "action " + t);
+                Assert.IsTrue(StageAction.TryParse(t, out var a), t);
+                Assert.IsTrue(_composer.Session.TrySubmit(a), "action " + t);
                 while (_composer.Session.IsBusy) yield return null;
             }
         }
 
         [UnityTest]
-        public IEnumerator Win_ShowsResults_AndLocksInput()
+        public IEnumerator Win_ShowsResults_RecordsStars_AndUnlocksNext()
         {
-            yield return Play("N", "N", "E", "E", "N", "E", "N", "E");
+            yield return Open(1);
+            yield return Play("E", "E", "E");
             yield return null;
             var results = _flow.Router.Get<ResultsScreen>();
             Assert.IsTrue(results.IsVisible);
             Assert.IsTrue(_composer.Session.InputLocked);
-            Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), "level 1 par is 8 from validation_v2.json: " + results.StarsText.Text);
+            Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), results.StarsText.Text);
             Assert.IsTrue(AppServices.Save.IsCompleted(1));
-            Assert.AreEqual(8, AppServices.Save.GetResult(1).BestTurns);
+            Assert.AreEqual(3, AppServices.Save.GetResult(1).BestTurns);
+            Assert.AreEqual(3, AppServices.Save.GetResult(1).BestStars);
+            Assert.IsTrue(StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, 2));
+            Assert.IsFalse(StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, 3));
         }
 
         [UnityTest]
-        public IEnumerator Capture_ShowsFailure_UndoRecovers()
+        public IEnumerator Capture_ShowsFailureWithCause_RetryRestores()
         {
-            // Level 1: fixed guard at (2,0) facing N range 1 sees nothing on board; walk into its node instead (occupancy capture).
-            // (0,4) -> (0,3) -> (0,2) -> (1,2) -> (2,2) -> (2,1); (0,0) and (1,1) are walls.
-            yield return Play("N", "N", "E", "E", "N");
+            yield return Open(3); // FTUE-3: guard at (2,0) facing S sees (2,1),(2,2); start (0,2)
+            yield return Play("E");
             Assert.IsFalse(_composer.Session.State.IsTerminal);
-            yield return Play("N"); // into (2,0), the guard's node -> occupied
+            yield return Play("E"); // into (2,2): seen before the guard update
             yield return null;
             var failure = _flow.Router.Get<FailureScreen>();
             Assert.IsTrue(failure.IsVisible);
-            failure.OnUndo();
+            Assert.AreEqual("BUSTED", failure.TitleText.Text);
+            StringAssert.Contains("before it moved", failure.ReasonText.Text);
+            failure.OnRetry();
             yield return null;
             Assert.IsFalse(failure.IsVisible);
             Assert.IsFalse(_composer.Session.State.IsTerminal);
             Assert.IsFalse(_composer.Session.InputLocked);
-            Assert.AreEqual(5, _composer.Session.State.TurnCount);
+            Assert.AreEqual(0, _composer.Session.State.T);
+            Assert.AreEqual(_composer.Session.Stage.Start, _composer.Session.State.Player);
+        }
+
+        [UnityTest]
+        public IEnumerator Lockdown_ShowsSecurityFailure_AndGhostIsRecordedOnAlarmFreeWins()
+        {
+            yield return Open(22); // LEVEL-17 Race the Alarm: budget 3, forced alarm
+            yield return Play("E");  // alarm triggered at (2,3)
+            Assert.IsTrue(_composer.Session.State.AlarmActive);
+            yield return Play("WAIT", "WAIT", "WAIT"); // budget runs out away from the exit
+            yield return null;
+            var failure = _flow.Router.Get<FailureScreen>();
+            Assert.IsTrue(failure.IsVisible);
+            Assert.AreEqual("SECURITY LOCKDOWN", failure.TitleText.Text);
+
+            yield return Open(21); // LEVEL-16 Camera Basics: Ghost offered, alarm-free route exists
+            var ghostRoute = StageSolver.Solve(_composer.Session.Stage, new SolveOptions { AlarmFreeOnly = true });
+            Assert.IsTrue(ghostRoute.Found);
+            foreach (var a in ghostRoute.Actions) { Assert.IsTrue(_composer.Session.TrySubmit(a)); while (_composer.Session.IsBusy) yield return null; }
+            yield return null;
+            Assert.IsTrue(_flow.Router.Get<ResultsScreen>().IsVisible);
+            Assert.IsTrue(AppServices.Save.GetResult(21).Ghost, "alarm-free completion earns Ghost");
+            Assert.AreEqual(1, AppServices.Save.GetResult(21).BestStars, "8 actions against par 4 is one star");
         }
 
         [UnityTest]
         public IEnumerator Pause_LocksInput_ResumeUnlocks()
         {
+            yield return Open(1);
             _flow.Router.Push<PauseScreen>();
             yield return null;
             Assert.IsTrue(_composer.Session.InputLocked);
-            Assert.IsFalse(_composer.Session.TrySubmit(GameAction.North));
+            Assert.IsFalse(_composer.Session.TrySubmit(StageAction.Move(Direction.East)));
             _flow.Router.Pop();
             yield return null;
             Assert.IsFalse(_composer.Session.InputLocked);
-            Assert.IsTrue(_composer.Session.TrySubmit(GameAction.North));
+            Assert.IsTrue(_composer.Session.TrySubmit(StageAction.Move(Direction.East)));
         }
     }
 }

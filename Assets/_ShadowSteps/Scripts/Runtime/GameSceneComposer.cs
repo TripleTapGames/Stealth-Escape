@@ -1,6 +1,6 @@
 using System.Collections;
-using ShadowSteps.Core;
 using ShadowSteps.Data;
+using ShadowSteps.V3;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -19,8 +19,8 @@ namespace ShadowSteps.Runtime
         public GameObject HudPrefab;
         [Tooltip("Optional UiPrefabSet asset (ScriptableObject from the UI assembly) with screen/HUD prefabs.")]
         public ScriptableObject UiPrefabs;
-        [Tooltip("Level to open when the scene is started directly in the editor and no level was requested (0 = first unfinished).")]
-        public int DebugLevelId = 0;
+        [Tooltip("Stage id to open when the scene is started directly in the editor and no stage was requested (0 = first unfinished).")]
+        public int DebugStageId = 0;
 
         public Camera BoardCamera { get; private set; }
         public BoardView Board { get; private set; }
@@ -30,10 +30,7 @@ namespace ShadowSteps.Runtime
         public IGameHud Hud { get; private set; }
         public bool Ready { get; private set; }
 
-        private void Awake()
-        {
-            BuildScene();
-        }
+        private void Awake() { BuildScene(); }
 
         private IEnumerator Start()
         {
@@ -41,22 +38,18 @@ namespace ShadowSteps.Runtime
             {
                 bool ok = false;
                 yield return AppServices.InitializeAsync(r => ok = r);
-                if (!ok)
-                {
-                    Hud?.ShowMessage("Could not load levels: " + AppServices.LastError);
-                    yield break;
-                }
+                if (!ok) { Hud?.ShowMessage("Could not load stages: " + AppServices.LastError); yield break; }
             }
-            int id = AppServices.PendingLevelId > 0 ? AppServices.PendingLevelId : DebugLevelId;
-            AppServices.PendingLevelId = 0;
-            var level = (id > 0 ? AppServices.Levels.ById(id) : null) ?? Progression.FirstUnfinished(AppServices.Levels, AppServices.Save);
-            OpenLevel(level);
+            int id = AppServices.PendingStageId > 0 ? AppServices.PendingStageId : DebugStageId;
+            AppServices.PendingStageId = 0;
+            var stage = (id > 0 ? AppServices.Stages.ById(id) : null) ?? StageProgression.FirstUnfinished(AppServices.Stages, AppServices.Save);
+            OpenStage(stage);
         }
 
-        public void OpenLevel(LevelDefinition level)
+        public void OpenStage(Stage stage)
         {
-            Session.LoadLevel(level);
-            if (AppServices.Save != null) { AppServices.Save.LastPlayedLevelId = level.Id; AppServices.PersistSave(); }
+            Session.LoadStage(stage);
+            if (AppServices.Save != null) { AppServices.Save.LastPlayedLevelId = stage.Id; AppServices.PersistSave(); }
             Ready = true;
         }
 
@@ -78,7 +71,6 @@ namespace ShadowSteps.Runtime
             var boardGo = new GameObject("Board");
             Board = boardGo.AddComponent<BoardView>();
             Board.Theme = Theme != null ? Theme : BoardTheme.CreateRuntimeDefault();
-            Board.HighContrastCones = AppServices.Save != null && AppServices.Save.Settings.ColorBlindAssist;
             BoardCamera.backgroundColor = Board.Theme.Background;
 
             var fitter = BoardCamera.GetComponent<CameraFitter>() ?? BoardCamera.gameObject.AddComponent<CameraFitter>();
@@ -94,9 +86,8 @@ namespace ShadowSteps.Runtime
             Input = sessionGo.AddComponent<InputController>();
             Input.Session = Session;
             Input.BoardCamera = BoardCamera;
-            Input.ActionRequested += a => Session.TrySubmit(a);
-            Input.UndoRequested += () => Session.Undo();
-            Input.RestartRequested += () => Session.Restart();
+            Input.RetryRequested += () => Session.Retry();
+            Input.UndoRequested += () => Session.DebugUndo();
 
             if (FindObjectOfType<EventSystem>() == null)
             {

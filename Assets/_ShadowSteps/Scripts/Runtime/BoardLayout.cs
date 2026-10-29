@@ -24,6 +24,8 @@ namespace ShadowSteps.Runtime
         }
 
         public static BoardLayout For(LevelDefinition level) => new BoardLayout(level.Width, level.Height, (float)level.NodeSpacing);
+        /// <summary>V3 stages always use a spacing of one world unit.</summary>
+        public static BoardLayout For(ShadowSteps.V3.Stage stage) => new BoardLayout(stage.Width, stage.Height, 1f);
 
         public Vector3 WorldPosition(GridCoord c) => new Vector3(Origin.x + c.X * NodeSpacing, Origin.y - c.Y * NodeSpacing, 0f);
 
