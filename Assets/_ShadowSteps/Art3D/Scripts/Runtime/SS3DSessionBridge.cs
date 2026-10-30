@@ -49,7 +49,7 @@ namespace ShadowSteps.Art3D
             if (composer.Board != null) { var fitter2D = composer.BoardCamera.GetComponent<CameraFitter>(); if (fitter2D != null) fitter2D.enabled = false; composer.Board.gameObject.SetActive(false); }
             Fitter = composer.BoardCamera.GetComponent<SS3DBoardCameraFitter>() ?? composer.BoardCamera.gameObject.AddComponent<SS3DBoardCameraFitter>();
             var palette = _palette != null ? _palette : Renderer.palette;
-            Fitter.board = Renderer; Fitter.usePerspective = palette.usePerspectiveCamera; Fitter.fieldOfView = palette.fieldOfView;
+            Fitter.board = Renderer; Fitter.usePerspective = palette.usePerspectiveCamera; Fitter.fieldOfView = palette.fieldOfView; Fitter.paddingTiles = palette.cameraPaddingTiles; Fitter.minWidthTiles = palette.minFramedTiles.x; Fitter.minDepthTiles = palette.minFramedTiles.y;
             SS3DArtTuning.ApplyLighting(Renderer.palette, composer.BoardCamera);
             SS3DArtTuning.ApplyPostProcessing(Renderer.palette, composer.BoardCamera);
             if (composer.Input != null)

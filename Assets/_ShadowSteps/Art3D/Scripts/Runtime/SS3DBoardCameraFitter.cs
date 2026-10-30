@@ -20,7 +20,9 @@ namespace ShadowSteps.Art3D
         [Range(0f, 0.5f)] public float topReservedFraction = 0.14f;
         [Range(0f, 0.5f)] public float bottomReservedFraction = 0.22f;
         [Tooltip("Extra world margin around the board bounds, in tiles. Small on purpose: the board is width-bound in portrait, so this directly sets how large the grid reads (0.55 ≈ parapets at the screen edge).")]
-        public float paddingTiles = 0.78f; // half-tile terrace border + plinth + a sliver of moat: nothing of the platform is cropped
+        public float paddingTiles = 0.78f;
+        [Tooltip("The framed area is never smaller than this many tiles (sunlit theme: 6 × 4, so small FTUE boards keep a proportional platform instead of a microscopic one).")]
+        public float minWidthTiles = 0f, minDepthTiles = 0f; // half-tile terrace border + plinth + a sliver of moat: nothing of the platform is cropped
         [Tooltip("Tallest portrait aspect (width/height) the decoration must fill; 9:19.5 covers modern phones.")]
         public float designAspect = 9f / 19.5f;
         public float minimumSize = 2.4f;
@@ -50,7 +52,9 @@ namespace ShadowSteps.Art3D
             _cam = _cam != null ? _cam : GetComponent<Camera>();
             var rot = Quaternion.Euler(downwardAngle, yaw, 0f);
             float pad = paddingTiles * (board != null ? board.tileSpacing : 1f);
-            var b = new Bounds(boardBounds.center, boardBounds.size + new Vector3(pad * 2f, 0f, pad * 2f));
+            float ts = board != null ? board.tileSpacing : 1f;
+            var framed = new Vector3(Mathf.Max(boardBounds.size.x, minWidthTiles * ts), boardBounds.size.y, Mathf.Max(boardBounds.size.z, minDepthTiles * ts));
+            var b = new Bounds(boardBounds.center, framed + new Vector3(pad * 2f, 0f, pad * 2f));
             var inv = Quaternion.Inverse(rot);
             var local = new Vector3[8];
             for (int i = 0; i < 8; i++)

@@ -92,7 +92,8 @@ namespace ShadowSteps.Art3D
                         if (tile != null) tile.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset);
                         SS3DArtTuning.Tint(tile, altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
                     }
-                    if (stage.IsWall(c) && palette.kitMode && palette.kitWallSegment != null && palette.kitWallPost != null) BuildKitWall(stage, c, pos);
+                    if (stage.IsWall(c) && palette.sunlitCourtyard) BuildMasonryWall(stage, c, pos);
+                    else if (stage.IsWall(c) && palette.kitMode && palette.kitWallSegment != null && palette.kitWallPost != null) BuildKitWall(stage, c, pos);
                     else if (stage.IsWall(c))
                     {
                         var wallPrefab = palette.kitMode && palette.kitWallVariants != null && palette.kitWallVariants.Length > 0 ? palette.kitWallVariants[(x * 7 + y * 3) % palette.kitWallVariants.Length] : null;
@@ -229,7 +230,7 @@ namespace ShadowSteps.Art3D
             }
             _guards.Clear(); _guardAnimators.Clear(); _guardFacing.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraBadges.Clear(); _cameraHighlights.Clear(); _cameraHeadRenderers.Clear(); _cameraLights.Clear(); _cameraPools.Clear();
-            _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear(); _stoneMats.Clear();
+            _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear(); _stoneMats.Clear(); _blockMats.Clear();
             _player = null; _playerAnimator = null; _key = null; _previewMarker = null;
             foreach (var pool in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) pool.Reset();
             Stage = null;
@@ -405,6 +406,37 @@ namespace ShadowSteps.Art3D
                 SS3DArtTuning.Tint(seg, SS3DTint.Wall, palette);
                 if (seg != null) SS3DKitFit.Fit(seg, ground + Vector3.back * 0.5f * s, 1.0f * s, h, 0.26f * s, false);
             }
+        }
+
+        private readonly Dictionary<Color, Material> _blockMats = new Dictionary<Color, Material>();
+        /// <summary>Procedural bevelled ivory block (bottom-centre origin) for the sunlit theme's masonry.</summary>
+        public GameObject Block(string name, Vector3 pos, float sizeX, float height, float sizeZ, float chamfer, Color color, Transform parent = null)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent != null ? parent : _geometry, false);
+            go.transform.position = pos;
+            go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(Mathf.Max(0.02f, sizeX), Mathf.Max(0.02f, height), Mathf.Max(0.02f, sizeZ), chamfer);
+            if (!_blockMats.TryGetValue(color, out var mat) || mat == null) { mat = MakeLitMaterial("SS3D Masonry " + ColorUtility.ToHtmlStringRGB(color), color); if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", palette.stoneSmoothness); _blockMats[color] = mat; }
+            go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+            return go;
+        }
+
+        /// <summary>
+        /// Sunlit theme: a wall cell is non-walkable ivory masonry, drawn as a continuous low wall (post on the cell,
+        /// course toward each wall neighbour east/south, cap on top) so it reads as architecture, never as a boulder.
+        /// </summary>
+        private void BuildMasonryWall(Stage stage, GridCoord c, Vector3 pos)
+        {
+            float s = tileSpacing, h = Mathf.Clamp(palette.wallHeightScale, 0.35f, 0.8f);
+            var ground = pos + Vector3.up * (FloorTop - 0.02f);
+            bool east = stage.IsWall(c.Neighbor(Direction.East)), south = stage.IsWall(c.Neighbor(Direction.South));
+            bool west = stage.IsWall(c.Neighbor(Direction.West)), north = stage.IsWall(c.Neighbor(Direction.North));
+            bool isolated = !east && !south && !west && !north;
+            float postW = isolated ? 0.72f * s : 0.44f * s;
+            Block("WallPost_" + c.X + "_" + c.Y, ground, postW, h + 0.06f, postW, 0.05f, palette.wallIvory);
+            Block("WallPostCap_" + c.X + "_" + c.Y, ground + Vector3.up * (h + 0.06f), postW + 0.08f * s, 0.08f, postW + 0.08f * s, 0.03f, palette.trimIvory);
+            if (east) { Block("WallRun_E_" + c.X + "_" + c.Y, ground + Vector3.right * 0.5f * s, 1.0f * s, h, 0.28f * s, 0.02f, palette.wallIvory); Block("WallCap_E_" + c.X + "_" + c.Y, ground + Vector3.right * 0.5f * s + Vector3.up * h, 1.0f * s, 0.06f, 0.34f * s, 0.02f, palette.trimIvory); }
+            if (south) { Block("WallRun_S_" + c.X + "_" + c.Y, ground + Vector3.back * 0.5f * s, 0.28f * s, h, 1.0f * s, 0.02f, palette.wallIvory); Block("WallCap_S_" + c.X + "_" + c.Y, ground + Vector3.back * 0.5f * s + Vector3.up * h, 0.34f * s, 0.06f, 1.0f * s, 0.02f, palette.trimIvory); }
         }
 
         private readonly List<Material> _stoneMats = new List<Material>();

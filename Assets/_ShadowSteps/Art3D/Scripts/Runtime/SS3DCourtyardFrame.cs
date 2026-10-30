@@ -12,7 +12,7 @@ namespace ShadowSteps.Art3D
     /// removed; it introduces no walls, blocked cells or vision blockers, and nothing south of the board is tall enough
     /// to hide a node at the 58° view (height &lt; 1.6 × distance from the last row).
     /// </summary>
-    public sealed class SS3DCourtyardFrame : MonoBehaviour
+    public sealed partial class SS3DCourtyardFrame : MonoBehaviour
     {
         public SS3DArtPalette palette;
         public bool generateExterior = true;
@@ -41,6 +41,7 @@ namespace ShadowSteps.Art3D
             if (!generateExterior) return;
             var stage = board.Stage;
             float s = board.tileSpacing;
+            if (palette.sunlitCourtyard) { BuildSunlit(board); return; }
             float north = board.ToWorld(0, 0).z + s * borderOffset;
             float south = board.ToWorld(0, stage.Height - 1).z - s * borderOffset;
             float left = board.ToWorld(0, 0).x - s * borderOffset;

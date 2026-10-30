@@ -64,11 +64,44 @@ namespace ShadowSteps.Art3D
                     }
                     if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", color);
                     else if (m.HasProperty("_Color")) m.SetColor("_Color", color);
+                    if (role == SS3DTint.Water && palette.sunlitCourtyard && m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", WaterTexture());
                     if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth);
                     if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", smooth);
                     if (emission.maxColorComponent > 0f && m.HasProperty("_EmissionColor")) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", emission); }
                 }
             }
+        }
+
+        private static Texture2D _water; private static Material _waterMat;
+        /// <summary>Procedural turquoise water albedo with soft caustic highlights (generated once, 256², tiling).</summary>
+        public static Texture2D WaterTexture()
+        {
+            if (_water != null) return _water;
+            const int n = 256;
+            _water = new Texture2D(n, n, TextureFormat.RGBA32, true) { name = "SS3D Water", wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear, hideFlags = HideFlags.DontSave };
+            var px = new Color[n * n];
+            for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+            {
+                float u = (float)x / n, v = (float)y / n;
+                float a = Mathf.PerlinNoise(u * 6f + 3.1f, v * 6f + 7.7f), b = Mathf.PerlinNoise(u * 13f + 11.3f, v * 13f + 2.9f);
+                float caustic = Mathf.Pow(1f - Mathf.Abs(a - 0.5f) * 2f, 6f) * 0.55f + Mathf.Pow(1f - Mathf.Abs(b - 0.5f) * 2f, 10f) * 0.35f;
+                float depth = 0.85f + (Mathf.PerlinNoise(u * 3f, v * 3f) - 0.5f) * 0.25f;
+                px[y * n + x] = new Color(Mathf.Clamp01(depth * 0.9f + caustic), Mathf.Clamp01(depth * 0.97f + caustic * 0.9f), Mathf.Clamp01(depth + caustic * 0.6f), 1f);
+            }
+            _water.SetPixels(px); _water.Apply(true);
+            return _water;
+        }
+
+        /// <summary>Shared lit water material for procedural water slabs (moat, pools, waterfall sheets): palette turquoise × caustic texture, high smoothness, faint emission.</summary>
+        public static Material WaterMaterial(SS3DArtPalette palette)
+        {
+            if (_waterMat != null) return _waterMat;
+            _waterMat = SS3DLevelRenderer.MakeLitMaterial("SS3D Water", palette.waterTurquoise);
+            var tex = WaterTexture();
+            if (_waterMat.HasProperty("_BaseMap")) _waterMat.SetTexture("_BaseMap", tex);
+            if (_waterMat.HasProperty("_Smoothness")) _waterMat.SetFloat("_Smoothness", palette.waterSmoothness);
+            if (_waterMat.HasProperty("_EmissionColor")) { _waterMat.EnableKeyword("_EMISSION"); _waterMat.SetColor("_EmissionColor", palette.waterEmission); }
+            return _waterMat;
         }
 
         private static Texture2D _stone;

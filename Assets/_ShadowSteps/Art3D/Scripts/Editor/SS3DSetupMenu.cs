@@ -207,9 +207,16 @@ namespace ShadowSteps.Art3D.Editor
 
         private static void CreateScene(string stageCode, string filename)
         {
+            Directory.CreateDirectory(SceneDir);
+            CreateSceneAt(stageCode, SceneDir + "/" + filename + ".unity", "SS3D_Visual_Preview_Only", null);
+        }
+
+        /// <summary>Builds a static art-preview scene for one stage at the given asset path (overwrites; one scene per stage). The callback sees the built renderer before the save.</summary>
+        public static void CreateSceneAt(string stageCode, string assetPath, string rootName, System.Action<SS3DLevelRenderer> afterBuild)
+        {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var palette = LoadValidatedPalette(); // after the switch, by path
-            var root = new GameObject("SS3D_Visual_Preview_Only");
+            var root = new GameObject(rootName);
             var renderer = root.AddComponent<SS3DLevelRenderer>(); renderer.palette = palette;
             var frame = root.AddComponent<SS3DCourtyardFrame>(); frame.palette = palette;
             var preview = root.AddComponent<SS3DPreviewController>();
@@ -220,10 +227,10 @@ namespace ShadowSteps.Art3D.Editor
             var fitter = camObj.AddComponent<SS3DBoardCameraFitter>(); fitter.board = renderer; preview.boardFitter = fitter;
             new GameObject("Warm_Directional_Sun").AddComponent<Light>().type = LightType.Directional;
             preview.BuildPreview(); // palette lighting is applied inside
-            Directory.CreateDirectory(SceneDir);
-            string path = SceneDir + "/" + filename + ".unity";
-            EditorSceneManager.SaveScene(scene, path); // overwrites the previous generation: one scene per stage, never duplicates
-            Debug.Log("[SS3D] preview scene created: " + path);
+            afterBuild?.Invoke(renderer);
+            Directory.CreateDirectory(Path.GetDirectoryName(assetPath));
+            EditorSceneManager.SaveScene(scene, assetPath); // overwrites the previous generation: one scene per stage, never duplicates
+            Debug.Log("[SS3D] preview scene created: " + assetPath);
         }
     }
 }

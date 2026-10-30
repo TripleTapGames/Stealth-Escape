@@ -35,6 +35,12 @@ engine hands it. It never decides movement, visibility, collisions or solver res
 - Kit pieces are fitted from their measured bounds (`SS3DKitFit`), so swapping any slot for another prefab needs no size tuning. `kitScale` sets kit metres per tile (0.5), `kitTint` the warm bias on textured materials, `kitFacadeYaw` / `kitStairsYaw` fix a piece that faces the wrong way.
 - Turning `kitMode` off restores the milestone-3 procedural trim; each kit slot also falls back individually when empty.
 
+## First10 sunlit courtyard scenes
+
+- `ShadowSteps_First10_Courtyard_Art_Pack/` sits at the project root. Shadow Steps ▸ 3D ▸ **Generate First 10 Courtyard Levels** (auto-run once by version 10) writes ten art-preview scenes to `Assets/_ShadowSteps/Art3D/Levels/First10/` and the validation report to `Docs/Reports/First10_Scene_Manifest.json`.
+- The theme is the palette's `sunlitCourtyard` flag (plus orthographic camera, padding 1.5, minimum framed 6 × 4). Turn it off to return to the castle kit layout; both keep `kitMode` for prop fitting.
+- Playable levels: the Game scene with `Use3DPresentation` renders the same theme; the First10 scenes are previews only.
+
 ## Files
 
 | File | Role |

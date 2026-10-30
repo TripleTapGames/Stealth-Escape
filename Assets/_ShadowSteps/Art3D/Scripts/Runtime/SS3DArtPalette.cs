@@ -53,6 +53,12 @@ namespace ShadowSteps.Art3D
         [Header("Environment kit (textured modular kit such as Synty POLYGON Fantasy Kingdom; every slot optional, the frame falls back to procedural trim)")]
         [Tooltip("On: walls and cover are fitted to the tile from their measured bounds, textured materials get only a gentle warm multiply, and the frame uses the kit slots below.")]
         public bool kitMode = false;
+        [Tooltip("SunlitCourtyard theme (First10 art direction): ivory procedural architecture, turquoise moat, kit used only for foliage, cover props and benches. Overrides the castle layout when kitMode is on.")]
+        public bool sunlitCourtyard = false;
+        [Tooltip("Fitter padding in tiles beyond the board edge; the sunlit theme uses 1.5 so the moat shows beside the platform.")]
+        [Range(0.3f, 3f)] public float cameraPaddingTiles = 0.78f;
+        [Tooltip("Minimum framed board size in tiles (width, depth); the sunlit platform is at least 6 × 4 so the camera frames the platform, not a tiny grid.")]
+        public Vector2 minFramedTiles = Vector2.zero;
         [Tooltip("Tile units per kit metre. 0.5 means a 1 m kit prop spans half a tile (characters are 0.95 tiles tall).")]
         [Range(0.2f, 1.5f)] public float kitScale = 0.5f;
         [Tooltip("Multiplied into every textured kit material instance (warm cream bias); white = untouched.")]
