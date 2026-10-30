@@ -114,3 +114,7 @@ InitTestScene*.unity*
 /Docs/ShadowSteps_ClaudeCode_Handover_2026-10-29.zip
 /Docs/ShadowSteps_ClaudeCode_Handover_V4_Obstacles.zip
 /StarterPack/
+
+# Licensed environment kit (Synty POLYGON Fantasy Kingdom): never committed, re-import from Package Manager
+Assets/PolygonFantasyKingdom/
+Assets/PolygonFantasyKingdom.meta

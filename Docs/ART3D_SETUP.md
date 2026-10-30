@@ -29,6 +29,12 @@ engine hands it. It never decides movement, visibility, collisions or solver res
 - The floor is procedural stone (`proceduralFloorTiles`); set it to false to use the glb floor tiles.
 - Demo scenes rebuild themselves on load (`SS3DPreviewController.rebuildOnLoad`), which marks the scene dirty; that is expected for previews.
 
+## Environment kit (milestone 5)
+
+- Import POLYGON Fantasy Kingdom to `Assets/PolygonFantasyKingdom` (keep the folder name). On the next script reload auto-setup converts its materials to URP Lit, maps the kit into the palette and regenerates the demo scenes; the same steps are under Shadow Steps ▸ 3D ▸ Kit.
+- Kit pieces are fitted from their measured bounds (`SS3DKitFit`), so swapping any slot for another prefab needs no size tuning. `kitScale` sets kit metres per tile (0.5), `kitTint` the warm bias on textured materials, `kitFacadeYaw` / `kitStairsYaw` fix a piece that faces the wrong way.
+- Turning `kitMode` off restores the milestone-3 procedural trim; each kit slot also falls back individually when empty.
+
 ## Files
 
 | File | Role |

@@ -36,6 +36,17 @@ namespace ShadowSteps.Art3D
                     var m = mats[i]; if (m == null) continue;
                     // Keep authored accents (banners, lantern glass, flowers): only recolour materials close to the model's main surface, i.e. the first material of each renderer.
                     if (i > 0 && role != SS3DTint.Water) continue;
+                    bool textured = (m.HasProperty("_BaseMap") && m.GetTexture("_BaseMap") != null) || (m.HasProperty("_MainTex") && m.GetTexture("_MainTex") != null);
+                    if (textured)
+                    {
+                        // Kit material: keep the authored atlas, only bias it warm (or recolour water to the palette turquoise, keeping its alpha).
+                        string prop = m.HasProperty("_BaseColor") ? "_BaseColor" : m.HasProperty("_Color") ? "_Color" : null;
+                        if (prop == null) continue;
+                        var current = m.GetColor(prop);
+                        if (role == SS3DTint.Water) { m.SetColor(prop, new Color(color.r, color.g, color.b, current.a)); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth); }
+                        else if (palette.kitMode) m.SetColor(prop, current * palette.kitTint);
+                        continue;
+                    }
                     if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", color);
                     else if (m.HasProperty("_Color")) m.SetColor("_Color", color);
                     if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth);

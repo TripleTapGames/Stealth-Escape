@@ -50,6 +50,20 @@ namespace ShadowSteps.Art3D
         [Header("Decorative pieces (placed only outside the logical board)")]
         public GameObject archFrame, palaceDoor, stairs, pillar, water, bench, lantern, banner, flowerbed;
 
+        [Header("Environment kit (textured modular kit such as Synty POLYGON Fantasy Kingdom; every slot optional, the frame falls back to procedural trim)")]
+        [Tooltip("On: walls and cover are fitted to the tile from their measured bounds, textured materials get only a gentle warm multiply, and the frame uses the kit slots below.")]
+        public bool kitMode = false;
+        [Tooltip("Tile units per kit metre. 0.5 means a 1 m kit prop spans half a tile (characters are 0.95 tiles tall).")]
+        [Range(0.2f, 1.5f)] public float kitScale = 0.5f;
+        [Tooltip("Multiplied into every textured kit material instance (warm cream bias); white = untouched.")]
+        public Color kitTint = new Color(1f, 0.97f, 0.90f, 1f);
+        [Tooltip("Yaw applied to the façade pieces so their decorated face looks at the board; change if the kit's front faces the other way.")]
+        public float kitFacadeYaw = 0f;
+        [Tooltip("Yaw of the staircase modules; 180 makes a +Z-descending model descend toward the camera.")]
+        public float kitStairsYaw = 180f;
+        public GameObject kitGround, kitParapetRail, kitParapetPost, kitWallRun, kitWallGate, kitBattlement, kitTower;
+        public GameObject kitStairs, kitHedge, kitTree, kitUrn, kitFountain, kitStatue, kitStatuePlinth, kitCarpet, kitLamp, kitBush, kitFlowers;
+
         [Header("Overlay colours (match the 2D board theme)")]
         public Color guardVisionFill = new Color(0.91f, 0.23f, 0.24f, 0.22f);
         public Color guardVisionBorder = new Color(0.90f, 0.23f, 0.25f, 1f);

@@ -96,7 +96,8 @@ namespace ShadowSteps.Art3D
                     {
                         var wall = Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
                         SS3DArtTuning.Tint(wall, SS3DTint.Wall, palette);
-                        if (wall != null) wall.transform.localScale = new Vector3(wall.transform.localScale.x, wall.transform.localScale.y * palette.wallHeightScale, wall.transform.localScale.z);
+                        if (wall != null && palette.kitMode) SS3DKitFit.Fit(wall, pos + Vector3.up * (FloorTop - 0.03f), 0.92f * s, palette.wallHeightScale, 0.92f * s, false); // kit: fit the cell, wallHeightScale is the height in tiles
+                        else if (wall != null) wall.transform.localScale = new Vector3(wall.transform.localScale.x, wall.transform.localScale.y * palette.wallHeightScale, wall.transform.localScale.z);
                     }
                     else if (stage.IsBlocked(c))
                     {
@@ -105,7 +106,8 @@ namespace ShadowSteps.Art3D
                         var prefab = variants != null && variants.Length > 0 ? variants[coverIndex++ % variants.Length] : null;
                         var cover = Create(prefab, "Cover_X_" + x + "_" + y, pos, Quaternion.identity, _geometry);
                         SS3DArtTuning.Tint(cover, coverIndex % 3 == 2 ? SS3DTint.Foliage : SS3DTint.Cover, palette);
-                        if (cover != null) cover.transform.localScale = new Vector3(cover.transform.localScale.x, cover.transform.localScale.y * palette.coverHeightScale, cover.transform.localScale.z);
+                        if (cover != null && palette.kitMode) { cover.transform.rotation = Quaternion.Euler(0f, 90f * ((x * 3 + y * 5) % 4), 0f); SS3DKitFit.FitUniform(cover, pos + Vector3.up * FloorTop, 0.74f * s, palette.coverHeightScale); }
+                        else if (cover != null) cover.transform.localScale = new Vector3(cover.transform.localScale.x, cover.transform.localScale.y * palette.coverHeightScale, cover.transform.localScale.z);
                     }
                     else if (renderNodeMarkers)
                     {
@@ -369,10 +371,10 @@ namespace ShadowSteps.Art3D
         private readonly List<Material> _stoneMats = new List<Material>();
 
         /// <summary>A bevelled stone slab with the procedural cream-stone texture; a few shared material variations keep draw calls low.</summary>
-        public GameObject CreateStoneTile(string name, Vector3 pos, bool alt, int seed)
+        public GameObject CreateStoneTile(string name, Vector3 pos, bool alt, int seed, Transform parent = null)
         {
             var go = new GameObject(name);
-            go.transform.SetParent(_geometry, false);
+            go.transform.SetParent(parent != null ? parent : _geometry, false);
             go.transform.position = pos;
             float size = palette.tileInset * tileSpacing;
             go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(size, FloorTop, size, palette.floorTileChamfer);
