@@ -138,7 +138,7 @@ MonoBehaviour:
   ambientSky: {r: 0.86, g: 0.9, b: 0.96, a: 1}
   ambientEquator: {r: 0.92, g: 0.86, b: 0.78, a: 1}
   ambientGround: {r: 0.7, g: 0.62, b: 0.52, a: 1}
-  usePerspectiveCamera: 0
+  usePerspectiveCamera: 1
   fieldOfView: 26
   postProcessing: 1
   bloomIntensity: 0.35
