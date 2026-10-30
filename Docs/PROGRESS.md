@@ -443,3 +443,9 @@ Request: cameras should project light to show coverage instead of only tinting n
 
 **Visually verified:** nothing; no render was possible from here. Rendering review is the next step.
 
+## 2026-10-30 — Fix: "Assign an SS3DArtPalette asset first" during demo scene generation
+
+**Root cause:** `SS3DSetupMenu.CreateScene` received the palette as a C# parameter and then called `EditorSceneManager.NewScene(…, Single)`. Switching scenes makes Unity unload assets that no serialized field references; a managed local does not keep an asset alive, so the palette became a destroyed object and `renderer.palette = palette` assigned Unity-null, which `SS3DLevelRenderer.Build` reported. The additive auto-setup path did not unload, which is why the first generation succeeded.
+
+**Fix (Art3D editor/runtime only, no gameplay, data, model, lighting or framing changes):** `SS3DSetupMenu.LoadValidatedPalette()` loads the palette **by path after every scene switch** and validates it; `CreateScene`/`CreateAdditive` assign it to the renderer, the frame and the preview controller before `BuildPreview()`; `SS3DPreviewController` resolves its own palette (field → renderer → default asset path in the editor) and validates; `SS3DArtPalette.Validate` lists empty core slots, an empty cover list and missing characters; `SS3DLevelRenderer.Build` explains the asset path in its error. Palette rebuilds fill only empty character slots (never overwrite). Scenes are regenerated at a fixed path per stage (overwrite, no duplicates); `GeneratorVersion` 3 triggers one automatic regeneration on the next script reload. Compile check 0 errors; not executed in Unity.
+

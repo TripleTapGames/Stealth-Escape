@@ -94,6 +94,23 @@ namespace ShadowSteps.Art3D
         public Color coverCrate = new Color(0.72f, 0.52f, 0.30f);
         [Range(0f, 1f)] public float stoneSmoothness = 0.25f;
 
+        /// <summary>Path of the shared palette asset (editor tooling loads it by path after scene switches, never by cached reference).</summary>
+        public const string DefaultAssetPath = "Assets/_ShadowSteps/Art3D/SS3DArtPalette.asset";
+
+        /// <summary>Lists everything that would make generation fail or fall back; returns true when the palette can build a stage.</summary>
+        public bool Validate(System.Collections.Generic.List<string> problems)
+        {
+            bool ok = true;
+            void Need(Object o, string slot) { if (o == null) { problems?.Add("palette slot '" + slot + "' is empty (run Shadow Steps ▸ 3D ▸ Create or update Art Palette after the .glb models imported)"); ok = false; } }
+            Need(floorA, "floorA"); Need(wallBlock, "wallBlock"); Need(node, "node"); Need(exitPad, "exitPad");
+            if (cameraModel == null && (cameraMount == null || cameraHead == null)) { problems?.Add("palette has no camera model (cameraModel or cameraMount + cameraHead)"); ok = false; }
+            if (coverObstacles == null || coverObstacles.Length == 0 || System.Array.Exists(coverObstacles, o => o == null)) { problems?.Add("palette coverObstacles list is empty or has an empty entry; blocked 'X' cells would be invisible"); ok = false; }
+            if (Spy == null) problems?.Add("no spy character or proxy assigned; the player will be invisible");
+            if (Guard == null) problems?.Add("no guard character or proxy assigned; guards will be invisible");
+            else if (guardCharacter == null) problems?.Add("guardCharacter is empty: the proxy guard is used (assign a characters_5_02 prefab on the palette)");
+            return ok;
+        }
+
         public GameObject Spy => spyCharacter != null ? spyCharacter : spyProxy;
         public GameObject Guard => guardCharacter != null ? guardCharacter : guardProxy;
         public bool HasCoreModels => floorA != null && (cameraModel != null || (cameraMount != null && cameraHead != null));

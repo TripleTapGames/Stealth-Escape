@@ -72,10 +72,10 @@ namespace ShadowSteps.Art3D.Editor
             palette.node = Slot(palette.node, "Node_Marker"); palette.exitPad = Slot(palette.exitPad, "Exit_Pad"); palette.collectibleKey = Slot(palette.collectibleKey, "Collectible_Key");
             palette.lockedDoor = Slot(palette.lockedDoor, "Door_Locked_Path"); palette.openedDoor = Slot(palette.openedDoor, "Door_Open_Path");
             palette.spyProxy = Slot(palette.spyProxy, "Character_Spy_PROXY"); palette.guardProxy = Slot(palette.guardProxy, "Character_Guard_PROXY");
-            // Characters: never overwritten once set (lockCharacterSelection); only filled when empty.
-            if (palette.spyCharacter == null && !(palette.lockCharacterSelection && palette.guardCharacter != null)) palette.spyCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultSpy + ".prefab");
-            if (palette.guardCharacter == null && !(palette.lockCharacterSelection && palette.spyCharacter != null)) palette.guardCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultGuard + ".prefab");
-            if (palette.spyCharacter != null || palette.guardCharacter != null) palette.lockCharacterSelection = true;
+            // Characters: a manual assignment is never overwritten (neither here nor by the model reset); only EMPTY slots get the default prefab.
+            if (palette.spyCharacter == null) { palette.spyCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultSpy + ".prefab"); if (palette.spyCharacter != null) Debug.Log("[SS3D] spyCharacter was empty; defaulted to " + DefaultSpy); }
+            if (palette.guardCharacter == null) { palette.guardCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultGuard + ".prefab"); if (palette.guardCharacter != null) Debug.Log("[SS3D] guardCharacter was empty; defaulted to " + DefaultGuard); }
+            palette.lockCharacterSelection = true;
             palette.cameraModel = Slot(palette.cameraModel, "Security_Camera"); palette.cameraMount = Slot(palette.cameraMount, "Security_Camera_Mount"); palette.cameraHead = Slot(palette.cameraHead, "Security_Camera_Head");
             palette.archFrame = Slot(palette.archFrame, "Entrance_Arch_Frame"); palette.palaceDoor = Slot(palette.palaceDoor, "Door_Double_Wood"); palette.stairs = Slot(palette.stairs, "Stairs_3Step_2m");
             palette.pillar = Slot(palette.pillar, "Pillar_Square"); palette.water = Slot(palette.water, "Water_Tile"); palette.bench = Slot(palette.bench, "Bench_Short");
@@ -109,8 +109,8 @@ namespace ShadowSteps.Art3D.Editor
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             var pal = EnsurePalette();
             if (!pal.HasCoreModels) { EditorUtility.DisplayDialog("Shadow Steps 3D", "3D model imports are missing. Install com.unity.cloud.gltfast in Package Manager, let the .glb files import, then run this again.", "OK"); return; }
-            CreateScene("LEVEL-2", "Clockwise_Rotating_Guard", pal);
-            CreateScene("LEVEL-16", "Camera_Basics", pal);
+            CreateScene("LEVEL-2", "Clockwise_Rotating_Guard");
+            CreateScene("LEVEL-16", "Camera_Basics");
             EditorUtility.DisplayDialog("Shadow Steps 3D", "Created 2 art-preview scenes in " + SceneDir + ". They are visual previews; play the Game scene with Use3DPresentation for the playable version.", "OK");
         }
 
@@ -121,7 +121,7 @@ namespace ShadowSteps.Art3D.Editor
             var pal = EnsurePalette();
             if (!pal.HasCoreModels) { EditorUtility.DisplayDialog("Shadow Steps 3D", "3D model imports are missing (install com.unity.cloud.gltfast).", "OK"); return; }
             var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
-            foreach (var s in pack.Stages) CreateScene(s.Code, s.Code.Replace("-", "_") + "_" + s.Title.Replace(" ", "_"), pal);
+            foreach (var s in pack.Stages) CreateScene(s.Code, s.Code.Replace("-", "_") + "_" + s.Title.Replace(" ", "_"));
             Debug.Log("[SS3D] created " + pack.Stages.Count + " preview scenes in " + SceneDir);
         }
 
@@ -139,23 +139,40 @@ namespace ShadowSteps.Art3D.Editor
 
         private static GameObject Model(string name) => AssetDatabase.LoadAssetAtPath<GameObject>(Models + name + ".glb");
 
-        private static void CreateScene(string stageCode, string filename, SS3DArtPalette palette)
+        /// <summary>
+        /// Loads the palette BY PATH after the scene switch: NewScene(Single) unloads assets that are only referenced from
+        /// C# locals, which turned a palette passed as a parameter into a destroyed object (the "Assign an SS3DArtPalette" error).
+        /// </summary>
+        public static SS3DArtPalette LoadValidatedPalette()
+        {
+            var palette = AssetDatabase.LoadAssetAtPath<SS3DArtPalette>(PalettePath);
+            if (palette == null) throw new System.InvalidOperationException("[SS3D] palette asset not found at " + PalettePath + "; run Shadow Steps ▸ 3D ▸ Create or update Art Palette first.");
+            var problems = new System.Collections.Generic.List<string>();
+            bool usable = palette.Validate(problems);
+            foreach (var pr in problems) { if (usable) Debug.LogWarning("[SS3D] " + pr); else Debug.LogError("[SS3D] " + pr); }
+            if (!usable) throw new System.InvalidOperationException("[SS3D] palette at " + PalettePath + " is incomplete; see Console. Did the .glb models import (glTFast)?");
+            return palette;
+        }
+
+        private static void CreateScene(string stageCode, string filename)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var palette = LoadValidatedPalette(); // after the switch, by path
             var root = new GameObject("SS3D_Visual_Preview_Only");
             var renderer = root.AddComponent<SS3DLevelRenderer>(); renderer.palette = palette;
             var frame = root.AddComponent<SS3DCourtyardFrame>(); frame.palette = palette;
             var preview = root.AddComponent<SS3DPreviewController>();
-            preview.stageCode = stageCode; preview.levelRenderer = renderer; preview.exteriorFrame = frame;
+            preview.palette = palette; preview.stageCode = stageCode; preview.levelRenderer = renderer; preview.exteriorFrame = frame;
             var camObj = new GameObject("Camera_Fixed_Ortho") { tag = "MainCamera" };
             var cam = camObj.AddComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(0.67f, 0.84f, 0.87f);
+            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = palette.backgroundColor;
             var fitter = camObj.AddComponent<SS3DBoardCameraFitter>(); fitter.board = renderer; preview.boardFitter = fitter;
             new GameObject("Warm_Directional_Sun").AddComponent<Light>().type = LightType.Directional;
             preview.BuildPreview(); // palette lighting is applied inside
             Directory.CreateDirectory(SceneDir);
-            EditorSceneManager.SaveScene(scene, SceneDir + "/" + filename + ".unity");
-            Debug.Log("[SS3D] preview scene created: " + filename);
+            string path = SceneDir + "/" + filename + ".unity";
+            EditorSceneManager.SaveScene(scene, path); // overwrites the previous generation: one scene per stage, never duplicates
+            Debug.Log("[SS3D] preview scene created: " + path);
         }
     }
 }

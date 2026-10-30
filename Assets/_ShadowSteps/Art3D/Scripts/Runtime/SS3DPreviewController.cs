@@ -16,16 +16,37 @@ namespace ShadowSteps.Art3D
     {
         [Tooltip("Optional TextAsset with a schema-3 pack; when empty the StreamingAssets levels_v4.json is read.")]
         public TextAsset packJson;
+        [Tooltip("Palette used for the renderer and the frame. When empty, the renderer's palette or (in the editor) the default asset path is used.")]
+        public SS3DArtPalette palette;
         public string stageCode = "LEVEL-2";
         public SS3DLevelRenderer levelRenderer;
         public SS3DCourtyardFrame exteriorFrame;
         public SS3DBoardCameraFitter boardFitter;
         public bool showInitialHazards = true;
 
+        private SS3DArtPalette ResolvePalette()
+        {
+            if (palette != null) return palette;
+            if (levelRenderer != null && levelRenderer.palette != null) return levelRenderer.palette;
+#if UNITY_EDITOR
+            return UnityEditor.AssetDatabase.LoadAssetAtPath<SS3DArtPalette>(SS3DArtPalette.DefaultAssetPath);
+#else
+            return null;
+#endif
+        }
+
         [ContextMenu("Build Preview")]
         public void BuildPreview()
         {
             if (levelRenderer == null) { Debug.LogError("[SS3D] assign a level renderer"); return; }
+            var resolved = ResolvePalette();
+            if (resolved == null) { Debug.LogError("[SS3D] no SS3DArtPalette: assign one on the preview controller or create " + SS3DArtPalette.DefaultAssetPath + " via Shadow Steps ▸ 3D ▸ Create or update Art Palette."); return; }
+            var problems = new System.Collections.Generic.List<string>();
+            bool usable = resolved.Validate(problems);
+            foreach (var pr in problems) { if (usable) Debug.LogWarning("[SS3D] " + pr); else Debug.LogError("[SS3D] " + pr); }
+            if (!usable) return;
+            palette = resolved; levelRenderer.palette = resolved;
+            if (exteriorFrame != null) exteriorFrame.palette = resolved;
             string json = packJson != null ? packJson.text : File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json"));
             var pack = StageJson.Parse(json);
             var stage = pack.FindByCode(stageCode) ?? pack.Stages[0];

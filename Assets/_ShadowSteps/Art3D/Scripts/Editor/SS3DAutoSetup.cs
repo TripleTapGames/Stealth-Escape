@@ -18,7 +18,7 @@ namespace ShadowSteps.Art3D.Editor
     {
         private const string SessionKey = "SS3D.AutoSetup.Done";
         /// <summary>Bump when the generator output changes; the two demo scenes are regenerated once per version.</summary>
-        public const int GeneratorVersion = 2;
+        public const int GeneratorVersion = 3;
         private static string VersionKey => "SS3D.GeneratorVersion." + Application.dataPath.GetHashCode();
         private static readonly (string code, string file)[] Demos = { ("LEVEL-2", "Clockwise_Rotating_Guard"), ("LEVEL-16", "Camera_Basics") };
 
@@ -39,7 +39,7 @@ namespace ShadowSteps.Art3D.Editor
                     string path = SS3DSetupMenu.SceneDir + "/" + file + ".unity";
                     if (File.Exists(path) && !regenerate) continue;
                     if (File.Exists(path) && EditorSceneManager.GetActiveScene().path == path) { Debug.LogWarning("[SS3D] " + path + " is open; close it to let auto-setup regenerate it (or use Shadow Steps ▸ 3D ▸ Create demo scenes)."); continue; }
-                    CreateAdditive(code, path, palette);
+                    CreateAdditive(code, path);
                 }
                 EditorPrefs.SetInt(VersionKey, GeneratorVersion);
             }
@@ -47,21 +47,22 @@ namespace ShadowSteps.Art3D.Editor
         }
 
         /// <summary>Builds a preview scene in an additive scene and saves it, leaving the active scene as it was.</summary>
-        public static void CreateAdditive(string stageCode, string path, SS3DArtPalette palette)
+        public static void CreateAdditive(string stageCode, string path)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
             try
             {
+                var palette = SS3DSetupMenu.LoadValidatedPalette(); // by path, after the scene switch
                 var root = new GameObject("SS3D_Visual_Preview_Only");
                 SceneManager.MoveGameObjectToScene(root, scene);
                 var renderer = root.AddComponent<SS3DLevelRenderer>(); renderer.palette = palette;
                 var frame = root.AddComponent<SS3DCourtyardFrame>(); frame.palette = palette;
                 var preview = root.AddComponent<SS3DPreviewController>();
-                preview.stageCode = stageCode; preview.levelRenderer = renderer; preview.exteriorFrame = frame;
+                preview.palette = palette; preview.stageCode = stageCode; preview.levelRenderer = renderer; preview.exteriorFrame = frame;
                 var camObj = new GameObject("Camera_Fixed_Ortho") { tag = "MainCamera" };
                 SceneManager.MoveGameObjectToScene(camObj, scene);
                 var cam = camObj.AddComponent<Camera>();
-                cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(0.67f, 0.84f, 0.87f);
+                cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = palette.backgroundColor;
                 var fitter = camObj.AddComponent<SS3DBoardCameraFitter>(); fitter.board = renderer; preview.boardFitter = fitter;
                 var sunObj = new GameObject("Warm_Directional_Sun");
                 SceneManager.MoveGameObjectToScene(sunObj, scene);

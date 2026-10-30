@@ -68,7 +68,9 @@ namespace ShadowSteps.Art3D
         public void Build(Stage stage)
         {
             if (stage == null) throw new System.ArgumentNullException(nameof(stage));
-            if (palette == null) throw new System.InvalidOperationException("Assign an SS3DArtPalette asset first.");
+            if (palette == null) throw new System.InvalidOperationException("SS3DLevelRenderer on '" + name + "' has no SS3DArtPalette. Assign " + SS3DArtPalette.DefaultAssetPath + " (editor tools must load it by path after a scene switch, because Unity unloads assets that are only referenced from C# locals).");
+            var problems = new List<string>();
+            if (!palette.Validate(problems)) throw new System.InvalidOperationException("SS3DArtPalette '" + palette.name + "' is incomplete:\n - " + string.Join("\n - ", problems));
             Clear();
             Stage = stage;
             _geometry = Root("Generated_Level_Geometry"); _nodes = Root("Movement_Nodes"); _lines = Root("Movement_Connections");
