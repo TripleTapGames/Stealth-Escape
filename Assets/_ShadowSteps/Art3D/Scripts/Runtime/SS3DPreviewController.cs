@@ -41,8 +41,9 @@ namespace ShadowSteps.Art3D
                 for (int i = 0; i < stage.Cameras.Count; i++) { var cells = Sight.CameraVision(stage, state, i, 0); levelRenderer.SetCameraCoverage(i, cells); camCells.AddRange(cells); }
                 levelRenderer.SetVision(guardCells, camCells);
             }
-            if (exteriorFrame != null) exteriorFrame.Build(levelRenderer);
             if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.Fit(levelRenderer.BoardBounds()); }
+            if (exteriorFrame != null) { exteriorFrame.fitter = boardFitter; exteriorFrame.Build(levelRenderer); }
+            SS3DArtTuning.ApplyLighting(levelRenderer.palette, boardFitter != null ? boardFitter.GetComponent<Camera>() : Camera.main);
             Debug.Log("[SS3D] preview built: " + stage.Code + " " + stage.Title);
         }
     }

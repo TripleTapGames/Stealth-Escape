@@ -81,11 +81,13 @@ namespace ShadowSteps.Art3D
                 {
                     var c = new GridCoord(x, y);
                     var pos = ToWorld(c);
-                    var floor = alternateFloorTiles && ((x + y) % 2 == 1) && palette.floorB != null ? palette.floorB : palette.floorA;
-                    Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                    bool altTile = alternateFloorTiles && ((x + y) % 2 == 1) && palette.floorB != null;
+                    var floor = altTile ? palette.floorB : palette.floorA;
+                    SS3DArtTuning.Tint(Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry), altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
                     if (stage.IsWall(c))
                     {
                         var wall = Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        SS3DArtTuning.Tint(wall, SS3DTint.Wall, palette);
                         if (wall != null) wall.transform.localScale = new Vector3(wall.transform.localScale.x, wall.transform.localScale.y * palette.wallHeightScale, wall.transform.localScale.z);
                     }
                     else if (stage.IsBlocked(c))
@@ -94,6 +96,7 @@ namespace ShadowSteps.Art3D
                         var variants = palette.coverObstacles;
                         var prefab = variants != null && variants.Length > 0 ? variants[coverIndex++ % variants.Length] : null;
                         var cover = Create(prefab, "Cover_X_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        SS3DArtTuning.Tint(cover, coverIndex % 3 == 2 ? SS3DTint.Foliage : SS3DTint.Cover, palette);
                         if (cover != null) cover.transform.localScale = new Vector3(cover.transform.localScale.x, cover.transform.localScale.y * palette.coverHeightScale, cover.transform.localScale.z);
                     }
                     else if (renderNodeMarkers)
@@ -118,11 +121,12 @@ namespace ShadowSteps.Art3D
                             var dir = (pb - pa).normalized;
                             var rot = Quaternion.LookRotation(Vector3.Cross(dir, Vector3.up), Vector3.up);
                             var obj = Create(palette.lockedDoor, "Door_" + door, (pa + pb) * 0.5f, rot, _geometry);
+                            SS3DArtTuning.Tint(obj, SS3DTint.Wood, palette);
                             if (obj != null) { _doors[door] = obj.transform; _doorOpen[door] = false; }
                         }
                     }
 
-            Create(palette.exitPad, "Exit", ToWorld(stage.Exit), Quaternion.identity, _geometry);
+            SS3DArtTuning.Tint(Create(palette.exitPad, "Exit", ToWorld(stage.Exit), Quaternion.identity, _geometry), SS3DTint.Exit, palette);
             if (stage.Key.HasValue) { var k = Create(palette.collectibleKey, "Key", ToWorld(stage.Key.Value), Quaternion.identity, _geometry); _key = k != null ? k.transform : null; }
 
             var spy = CreateCharacter(palette.Spy, "Spy", ToWorld(stage.Start), SS3DGrid.Facing(Direction.North));
@@ -263,6 +267,7 @@ namespace ShadowSteps.Art3D
             if (_doorOpen.TryGetValue(i, out bool wasOpen) && wasOpen == open) return;
             var prefab = open ? palette.openedDoor : palette.lockedDoor;
             var obj = Create(prefab, "Door_" + i, t.position, t.rotation, _geometry);
+            SS3DArtTuning.Tint(obj, SS3DTint.Wood, palette);
             SafeDestroy(t.gameObject);
             _doors[i] = obj != null ? obj.transform : null;
             _doorOpen[i] = open;

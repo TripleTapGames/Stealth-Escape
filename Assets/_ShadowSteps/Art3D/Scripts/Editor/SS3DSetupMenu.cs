@@ -98,7 +98,7 @@ namespace ShadowSteps.Art3D.Editor
             {
                 var st = pack.FindByCode(code); if (st == null) continue;
                 foreach (float aspect in new[] { 9f / 16f, 9f / 19.5f })
-                    sb.AppendLine(code + " " + st.Width + "x" + st.Height + " | " + SS3DFraming.Compute(st.Width, st.Height, 63f, aspect, 0.14f, 0.22f, 1.0f, 2.4f, wallH, coverH));
+                    sb.AppendLine(code + " " + st.Width + "x" + st.Height + " | " + SS3DFraming.Compute(st.Width, st.Height, 58f, aspect, 0.14f, 0.22f, 0.9f, 2.4f, wallH, coverH));
             }
             Debug.Log("[SS3D] framing report\n" + sb);
         }
@@ -151,11 +151,8 @@ namespace ShadowSteps.Art3D.Editor
             var cam = camObj.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(0.67f, 0.84f, 0.87f);
             var fitter = camObj.AddComponent<SS3DBoardCameraFitter>(); fitter.board = renderer; preview.boardFitter = fitter;
-            var sun = new GameObject("Warm_Directional_Sun").AddComponent<Light>();
-            sun.type = LightType.Directional; sun.intensity = 1.3f; sun.color = new Color(1f, 0.91f, 0.76f);
-            sun.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
-            RenderSettings.ambientMode = AmbientMode.Flat; RenderSettings.ambientLight = new Color(0.79f, 0.82f, 0.86f);
-            preview.BuildPreview();
+            new GameObject("Warm_Directional_Sun").AddComponent<Light>().type = LightType.Directional;
+            preview.BuildPreview(); // palette lighting is applied inside
             Directory.CreateDirectory(SceneDir);
             EditorSceneManager.SaveScene(scene, SceneDir + "/" + filename + ".unity");
             Debug.Log("[SS3D] preview scene created: " + filename);

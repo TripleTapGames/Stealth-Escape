@@ -429,3 +429,17 @@ Editor log of the user's Play attempt: Bootstrap loaded 30 stages and the save, 
 
 Request: cameras should project light to show coverage instead of only tinting nodes. In `SS3DLevelRenderer` each camera head now carries a URP spot light (palette: colour, intensity, range, angle), and `SetCameraCoverage(camera, cells)` draws soft radial light pools and faint rays from the lens to **exactly the cells the engine reports** for that camera, so walls, cover and smoke cut the projected coverage the same way they cut detection. The amber hazard ring stays as the authoritative border; the flat amber fill is dropped while projection is on. An EMP-disabled camera switches its light off and its pools disappear until the two protected actions elapse. Bridge and preview feed per-camera cells. Compile check 0 errors; not rendered in Unity.
 
+## 2026-10-30 — 3D milestone 1: camera framing, courtyard composition and lighting (no gameplay, data or model changes)
+
+**Diagnosis:** the board is width-bound in portrait, so the orthographic size is fixed by the board width and the decoration (one tile beyond the parapets) left empty cyan bands above and below. Zooming in would crop the grid; the fix is composition.
+
+**Changes (Art3D only)**
+- `SS3DBoardCameraFitter`: pitch 63° → 58° (closer to the reference), padding 0.9 tiles, `designAspect` 9:19.5, `[ExecuteAlways]` so edit-mode Game-view aspect changes refit; `SizeFor`/`VisibleGroundRect` compute the ground rectangle visible for any aspect without moving the camera.
+- `SS3DCourtyardFrame`: new composition that fills the visible rectangle for the tallest aspect: north façade line (wall blocks, entrance arch, double door, lanterns, banners, pillars, red carpet strip to the parapet gap), parapets with corner pillars and side benches, south terrace with a double staircase and pillar pair, then alternating canal water and flowerbed rows/columns outward to the screen edge; the staircase lane stays clear. All objects remain outside tile centres; the playable area receives only `X` obstacles.
+- `SS3DArtTuning`: per-role tints on material **instances** (cream floor A/B, ivory walls, warm stone, vibrant turquoise water with high smoothness and faint emission, wood, foliage, green exit, crate) and `ApplyLighting` (warm sun 1.55, soft shadows 0.55, trilight warm ambient, warm-grey background) used by preview, demo generation and the runtime bridge. Imported assets and the character pack are untouched.
+- Demo scenes: `SS3DAutoSetup.GeneratorVersion = 2` regenerates `Art3D/Demo/Clockwise_Rotating_Guard.unity` and `Camera_Basics.unity` additively on the next script reload (skips a scene that is currently open and says so).
+
+**Calculated framing at 58° (HUD bands 14 % / 22 %, padding 0.9):** LEVEL-2 uses 100 % of width and 65 % (9:16) / 53 % (9:19.5) of the usable band; LEVEL-16 66 % / 54 %; LEVEL-20 75 % / 61 %. The visible ground extends about ±4 tiles sideways and 5.5–7.8 tiles beyond the north edge and 6.8–9.6 beyond the south edge, which the frame now fills with façade, water and greenery.
+
+**Visually verified:** nothing; no render was possible from here. Rendering review is the next step.
+

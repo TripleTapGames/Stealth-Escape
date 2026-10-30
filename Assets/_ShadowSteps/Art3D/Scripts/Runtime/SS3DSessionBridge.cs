@@ -47,8 +47,7 @@ namespace ShadowSteps.Art3D
             if (composer.Board != null) { var fitter2D = composer.BoardCamera.GetComponent<CameraFitter>(); if (fitter2D != null) fitter2D.enabled = false; composer.Board.gameObject.SetActive(false); }
             Fitter = composer.BoardCamera.GetComponent<SS3DBoardCameraFitter>() ?? composer.BoardCamera.gameObject.AddComponent<SS3DBoardCameraFitter>();
             Fitter.board = Renderer;
-            composer.BoardCamera.backgroundColor = new Color(0.67f, 0.84f, 0.87f);
-            EnsureLighting();
+            SS3DArtTuning.ApplyLighting(Renderer.palette, composer.BoardCamera);
             if (composer.Input != null)
             {
                 composer.Input.ScreenToNodeOverride = ScreenToNode;
@@ -70,21 +69,12 @@ namespace ShadowSteps.Art3D
             _session.ModeChanged -= OnModeChanged; _session.PreviewShown -= OnPreviewShown; _session.PreviewHidden -= OnPreviewHidden;
         }
 
-        private void EnsureLighting()
-        {
-            if (FindObjectOfType<Light>() != null) return;
-            var sun = new GameObject("Warm_Directional_Sun").AddComponent<Light>();
-            sun.type = LightType.Directional; sun.intensity = 1.3f; sun.color = new Color(1f, 0.91f, 0.76f);
-            sun.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.79f, 0.82f, 0.86f);
-        }
-
         private void OnStageLoaded(Stage stage)
         {
             Renderer.Build(stage);
-            Frame.Build(Renderer);
             Fitter.Fit(Renderer.BoardBounds());
+            Frame.fitter = Fitter;
+            Frame.Build(Renderer);
         }
 
         /// <summary>Snap every visual to the authoritative state (same data the 2D board shows).</summary>

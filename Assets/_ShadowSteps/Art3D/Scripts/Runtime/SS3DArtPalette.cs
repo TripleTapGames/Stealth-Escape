@@ -69,6 +69,31 @@ namespace ShadowSteps.Art3D
         public Color previewDanger = new Color(1.00f, 0.20f, 0.20f, 0.9f);
         public Color previewAlarm = new Color(1.00f, 0.70f, 0.15f, 0.9f);
 
+        [Header("Scene lighting (applied by the preview/bridge; sun + ambient only, no post effects)")]
+        public Color backgroundColor = new Color(0.62f, 0.80f, 0.82f);
+        public Color sunColor = new Color(1.00f, 0.93f, 0.80f);
+        public float sunIntensity = 1.55f;
+        public Vector2 sunAngles = new Vector2(52f, -34f);
+        [Range(0f, 1f)] public float sunShadowStrength = 0.55f;
+        public Color ambientSky = new Color(0.86f, 0.90f, 0.96f);
+        public Color ambientEquator = new Color(0.92f, 0.86f, 0.78f);
+        public Color ambientGround = new Color(0.70f, 0.62f, 0.52f);
+
+        [Header("Material tints by role (applied to material INSTANCES, never to the imported assets)")]
+        public bool tintMaterials = true;
+        public Color floorA_Cream = new Color(0.949f, 0.871f, 0.741f);
+        public Color floorB_Cream = new Color(0.914f, 0.824f, 0.690f);
+        public Color wallIvory = new Color(0.914f, 0.835f, 0.682f);
+        public Color warmStone = new Color(0.847f, 0.745f, 0.588f);
+        public Color waterTurquoise = new Color(0.231f, 0.686f, 0.780f);
+        [Range(0f, 1f)] public float waterSmoothness = 0.92f;
+        public Color waterEmission = new Color(0.06f, 0.22f, 0.26f);
+        public Color woodBrown = new Color(0.52f, 0.33f, 0.18f);
+        public Color foliageGreen = new Color(0.40f, 0.66f, 0.30f);
+        public Color exitGreen = new Color(0.231f, 0.769f, 0.510f);
+        public Color coverCrate = new Color(0.72f, 0.52f, 0.30f);
+        [Range(0f, 1f)] public float stoneSmoothness = 0.25f;
+
         public GameObject Spy => spyCharacter != null ? spyCharacter : spyProxy;
         public GameObject Guard => guardCharacter != null ? guardCharacter : guardProxy;
         public bool HasCoreModels => floorA != null && (cameraModel != null || (cameraMount != null && cameraHead != null));

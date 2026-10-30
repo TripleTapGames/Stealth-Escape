@@ -17,6 +17,9 @@ namespace ShadowSteps.Art3D.Editor
     public static class SS3DAutoSetup
     {
         private const string SessionKey = "SS3D.AutoSetup.Done";
+        /// <summary>Bump when the generator output changes; the two demo scenes are regenerated once per version.</summary>
+        public const int GeneratorVersion = 2;
+        private static string VersionKey => "SS3D.GeneratorVersion." + Application.dataPath.GetHashCode();
         private static readonly (string code, string file)[] Demos = { ("LEVEL-2", "Clockwise_Rotating_Guard"), ("LEVEL-16", "Camera_Basics") };
 
         static SS3DAutoSetup() { EditorApplication.delayCall += Run; }
@@ -30,12 +33,15 @@ namespace ShadowSteps.Art3D.Editor
                 if (AssetDatabase.LoadAssetAtPath<GameObject>(SS3DSetupMenu.Models + "Floor_Tile_A.glb") == null) { Debug.Log("[SS3D] auto-setup skipped: .glb models not imported yet (glTFast)."); return; }
                 var palette = SS3DSetupMenu.BuildPalette(overwriteModels: false);
                 if (!palette.HasCoreModels) { Debug.LogWarning("[SS3D] auto-setup: palette is missing core models; check Shadow Steps ▸ 3D ▸ Validate imported models."); return; }
+                bool regenerate = EditorPrefs.GetInt(VersionKey, 0) != GeneratorVersion;
                 foreach (var (code, file) in Demos)
                 {
                     string path = SS3DSetupMenu.SceneDir + "/" + file + ".unity";
-                    if (File.Exists(path)) continue;
+                    if (File.Exists(path) && !regenerate) continue;
+                    if (File.Exists(path) && EditorSceneManager.GetActiveScene().path == path) { Debug.LogWarning("[SS3D] " + path + " is open; close it to let auto-setup regenerate it (or use Shadow Steps ▸ 3D ▸ Create demo scenes)."); continue; }
                     CreateAdditive(code, path, palette);
                 }
+                EditorPrefs.SetInt(VersionKey, GeneratorVersion);
             }
             catch (System.Exception e) { Debug.LogError("[SS3D] auto-setup failed: " + e); }
         }
@@ -59,10 +65,8 @@ namespace ShadowSteps.Art3D.Editor
                 var fitter = camObj.AddComponent<SS3DBoardCameraFitter>(); fitter.board = renderer; preview.boardFitter = fitter;
                 var sunObj = new GameObject("Warm_Directional_Sun");
                 SceneManager.MoveGameObjectToScene(sunObj, scene);
-                var sun = sunObj.AddComponent<Light>();
-                sun.type = LightType.Directional; sun.intensity = 1.3f; sun.color = new Color(1f, 0.91f, 0.76f);
-                sunObj.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
-                preview.BuildPreview();
+                sunObj.AddComponent<Light>().type = LightType.Directional;
+                preview.BuildPreview(); // applies palette lighting to the sun and camera
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 EditorSceneManager.SaveScene(scene, path);
                 Debug.Log("[SS3D] preview scene created: " + path);
