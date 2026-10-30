@@ -16,7 +16,7 @@ namespace ShadowSteps.Art3D.Editor
     [InitializeOnLoad]
     public static class SS3DAutoSetup
     {
-        private const string SessionKey = "SS3D.AutoSetup.Done";
+        private static string SessionKey => "SS3D.AutoSetup.Done." + GeneratorVersion; // per version: a bump re-runs in the same editor session
         /// <summary>Bump when the generator output changes; the two demo scenes are regenerated once per version.</summary>
         public const int GeneratorVersion = 7;
         private static string VersionKey => "SS3D.GeneratorVersion." + Application.dataPath.GetHashCode();

@@ -437,7 +437,7 @@ namespace ShadowSteps.Art3D
             var obj = Place(palette.floorA, name, p);
             if (obj == null) return;
             obj.transform.localScale = new Vector3(width, 0.2f, Mathf.Max(0.2f, length));
-            foreach (var r in obj.GetComponentsInChildren<Renderer>()) foreach (var m in r.materials) { if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", new Color(0.78f, 0.20f, 0.22f)); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.1f); }
+            foreach (var r in obj.GetComponentsInChildren<Renderer>()) foreach (var m in SS3DArtTuning.InstanceMaterials(r)) { if (m == null) continue; if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", new Color(0.78f, 0.20f, 0.22f)); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.1f); }
         }
 
         private void Stone(GameObject prefab, string name, Vector3 p, SS3DTint tint, Quaternion? rot = null) => Tinted(prefab, name, p, tint, rot);

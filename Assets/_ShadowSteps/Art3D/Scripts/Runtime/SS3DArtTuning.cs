@@ -11,6 +11,21 @@ namespace ShadowSteps.Art3D
     public static class SS3DArtTuning
     {
         /// <summary>Tints every renderer of an instantiated object by setting colours on its material instances.</summary>
+        /// <summary>Per-renderer material instances created explicitly (renderer.material would warn and leak in edit mode); the imported assets are never modified.</summary>
+        public static Material[] InstanceMaterials(Renderer r)
+        {
+            var mats = r.sharedMaterials;
+            bool changed = false;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                var m = mats[i]; if (m == null) continue;
+                if (m.name.EndsWith(" (SS3D)")) continue; // already an instance of ours
+                mats[i] = new Material(m) { name = m.name + " (SS3D)" }; changed = true;
+            }
+            if (changed) r.sharedMaterials = mats;
+            return mats;
+        }
+
         public static void Tint(GameObject instance, SS3DTint role, SS3DArtPalette palette)
         {
             if (instance == null || palette == null || !palette.tintMaterials || role == SS3DTint.None) return;
@@ -30,7 +45,7 @@ namespace ShadowSteps.Art3D
             }
             foreach (var r in instance.GetComponentsInChildren<Renderer>(true))
             {
-                var mats = r.materials; // instances
+                var mats = InstanceMaterials(r);
                 for (int i = 0; i < mats.Length; i++)
                 {
                     var m = mats[i]; if (m == null) continue;
