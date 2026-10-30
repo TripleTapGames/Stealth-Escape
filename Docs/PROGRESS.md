@@ -407,3 +407,21 @@ Editor log of the user's Play attempt: Bootstrap loaded 30 stages and the save, 
 
 **Verified in Unity editor?** No. **Next:** open Unity, let glTFast import, run the three menus, review the two demo scenes, then enable the 3D presentation in Game.unity and play LEVEL-2 and LEVEL-16.
 
+## 2026-10-30 — 3D visual validation milestone, part 1 (what could be verified without rendering)
+
+**Verified from the project files (editor open, no render possible from here)**
+- glTFast `com.unity.cloud.gltfast` 6.8.0 resolved (`Packages/packages-lock.json`, `Library/PackageCache`); shader graph 14.0.12 present for its URP shaders.
+- All 26 `.glb` models imported: 26 `.glb.meta` files written by glTFast's ScriptedImporter, every one with `reportItems: []` (no import warnings/errors).
+- No palette asset and no demo scenes existed: the Shadow Steps ▸ 3D menus had not been run.
+
+**Changes**
+- `SS3DSetupMenu`: palette rebuild now fills **empty slots only** and never overwrites `spyCharacter`/`guardCharacter` (`lockCharacterSelection`, auto-set once a character is assigned); a separate "Reset model slots (keeps characters)" menu re-resolves models; new "Framing report (portrait 9:16 and 9:19.5)".
+- `SS3DAutoSetup` ([InitializeOnLoad]): on the next script reload builds the palette if missing and creates `Assets/_ShadowSteps/Art3D/Demo/Clockwise_Rotating_Guard.unity` (LEVEL-2) and `Camera_Basics.unity` (LEVEL-16) **additively**, so the open scene is untouched; never overwrites existing files.
+- `SS3DArtPalette.wallHeightScale` (0.7) and `coverHeightScale` (0.85) applied by the renderer; `SS3DFraming` pure math for fit/occlusion checks.
+
+**Framing arithmetic (63° pitch, 1-tile padding, HUD bands 14 % top / 22 % bottom):** all demo boards are width-bound in portrait and fit: LEVEL-2 uses 100 % of width and 67 % (9:16) / 55 % (9:19.5) of the usable height; LEVEL-16 68 % / 56 %; the tallest board (LEVEL-20, 7×6) 77 % / 63 %. A full-height wall (0.93) would cover 47 % of the tile behind it on screen, i.e. almost the node centre; at 0.7 scale it covers 33 % and cover crates at 0.85 scale 38 %, so node markers (tile centre) and the floating NEXT/rotation markers (0.9 units up) stay visible.
+
+**Not verified:** rendered look, material colours, character facing/scale on screen, actual portrait screenshots. Unity must be focused once so the auto-setup runs; then open the two scenes.
+
+**Tests run:** `Tools/unity_compile_check.py` → 0 errors. Rules untouched (no Core/Data change).
+
