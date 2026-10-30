@@ -182,9 +182,12 @@ namespace ShadowSteps.Art3D
                         SS3DArtTuning.Tint(tower, SS3DTint.Wall, palette);
                     }
                     float bannerX = middle + sign * (gateW * 0.5f + 1.9f * s);
-                    var banner = Place(palette.banner, "Banner_" + (sign < 0 ? "W" : "E"), new Vector3(bannerX, 0f, facadeZ - 0.2f * s));
-                    if (kit) SS3DKitFit.FitUniform(banner, new Vector3(bannerX, drop + wallH * 0.42f, facadeZ - 0.2f * s), float.PositiveInfinity, 1.1f);
-                    if (palette.kitStatuePlinth != null || palette.kitStatue != null)
+                    if (palette.kitAccents)
+                    {
+                        var banner = Place(palette.banner, "Banner_" + (sign < 0 ? "W" : "E"), new Vector3(bannerX, 0f, facadeZ - 0.2f * s));
+                        SS3DKitFit.FitUniform(banner, new Vector3(bannerX, drop + wallH * 0.42f, facadeZ - 0.2f * s), float.PositiveInfinity, 1.1f);
+                    }
+                    if (palette.kitAccents && (palette.kitStatuePlinth != null || palette.kitStatue != null))
                     {
                         float sx = middle + sign * (gateW * 0.5f + 2.6f * s), sz = facadeZ - 1.0f * s, top = drop;
                         if (palette.kitStatuePlinth != null) { var pl = Place(palette.kitStatuePlinth, "Statue_Plinth_" + (sign < 0 ? "W" : "E"), new Vector3(sx, 0f, sz)); SS3DKitFit.FitUniform(pl, new Vector3(sx, drop, sz), 0.9f * s, 0.55f); SS3DArtTuning.Tint(pl, SS3DTint.Stone, palette); top = drop + SS3DKitFit.WorldSize(pl).y; }
@@ -393,7 +396,7 @@ namespace ShadowSteps.Art3D
 
         private void Bush(string name, Vector3 p, float height)
         {
-            if (!Kit || palette.kitBush == null) return;
+            if (!Kit || !palette.kitAccents || palette.kitBush == null) return;
             var b = Place(palette.kitBush, name, p);
             SS3DKitFit.FitUniform(b, p, 0.9f, height);
             SS3DArtTuning.Tint(b, SS3DTint.Foliage, palette);
@@ -401,14 +404,14 @@ namespace ShadowSteps.Art3D
 
         private void Flowers(string name, Vector3 p)
         {
-            if (!Kit || palette.kitFlowers == null) return;
+            if (!Kit || !palette.kitAccents || palette.kitFlowers == null) return;
             var f = Place(palette.kitFlowers, name, p, Quaternion.Euler(0f, (p.z * 41f) % 360f, 0f));
             SS3DKitFit.FitUniform(f, p, 0.8f, 0.4f);
         }
 
         private void Urn(string name, Vector3 p, float height)
         {
-            if (!Kit || palette.kitUrn == null) return;
+            if (!Kit || !palette.kitAccents || palette.kitUrn == null) return;
             var u = Place(palette.kitUrn, name, p);
             SS3DKitFit.FitUniform(u, p, 0.5f, height);
             SS3DArtTuning.Tint(u, SS3DTint.Stone, palette);

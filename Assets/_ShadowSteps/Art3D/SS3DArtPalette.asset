@@ -72,6 +72,29 @@ MonoBehaviour:
   banner: {fileID: 4814140183114437194, guid: 7bbb7fb99d3c443fba674b7c6c289857, type: 3}
   flowerbed: {fileID: 4814140183114437194, guid: ccd8999fd4b1642229ed4f533c2f7fbe,
     type: 3}
+  kitMode: 0
+  kitScale: 0.5
+  kitTint: {r: 1, g: 0.97, b: 0.9, a: 1}
+  kitFacadeYaw: 0
+  kitStairsYaw: 180
+  kitGround: {fileID: 0}
+  kitParapetRail: {fileID: 0}
+  kitParapetPost: {fileID: 0}
+  kitWallRun: {fileID: 0}
+  kitWallGate: {fileID: 0}
+  kitBattlement: {fileID: 0}
+  kitTower: {fileID: 0}
+  kitStairs: {fileID: 0}
+  kitHedge: {fileID: 0}
+  kitTree: {fileID: 0}
+  kitUrn: {fileID: 0}
+  kitFountain: {fileID: 0}
+  kitStatue: {fileID: 0}
+  kitStatuePlinth: {fileID: 0}
+  kitCarpet: {fileID: 0}
+  kitLamp: {fileID: 0}
+  kitBush: {fileID: 0}
+  kitFlowers: {fileID: 0}
   guardVisionFill: {r: 0.91, g: 0.23, b: 0.24, a: 0.22}
   guardVisionBorder: {r: 0.9, g: 0.23, b: 0.25, a: 1}
   cameraVisionFill: {r: 0.95, g: 0.7, b: 0.17, a: 0.22}
@@ -97,6 +120,21 @@ MonoBehaviour:
   ambientSky: {r: 0.86, g: 0.9, b: 0.96, a: 1}
   ambientEquator: {r: 0.92, g: 0.86, b: 0.78, a: 1}
   ambientGround: {r: 0.7, g: 0.62, b: 0.52, a: 1}
+  usePerspectiveCamera: 1
+  fieldOfView: 26
+  postProcessing: 1
+  bloomIntensity: 0.35
+  bloomThreshold: 1
+  vignetteIntensity: 0.22
+  postExposure: 0.15
+  saturation: 12
+  contrast: 8
+  depthOfField: 1
+  depthOfFieldStrength: 0.6
+  proceduralFloorTiles: 1
+  floorTileChamfer: 0.035
+  floorColorVariation: 0.05
+  floorSmoothness: 0.35
   tintMaterials: 1
   floorA_Cream: {r: 0.949, g: 0.871, b: 0.741, a: 1}
   floorB_Cream: {r: 0.914, g: 0.824, b: 0.69, a: 1}
