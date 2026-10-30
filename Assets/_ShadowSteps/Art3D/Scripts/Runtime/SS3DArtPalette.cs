@@ -37,6 +37,15 @@ namespace ShadowSteps.Art3D
 
         [Header("Wall-mounted security cameras")]
         public GameObject cameraModel, cameraMount, cameraHead;
+        [Tooltip("Cameras project their coverage as light: a spot light in the head plus soft light pools and rays on the detected cells only.")]
+        public bool cameraProjectsLight = true;
+        public Color cameraLightColor = new Color(1.00f, 0.78f, 0.35f, 1f);
+        public float cameraLightIntensity = 2.2f;
+        public float cameraLightRange = 4.0f;
+        [Range(20f, 120f)] public float cameraLightSpotAngle = 75f;
+        public Color cameraPoolColor = new Color(1.00f, 0.72f, 0.20f, 0.55f);
+        public Color cameraRayColor = new Color(1.00f, 0.80f, 0.35f, 0.35f);
+        public bool cameraShowRays = true;
 
         [Header("Decorative pieces (placed only outside the logical board)")]
         public GameObject archFrame, palaceDoor, stairs, pillar, water, bench, lantern, banner, flowerbed;

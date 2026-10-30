@@ -102,7 +102,12 @@ namespace ShadowSteps.Art3D
             var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
             for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], state.T))) if (seen.Add(c)) guardCells.Add(c);
             var camCells = new List<GridCoord>(); seen.Clear();
-            for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, state, i, state.T)) if (seen.Add(c)) camCells.Add(c);
+            for (int i = 0; i < stage.Cameras.Count; i++)
+            {
+                var cells = Sight.CameraVision(stage, state, i, state.T);
+                Renderer.SetCameraCoverage(i, cells);
+                foreach (var c in cells) if (seen.Add(c)) camCells.Add(c);
+            }
             Renderer.SetVision(guardCells, camCells);
             var reachNodes = new List<GridCoord>(); var reachEdges = new List<EdgeKey>();
             if (!state.IsTerminal)

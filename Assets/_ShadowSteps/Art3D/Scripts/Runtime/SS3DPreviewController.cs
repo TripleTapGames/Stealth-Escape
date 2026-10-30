@@ -38,7 +38,7 @@ namespace ShadowSteps.Art3D
                 var guardCells = new System.Collections.Generic.List<GridCoord>();
                 for (int i = 0; i < stage.Guards.Count; i++) guardCells.AddRange(Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], 0)));
                 var camCells = new System.Collections.Generic.List<GridCoord>();
-                for (int i = 0; i < stage.Cameras.Count; i++) camCells.AddRange(Sight.CameraVision(stage, state, i, 0));
+                for (int i = 0; i < stage.Cameras.Count; i++) { var cells = Sight.CameraVision(stage, state, i, 0); levelRenderer.SetCameraCoverage(i, cells); camCells.AddRange(cells); }
                 levelRenderer.SetVision(guardCells, camCells);
             }
             if (exteriorFrame != null) exteriorFrame.Build(levelRenderer);

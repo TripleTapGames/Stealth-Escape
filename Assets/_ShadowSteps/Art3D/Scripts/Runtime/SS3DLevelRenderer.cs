@@ -42,6 +42,9 @@ namespace ShadowSteps.Art3D
         private readonly List<Transform> _cameraBadges = new List<Transform>();
         private readonly List<Transform> _cameraHighlights = new List<Transform>();
         private readonly List<Renderer[]> _cameraHeadRenderers = new List<Renderer[]>();
+        private readonly List<Light> _cameraLights = new List<Light>();
+        private readonly List<LightPool> _cameraPools = new List<LightPool>();
+        private Material _poolMat, _rayMat;
         private readonly Dictionary<int, Transform> _doors = new Dictionary<int, Transform>();
         private readonly Dictionary<int, bool> _doorOpen = new Dictionary<int, bool>();
         private readonly Dictionary<GridCoord, Renderer> _nodeMarkers = new Dictionary<GridCoord, Renderer>();
@@ -175,6 +178,19 @@ namespace ShadowSteps.Art3D
                 hl.position = basePoint + Vector3.up * (FloorTop + 0.02f);
                 hl.gameObject.SetActive(false);
                 _cameraHighlights.Add(hl);
+
+                // Coverage as light: a spot light in the rotating head plus per-cell pools/rays fed by the engine.
+                var lightGo = new GameObject("Camera_" + i + "_Light");
+                lightGo.transform.SetParent(head, false);
+                lightGo.transform.localPosition = new Vector3(0f, 0.12f, 0.3f);
+                lightGo.transform.localRotation = Quaternion.Euler(28f, 0f, 0f);
+                var light = lightGo.AddComponent<Light>();
+                light.type = LightType.Spot; light.color = palette.cameraLightColor; light.intensity = palette.cameraLightIntensity;
+                light.range = palette.cameraLightRange * s; light.spotAngle = palette.cameraLightSpotAngle; light.shadows = LightShadows.None;
+                light.enabled = palette.cameraProjectsLight;
+                _cameraLights.Add(light);
+                var pool = new LightPool(); pool.Attach(_overlays, basePoint + Vector3.up * (FloorTop + 0.35f * s));
+                _cameraPools.Add(pool);
             }
 
             _previewMarker = MakeRing("PreviewMarker", palette.previewSafe, 0.42f * s, ref _highlightMat);
@@ -190,7 +206,7 @@ namespace ShadowSteps.Art3D
                 if (t != null) SafeDestroy(t.gameObject);
             }
             _guards.Clear(); _guardAnimators.Clear(); _guardFacing.Clear(); _guardNext.Clear(); _guardRotation.Clear();
-            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraBadges.Clear(); _cameraHighlights.Clear(); _cameraHeadRenderers.Clear();
+            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraBadges.Clear(); _cameraHighlights.Clear(); _cameraHeadRenderers.Clear(); _cameraLights.Clear(); _cameraPools.Clear();
             _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear();
             _player = null; _playerAnimator = null; _key = null; _previewMarker = null;
             foreach (var pool in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) pool.Reset();
@@ -231,6 +247,11 @@ namespace ShadowSteps.Art3D
             _cameraBadges[i].gameObject.SetActive(disabledActionsLeft > 0);
             _cameraBadges[i].localScale = Vector3.one * (disabledActionsLeft >= 2 ? 1f : 0.7f);
             _cameraHighlights[i].gameObject.SetActive(highlight);
+            if (i < _cameraLights.Count && _cameraLights[i] != null)
+            {
+                _cameraLights[i].enabled = palette.cameraProjectsLight && disabledActionsLeft == 0;
+                _cameraLights[i].color = palette.cameraLightColor;
+            }
             foreach (var r in _cameraHeadRenderers[i])
                 foreach (var m in r.materials)
                     if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", disabledActionsLeft > 0 ? palette.empDisabled : Color.white);
@@ -283,8 +304,21 @@ namespace ShadowSteps.Art3D
         public void SetVision(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells)
         {
             _guardVision.Show(this, guardCells, Mat("guardFill", palette.guardVisionFill), Mat("guardBorder", palette.guardVisionBorder), 0.86f, 0.44f, overlayLift);
-            _cameraVision.Show(this, cameraCells, Mat("camFill", palette.cameraVisionFill), Mat("camBorder", palette.cameraVisionBorder), 0.66f, 0.34f, overlayLift + 0.004f);
+            // With light projection on, the amber ring stays (hazard border) but the fill is replaced by the per-camera light pools.
+            var fill = palette.cameraProjectsLight ? Mat("camFillNone", new Color(0f, 0f, 0f, 0f)) : Mat("camFill", palette.cameraVisionFill);
+            _cameraVision.Show(this, cameraCells, fill, Mat("camBorder", palette.cameraVisionBorder), 0.66f, 0.34f, overlayLift + 0.004f);
         }
+
+        /// <summary>Per-camera detected cells: soft light pools on those cells and faint rays from the lens to each (cells only, so walls and cover cut the coverage truthfully).</summary>
+        public void SetCameraCoverage(int cameraIndex, IEnumerable<GridCoord> cells)
+        {
+            if (cameraIndex < 0 || cameraIndex >= _cameraPools.Count) return;
+            if (_poolMat == null) _poolMat = MakePoolMaterial("SS3D Camera Light Pool", palette.cameraPoolColor);
+            if (_rayMat == null) _rayMat = MakeOverlayMaterial("SS3D Camera Ray", palette.cameraRayColor);
+            _cameraPools[cameraIndex].Show(this, palette.cameraProjectsLight ? cells : null, _poolMat, _rayMat, palette.cameraShowRays, palette.cameraRayColor, overlayLift + 0.002f);
+        }
+
+        public void ClearCameraCoverage() { foreach (var p in _cameraPools) p.Clear(); }
 
         public void SetPreview(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells, GridCoord? marker, Color markerColor)
         {
@@ -447,6 +481,75 @@ namespace ShadowSteps.Art3D
             if (!Application.isPlaying) { DestroyImmediate(o); return; }
 #endif
             Destroy(o);
+        }
+
+        private static Texture2D _radial;
+        /// <summary>Soft radial alpha texture for light pools (generated once; no external art).</summary>
+        public static Texture2D RadialTexture()
+        {
+            if (_radial != null) return _radial;
+            const int n = 64;
+            _radial = new Texture2D(n, n, TextureFormat.RGBA32, false) { name = "SS3D Radial", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            var px = new Color[n * n];
+            for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+            {
+                float dx = (x + 0.5f) / n - 0.5f, dy = (y + 0.5f) / n - 0.5f;
+                float d = Mathf.Sqrt(dx * dx + dy * dy) * 2f;
+                float a = Mathf.Clamp01(1f - d); a = a * a * (3f - 2f * a);
+                px[y * n + x] = new Color(1f, 1f, 1f, a);
+            }
+            _radial.SetPixels(px); _radial.Apply();
+            return _radial;
+        }
+
+        public static Material MakePoolMaterial(string name, Color tint)
+        {
+            var m = MakeOverlayMaterial(name, tint);
+            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", RadialTexture());
+            if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", RadialTexture());
+            if (m.HasProperty("_Blend")) m.SetFloat("_Blend", 2f); // URP Unlit: additive-ish look for light
+            m.renderQueue = 3001;
+            return m;
+        }
+
+        /// <summary>One camera's light pools (soft discs on detected cells) and rays from the lens to each cell centre.</summary>
+        private sealed class LightPool
+        {
+            private readonly List<Transform> _discs = new List<Transform>();
+            private readonly List<LineRenderer> _rays = new List<LineRenderer>();
+            private Transform _parent; private Vector3 _lens;
+
+            public void Attach(Transform parent, Vector3 lens) { _parent = parent; _lens = lens; }
+
+            public void Show(SS3DLevelRenderer r, IEnumerable<GridCoord> cells, Material pool, Material ray, bool showRays, Color rayColor, float lift)
+            {
+                Clear();
+                if (cells == null || _parent == null) return;
+                int i = 0;
+                foreach (var c in cells)
+                {
+                    if (i >= _discs.Count)
+                    {
+                        var q = GameObject.CreatePrimitive(PrimitiveType.Quad); q.name = "CameraLightPool"; q.transform.SetParent(_parent, false); StripColliders(q);
+                        _discs.Add(q.transform);
+                        var lineGo = new GameObject("CameraRay"); lineGo.transform.SetParent(_parent, false);
+                        var lr = lineGo.AddComponent<LineRenderer>(); lr.useWorldSpace = true; lr.positionCount = 2; lr.widthMultiplier = 0.035f * r.tileSpacing;
+                        _rays.Add(lr);
+                    }
+                    var pos = r.ToWorld(c) + Vector3.up * (r.FloorTop + lift);
+                    var d = _discs[i]; d.position = pos; d.rotation = Quaternion.Euler(90f, 0f, 0f); d.localScale = new Vector3(1.25f * r.tileSpacing, 1.25f * r.tileSpacing, 1f);
+                    d.GetComponent<Renderer>().sharedMaterial = pool; d.gameObject.SetActive(true);
+                    var l = _rays[i]; l.sharedMaterial = ray; l.startColor = rayColor; l.endColor = new Color(rayColor.r, rayColor.g, rayColor.b, 0f);
+                    l.SetPosition(0, _lens); l.SetPosition(1, pos); l.gameObject.SetActive(showRays);
+                    i++;
+                }
+            }
+
+            public void Clear()
+            {
+                foreach (var d in _discs) if (d != null) d.gameObject.SetActive(false);
+                foreach (var l in _rays) if (l != null) l.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>Pooled quad + ring per hazard cell.</summary>

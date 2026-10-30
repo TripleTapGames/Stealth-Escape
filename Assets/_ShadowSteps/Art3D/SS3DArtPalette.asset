@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d930c9af0518fc287abf6e0e2804977b, type: 3}
+  m_Name: SS3DArtPalette
+  m_EditorClassIdentifier: 
+  floorA: {fileID: 4814140183114437194, guid: f6b9ec202074f4cdeb9d645c08745294, type: 3}
+  floorB: {fileID: 4814140183114437194, guid: fd2916615311e4aac82316d11d9577bf, type: 3}
+  wallBlock: {fileID: 4814140183114437194, guid: 9427e1d7d95644c9b95c62875eb0f08a,
+    type: 3}
+  wallStraight: {fileID: 4814140183114437194, guid: 5a2f4cc5527ca4c0cb9aed1f6e2b7ec6,
+    type: 3}
+  coverObstacles:
+  - {fileID: 4814140183114437194, guid: 905009cbb6a594fe7940b359dd6e2703, type: 3}
+  - {fileID: 4814140183114437194, guid: 68d82fd5d24004aa6bb84b2c54449c7a, type: 3}
+  - {fileID: 4814140183114437194, guid: 5dc6a41046fe243afa07f00955dccc7b, type: 3}
+  floorTop: 0.112
+  wallHeightScale: 0.7
+  coverHeightScale: 0.85
+  node: {fileID: 4814140183114437194, guid: a8044689ab47143f78f5c809fb684757, type: 3}
+  exitPad: {fileID: 4814140183114437194, guid: 8e664b697178b4d9293cd1dd4efabdae, type: 3}
+  collectibleKey: {fileID: 4814140183114437194, guid: e44d11994090849d0824ff75ab8db185,
+    type: 3}
+  lockedDoor: {fileID: 4814140183114437194, guid: 44334aa0ae7214845bbdb494f2d32195,
+    type: 3}
+  openedDoor: {fileID: 4814140183114437194, guid: 1d441b050d3ca4f4a841478adfc57000,
+    type: 3}
+  lockCharacterSelection: 1
+  spyCharacter: {fileID: 2276522308565308968, guid: d20dd07bdc2800d4185162695b233b3e,
+    type: 3}
+  guardCharacter: {fileID: 0}
+  spyProxy: {fileID: 4814140183114437194, guid: f3f7b5b6323214f6083f3f197bdf69c3,
+    type: 3}
+  guardProxy: {fileID: 4814140183114437194, guid: dfdf0503a6bfe424bb97b5e483b258a0,
+    type: 3}
+  characterTargetHeight: 0.95
+  characterYawOffset: 0
+  idleStateName: Idle
+  walkStateName: Walk
+  cameraModel: {fileID: 4814140183114437194, guid: 5dc0833d9c5964da29138592d10ad02e,
+    type: 3}
+  cameraMount: {fileID: 4814140183114437194, guid: cf7fdf545ec9344b29e8d8e2fd637989,
+    type: 3}
+  cameraHead: {fileID: 4814140183114437194, guid: 52f3eaabac7844508bb70c63524f7f9d,
+    type: 3}
+  archFrame: {fileID: 4814140183114437194, guid: cd78630f20563436d83d48a70d4a40f0,
+    type: 3}
+  palaceDoor: {fileID: 4814140183114437194, guid: 82115719bd6614b3d932a5e3f19cb61d,
+    type: 3}
+  stairs: {fileID: 4814140183114437194, guid: ff7dc1e18dc6e4c4099675810416c5b2, type: 3}
+  pillar: {fileID: 4814140183114437194, guid: 5b036ebe1418b4a44bf0825d218427b6, type: 3}
+  water: {fileID: 4814140183114437194, guid: be5b00bd9f62a42138e65203c37593f8, type: 3}
+  bench: {fileID: 4814140183114437194, guid: 0b2d03c0021b24e4680f3165ee6f0f96, type: 3}
+  lantern: {fileID: 4814140183114437194, guid: 17991a4b796a2452da2e672419dc164c, type: 3}
+  banner: {fileID: 4814140183114437194, guid: 7bbb7fb99d3c443fba674b7c6c289857, type: 3}
+  flowerbed: {fileID: 4814140183114437194, guid: ccd8999fd4b1642229ed4f533c2f7fbe,
+    type: 3}
+  guardVisionFill: {r: 0.91, g: 0.23, b: 0.24, a: 0.22}
+  guardVisionBorder: {r: 0.9, g: 0.23, b: 0.25, a: 1}
+  cameraVisionFill: {r: 0.95, g: 0.7, b: 0.17, a: 0.22}
+  cameraVisionBorder: {r: 0.98, g: 0.67, b: 0.13, a: 1}
+  previewFill: {r: 1, g: 0.85, b: 0.4, a: 0.1}
+  previewBorder: {r: 1, g: 0.85, b: 0.4, a: 0.7}
+  reachable: {r: 0.38, g: 0.85, b: 0.85, a: 1}
+  smokeTarget: {r: 0.4, g: 0.95, b: 0.9, a: 0.45}
+  smokeCloud: {r: 0.88, g: 0.92, b: 0.95, a: 0.75}
+  nextMarker: {r: 0.2, g: 0.85, b: 1, a: 1}
+  rotationMarker: {r: 1, g: 0.95, b: 0.7, a: 1}
+  empDisabled: {r: 0.45, g: 0.88, b: 0.92, a: 1}
+  cameraHighlight: {r: 0.4, g: 1, b: 0.9, a: 1}
+  connection: {r: 0.16, g: 0.2, b: 0.28, a: 0.8}
+  previewSafe: {r: 0.4, g: 1, b: 0.6, a: 0.8}
+  previewDanger: {r: 1, g: 0.2, b: 0.2, a: 0.9}
+  previewAlarm: {r: 1, g: 0.7, b: 0.15, a: 0.9}
