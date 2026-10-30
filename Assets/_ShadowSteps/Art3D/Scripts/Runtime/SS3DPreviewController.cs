@@ -22,6 +22,10 @@ namespace ShadowSteps.Art3D
         public SS3DLevelRenderer levelRenderer;
         public SS3DCourtyardFrame exteriorFrame;
         public SS3DBoardCameraFitter boardFitter;
+        [Tooltip("Optional town environment; when set with a profile it replaces the courtyard frame and supplies cover/wall props and floor tints.")]
+        public TownEnvironmentGenerator townEnvironment;
+        [Tooltip("Camera padding in tiles for this scene (0 = palette value).")]
+        public float paddingOverride = 0f;
         public bool showInitialHazards = true;
         [Tooltip("Rebuild the preview whenever the scene loads. Generated meshes, materials and the post-processing profile are not assets, so a saved scene only stores the seed; this keeps it self-healing.")]
         public bool rebuildOnLoad = true;
@@ -61,6 +65,8 @@ namespace ShadowSteps.Art3D
             string json = packJson != null ? packJson.text : File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json"));
             var pack = StageJson.Parse(json);
             var stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
+            bool town = townEnvironment != null && townEnvironment.profile != null;
+            levelRenderer.overrides = town ? townEnvironment.profile.RendererOverrides() : null;
             levelRenderer.Build(stage);
             var state = StageState.Initial(stage);
             for (int i = 0; i < stage.Guards.Count; i++) levelRenderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], 0), GuardTrack.NextStep(stage.Guards[i], 0));
@@ -73,10 +79,14 @@ namespace ShadowSteps.Art3D
                 for (int i = 0; i < stage.Cameras.Count; i++) { var cells = Sight.CameraVision(stage, state, i, 0); levelRenderer.SetCameraCoverage(i, cells); camCells.AddRange(cells); }
                 levelRenderer.SetVision(guardCells, camCells);
             }
-            if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.usePerspective = resolved.usePerspectiveCamera; boardFitter.fieldOfView = resolved.fieldOfView; boardFitter.paddingTiles = resolved.cameraPaddingTiles; boardFitter.minWidthTiles = resolved.minFramedTiles.x; boardFitter.minDepthTiles = resolved.minFramedTiles.y; boardFitter.Fit(levelRenderer.BoardBounds()); }
-            if (exteriorFrame != null) { exteriorFrame.fitter = boardFitter; exteriorFrame.Build(levelRenderer); }
+            if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.usePerspective = resolved.usePerspectiveCamera; boardFitter.fieldOfView = resolved.fieldOfView; boardFitter.paddingTiles = paddingOverride > 0f ? paddingOverride : resolved.cameraPaddingTiles; boardFitter.minWidthTiles = town ? 0f : resolved.minFramedTiles.x; boardFitter.minDepthTiles = town ? 0f : resolved.minFramedTiles.y; boardFitter.Fit(levelRenderer.BoardBounds()); }
             var cam = boardFitter != null ? boardFitter.GetComponent<Camera>() : Camera.main;
-            SS3DArtTuning.ApplyLighting(levelRenderer.palette, cam);
+            if (town) { townEnvironment.fitter = boardFitter; townEnvironment.palette = resolved; townEnvironment.Build(levelRenderer); if (exteriorFrame != null) exteriorFrame.Clear(); townEnvironment.profile.ApplyLighting(resolved, cam); }
+            else
+            {
+                if (exteriorFrame != null) { exteriorFrame.fitter = boardFitter; exteriorFrame.Build(levelRenderer); }
+                SS3DArtTuning.ApplyLighting(levelRenderer.palette, cam);
+            }
             SS3DArtTuning.ApplyPostProcessing(levelRenderer.palette, cam);
             Debug.Log("[SS3D] preview built: " + stage.Code + " " + stage.Title);
         }

@@ -18,7 +18,7 @@ namespace ShadowSteps.Art3D.Editor
     {
         private static string SessionKey => "SS3D.AutoSetup.Done." + GeneratorVersion; // per version: a bump re-runs in the same editor session
         /// <summary>Bump when the generator output changes; the two demo scenes are regenerated once per version.</summary>
-        public const int GeneratorVersion = 13;
+        public const int GeneratorVersion = 14;
         private static string VersionKey => "SS3D.GeneratorVersion." + Application.dataPath.GetHashCode();
         private static readonly (string code, string file)[] Demos = { ("LEVEL-2", "Clockwise_Rotating_Guard"), ("LEVEL-16", "Camera_Basics") };
 
@@ -44,6 +44,7 @@ namespace ShadowSteps.Art3D.Editor
                     if (File.Exists(path) && EditorSceneManager.GetActiveScene().path == path) { Debug.LogWarning("[SS3D] " + path + " is open; close it to let auto-setup regenerate it (or use Shadow Steps ▸ 3D ▸ Create demo scenes)."); continue; }
                     CreateAdditive(code, path);
                 }
+                if (TownEnvironmentSetup.TownPresent && EditorPrefs.GetInt(VersionKey, 0) < 14) TownEnvironmentSetup.GenerateAll(); // POLYGON Town environments, once
                 EditorPrefs.SetInt(VersionKey, GeneratorVersion);
             }
             catch (System.Exception e) { Debug.LogError("[SS3D] auto-setup failed: " + e); }

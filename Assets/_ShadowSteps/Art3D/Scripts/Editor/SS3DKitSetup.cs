@@ -19,11 +19,15 @@ namespace ShadowSteps.Art3D.Editor
         public static bool KitPresent => AssetDatabase.IsValidFolder(KitRoot + "/Prefabs");
 
         [MenuItem("Shadow Steps/3D/Kit/Convert Synty materials to URP Lit")]
-        public static int ConvertMaterials()
+        public static int ConvertMaterials() => ConvertMaterials(KitRoot);
+
+        /// <summary>Upgrades every Built-in Standard material under <paramref name="root"/> to URP Lit with Unity's own upgrader (idempotent).</summary>
+        public static int ConvertMaterials(string root)
         {
+            if (!AssetDatabase.IsValidFolder(root)) { Debug.LogWarning("[SS3D] material conversion: " + root + " not found"); return 0; }
             var upgraders = new List<MaterialUpgrader> { new StandardUpgrader("Standard"), new StandardUpgrader("Standard (Specular setup)") };
             int converted = 0, skipped = 0;
-            foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { KitRoot }))
+            foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { root }))
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var m = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -34,7 +38,7 @@ namespace ShadowSteps.Art3D.Editor
                 EditorUtility.SetDirty(m); converted++;
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[SS3D] kit materials: " + converted + " converted to URP Lit, " + skipped + " left as they were (already URP, particle or legacy shaders).");
+            Debug.Log("[SS3D] " + root + ": " + converted + " materials converted to URP Lit, " + skipped + " left as they were (already URP, particle or legacy shaders).");
             return converted;
         }
 

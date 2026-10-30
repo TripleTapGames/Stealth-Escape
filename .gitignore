@@ -118,3 +118,7 @@ InitTestScene*.unity*
 # Licensed environment kit (Synty POLYGON Fantasy Kingdom): never committed, re-import from Package Manager
 Assets/PolygonFantasyKingdom/
 Assets/PolygonFantasyKingdom.meta
+
+# Licensed environment kit (Synty POLYGON Town Pack): never committed
+Assets/PolygonTown/
+Assets/PolygonTown.meta

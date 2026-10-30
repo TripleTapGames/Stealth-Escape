@@ -65,6 +65,9 @@ namespace ShadowSteps.Art3D
 
         // ---------------------------------------------------------------- build
 
+        /// <summary>Optional per-scene overrides (set by an environment generator before Build): cover props, wall prop and floor tints. Null = palette.</summary>
+        public SS3DPropOverrides overrides;
+
         public void Build(Stage stage)
         {
             if (stage == null) throw new System.ArgumentNullException(nameof(stage));
@@ -92,7 +95,13 @@ namespace ShadowSteps.Art3D
                         if (tile != null) tile.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset);
                         SS3DArtTuning.Tint(tile, altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
                     }
-                    if (stage.IsWall(c) && palette.sunlitCourtyard) BuildMasonryWall(stage, c, pos);
+                    if (stage.IsWall(c) && overrides != null && overrides.wallProp != null)
+                    {
+                        var wall = Create(overrides.wallProp, "SolidWall_" + x + "_" + y, pos, Quaternion.Euler(0f, 90f * ((x * 5 + y * 3) % 4), 0f), _geometry);
+                        SS3DArtTuning.Tint(wall, SS3DTint.None, palette);
+                        if (wall != null) SS3DKitFit.Fit(wall, pos + Vector3.up * (FloorTop - 0.03f), 0.92f * s, overrides.wallHeight > 0f ? overrides.wallHeight : palette.wallHeightScale, 0.92f * s, false);
+                    }
+                    else if (stage.IsWall(c) && palette.sunlitCourtyard) BuildMasonryWall(stage, c, pos);
                     else if (stage.IsWall(c) && palette.kitMode && palette.kitWallSegment != null && palette.kitWallPost != null) BuildKitWall(stage, c, pos);
                     else if (stage.IsWall(c))
                     {
@@ -105,7 +114,7 @@ namespace ShadowSteps.Art3D
                     else if (stage.IsBlocked(c))
                     {
                         // V4 'X': a solid 1×1 obstacle on this cell only. The rule uses the whole cell regardless of the mesh height.
-                        var variants = palette.coverObstacles;
+                        var variants = overrides != null && overrides.coverProps != null && overrides.coverProps.Length > 0 ? overrides.coverProps : palette.coverObstacles;
                         var prefab = variants != null && variants.Length > 0 ? variants[coverIndex++ % variants.Length] : null;
                         var cover = Create(prefab, "Cover_X_" + x + "_" + y, pos, Quaternion.identity, _geometry);
                         SS3DArtTuning.Tint(cover, coverIndex % 3 == 2 ? SS3DTint.Foliage : SS3DTint.Cover, palette);
@@ -453,7 +462,7 @@ namespace ShadowSteps.Art3D
             if (_stoneMats.Count == 0)
                 for (int i = 0; i < 6; i++)
                 {
-                    var baseColor = i % 2 == 0 ? palette.floorA_Cream : palette.floorB_Cream;
+                    var baseColor = overrides != null && overrides.tintFloor ? (i % 2 == 0 ? overrides.floorA : overrides.floorB) : (i % 2 == 0 ? palette.floorA_Cream : palette.floorB_Cream);
                     float v = 1f + ((i / 2) - 1) * palette.floorColorVariation;
                     var m = MakeLitMaterial("SS3D Stone " + i, new Color(baseColor.r * v, baseColor.g * v, baseColor.b * v, 1f));
                     var tex = SS3DArtTuning.StoneTexture();
@@ -722,6 +731,17 @@ namespace ShadowSteps.Art3D
                 _shown.Clear();
             }
         }
+    }
+
+        /// <summary>Per-scene art overrides for the level renderer (environment profiles). Visual only.</summary>
+    [System.Serializable]
+    public class SS3DPropOverrides
+    {
+        public GameObject[] coverProps;
+        public GameObject wallProp;
+        [Tooltip("Height of the wall prop in tiles (0 = palette wallHeightScale).")] public float wallHeight;
+        public bool tintFloor;
+        public Color floorA = Color.white, floorB = Color.white;
     }
 
     /// <summary>Tiny procedural meshes for direction markers and architectural trim (no external art needed).</summary>

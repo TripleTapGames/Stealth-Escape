@@ -41,6 +41,11 @@ engine hands it. It never decides movement, visibility, collisions or solver res
 - The theme is the palette's `sunlitCourtyard` flag (plus orthographic camera, padding 1.5, minimum framed 6 × 4). Turn it off to return to the castle kit layout; both keep `kitMode` for prop fitting.
 - Playable levels: the Game scene with `Use3DPresentation` renders the same theme; the First10 scenes are previews only.
 
+## Town environments (POLYGON Town Pack)
+
+- Import the pack to `Assets/PolygonTown`. Shadow Steps ▸ 3D ▸ Town ▸ *Create or update the 10 environment profiles* resolves prefabs by path into `Art3D/Town/Profiles`; *Generate 10 town environment scenes + preview* writes `Art3D/Levels/Town/SS3D_Town_01…10` and `SS3D_Town_Preview.unity` (select `Town_Preview_Switcher` for the 1–10 buttons). Auto-setup runs both once.
+- Profiles are plain ScriptableObjects: swap any prefab, tint or count and regenerate. Gameplay geometry is never in a profile.
+
 ## Files
 
 | File | Role |

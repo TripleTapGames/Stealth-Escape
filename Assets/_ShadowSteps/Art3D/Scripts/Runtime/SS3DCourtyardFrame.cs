@@ -29,6 +29,9 @@ namespace ShadowSteps.Art3D
         private bool Kit => palette != null && palette.kitMode;
         private float K => Kit ? palette.kitScale : 1f;
 
+        /// <summary>Removes the generated exterior (used when another environment generator takes over the scene).</summary>
+        public void Clear() { if (_frame != null) SS3DLevelRenderer.SafeDestroy(_frame.gameObject); _frame = null; }
+
         [ContextMenu("Build Around Level")]
         public void Build(SS3DLevelRenderer board)
         {
