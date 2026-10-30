@@ -1,0 +1,7 @@
+NEXT ACTION (ONE COMMAND):
+1) Extract ShadowSteps_First10_Courtyard_Art_Pack.zip into the ROOT of your Unity ShadowSteps project, beside Assets, Packages and ProjectSettings; leave your installed Synty / characters_5_02 assets where they are.
+2) In Claude Code opened at the Unity project root, paste:
+
+Read `ShadowSteps_First10_Courtyard_Art_Pack/CLAUDE_FIRST10_IMPLEMENTATION_PROMPT.md` and execute it fully. Use the attached original reference images and V4 level data. Generate the first 10 3D Unity courtyard levels in my existing project, preserving gameplay. Stop and report evidence/screenshot results.
+
+3) Open generated first 10 scenes in Unity. Share the Game-view screenshot for Main Level 2 (Clockwise) at 9:16 to review visual fidelity.

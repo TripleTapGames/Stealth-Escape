@@ -1,0 +1,31 @@
+{
+  "count": 10,
+  "ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "titles": [
+    "First Steps",
+    "Follow the Lines",
+    "Stay Out of Sight",
+    "Watch the Rotation",
+    "Moving Patrol",
+    "Safe Side",
+    "Clockwise",
+    "One Step Ahead",
+    "Double Trouble",
+    "Corner Patrol"
+  ],
+  "source_sha256": "f88432a0b402796a17843fc9b7d537c514cbef393b2994b68fc1f09c6269de04",
+  "references_present": true,
+  "blueprints": 10,
+  "levels_validated": true
+}

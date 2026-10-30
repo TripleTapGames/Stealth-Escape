@@ -24,7 +24,7 @@ MonoBehaviour:
   - {fileID: 1177926268367656, guid: 9113b902fee41e840a16886b937e28d9, type: 3}
   - {fileID: 1793482622933152, guid: 0b4b7d63ece7f3d48b599d2dbfee78ff, type: 3}
   floorTop: 0.112
-  wallHeightScale: 0.7
+  wallHeightScale: 0.5
   coverHeightScale: 0.85
   node: {fileID: 4814140183114437194, guid: a8044689ab47143f78f5c809fb684757, type: 3}
   exitPad: {fileID: 4814140183114437194, guid: 8e664b697178b4d9293cd1dd4efabdae, type: 3}
@@ -83,6 +83,10 @@ MonoBehaviour:
   - {fileID: 1120049323231456, guid: 7aa04f87f3bbed944b09d88299a3b724, type: 3}
   - {fileID: 1277971983454576, guid: c68a3919f630bce4fa8573fb27553352, type: 3}
   - {fileID: 1722463299411574, guid: b97f4fc4776ca5b43bbcf11e72cc4ada, type: 3}
+  kitWallSegment: {fileID: 1878104747260942, guid: 37bf0f96ae7d9ff40855f1124f18005e,
+    type: 3}
+  kitWallPost: {fileID: 1048459307401366, guid: 5763b5c079fc82d4f9eba6bdb64be096,
+    type: 3}
   kitAccents: 0
   kitGround: {fileID: 1213984388251548, guid: f39a87f00698b7f4b951eb1246c05f73, type: 3}
   kitParapetRail: {fileID: 1708773804151216, guid: f6982135a3b945544844575fc99b443c,

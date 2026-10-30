@@ -1,0 +1,484 @@
+{
+  "manifest_version": "1.0",
+  "mapping": "V4 levels IDs 1..10, FTUE1..5 and Main1..5",
+  "art_reference": "Sunlit premium miniature 2.5D courtyard; not Synty medieval fortress ring",
+  "levels": [
+    {
+      "sequence": 1,
+      "source_level_id": 1,
+      "source_label": "FTUE 1",
+      "source_title": "First Steps",
+      "scene_filename": "SS3D_01_First_Steps.unity",
+      "grid": {
+        "width": 4,
+        "height": 1,
+        "blocked_nodes": [],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 0,
+        "camera_count": 0,
+        "optimal_actions": 3,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Entrance Walk",
+        "location_treatment": "Entry terrace",
+        "art_emphasis": "Short 4-node route, no guards; generous architectural frame and uncluttered path",
+        "perimeter_decoration": "Ivory arch, blue banners, small flowerbeds beyond side rails",
+        "readability_priority": "No visually misleading red-carpet exit; place true exit glow on data node",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 2,
+      "source_level_id": 2,
+      "source_label": "FTUE 2",
+      "source_title": "Follow the Lines",
+      "scene_filename": "SS3D_02_Follow_the_Lines.unity",
+      "grid": {
+        "width": 3,
+        "height": 3,
+        "blocked_nodes": [],
+        "solid_walls": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      "stage_mechanics": {
+        "guard_count": 0,
+        "camera_count": 0,
+        "optimal_actions": 6,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Side Passage",
+        "location_treatment": "West arcade",
+        "art_emphasis": "Route around two # physical walls; use low sandstone wall pieces on these authored cells",
+        "perimeter_decoration": "Stepped balustrade and two wall lanterns outside board",
+        "readability_priority": "Do not decorate # walls as traversable pathway",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 3,
+      "source_level_id": 3,
+      "source_label": "FTUE 3",
+      "source_title": "Stay Out of Sight",
+      "scene_filename": "SS3D_03_Stay_Out_of_Sight.unity",
+      "grid": {
+        "width": 5,
+        "height": 5,
+        "blocked_nodes": [
+          [
+            2,
+            3
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 8,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Guard Court",
+        "location_treatment": "Lantern plaza",
+        "art_emphasis": "Static guard sightline; one X cell is a physical cover planter",
+        "perimeter_decoration": "Turquoise side canal with two tree clusters outside wall",
+        "readability_priority": "Keep guard straight two-node danger and cover occlusion exact",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 4,
+      "source_level_id": 4,
+      "source_label": "FTUE 4",
+      "source_title": "Watch the Rotation",
+      "scene_filename": "SS3D_04_Watch_the_Rotation.unity",
+      "grid": {
+        "width": 5,
+        "height": 5,
+        "blocked_nodes": [
+          [
+            2,
+            3
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 5,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Clockwise Pavilion",
+        "location_treatment": "Lantern plaza",
+        "art_emphasis": "One rotating guard and one X cover planter",
+        "perimeter_decoration": "Gold-trimmed facade with blue/gold banners, soft amber lanterns",
+        "readability_priority": "Show clockwise rotation marker, not a false 2D fan cone",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 5,
+      "source_level_id": 5,
+      "source_label": "FTUE 5",
+      "source_title": "Moving Patrol",
+      "scene_filename": "SS3D_05_Moving_Patrol.unity",
+      "grid": {
+        "width": 5,
+        "height": 5,
+        "blocked_nodes": [
+          [
+            3,
+            2
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 6,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Patrol Terrace",
+        "location_treatment": "Lower water court",
+        "art_emphasis": "Straight five-point ping-pong patrol; X cover feature",
+        "perimeter_decoration": "Small perimeter bench group and decorative water cascade",
+        "readability_priority": "Use NEXT arrow; preserve exact patrol timing",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 6,
+      "source_level_id": 6,
+      "source_label": "Level 1",
+      "source_title": "Safe Side",
+      "scene_filename": "SS3D_06_Safe_Side.unity",
+      "grid": {
+        "width": 6,
+        "height": 4,
+        "blocked_nodes": [
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            1
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 9,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Side Garden",
+        "location_treatment": "Stone terrace",
+        "art_emphasis": "Two X solid covers and stationary guard; slightly expanded six-column board",
+        "perimeter_decoration": "Cream marble surround and blue-water channel on one side",
+        "readability_priority": "Never put decorative flowers on walkable node centers",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 7,
+      "source_level_id": 7,
+      "source_label": "Level 2",
+      "source_title": "Clockwise",
+      "scene_filename": "SS3D_07_Clockwise.unity",
+      "grid": {
+        "width": 6,
+        "height": 4,
+        "blocked_nodes": [
+          [
+            2,
+            2
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 7,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Clockwise",
+        "location_treatment": "Royal courtyard",
+        "art_emphasis": "Two X solid covers and a clockwise rotating guard",
+        "perimeter_decoration": "Red carpet outside board near palace doors, pink flowers beyond outer walls",
+        "readability_priority": "Actual guard vision remains 2-node straight line",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 8,
+      "source_level_id": 8,
+      "source_label": "Level 3",
+      "source_title": "One Step Ahead",
+      "scene_filename": "SS3D_08_One_Step_Ahead.unity",
+      "grid": {
+        "width": 6,
+        "height": 4,
+        "blocked_nodes": [
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 11,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "One Step Ahead",
+        "location_treatment": "Canal arcade",
+        "art_emphasis": "Three X cover cells form deliberate detour; vertical moving patrol",
+        "perimeter_decoration": "Exterior water channel and low wall pillars",
+        "readability_priority": "Separate obstacle silhouettes so adjacency/paths stay readable",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 9,
+      "source_level_id": 9,
+      "source_label": "Level 4",
+      "source_title": "Double Trouble",
+      "scene_filename": "SS3D_09_Double_Trouble.unity",
+      "grid": {
+        "width": 7,
+        "height": 5,
+        "blocked_nodes": [
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 2,
+        "camera_count": 0,
+        "optimal_actions": 14,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Double Trouble",
+        "location_treatment": "Twin Lantern Court",
+        "art_emphasis": "Two guards and three solid X covers; broader seven-column board",
+        "perimeter_decoration": "Symmetrical lanterns, waterfall niches and raised archway",
+        "readability_priority": "Both guard sight overlays independently readable",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    },
+    {
+      "sequence": 10,
+      "source_level_id": 10,
+      "source_label": "Level 5",
+      "source_title": "Corner Patrol",
+      "scene_filename": "SS3D_10_Corner_Patrol.unity",
+      "grid": {
+        "width": 7,
+        "height": 5,
+        "blocked_nodes": [
+          [
+            3,
+            2
+          ],
+          [
+            5,
+            1
+          ]
+        ],
+        "solid_walls": []
+      },
+      "stage_mechanics": {
+        "guard_count": 1,
+        "camera_count": 0,
+        "optimal_actions": 8,
+        "smoke_charges": 0,
+        "emp_charges": 0
+      },
+      "art_variant": {
+        "scene_theme": "Sunlit Ivory Royal Courtyard",
+        "variant_name": "Corner Patrol",
+        "location_treatment": "Gallery Square",
+        "art_emphasis": "Looping guard around authored perimeter; two solid X covers",
+        "perimeter_decoration": "Outdoor corner trees, turquoise pool edges, small flowering planters",
+        "readability_priority": "Show next-step direction in loop, no hidden hazards",
+        "inside_playable_area_decorations": "NONE; only exact authored X/# or approved gameplay geometry",
+        "palette": {
+          "stone": "ivory / cream / warm sandstone",
+          "water": "turquoise",
+          "fabrics": "royal blue / muted crimson",
+          "vegetation": "lush greens outside board only",
+          "lighting": "soft warm afternoon sun"
+        },
+        "approved_source_images": [
+          "References/Original_Gameplay_Art_Reference.png",
+          "References/Empty_Courtyard_No_Interior_Bushes.png"
+        ]
+      }
+    }
+  ]
+}
