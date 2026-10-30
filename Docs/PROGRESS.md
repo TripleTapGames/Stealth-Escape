@@ -425,3 +425,7 @@ Editor log of the user's Play attempt: Bootstrap loaded 30 stages and the save, 
 
 **Tests run:** `Tools/unity_compile_check.py` → 0 errors. Rules untouched (no Core/Data change).
 
+## 2026-10-30 — Camera coverage shown as projected light (3D layer)
+
+Request: cameras should project light to show coverage instead of only tinting nodes. In `SS3DLevelRenderer` each camera head now carries a URP spot light (palette: colour, intensity, range, angle), and `SetCameraCoverage(camera, cells)` draws soft radial light pools and faint rays from the lens to **exactly the cells the engine reports** for that camera, so walls, cover and smoke cut the projected coverage the same way they cut detection. The amber hazard ring stays as the authoritative border; the flat amber fill is dropped while projection is on. An EMP-disabled camera switches its light off and its pools disappear until the two protected actions elapse. Bridge and preview feed per-camera cells. Compile check 0 errors; not rendered in Unity.
+
