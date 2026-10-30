@@ -94,7 +94,8 @@ namespace ShadowSteps.Art3D
                     }
                     if (stage.IsWall(c))
                     {
-                        var wall = Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        var wallPrefab = palette.kitMode && palette.kitWallVariants != null && palette.kitWallVariants.Length > 0 ? palette.kitWallVariants[(x * 7 + y * 3) % palette.kitWallVariants.Length] : null;
+                        var wall = Create(wallPrefab != null ? wallPrefab : palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
                         SS3DArtTuning.Tint(wall, SS3DTint.Wall, palette);
                         if (wall != null && palette.kitMode) SS3DKitFit.Fit(wall, pos + Vector3.up * (FloorTop - 0.03f), 0.92f * s, palette.wallHeightScale, 0.92f * s, false); // kit: fit the cell, wallHeightScale is the height in tiles
                         else if (wall != null) wall.transform.localScale = new Vector3(wall.transform.localScale.x, wall.transform.localScale.y * palette.wallHeightScale, wall.transform.localScale.z);

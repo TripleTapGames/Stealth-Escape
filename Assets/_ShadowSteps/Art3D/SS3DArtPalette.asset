@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   floorA: {fileID: 4814140183114437194, guid: f6b9ec202074f4cdeb9d645c08745294, type: 3}
   floorB: {fileID: 4814140183114437194, guid: fd2916615311e4aac82316d11d9577bf, type: 3}
-  wallBlock: {fileID: 4814140183114437194, guid: 9427e1d7d95644c9b95c62875eb0f08a,
-    type: 3}
+  wallBlock: {fileID: 1791545254059576, guid: 9fee80ab9220d674f99e62dd034d3a0b, type: 3}
   wallStraight: {fileID: 4814140183114437194, guid: 5a2f4cc5527ca4c0cb9aed1f6e2b7ec6,
     type: 3}
   coverObstacles:
-  - {fileID: 4814140183114437194, guid: 905009cbb6a594fe7940b359dd6e2703, type: 3}
-  - {fileID: 4814140183114437194, guid: 68d82fd5d24004aa6bb84b2c54449c7a, type: 3}
-  - {fileID: 4814140183114437194, guid: 5dc6a41046fe243afa07f00955dccc7b, type: 3}
+  - {fileID: 1719569932363254, guid: 2f8e08a414723f3478184919435f67c0, type: 3}
+  - {fileID: 1894982720226970, guid: b26e035715d763f409a7e837ae204dab, type: 3}
+  - {fileID: 1748694898646254, guid: c6efdc6da1dc29241a8651dcd1622ccc, type: 3}
+  - {fileID: 1177926268367656, guid: 9113b902fee41e840a16886b937e28d9, type: 3}
+  - {fileID: 1793482622933152, guid: 0b4b7d63ece7f3d48b599d2dbfee78ff, type: 3}
   floorTop: 0.112
   wallHeightScale: 0.7
   coverHeightScale: 0.85
@@ -66,35 +67,42 @@ MonoBehaviour:
     type: 3}
   stairs: {fileID: 4814140183114437194, guid: ff7dc1e18dc6e4c4099675810416c5b2, type: 3}
   pillar: {fileID: 4814140183114437194, guid: 5b036ebe1418b4a44bf0825d218427b6, type: 3}
-  water: {fileID: 4814140183114437194, guid: be5b00bd9f62a42138e65203c37593f8, type: 3}
-  bench: {fileID: 4814140183114437194, guid: 0b2d03c0021b24e4680f3165ee6f0f96, type: 3}
+  water: {fileID: 1318850858775610, guid: 70dd3f256d189fa45aac0e45bb7bb06e, type: 3}
+  bench: {fileID: 1940261937569050, guid: a5e64cdff84bd42489a68df615fff053, type: 3}
   lantern: {fileID: 4814140183114437194, guid: 17991a4b796a2452da2e672419dc164c, type: 3}
-  banner: {fileID: 4814140183114437194, guid: 7bbb7fb99d3c443fba674b7c6c289857, type: 3}
+  banner: {fileID: 1368671110142866, guid: 1892a9bbd9c37a049b7326377596c2df, type: 3}
   flowerbed: {fileID: 4814140183114437194, guid: ccd8999fd4b1642229ed4f533c2f7fbe,
     type: 3}
-  kitMode: 0
+  kitMode: 1
   kitScale: 0.5
   kitTint: {r: 1, g: 0.97, b: 0.9, a: 1}
   kitFacadeYaw: 0
   kitStairsYaw: 180
-  kitGround: {fileID: 0}
-  kitParapetRail: {fileID: 0}
-  kitParapetPost: {fileID: 0}
-  kitWallRun: {fileID: 0}
-  kitWallGate: {fileID: 0}
-  kitBattlement: {fileID: 0}
-  kitTower: {fileID: 0}
-  kitStairs: {fileID: 0}
-  kitHedge: {fileID: 0}
-  kitTree: {fileID: 0}
-  kitUrn: {fileID: 0}
-  kitFountain: {fileID: 0}
-  kitStatue: {fileID: 0}
-  kitStatuePlinth: {fileID: 0}
-  kitCarpet: {fileID: 0}
-  kitLamp: {fileID: 0}
-  kitBush: {fileID: 0}
-  kitFlowers: {fileID: 0}
+  kitAccents: 0
+  kitGround: {fileID: 1213984388251548, guid: f39a87f00698b7f4b951eb1246c05f73, type: 3}
+  kitParapetRail: {fileID: 1708773804151216, guid: f6982135a3b945544844575fc99b443c,
+    type: 3}
+  kitParapetPost: {fileID: 1128161544012272, guid: f8ddb4403e738c64c90bc3b9922f8b38,
+    type: 3}
+  kitWallRun: {fileID: 1537193040482440, guid: 5a1c6df907d669b4ea53c92c6e212dbe, type: 3}
+  kitWallGate: {fileID: 1643572010562178, guid: f775552096f7c4e46a9e0938fce4ca6c,
+    type: 3}
+  kitBattlement: {fileID: 1995842527840632, guid: 696d556a80bf28e46aa3eab92f05424f,
+    type: 3}
+  kitTower: {fileID: 1920849402605650, guid: 74c8606a98822e044bb1cd8a2eaefebb, type: 3}
+  kitStairs: {fileID: 1962414162455570, guid: 2cec3e36c100660409a207648fb52105, type: 3}
+  kitHedge: {fileID: 1130060130238206, guid: b19fad002d048c74c8540978be2e6ad9, type: 3}
+  kitTree: {fileID: 1766626281795622, guid: 86a6bda8f78af6b449cd7570bc4efc6f, type: 3}
+  kitUrn: {fileID: 1640751063747882, guid: b9de695b7be1d124ea3e7df2402904a7, type: 3}
+  kitFountain: {fileID: 1297885529879400, guid: 7f687487d4bbab24fb547dc9af8ed83f,
+    type: 3}
+  kitStatue: {fileID: 1382234347740782, guid: fe1a0f10361a25547866107e44743441, type: 3}
+  kitStatuePlinth: {fileID: 1202480211589362, guid: e0c1f0be767df3742acce9a52cfa582a,
+    type: 3}
+  kitCarpet: {fileID: 1372513855293848, guid: a8c4fdc6d28491d4dbf6dc15d651e2ed, type: 3}
+  kitLamp: {fileID: 1568525375095786, guid: bac41e063fe0fec4dae7fc7740141d27, type: 3}
+  kitBush: {fileID: 1971138446206388, guid: 92d82af32628bb241ad09d2714fcb14c, type: 3}
+  kitFlowers: {fileID: 1710074090034138, guid: 8987043dc8eb1c24a84b9bf9dd364f31, type: 3}
   guardVisionFill: {r: 0.91, g: 0.23, b: 0.24, a: 0.22}
   guardVisionBorder: {r: 0.9, g: 0.23, b: 0.25, a: 1}
   cameraVisionFill: {r: 0.95, g: 0.7, b: 0.17, a: 0.22}

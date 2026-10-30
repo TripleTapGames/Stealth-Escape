@@ -103,23 +103,33 @@ namespace ShadowSteps.Art3D
             return (rot * new Vector3(u * t * aspect, v * t, 1f)).normalized;
         }
 
-        /// <summary>Ground-plane rectangle (XZ, world) that would be visible for the given aspect, used to extend decoration to the screen edges.</summary>
-        public Rect VisibleGroundRect(float aspect, float planeY = 0f)
+        /// <summary>Where the four screen corners (bottom-left, bottom-right, top-left, top-right) hit the ground plane for the given aspect; false when the camera cannot be evaluated.</summary>
+        public bool VisibleGroundCorners(float aspect, float planeY, Vector3[] corners)
         {
             if (!_hasBounds && board != null && board.IsBuilt) { _lastBounds = board.BoardBounds(); _hasBounds = true; }
+            if (!_hasBounds || corners == null || corners.Length < 4) return false;
             float halfH = SizeFor(_lastBounds, aspect, out var centre), halfW = halfH * aspect;
             var rot = Quaternion.Euler(downwardAngle, yaw, 0f);
             Vector3 right = rot * Vector3.right, up = rot * Vector3.up;
-            float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue;
-            foreach (var corner in new[] { new Vector2(-1f, -1f), new Vector2(1f, -1f), new Vector2(-1f, 1f), new Vector2(1f, 1f) })
+            var uv = new[] { new Vector2(-1f, -1f), new Vector2(1f, -1f), new Vector2(-1f, 1f), new Vector2(1f, 1f) };
+            for (int i = 0; i < 4; i++)
             {
-                var origin = usePerspective ? centre : centre + right * corner.x * halfW + up * corner.y * halfH;
-                var dir = RayDirection(rot, corner.x, corner.y, aspect);
-                if (Mathf.Abs(dir.y) < 1e-4f) continue;
+                var origin = usePerspective ? centre : centre + right * uv[i].x * halfW + up * uv[i].y * halfH;
+                var dir = RayDirection(rot, uv[i].x, uv[i].y, aspect);
+                if (Mathf.Abs(dir.y) < 1e-4f) return false;
                 float t = (planeY - origin.y) / dir.y;
-                var hit = origin + dir * t;
-                minX = Mathf.Min(minX, hit.x); maxX = Mathf.Max(maxX, hit.x); minZ = Mathf.Min(minZ, hit.z); maxZ = Mathf.Max(maxZ, hit.z);
+                corners[i] = origin + dir * t;
             }
+            return true;
+        }
+
+        /// <summary>Ground-plane rectangle (XZ, world) that would be visible for the given aspect, used to extend decoration to the screen edges.</summary>
+        public Rect VisibleGroundRect(float aspect, float planeY = 0f)
+        {
+            var c = new Vector3[4];
+            if (!VisibleGroundCorners(aspect, planeY, c)) return Rect.MinMaxRect(-6f, -6f, 6f, 6f);
+            float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue;
+            foreach (var hit in c) { minX = Mathf.Min(minX, hit.x); maxX = Mathf.Max(maxX, hit.x); minZ = Mathf.Min(minZ, hit.z); maxZ = Mathf.Max(maxZ, hit.z); }
             return Rect.MinMaxRect(minX, minZ, maxX, maxZ);
         }
 

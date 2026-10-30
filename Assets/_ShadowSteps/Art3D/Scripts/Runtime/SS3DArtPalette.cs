@@ -59,12 +59,12 @@ namespace ShadowSteps.Art3D
         public Color kitTint = new Color(1f, 0.97f, 0.90f, 1f);
         [Tooltip("Yaw applied to the façade pieces so their decorated face looks at the board; change if the kit's front faces the other way.")]
         public float kitFacadeYaw = 0f;
-        [Tooltip("Yaw of the staircase modules; 180 makes a +Z-descending model descend toward the camera.")]
-        public float kitStairsYaw = 180f;
+        [Tooltip("Alternative wall-cell prefabs cycled per cell (kit mode); empty = wallBlock everywhere.")]
+        public GameObject[] kitWallVariants;
         [Tooltip("Small accents (statues, urns, banners, bushes, flowers). Off keeps the composition to a few large shapes.")]
         public bool kitAccents = false;
         public GameObject kitGround, kitParapetRail, kitParapetPost, kitWallRun, kitWallGate, kitBattlement, kitTower;
-        public GameObject kitStairs, kitHedge, kitTree, kitUrn, kitFountain, kitStatue, kitStatuePlinth, kitCarpet, kitLamp, kitBush, kitFlowers;
+        public GameObject kitHedge, kitTree, kitUrn, kitStatue, kitStatuePlinth, kitCarpet, kitLamp, kitBush, kitFlowers;
 
         [Header("Overlay colours (match the 2D board theme)")]
         public Color guardVisionFill = new Color(0.91f, 0.23f, 0.24f, 0.22f);

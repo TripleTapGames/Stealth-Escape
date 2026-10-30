@@ -49,8 +49,12 @@ namespace ShadowSteps.Art3D.Editor
             GameObject First(params string[] subs) { foreach (var s in subs) { var go = AssetDatabase.LoadAssetAtPath<GameObject>(Prefab(s)); if (go != null) return go; } missing.Add(subs[0]); return null; }
 
             // Grid pieces fitted to the cell at build time (bounds-based), so exact kit sizes do not matter.
-            var wall = Get("Environments/SM_Env_StoneWall_Pillar_01");
+            var wall = Get("Castle/SM_Bld_Castle_Wall_Block_01"); // light castle stone, same atlas as the façade
             if (wall != null) palette.wallBlock = wall;
+            var variants = new List<GameObject>();
+            foreach (var v in new[] { "Castle/SM_Bld_Castle_Wall_Block_01", "Castle/SM_Bld_Castle_Wall_Block_02", "Castle/SM_Bld_Castle_Wall_Block_03", "Castle/SM_Bld_Castle_Wall_Block_04", "Castle/SM_Bld_Castle_Wall_Block_05" })
+            { var go = AssetDatabase.LoadAssetAtPath<GameObject>(Prefab(v)); if (go != null) variants.Add(go); }
+            palette.kitWallVariants = variants.ToArray();
             var cover = new List<GameObject>();
             foreach (var c in new[] { "Props/SM_Prop_Crate_Wood_01", "Props/SM_Prop_Barrel_01", "Environments/SM_Env_Planter_Pot_01", "Props/SM_Prop_Hay_Bale_01", "Props/SM_Prop_Sack_Stack_01" })
             { var go = AssetDatabase.LoadAssetAtPath<GameObject>(Prefab(c)); if (go != null) cover.Add(go); else missing.Add(c); }
@@ -64,11 +68,9 @@ namespace ShadowSteps.Art3D.Editor
             palette.kitWallGate = First("Castle/SM_Bld_Castle_Wall_Gate_01", "Castle/SM_Bld_Castle_Wall_Door_Big_01");
             palette.kitBattlement = Get("Castle/SM_Bld_Castle_Battlements_01");
             palette.kitTower = Get("Castle/SM_Bld_Castle_Wall_Tower_S_01");
-            palette.kitStairs = Get("House/SM_Bld_House_Stairs_Stone_01");
             palette.kitHedge = Get("Environments/SM_Env_Hedge_01");
             palette.kitTree = Get("Environments/SM_Env_Tree_Round_01");
             palette.kitUrn = Get("Environments/SM_Env_Planter_Pedestal_01");
-            palette.kitFountain = Get("Environments/SM_Env_Fountain_01");
             palette.kitStatue = First("Props/SM_Prop_Statue_Knight_01", "Props/SM_Prop_Statue_Hero_01");
             palette.kitStatuePlinth = Get("Props/SM_Prop_Statue_Plinth_01");
             palette.kitCarpet = Get("Props/SM_Prop_Rug_01");
