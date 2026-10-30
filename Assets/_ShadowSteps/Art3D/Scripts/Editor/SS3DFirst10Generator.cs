@@ -38,7 +38,8 @@ namespace ShadowSteps.Art3D.Editor
             var palette = SS3DSetupMenu.EnsurePalette();
             palette.sunlitCourtyard = true;
             palette.usePerspectiveCamera = false;
-            palette.cameraPaddingTiles = 1.5f;
+            palette.sunlitMarginTiles = 1.5f;
+            palette.cameraPaddingTiles = palette.sunlitMarginTiles + 0.6f; // margin + plinth + a sliver of moat: the platform fills the width, the grid sits in open floor
             palette.minFramedTiles = new Vector2(6f, 4f);
             palette.kitAccents = false;
             palette.proceduralFloorTiles = true;

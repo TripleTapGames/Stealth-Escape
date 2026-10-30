@@ -59,6 +59,8 @@ namespace ShadowSteps.Art3D
         [Range(0.3f, 3f)] public float cameraPaddingTiles = 0.78f;
         [Tooltip("Minimum framed board size in tiles (width, depth); the sunlit platform is at least 6 × 4 so the camera frames the platform, not a tiny grid.")]
         public Vector2 minFramedTiles = Vector2.zero;
+        [Tooltip("Sunlit theme: open ivory floor between the playable grid and the parapet, in tiles on every side (the reference keeps a generous empty margin).")]
+        [Range(0.5f, 3f)] public float sunlitMarginTiles = 1.5f;
         [Tooltip("Tile units per kit metre. 0.5 means a 1 m kit prop spans half a tile (characters are 0.95 tiles tall).")]
         [Range(0.2f, 1.5f)] public float kitScale = 0.5f;
         [Tooltip("Multiplied into every textured kit material instance (warm cream bias); white = untouched.")]

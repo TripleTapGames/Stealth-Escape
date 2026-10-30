@@ -49,7 +49,9 @@ namespace ShadowSteps.Art3D
             var variant = SunlitVariant.For(stage.Id);
             float gx0 = board.ToWorld(0, 0).x - 0.5f * s, gx1 = board.ToWorld(stage.Width - 1, 0).x + 0.5f * s;
             float gz1 = board.ToWorld(0, 0).z + 0.5f * s, gz0 = board.ToWorld(0, stage.Height - 1).z - 0.5f * s;
-            float borderX = Mathf.Max(0.5f * s, (6f * s - (gx1 - gx0)) * 0.5f), borderZ = Mathf.Max(0.5f * s, (4f * s - (gz1 - gz0)) * 0.5f);
+            // Open floor between the grid and the parapet on every side (reference look), never less than a 6 × 4 platform.
+            float margin = palette.sunlitMarginTiles * s;
+            float borderX = Mathf.Max(margin, (6f * s - (gx1 - gx0)) * 0.5f), borderZ = Mathf.Max(margin, (4f * s - (gz1 - gz0)) * 0.5f);
             float px0 = gx0 - borderX, px1 = gx1 + borderX, pz0 = gz0 - borderZ, pz1 = gz1 + borderZ;
             float middle = (px0 + px1) * 0.5f, centreZ = (pz0 + pz1) * 0.5f;
             float left = px0 + 0.3f * s, right = px1 - 0.3f * s, north = pz1 - 0.3f * s, south = pz0 + 0.3f * s;
@@ -115,9 +117,9 @@ namespace ShadowSteps.Art3D
                 Ball("Pier_Ball_" + n, new Vector3(cx, railY + 0.46f + 0.17f * s, cz), 0.34f * s, palette.trimIvory);
             }
             if (variant.benches)
-                foreach (float bz in new[] { centreZ - 1.3f * s, centreZ + 1.3f * s })
+                foreach (float bz in new[] { centreZ - 1.6f * s, centreZ + 1.6f * s })
                 {
-                    if (bz < south + 0.6f * s || bz > north - 0.6f * s) continue;
+                    if (bz < south + 0.8f * s || bz > north - 0.8f * s) continue;
                     Wood(palette.bench, "Bench_W", new Vector3(left + 0.42f * s, ft, bz), Quaternion.Euler(0f, 90f, 0f), 1.1f * s);
                     Wood(palette.bench, "Bench_E", new Vector3(right - 0.42f * s, ft, bz), Quaternion.Euler(0f, -90f, 0f), 1.1f * s);
                 }

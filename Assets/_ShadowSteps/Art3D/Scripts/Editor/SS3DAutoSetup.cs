@@ -18,7 +18,7 @@ namespace ShadowSteps.Art3D.Editor
     {
         private static string SessionKey => "SS3D.AutoSetup.Done." + GeneratorVersion; // per version: a bump re-runs in the same editor session
         /// <summary>Bump when the generator output changes; the two demo scenes are regenerated once per version.</summary>
-        public const int GeneratorVersion = 10;
+        public const int GeneratorVersion = 11;
         private static string VersionKey => "SS3D.GeneratorVersion." + Application.dataPath.GetHashCode();
         private static readonly (string code, string file)[] Demos = { ("LEVEL-2", "Clockwise_Rotating_Guard"), ("LEVEL-16", "Camera_Basics") };
 
@@ -35,7 +35,7 @@ namespace ShadowSteps.Art3D.Editor
                 var palette = SS3DSetupMenu.BuildPalette(overwriteModels: false);
                 if (SS3DKitSetup.KitPresent && (EditorPrefs.GetInt(VersionKey, 0) < GeneratorVersion || !palette.kitMode)) SS3DKitSetup.MapKit(); // environment kit: materials to URP + palette slots, re-mapped on every generator version
                 if (!palette.HasCoreModels) { Debug.LogWarning("[SS3D] auto-setup: palette is missing core models; check Shadow Steps ▸ 3D ▸ Validate imported models."); return; }
-                if (SS3DFirst10Generator.PackPresent && EditorPrefs.GetInt(VersionKey, 0) < 10) SS3DFirst10Generator.ApplySunlitTheme(); // First10 art direction
+                if (SS3DFirst10Generator.PackPresent && EditorPrefs.GetInt(VersionKey, 0) < GeneratorVersion) SS3DFirst10Generator.ApplySunlitTheme(); // First10 art direction
                 bool regenerate = EditorPrefs.GetInt(VersionKey, 0) != GeneratorVersion;
                 foreach (var (code, file) in Demos)
                 {
