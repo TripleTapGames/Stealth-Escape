@@ -98,7 +98,7 @@ namespace ShadowSteps.Art3D.Editor
             {
                 var st = pack.FindByCode(code); if (st == null) continue;
                 foreach (float aspect in new[] { 9f / 16f, 9f / 19.5f })
-                    sb.AppendLine(code + " " + st.Width + "x" + st.Height + " | " + SS3DFraming.Compute(st.Width, st.Height, 58f, aspect, 0.14f, 0.22f, 0.9f, 2.4f, wallH, coverH));
+                    sb.AppendLine(code + " " + st.Width + "x" + st.Height + " | " + SS3DFraming.Compute(st.Width, st.Height, 58f, aspect, 0.14f, 0.22f, 0.55f, 2.4f, wallH, coverH));
             }
             Debug.Log("[SS3D] framing report\n" + sb);
         }

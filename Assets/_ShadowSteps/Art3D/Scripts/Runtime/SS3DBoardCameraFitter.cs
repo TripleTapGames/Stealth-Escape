@@ -16,8 +16,8 @@ namespace ShadowSteps.Art3D
         public float yaw = 0f;
         [Range(0f, 0.5f)] public float topReservedFraction = 0.14f;
         [Range(0f, 0.5f)] public float bottomReservedFraction = 0.22f;
-        [Tooltip("Extra world margin around the board bounds, in tiles (covers the parapets).")]
-        public float paddingTiles = 0.9f;
+        [Tooltip("Extra world margin around the board bounds, in tiles. Small on purpose: the board is width-bound in portrait, so this directly sets how large the grid reads (0.55 ≈ parapets at the screen edge).")]
+        public float paddingTiles = 0.55f;
         [Tooltip("Tallest portrait aspect (width/height) the decoration must fill; 9:19.5 covers modern phones.")]
         public float designAspect = 9f / 19.5f;
         public float minimumSize = 2.4f;
