@@ -63,7 +63,7 @@ namespace ShadowSteps.Art3D
             float screenBottomZ = hasCorners ? Mathf.Min(corners[0].z, corners[1].z) : south - 5f * s;
             float farNorth = Mathf.Max(visible.yMax + s, north + 3f * s), farSouth = Mathf.Min(visible.yMin - s, south - 3f * s);
             float farWest = Mathf.Min(visible.xMin - s, left - 2.5f * s), farEast = Mathf.Max(visible.xMax + s, right + 2.5f * s);
-            float facadeZ = kit ? north + 2.75f * s : north + 1.9f * s;
+            float facadeZ = kit ? north + 2.2f * s : north + 1.9f * s;
 
             // ---- 1. Ground: kit grass slab fitted to the visible rectangle, or a warm-stone slab.
             if (kit && palette.kitGround != null)
@@ -74,20 +74,42 @@ namespace ShadowSteps.Art3D
             }
             else Slab(palette.floorA, "Ground_Plane", new Vector3((farWest + farEast) * 0.5f, drop - 0.02f, (farNorth + farSouth) * 0.5f), (farEast - farWest), (farNorth - farSouth), SS3DTint.Stone);
 
-            // ---- 2. Raised terrace: one-tile floor border (same stone as the board), grout, two-step plinth, ivory trim.
-            for (float x = left - 0.5f * s; x <= right + 0.5f * s + 1e-3f; x += s)
-                for (float z = south - 0.5f * s; z <= north + 0.5f * s + 1e-3f; z += s)
+            // ---- 2. Raised terrace: floor border in the board stone (half a tile in kit mode so the board stays the biggest shape), grout, two-step plinth, ivory trim.
+            float gx0 = board.ToWorld(0, 0).x - 0.5f * s, gx1 = board.ToWorld(stage.Width - 1, 0).x + 0.5f * s;
+            float gz1 = board.ToWorld(0, 0).z + 0.5f * s, gz0 = board.ToWorld(0, stage.Height - 1).z - 0.5f * s;
+            float border = kit ? 0.5f * s : 1.0f * s;
+            if (kit && palette.proceduralFloorTiles)
+            {
+                float hb = border * 0.5f;
+                for (int yy = 0; yy < stage.Height; yy++)
                 {
-                    bool insideGrid = x > board.ToWorld(0, 0).x - 0.5f * s && x < board.ToWorld(stage.Width - 1, 0).x + 0.5f * s && z < board.ToWorld(0, 0).z + 0.5f * s && z > board.ToWorld(0, stage.Height - 1).z - 0.5f * s;
-                    if (insideGrid) continue;
-                    if (palette.proceduralFloorTiles) board.CreateStoneTile("Terrace_Border", transform.TransformPoint(new Vector3(x, 0f, z)), Mathf.RoundToInt(x + z) % 2 == 0, Mathf.RoundToInt(x * 7f + z * 13f), _frame);
-                    else
-                    {
-                        var t = Place(palette.floorA, "Terrace_Border", new Vector3(x, 0f, z));
-                        if (t != null) { t.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset); SS3DArtTuning.Tint(t, SS3DTint.FloorB, palette); }
-                    }
+                    float z = board.ToWorld(0, yy).z;
+                    board.CreateStoneTile("Terrace_Border_W", transform.TransformPoint(new Vector3(gx0 - hb, 0f, z)), yy % 2 == 0, yy * 13, _frame, border, s);
+                    board.CreateStoneTile("Terrace_Border_E", transform.TransformPoint(new Vector3(gx1 + hb, 0f, z)), yy % 2 == 1, yy * 17, _frame, border, s);
                 }
-            float platW = (right - left) + 2.0f * s, platD = (north - south) + 2.0f * s;
+                for (int xx = 0; xx < stage.Width; xx++)
+                {
+                    float x = board.ToWorld(xx, 0).x;
+                    board.CreateStoneTile("Terrace_Border_N", transform.TransformPoint(new Vector3(x, 0f, gz1 + hb)), xx % 2 == 0, xx * 7, _frame, s, border);
+                    board.CreateStoneTile("Terrace_Border_S", transform.TransformPoint(new Vector3(x, 0f, gz0 - hb)), xx % 2 == 1, xx * 11, _frame, s, border);
+                }
+                foreach (var (cx, cz) in new[] { (gx0 - hb, gz1 + hb), (gx1 + hb, gz1 + hb), (gx0 - hb, gz0 - hb), (gx1 + hb, gz0 - hb) })
+                    board.CreateStoneTile("Terrace_Border_Corner", transform.TransformPoint(new Vector3(cx, 0f, cz)), true, Mathf.RoundToInt(cx * 3f + cz * 5f), _frame, border, border);
+            }
+            else
+                for (float x = left - 0.5f * s; x <= right + 0.5f * s + 1e-3f; x += s)
+                    for (float z = south - 0.5f * s; z <= north + 0.5f * s + 1e-3f; z += s)
+                    {
+                        bool insideGrid = x > gx0 && x < gx1 && z < gz1 && z > gz0;
+                        if (insideGrid) continue;
+                        if (palette.proceduralFloorTiles) board.CreateStoneTile("Terrace_Border", transform.TransformPoint(new Vector3(x, 0f, z)), Mathf.RoundToInt(x + z) % 2 == 0, Mathf.RoundToInt(x * 7f + z * 13f), _frame);
+                        else
+                        {
+                            var t = Place(palette.floorA, "Terrace_Border", new Vector3(x, 0f, z));
+                            if (t != null) { t.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset); SS3DArtTuning.Tint(t, SS3DTint.FloorB, palette); }
+                        }
+                    }
+            float platW = (gx1 - gx0) + 2f * border + 0.4f * s, platD = (gz1 - gz0) + 2f * border + 0.4f * s;
             Box("Terrace_Grout", new Vector3(middle, -0.012f, centreZ), platW, palette.floorTop - 0.022f, platD, 0f, palette.groutColor);
             Box("Platform_Plinth_Upper", new Vector3(middle, drop, centreZ), platW + 0.30f * s, terraceDrop + 0.005f, platD + 0.30f * s, 0.08f, palette.plinthStone);
             Box("Platform_Plinth_Lower", new Vector3(middle, drop - 0.22f, centreZ), platW + 0.80f * s, 0.22f, platD + 0.80f * s, 0.06f, palette.warmStone);
@@ -159,7 +181,7 @@ namespace ShadowSteps.Art3D
 
             if (kit)
             {
-                BuildKitSurroundings(board, s, k, left, right, north, south, middle, centreZ, drop, facadeZ, platW, platD, plinthHalfW, plinthHalfD, farWest, farEast, farNorth, farSouth, screenBottomZ, HalfWidthAt, railY);
+                BuildKitSurroundings(board, s, k, gz0, gz1, border, middle, centreZ, drop, facadeZ, plinthHalfW, plinthHalfD, farWest, farEast, farNorth, farSouth, screenBottomZ, HalfWidthAt, railY);
                 return;
             }
 
@@ -232,20 +254,23 @@ namespace ShadowSteps.Art3D
         /// already fills the width, so everything lives in the north band (wall, gate, bridge) and the south band
         /// (staircase bridge, path, hedges, trees), with a moat ring tying the two together.
         /// </summary>
-        private void BuildKitSurroundings(SS3DLevelRenderer board, float s, float k, float left, float right, float north, float south, float middle, float centreZ, float drop, float facadeZ,
-                                          float platW, float platD, float plinthHalfW, float plinthHalfD, float farWest, float farEast, float farNorth, float farSouth, float screenBottomZ, System.Func<float, float> halfWidthAt, float railY)
+        private void BuildKitSurroundings(SS3DLevelRenderer board, float s, float k, float gz0, float gz1, float border, float middle, float centreZ, float drop, float facadeZ,
+                                          float plinthHalfW, float plinthHalfD, float farWest, float farEast, float farNorth, float farSouth, float screenBottomZ, System.Func<float, float> halfWidthAt, float railY)
         {
-            // ---- Moat ring around the lower plinth, kerbed on the outside; water slightly above the ground so it reads on any ground model.
-            float moatW = 1.0f * s, kerb = 0.14f * s;
-            float moatOuterX = plinthHalfW + moatW, moatOuterZ = plinthHalfD + moatW;
-            Canal("Moat_W", new Vector3(middle - plinthHalfW - moatW * 0.5f, drop, centreZ), moatW, 2f * moatOuterZ);
-            Canal("Moat_E", new Vector3(middle + plinthHalfW + moatW * 0.5f, drop, centreZ), moatW, 2f * moatOuterZ);
-            Canal("Moat_S", new Vector3(middle, drop, centreZ - plinthHalfD - moatW * 0.5f), 2f * plinthHalfW, moatW);
-            Canal("Moat_N", new Vector3(middle, drop, centreZ + plinthHalfD + moatW * 0.5f), 2f * plinthHalfW, moatW);
-            Box("Moat_Kerb_W", new Vector3(middle - moatOuterX - kerb * 0.5f, drop - 0.04f, centreZ), kerb, 0.12f, 2f * moatOuterZ + 2f * kerb, 0.02f, palette.plinthStone);
-            Box("Moat_Kerb_E", new Vector3(middle + moatOuterX + kerb * 0.5f, drop - 0.04f, centreZ), kerb, 0.12f, 2f * moatOuterZ + 2f * kerb, 0.02f, palette.plinthStone);
-            Box("Moat_Kerb_S", new Vector3(middle, drop - 0.04f, centreZ - moatOuterZ - kerb * 0.5f), 2f * moatOuterX + 2f * kerb, 0.12f, kerb, 0.02f, palette.plinthStone);
-            Box("Moat_Kerb_N", new Vector3(middle, drop - 0.04f, centreZ + moatOuterZ + kerb * 0.5f), 2f * moatOuterX + 2f * kerb, 0.12f, kerb, 0.02f, palette.plinthStone);
+            // ---- Water only where the portrait view has room: one strip across the north and one across the south of the plinth, kerbed on three sides.
+            //      Paved forecourt between the north strip and the palace wall, paved apron around the stair foot; grass beyond. The sides stay plain.
+            float moatW = 1.0f * s, kerb = 0.14f * s, apronHalfW = plinthHalfW + 1.0f * s;
+            float moatS0 = centreZ - plinthHalfD, moatS1 = moatS0 - moatW, moatN0 = centreZ + plinthHalfD, moatN1 = moatN0 + moatW;
+            Canal("Moat_S", new Vector3(middle, drop, (moatS0 + moatS1) * 0.5f), 2f * plinthHalfW, moatW);
+            Canal("Moat_N", new Vector3(middle, drop, (moatN0 + moatN1) * 0.5f), 2f * plinthHalfW, moatW);
+            foreach (var (n, z0, z1, sign) in new[] { ("S", moatS1, moatS0, -1f), ("N", moatN0, moatN1, 1f) })
+            {
+                Box("Moat_Kerb_" + n, new Vector3(middle, drop - 0.04f, (sign < 0 ? z0 : z1) + sign * kerb * 0.5f), 2f * plinthHalfW + 2f * kerb, 0.12f, kerb, 0.02f, palette.plinthStone);
+                Box("Moat_Kerb_" + n + "W", new Vector3(middle - plinthHalfW - kerb * 0.5f, drop - 0.04f, (z0 + z1) * 0.5f), kerb, 0.12f, moatW, 0.02f, palette.plinthStone);
+                Box("Moat_Kerb_" + n + "E", new Vector3(middle + plinthHalfW + kerb * 0.5f, drop - 0.04f, (z0 + z1) * 0.5f), kerb, 0.12f, moatW, 0.02f, palette.plinthStone);
+            }
+            float forecourtZ0 = moatN1 + kerb, forecourtZ1 = facadeZ + 0.2f * s;
+            Box("Forecourt_Paving", new Vector3(middle, drop - 0.03f, (forecourtZ0 + forecourtZ1) * 0.5f), 2f * apronHalfW, 0.05f, forecourtZ1 - forecourtZ0, 0.02f, palette.warmStone);
 
             // ---- North: palace line across the whole visible width (gate house centred, window walls + battlements, towers), bridge + carpet + steps to the terrace.
             float wallH = 2.4f;
@@ -295,48 +320,52 @@ namespace ShadowSteps.Art3D
                 Urn("Gate_Urn_E", new Vector3(middle + gateW * 0.5f + 0.25f * s, drop, facadeZ - 0.75f * s), 0.8f);
             }
             // Bridge over the north moat from the terrace plinth to the gate, carpet on top, two steps up onto the terrace.
-            float bridgeFrom = north + 1.15f * s, bridgeTo = facadeZ - 0.15f * s;
+            float bridgeFrom = moatN0 - 0.3f * s, bridgeTo = facadeZ - 0.15f * s;
             Box("North_Bridge", new Vector3(middle, drop - 0.03f, (bridgeFrom + bridgeTo) * 0.5f), 1.5f * s, 0.09f, bridgeTo - bridgeFrom, 0.03f, palette.plinthStone);
-            Carpet("Carpet_North", new Vector3(middle, drop + 0.065f, (north + 1.0f * s + bridgeTo - 0.1f * s) * 0.5f), 0.9f * s, bridgeTo - 0.1f * s - (north + 1.0f * s));
-            Box("Entrance_Step_0", new Vector3(middle, -0.12f, north + 1.15f * s), 1.5f * s, 0.12f, 0.30f * s, 0.02f, palette.plinthStone);
-            Box("Entrance_Step_1", new Vector3(middle, -0.24f, north + 1.45f * s), 1.5f * s, 0.12f, 0.30f * s, 0.02f, palette.plinthStone);
-            Lamp("Lamp_Gate_W", new Vector3(middle - 1.05f * s, palette.floorTop, north + 0.5f * s), 1.25f);
-            Lamp("Lamp_Gate_E", new Vector3(middle + 1.05f * s, palette.floorTop, north + 0.5f * s), 1.25f);
-            Carpet("Carpet_Terrace_N", new Vector3(middle, palette.floorTop + 0.012f, north + 0.5f * s), 0.9f * s, 0.9f * s);
-            Carpet("Carpet_Terrace_S", new Vector3(middle, palette.floorTop + 0.012f, south - 0.5f * s), 0.9f * s, 0.9f * s);
+            float terraceEdgeN = gz1 + border;
+            Carpet("Carpet_North", new Vector3(middle, drop + 0.065f, (terraceEdgeN + bridgeTo - 0.1f * s) * 0.5f), 0.9f * s, bridgeTo - 0.1f * s - terraceEdgeN);
+            Box("Entrance_Step_0", new Vector3(middle, -0.12f, terraceEdgeN + 0.12f * s), 1.5f * s, 0.12f, 0.30f * s, 0.02f, palette.plinthStone);
+            Box("Entrance_Step_1", new Vector3(middle, -0.24f, terraceEdgeN + 0.42f * s), 1.5f * s, 0.12f, 0.30f * s, 0.02f, palette.plinthStone);
+            Lamp("Lamp_Gate_W", new Vector3(middle - 1.1f * s, drop, forecourtZ0 + 0.35f * s), 1.1f);
+            Lamp("Lamp_Gate_E", new Vector3(middle + 1.1f * s, drop, forecourtZ0 + 0.35f * s), 1.1f);
+            Carpet("Carpet_Terrace_N", new Vector3(middle, palette.floorTop + 0.012f, gz1 + border * 0.5f), 0.9f * s, border);
+            Carpet("Carpet_Terrace_S", new Vector3(middle, palette.floorTop + 0.012f, gz0 - border * 0.5f), 0.9f * s, border);
             if (decorateWithOutsidePlants && palette.kitTree != null)
                 foreach (float tx in new[] { farWest + 1.5f * s, middle - 3.6f * s, middle + 3.6f * s, farEast - 1.5f * s }) Tree("Tree_N", new Vector3(tx, drop, facadeZ + 1.3f * s), 3.3f);
 
             // ---- South: landing + cream steps bridging the moat, low cheek walls, newels with urns, a path to the screen edge, hedges and trees beside it.
-            Box("Stair_Landing", new Vector3(middle, drop - 0.22f, south - 1.35f * s), 3.6f * s, 0.22f + terraceDrop, 0.9f * s, 0.05f, palette.plinthStone);
-            const int steps = 4; float stepRise = terraceDrop / steps, stepDepth = 0.32f * s;
+            float terraceEdgeS = gz0 - border, landingDepth = (terraceEdgeS - moatS1) + 0.1f * s;
+            Box("Stair_Landing", new Vector3(middle, drop - 0.22f, terraceEdgeS - landingDepth * 0.5f), 3.4f * s, 0.22f + terraceDrop, landingDepth, 0.05f, palette.plinthStone);
+            const int steps = 4; float stepRise = terraceDrop / steps, stepDepth = 0.32f * s, stairStart = terraceEdgeS - landingDepth;
             for (int i = 0; i < steps; i++)
             {
-                float top = -(i + 1) * stepRise, z = south - 1.8f * s - stepDepth * (i + 0.5f);
+                float top = -(i + 1) * stepRise, z = stairStart - stepDepth * (i + 0.5f);
                 Box("Entry_Step_" + i, new Vector3(middle, drop - 0.03f, z), 2.6f * s, top - (drop - 0.03f), stepDepth + 0.01f, 0.02f, palette.plinthStone);
             }
-            float stairEnd = south - 1.8f * s - stepDepth * steps;
+            float stairEnd = stairStart - stepDepth * steps;
+            float apronZ0 = moatS1 - kerb, apronZ1 = stairEnd - 0.7f * s;
+            Box("South_Apron", new Vector3(middle, drop - 0.03f, (apronZ0 + apronZ1) * 0.5f), 2f * apronHalfW, 0.05f, apronZ0 - apronZ1, 0.02f, palette.warmStone);
             float cheekH = terraceDrop + 0.14f;
-            Box("Stair_Cheek_L", new Vector3(middle - 1.55f * s, drop - 0.05f, (south - 0.9f * s + stairEnd) * 0.5f), 0.30f * s, cheekH, (south - 0.9f * s) - stairEnd, 0.04f, palette.wallIvory);
-            Box("Stair_Cheek_R", new Vector3(middle + 1.55f * s, drop - 0.05f, (south - 0.9f * s + stairEnd) * 0.5f), 0.30f * s, cheekH, (south - 0.9f * s) - stairEnd, 0.04f, palette.wallIvory);
-            foreach (var (n, cx) in new[] { ("L", middle - 1.55f * s), ("R", middle + 1.55f * s) })
+            Box("Stair_Cheek_L", new Vector3(middle - 1.5f * s, drop - 0.05f, (terraceEdgeS + stairEnd) * 0.5f), 0.30f * s, cheekH, terraceEdgeS - stairEnd, 0.04f, palette.wallIvory);
+            Box("Stair_Cheek_R", new Vector3(middle + 1.5f * s, drop - 0.05f, (terraceEdgeS + stairEnd) * 0.5f), 0.30f * s, cheekH, terraceEdgeS - stairEnd, 0.04f, palette.wallIvory);
+            foreach (var (n, cx) in new[] { ("L", middle - 1.5f * s), ("R", middle + 1.5f * s) })
             {
                 float newelH = railY + 0.40f;
-                Box("Newel_" + n, new Vector3(cx, drop - 0.22f, south - 1.0f * s), 0.58f * s, newelH + 0.22f, 0.58f * s, 0.07f, palette.wallIvory);
-                Box("Newel_Cap_" + n, new Vector3(cx, drop + newelH, south - 1.0f * s), 0.50f * s, 0.16f, 0.50f * s, 0.07f, palette.trimIvory);
-                Urn("Newel_Urn_" + n, new Vector3(cx, drop + newelH + 0.16f, south - 1.0f * s), 0.35f);
+                Box("Newel_" + n, new Vector3(cx, drop - 0.22f, terraceEdgeS - 0.1f * s), 0.56f * s, newelH + 0.22f, 0.56f * s, 0.07f, palette.wallIvory);
+                Box("Newel_Cap_" + n, new Vector3(cx, drop + newelH, terraceEdgeS - 0.1f * s), 0.48f * s, 0.16f, 0.48f * s, 0.07f, palette.trimIvory);
+                Urn("Newel_Urn_" + n, new Vector3(cx, drop + newelH + 0.16f, terraceEdgeS - 0.1f * s), 0.35f);
             }
-            float pathEnd = Mathf.Min(stairEnd - 1f * s, screenBottomZ - 1f * s);
-            Box("South_Path", new Vector3(middle, drop - 0.01f, (stairEnd + pathEnd) * 0.5f), 1.7f * s, 0.05f, stairEnd - pathEnd, 0.02f, palette.plinthStone);
+            float pathEnd = Mathf.Min(apronZ1 - 1f * s, screenBottomZ - 1f * s);
+            Box("South_Path", new Vector3(middle, drop - 0.01f, (apronZ1 + 0.1f * s + pathEnd) * 0.5f), 1.7f * s, 0.05f, apronZ1 + 0.1f * s - pathEnd, 0.02f, palette.plinthStone);
             Lamp("Lamp_Stairs_W", new Vector3(middle - 2.2f * s, drop, stairEnd - 0.3f * s), 0.9f);
             Lamp("Lamp_Stairs_E", new Vector3(middle + 2.2f * s, drop, stairEnd - 0.3f * s), 0.9f);
             if (decorateWithOutsidePlants)
             {
-                float hedgeX = Mathf.Max(2.9f * s, halfWidthAt(stairEnd - 1f * s) - 1.0f * s);
+                float hedgeX = Mathf.Max(2.9f * s, halfWidthAt(apronZ1 - 1f * s) - 1.0f * s);
                 if (palette.kitHedge != null)
                 {
-                    HedgeRun("Hedge_SW", new Vector3(middle - hedgeX, drop, stairEnd - 0.4f * s), new Vector3(middle - hedgeX, drop, pathEnd));
-                    HedgeRun("Hedge_SE", new Vector3(middle + hedgeX, drop, stairEnd - 0.4f * s), new Vector3(middle + hedgeX, drop, pathEnd));
+                    HedgeRun("Hedge_SW", new Vector3(middle - hedgeX, drop, apronZ1 - 0.3f * s), new Vector3(middle - hedgeX, drop, pathEnd));
+                    HedgeRun("Hedge_SE", new Vector3(middle + hedgeX, drop, apronZ1 - 0.3f * s), new Vector3(middle + hedgeX, drop, pathEnd));
                 }
                 if (palette.kitTree != null)
                 {

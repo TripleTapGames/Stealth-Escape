@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   floorA: {fileID: 4814140183114437194, guid: f6b9ec202074f4cdeb9d645c08745294, type: 3}
   floorB: {fileID: 4814140183114437194, guid: fd2916615311e4aac82316d11d9577bf, type: 3}
-  wallBlock: {fileID: 1791545254059576, guid: 9fee80ab9220d674f99e62dd034d3a0b, type: 3}
+  wallBlock: {fileID: 1048459307401366, guid: 5763b5c079fc82d4f9eba6bdb64be096, type: 3}
   wallStraight: {fileID: 4814140183114437194, guid: 5a2f4cc5527ca4c0cb9aed1f6e2b7ec6,
     type: 3}
   coverObstacles:
@@ -77,7 +77,12 @@ MonoBehaviour:
   kitScale: 0.5
   kitTint: {r: 1, g: 0.97, b: 0.9, a: 1}
   kitFacadeYaw: 0
-  kitStairsYaw: 180
+  kitWallVariants:
+  - {fileID: 1048459307401366, guid: 5763b5c079fc82d4f9eba6bdb64be096, type: 3}
+  - {fileID: 1186474165943848, guid: 47d875e3593051b4b9876b3da101536d, type: 3}
+  - {fileID: 1120049323231456, guid: 7aa04f87f3bbed944b09d88299a3b724, type: 3}
+  - {fileID: 1277971983454576, guid: c68a3919f630bce4fa8573fb27553352, type: 3}
+  - {fileID: 1722463299411574, guid: b97f4fc4776ca5b43bbcf11e72cc4ada, type: 3}
   kitAccents: 0
   kitGround: {fileID: 1213984388251548, guid: f39a87f00698b7f4b951eb1246c05f73, type: 3}
   kitParapetRail: {fileID: 1708773804151216, guid: f6982135a3b945544844575fc99b443c,
@@ -90,12 +95,9 @@ MonoBehaviour:
   kitBattlement: {fileID: 1995842527840632, guid: 696d556a80bf28e46aa3eab92f05424f,
     type: 3}
   kitTower: {fileID: 1920849402605650, guid: 74c8606a98822e044bb1cd8a2eaefebb, type: 3}
-  kitStairs: {fileID: 1962414162455570, guid: 2cec3e36c100660409a207648fb52105, type: 3}
   kitHedge: {fileID: 1130060130238206, guid: b19fad002d048c74c8540978be2e6ad9, type: 3}
   kitTree: {fileID: 1766626281795622, guid: 86a6bda8f78af6b449cd7570bc4efc6f, type: 3}
   kitUrn: {fileID: 1640751063747882, guid: b9de695b7be1d124ea3e7df2402904a7, type: 3}
-  kitFountain: {fileID: 1297885529879400, guid: 7f687487d4bbab24fb547dc9af8ed83f,
-    type: 3}
   kitStatue: {fileID: 1382234347740782, guid: fe1a0f10361a25547866107e44743441, type: 3}
   kitStatuePlinth: {fileID: 1202480211589362, guid: e0c1f0be767df3742acce9a52cfa582a,
     type: 3}

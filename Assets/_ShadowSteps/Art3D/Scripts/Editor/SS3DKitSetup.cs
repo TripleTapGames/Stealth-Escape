@@ -55,6 +55,8 @@ namespace ShadowSteps.Art3D.Editor
             foreach (var v in new[] { "Castle/SM_Bld_Castle_Wall_Block_01", "Castle/SM_Bld_Castle_Wall_Block_02", "Castle/SM_Bld_Castle_Wall_Block_03", "Castle/SM_Bld_Castle_Wall_Block_04", "Castle/SM_Bld_Castle_Wall_Block_05" })
             { var go = AssetDatabase.LoadAssetAtPath<GameObject>(Prefab(v)); if (go != null) variants.Add(go); }
             palette.kitWallVariants = variants.ToArray();
+            palette.kitWallSegment = Get("Castle/SM_Bld_Castle_Wall_Bottom_01"); // plain castle-stone course, fitted to one tile between wall cells
+            palette.kitWallPost = Get("Castle/SM_Bld_Castle_Wall_Block_01");
             var cover = new List<GameObject>();
             foreach (var c in new[] { "Props/SM_Prop_Crate_Wood_01", "Props/SM_Prop_Barrel_01", "Environments/SM_Env_Planter_Pot_01", "Props/SM_Prop_Hay_Bale_01", "Props/SM_Prop_Sack_Stack_01" })
             { var go = AssetDatabase.LoadAssetAtPath<GameObject>(Prefab(c)); if (go != null) cover.Add(go); else missing.Add(c); }
@@ -84,7 +86,7 @@ namespace ShadowSteps.Art3D.Editor
             palette.kitMode = true;
             palette.kitScale = 0.5f;
             palette.proceduralFloorTiles = true; // cream stone board stays; the kit supplies walls, cover and the perimeter
-            palette.wallHeightScale = Mathf.Clamp(palette.wallHeightScale, 0.5f, 0.8f);
+            palette.wallHeightScale = 0.5f; // low border: never hides a node, reads as trim rather than mass
             EditorUtility.SetDirty(palette); AssetDatabase.SaveAssets();
             if (missing.Count > 0) Debug.LogWarning("[SS3D] kit mapping: " + missing.Count + " prefab(s) not found (slot left as before): " + string.Join(", ", missing));
             Debug.Log("[SS3D] Synty Fantasy Kingdom mapped into " + SS3DArtPalette.DefaultAssetPath + " (kitMode on). Regenerate the demo scenes to see it: Shadow Steps ▸ 3D ▸ Create demo scenes.");

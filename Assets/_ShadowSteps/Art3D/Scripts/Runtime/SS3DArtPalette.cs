@@ -61,6 +61,8 @@ namespace ShadowSteps.Art3D
         public float kitFacadeYaw = 0f;
         [Tooltip("Alternative wall-cell prefabs cycled per cell (kit mode); empty = wallBlock everywhere.")]
         public GameObject[] kitWallVariants;
+        [Tooltip("Kit mode: wall cells are drawn as a continuous low border (segment between adjacent wall cells, post on each wall cell); isolated wall cells fall back to a block.")]
+        public GameObject kitWallSegment, kitWallPost;
         [Tooltip("Small accents (statues, urns, banners, bushes, flowers). Off keeps the composition to a few large shapes.")]
         public bool kitAccents = false;
         public GameObject kitGround, kitParapetRail, kitParapetPost, kitWallRun, kitWallGate, kitBattlement, kitTower;

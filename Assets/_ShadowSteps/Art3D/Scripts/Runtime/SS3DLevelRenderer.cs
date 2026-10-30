@@ -92,7 +92,8 @@ namespace ShadowSteps.Art3D
                         if (tile != null) tile.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset);
                         SS3DArtTuning.Tint(tile, altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
                     }
-                    if (stage.IsWall(c))
+                    if (stage.IsWall(c) && palette.kitMode && palette.kitWallSegment != null && palette.kitWallPost != null) BuildKitWall(stage, c, pos);
+                    else if (stage.IsWall(c))
                     {
                         var wallPrefab = palette.kitMode && palette.kitWallVariants != null && palette.kitWallVariants.Length > 0 ? palette.kitWallVariants[(x * 7 + y * 3) % palette.kitWallVariants.Length] : null;
                         var wall = Create(wallPrefab != null ? wallPrefab : palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
@@ -369,16 +370,54 @@ namespace ShadowSteps.Art3D
 
         // ---------------------------------------------------------------- helpers
 
+        /// <summary>
+        /// Wall cell as architecture instead of a block: a post on the cell centre and a low segment toward each
+        /// wall neighbour to the east and south (so every pair of adjacent wall cells shares exactly one segment).
+        /// The rule still treats the whole cell as solid; this only changes how it looks.
+        /// </summary>
+        private void BuildKitWall(Stage stage, GridCoord c, Vector3 pos)
+        {
+            float s = tileSpacing, h = palette.wallHeightScale;
+            var ground = pos + Vector3.up * (FloorTop - 0.03f);
+            bool east = stage.IsWall(c.Neighbor(Direction.East)), south = stage.IsWall(c.Neighbor(Direction.South));
+            bool west = stage.IsWall(c.Neighbor(Direction.West)), north = stage.IsWall(c.Neighbor(Direction.North));
+            if (!east && !south && !west && !north)
+            {
+                var variants = palette.kitWallVariants;
+                var prefab = variants != null && variants.Length > 0 ? variants[(c.X * 7 + c.Y * 3) % variants.Length] : palette.wallBlock;
+                var block = Create(prefab, "SolidWall_" + c.X + "_" + c.Y, pos, Quaternion.identity, _geometry);
+                SS3DArtTuning.Tint(block, SS3DTint.Wall, palette);
+                if (block != null) SS3DKitFit.Fit(block, ground, 0.8f * s, h, 0.8f * s, false);
+                return;
+            }
+            var post = Create(palette.kitWallPost, "WallPost_" + c.X + "_" + c.Y, pos, Quaternion.identity, _geometry);
+            SS3DArtTuning.Tint(post, SS3DTint.Wall, palette);
+            if (post != null) SS3DKitFit.Fit(post, ground, 0.42f * s, h + 0.08f, 0.42f * s, false);
+            if (east)
+            {
+                var seg = Create(palette.kitWallSegment, "WallRun_E_" + c.X + "_" + c.Y, pos + Vector3.right * 0.5f * s, Quaternion.identity, _geometry);
+                SS3DArtTuning.Tint(seg, SS3DTint.Wall, palette);
+                if (seg != null) SS3DKitFit.Fit(seg, ground + Vector3.right * 0.5f * s, 1.0f * s, h, 0.26f * s, false);
+            }
+            if (south)
+            {
+                var seg = Create(palette.kitWallSegment, "WallRun_S_" + c.X + "_" + c.Y, pos + Vector3.back * 0.5f * s, Quaternion.Euler(0f, 90f, 0f), _geometry);
+                SS3DArtTuning.Tint(seg, SS3DTint.Wall, palette);
+                if (seg != null) SS3DKitFit.Fit(seg, ground + Vector3.back * 0.5f * s, 1.0f * s, h, 0.26f * s, false);
+            }
+        }
+
         private readonly List<Material> _stoneMats = new List<Material>();
 
         /// <summary>A bevelled stone slab with the procedural cream-stone texture; a few shared material variations keep draw calls low.</summary>
-        public GameObject CreateStoneTile(string name, Vector3 pos, bool alt, int seed, Transform parent = null)
+        public GameObject CreateStoneTile(string name, Vector3 pos, bool alt, int seed, Transform parent = null, float sizeX = -1f, float sizeZ = -1f)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent != null ? parent : _geometry, false);
             go.transform.position = pos;
             float size = palette.tileInset * tileSpacing;
-            go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(size, FloorTop, size, palette.floorTileChamfer);
+            float sx = sizeX > 0f ? sizeX * palette.tileInset : size, sz = sizeZ > 0f ? sizeZ * palette.tileInset : size;
+            go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(sx, FloorTop, sz, palette.floorTileChamfer);
             if (_stoneMats.Count == 0)
                 for (int i = 0; i < 6; i++)
                 {
@@ -392,7 +431,7 @@ namespace ShadowSteps.Art3D
                 }
             int variant = (alt ? 0 : 1) + 2 * (Mathf.Abs(seed) % 3);
             go.AddComponent<MeshRenderer>().sharedMaterial = _stoneMats[variant % _stoneMats.Count];
-            go.transform.rotation = Quaternion.Euler(0f, 90f * (Mathf.Abs(seed / 7) % 4), 0f); // rotate the texture per tile to hide repetition
+            if (sizeX <= 0f && sizeZ <= 0f) go.transform.rotation = Quaternion.Euler(0f, 90f * (Mathf.Abs(seed / 7) % 4), 0f); // rotate square tiles to hide repetition
             return go;
         }
 
