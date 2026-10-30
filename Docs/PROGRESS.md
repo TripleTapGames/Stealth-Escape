@@ -455,3 +455,12 @@ Request: cameras should project light to show coverage instead of only tinting n
 - **Perimeter redesign** (`SS3DCourtyardFrame` rewritten): the repeated 1×1 water/bush grid is gone. Outside the terrace there is one calm ground plane, two long side canals and a cross channel behind the façade (stretched water tiles), grouped hedges (scaled flowerbeds) at the four far corners and a few along the canals, a topiary pair flanking the entrance, two planter groups beside the stairs; façade = two wall courses on the axis with arch, double door, pillars, lanterns, banners; south = double staircase with sphere pillars; a red carpet links door → terrace gap → stairs. All objects remain outside tile centres and use the existing modular prefabs (scaled), no primitives, no new models.
 - `GeneratorVersion` 4 regenerates both demo scenes on the next script reload (or Shadow Steps ▸ 3D ▸ Create demo scenes). Compile check 0 errors; not rendered here.
 
+## 2026-10-30 — 3D milestone 3: the central courtyard (no gameplay, data, model-file or outer-perimeter changes)
+
+- `SS3DMeshes.ChamferedBox`: procedural flat-shaded bevelled block (bottom-centre origin), cached by size; the frame's new `Box()` helper builds every trim from it with lit materials in palette colours. No external modelling.
+- **Platform:** inset floor stones (`tileInset` 0.94) over a grout slab in the renderer (so the Game scene gets it too) plus the terrace grout, a two-step bevelled plinth under the whole platform (upper step in plinth stone, wider lower step in warm stone) and a thin ivory bevelled trim frame just inside the parapets.
+- **Parapets:** thick base course + bevelled ivory cap rail + pilasters every two tiles, corner piers with caps; gaps on the axis for the entrance and the stairs; benches kept.
+- **Entrance:** stepped plinth, tall wall with cornice and attic, recessed door bay with lintel, pilasters either side, arch and double door models inside, lanterns, banners, three steps descending to the terrace, carpet from the door to the terrace gap.
+- **Staircase:** landing slab tied to the plinth, double stairs, cheek walls, newel piers with caps, carpet pad at the terrace gap.
+- Palette: `groutColor`, `trimIvory`, `plinthStone`, `tileInset`. `GeneratorVersion` 5 regenerates the demo scenes on the next script reload. Compile check 0 errors; not rendered here.
+

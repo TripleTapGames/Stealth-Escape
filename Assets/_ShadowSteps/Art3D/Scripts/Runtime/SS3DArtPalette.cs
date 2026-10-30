@@ -93,6 +93,11 @@ namespace ShadowSteps.Art3D
         public Color exitGreen = new Color(0.231f, 0.769f, 0.510f);
         public Color coverCrate = new Color(0.72f, 0.52f, 0.30f);
         [Range(0f, 1f)] public float stoneSmoothness = 0.25f;
+        [Header("Courtyard trim (milestone 3)")]
+        public Color groutColor = new Color(0.72f, 0.60f, 0.46f);
+        public Color trimIvory = new Color(0.96f, 0.91f, 0.80f);
+        public Color plinthStone = new Color(0.80f, 0.69f, 0.54f);
+        [Range(0.8f, 1f)] public float tileInset = 0.94f;
 
         /// <summary>Path of the shared palette asset (editor tooling loads it by path after scene switches, never by cached reference).</summary>
         public const string DefaultAssetPath = "Assets/_ShadowSteps/Art3D/SS3DArtPalette.asset";

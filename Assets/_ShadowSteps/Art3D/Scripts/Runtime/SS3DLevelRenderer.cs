@@ -85,7 +85,9 @@ namespace ShadowSteps.Art3D
                     var pos = ToWorld(c);
                     bool altTile = alternateFloorTiles && ((x + y) % 2 == 1) && palette.floorB != null;
                     var floor = altTile ? palette.floorB : palette.floorA;
-                    SS3DArtTuning.Tint(Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry), altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
+                    var tile = Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                    if (tile != null) tile.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset); // grout gap between stones
+                    SS3DArtTuning.Tint(tile, altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
                     if (stage.IsWall(c))
                     {
                         var wall = Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
@@ -108,6 +110,12 @@ namespace ShadowSteps.Art3D
                         if (r != null) _nodeMarkers[c] = r;
                     }
                 }
+
+            // Grout slab under the whole grid so the inset stones read as individual tiles.
+            var grout = new GameObject("Floor_Grout"); grout.transform.SetParent(_geometry, false);
+            grout.transform.position = transform.TransformPoint(new Vector3(0f, 0f, 0f));
+            var gf = grout.AddComponent<MeshFilter>(); gf.sharedMesh = SS3DMeshes.ChamferedBox(stage.Width * s, FloorTop - 0.015f, stage.Height * s, 0f);
+            grout.AddComponent<MeshRenderer>().sharedMaterial = MakeLitMaterial("SS3D Grout", palette.groutColor);
 
             if (renderConnectionLines)
                 foreach (var a in stage.FloorNodes())
@@ -611,10 +619,47 @@ namespace ShadowSteps.Art3D
         }
     }
 
-    /// <summary>Tiny procedural meshes for direction markers (no external art needed).</summary>
+    /// <summary>Tiny procedural meshes for direction markers and architectural trim (no external art needed).</summary>
     public static class SS3DMeshes
     {
         private static Mesh _arrow;
+        private static readonly Dictionary<string, Mesh> _boxes = new Dictionary<string, Mesh>();
+
+        /// <summary>
+        /// Box with origin at the bottom centre whose top edges are chamfered: vertical sides up to (height − chamfer), then a
+        /// 45° bevel strip to a top face inset by the chamfer. Flat shaded; used for plinths, cap rails, lintels and trims.
+        /// </summary>
+        public static Mesh ChamferedBox(float sizeX, float height, float sizeZ, float chamfer)
+        {
+            string key = sizeX.ToString("0.000") + "x" + height.ToString("0.000") + "x" + sizeZ.ToString("0.000") + "c" + chamfer.ToString("0.000");
+            if (_boxes.TryGetValue(key, out var cached) && cached != null) return cached;
+            chamfer = Mathf.Clamp(chamfer, 0f, Mathf.Min(sizeX, sizeZ, height) * 0.49f);
+            float hx = sizeX * 0.5f, hz = sizeZ * 0.5f, yb = height - chamfer, ix = hx - chamfer, iz = hz - chamfer;
+            var verts = new List<Vector3>(); var norms = new List<Vector3>(); var tris = new List<int>();
+            void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+            {
+                int i = verts.Count; var n = Vector3.Cross(b - a, d - a).normalized;
+                verts.Add(a); verts.Add(b); verts.Add(c); verts.Add(d); norms.Add(n); norms.Add(n); norms.Add(n); norms.Add(n);
+                tris.Add(i); tris.Add(i + 1); tris.Add(i + 2); tris.Add(i); tris.Add(i + 2); tris.Add(i + 3);
+            }
+            // vertical sides (counter-clockwise seen from outside)
+            Quad(new Vector3(-hx, 0, -hz), new Vector3(-hx, yb, -hz), new Vector3(hx, yb, -hz), new Vector3(hx, 0, -hz));   // front (−Z)
+            Quad(new Vector3(hx, 0, hz), new Vector3(hx, yb, hz), new Vector3(-hx, yb, hz), new Vector3(-hx, 0, hz));       // back (+Z)
+            Quad(new Vector3(-hx, 0, hz), new Vector3(-hx, yb, hz), new Vector3(-hx, yb, -hz), new Vector3(-hx, 0, -hz));   // left
+            Quad(new Vector3(hx, 0, -hz), new Vector3(hx, yb, -hz), new Vector3(hx, yb, hz), new Vector3(hx, 0, hz));       // right
+            // bevel strips
+            Quad(new Vector3(-hx, yb, -hz), new Vector3(-ix, height, -iz), new Vector3(ix, height, -iz), new Vector3(hx, yb, -hz));
+            Quad(new Vector3(hx, yb, hz), new Vector3(ix, height, iz), new Vector3(-ix, height, iz), new Vector3(-hx, yb, hz));
+            Quad(new Vector3(-hx, yb, hz), new Vector3(-ix, height, iz), new Vector3(-ix, height, -iz), new Vector3(-hx, yb, -hz));
+            Quad(new Vector3(hx, yb, -hz), new Vector3(ix, height, -iz), new Vector3(ix, height, iz), new Vector3(hx, yb, hz));
+            // top and bottom
+            Quad(new Vector3(-ix, height, -iz), new Vector3(-ix, height, iz), new Vector3(ix, height, iz), new Vector3(ix, height, -iz));
+            Quad(new Vector3(-hx, 0, hz), new Vector3(-hx, 0, -hz), new Vector3(hx, 0, -hz), new Vector3(hx, 0, hz));
+            var m = new Mesh { name = "SS3D ChamferedBox " + key };
+            m.SetVertices(verts); m.SetNormals(norms); m.SetTriangles(tris, 0); m.RecalculateBounds();
+            _boxes[key] = m;
+            return m;
+        }
         /// <summary>Flat triangle pointing +Z, 1 unit long, lying on XZ.</summary>
         public static Mesh Arrow()
         {
