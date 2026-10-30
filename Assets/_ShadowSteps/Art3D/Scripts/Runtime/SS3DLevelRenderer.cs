@@ -273,8 +273,8 @@ namespace ShadowSteps.Art3D
                 _cameraLights[i].color = palette.cameraLightColor;
             }
             foreach (var r in _cameraHeadRenderers[i])
-                foreach (var m in r.materials)
-                    if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", disabledActionsLeft > 0 ? palette.empDisabled : Color.white);
+                foreach (var m in SS3DArtTuning.InstanceMaterials(r))
+                    if (m != null && m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", disabledActionsLeft > 0 ? palette.empDisabled : Color.white);
         }
 
         public void SetDoor(int i, bool open)
