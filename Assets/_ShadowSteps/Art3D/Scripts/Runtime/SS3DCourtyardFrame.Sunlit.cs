@@ -85,10 +85,17 @@ namespace ShadowSteps.Art3D
             Box("Platform_Plinth_Lower", new Vector3(middle, drop - 0.30f, centreZ), 2f * plinthHalfW, 0.30f, 2f * plinthHalfD, 0.06f, palette.warmStone);
             Box("Platform_Plinth_Upper", new Vector3(middle, drop, centreZ), (px1 - px0) + 0.3f * s, terraceDrop + 0.005f, (pz1 - pz0) + 0.3f * s, 0.08f, palette.plinthStone);
 
-            // ---- 2. Platform floor: stone tiles over the whole border ring (never on the grid), grout underneath, ivory trim frame.
-            FillTiles(board, px0, gx0, pz0, pz1, "Terrace_W"); FillTiles(board, gx1, px1, pz0, pz1, "Terrace_E");
-            FillTiles(board, gx0, gx1, gz1, pz1, "Terrace_N"); FillTiles(board, gx0, gx1, pz0, gz0, "Terrace_S");
-            Box("Terrace_Grout", new Vector3(middle, -0.012f, centreZ), (px1 - px0) + 0.1f * s, ft - 0.022f, (pz1 - pz0) + 0.1f * s, 0f, palette.groutColor);
+            // ---- 2. Platform floor: the open margin is stone tiles set 4.5 cm below the playable court, so the grid reads as a raised, clearly
+            //         defined courtyard floor (the renderer's grout slab is the riser) with an ivory edge trim; grout under the margin tiles.
+            float courtStep = 0.045f, borderTop = ft - courtStep;
+            FillTiles(board, px0, gx0, pz0, pz1, "Terrace_W", -courtStep); FillTiles(board, gx1, px1, pz0, pz1, "Terrace_E", -courtStep);
+            FillTiles(board, gx0, gx1, gz1, pz1, "Terrace_N", -courtStep); FillTiles(board, gx0, gx1, pz0, gz0, "Terrace_S", -courtStep);
+            Box("Terrace_Grout", new Vector3(middle, -0.06f, centreZ), (px1 - px0) + 0.1f * s, borderTop - 0.012f + 0.06f, (pz1 - pz0) + 0.1f * s, 0f, palette.groutColor);
+            float edgeW = 0.10f * s, edgeH = courtStep + 0.03f;
+            Box("Court_Edge_N", new Vector3(middle, borderTop - 0.01f, gz1 + edgeW * 0.5f), (gx1 - gx0) + 2f * edgeW, edgeH, edgeW, 0.015f, palette.trimIvory);
+            Box("Court_Edge_S", new Vector3(middle, borderTop - 0.01f, gz0 - edgeW * 0.5f), (gx1 - gx0) + 2f * edgeW, edgeH, edgeW, 0.015f, palette.trimIvory);
+            Box("Court_Edge_W", new Vector3(gx0 - edgeW * 0.5f, borderTop - 0.01f, (gz0 + gz1) * 0.5f), edgeW, edgeH, (gz1 - gz0), 0.015f, palette.trimIvory);
+            Box("Court_Edge_E", new Vector3(gx1 + edgeW * 0.5f, borderTop - 0.01f, (gz0 + gz1) * 0.5f), edgeW, edgeH, (gz1 - gz0), 0.015f, palette.trimIvory);
             float trimH = ft + 0.03f;
             Box("Trim_N", new Vector3(middle, 0f, north - 0.22f * s), (right - left) - 0.6f * s, trimH, 0.08f * s, 0.02f, palette.trimIvory);
             Box("Trim_S", new Vector3(middle, 0f, south + 0.22f * s), (right - left) - 0.6f * s, trimH, 0.08f * s, 0.02f, palette.trimIvory);
@@ -120,8 +127,8 @@ namespace ShadowSteps.Art3D
                 foreach (float bz in new[] { centreZ - 1.6f * s, centreZ + 1.6f * s })
                 {
                     if (bz < south + 0.8f * s || bz > north - 0.8f * s) continue;
-                    Wood(palette.bench, "Bench_W", new Vector3(left + 0.42f * s, ft, bz), Quaternion.Euler(0f, 90f, 0f), 1.1f * s);
-                    Wood(palette.bench, "Bench_E", new Vector3(right - 0.42f * s, ft, bz), Quaternion.Euler(0f, -90f, 0f), 1.1f * s);
+                    Wood(palette.bench, "Bench_W", new Vector3(left + 0.42f * s, borderTop, bz), Quaternion.Euler(0f, 90f, 0f), 1.1f * s, borderTop);
+                    Wood(palette.bench, "Bench_E", new Vector3(right - 0.42f * s, borderTop, bz), Quaternion.Euler(0f, -90f, 0f), 1.1f * s, borderTop);
                 }
 
             // ---- 4. Entrance façade on the axis beyond the moat: plinth, wall, cornice, door bay with arch + wooden doors, lanterns, banners, niches.
@@ -160,7 +167,7 @@ namespace ShadowSteps.Art3D
             Box("Entrance_Step_Terrace_0", new Vector3(middle, -0.12f, pz1 + 0.12f * s), 1.5f * s, 0.12f, 0.28f * s, 0.02f, palette.plinthStone);
             Box("Entrance_Step_Terrace_1", new Vector3(middle, -0.24f, pz1 + 0.40f * s), 1.5f * s, 0.12f, 0.28f * s, 0.02f, palette.plinthStone);
             Carpet("Carpet_Entrance", new Vector3(middle, drop + 0.03f, (pz1 + 0.55f * s + facadeZ - 1.0f * s) * 0.5f), 0.9f * s, Mathf.Max(0.4f, facadeZ - 1.0f * s - (pz1 + 0.55f * s)));
-            Carpet("Carpet_Gap_N", new Vector3(middle, ft + 0.012f, (gz1 + pz1) * 0.5f), 0.9f * s, Mathf.Max(0.3f, pz1 - gz1 - 0.05f * s)); // on the border strip only, never on a grid node
+            Carpet("Carpet_Gap_N", new Vector3(middle, borderTop + 0.012f, (gz1 + edgeW + pz1) * 0.5f), 0.9f * s, Mathf.Max(0.3f, pz1 - gz1 - edgeW - 0.05f * s)); // on the open margin only, never on a grid node
 
             // ---- 5. South: landing, four ivory steps bridging the moat, cheek walls, ball-topped newels, path, flower beds.
             float landingDepth = (pz0 - (centreZ - oz - kerb)) + 0.2f * s;
@@ -223,7 +230,7 @@ namespace ShadowSteps.Art3D
         }
 
         /// <summary>Stone tiles over a rectangle of the platform floor, tiles never larger than one tile and never on the grid.</summary>
-        private void FillTiles(SS3DLevelRenderer board, float x0, float x1, float z0, float z1, string name)
+        private void FillTiles(SS3DLevelRenderer board, float x0, float x1, float z0, float z1, string name, float y = 0f)
         {
             float s = board.tileSpacing;
             float w = x1 - x0, d = z1 - z0; if (w < 0.05f || d < 0.05f) return;
@@ -232,7 +239,7 @@ namespace ShadowSteps.Art3D
             for (int i = 0; i < nx; i++)
                 for (int j = 0; j < nz; j++)
                 {
-                    var p = transform.TransformPoint(new Vector3(x0 + tw * (i + 0.5f), 0f, z0 + td * (j + 0.5f)));
+                    var p = transform.TransformPoint(new Vector3(x0 + tw * (i + 0.5f), y, z0 + td * (j + 0.5f)));
                     board.CreateStoneTile(name, p, (i + j) % 2 == 0, i * 31 + j * 17 + name.Length, _frame, tw, td);
                 }
         }

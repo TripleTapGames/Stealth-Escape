@@ -75,8 +75,9 @@ MonoBehaviour:
     type: 3}
   kitMode: 1
   sunlitCourtyard: 1
-  cameraPaddingTiles: 1.5
+  cameraPaddingTiles: 2.1
   minFramedTiles: {x: 6, y: 4}
+  sunlitMarginTiles: 1.5
   kitScale: 0.5
   kitTint: {r: 1, g: 0.97, b: 0.9, a: 1}
   kitFacadeYaw: 0

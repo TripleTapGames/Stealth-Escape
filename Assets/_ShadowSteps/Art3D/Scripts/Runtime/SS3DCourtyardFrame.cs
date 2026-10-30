@@ -494,11 +494,11 @@ namespace ShadowSteps.Art3D
 
         private void Stone(GameObject prefab, string name, Vector3 p, SS3DTint tint, Quaternion? rot = null) => Tinted(prefab, name, p, tint, rot);
 
-        private void Wood(GameObject prefab, string name, Vector3 p, Quaternion? rot = null, float kitLength = 0f)
+        private void Wood(GameObject prefab, string name, Vector3 p, Quaternion? rot = null, float kitLength = 0f, float? groundY = null)
         {
             var obj = Place(prefab, name, p, rot);
             if (obj == null) return;
-            if (Kit && kitLength > 0f) SS3DKitFit.Fit(obj, new Vector3(p.x, palette.floorTop, p.z), kitLength, float.NaN, float.NaN, true);
+            if (Kit && kitLength > 0f) SS3DKitFit.Fit(obj, new Vector3(p.x, groundY ?? palette.floorTop, p.z), kitLength, float.NaN, float.NaN, true);
             SS3DArtTuning.Tint(obj, SS3DTint.Wood, palette);
         }
 
