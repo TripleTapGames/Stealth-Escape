@@ -80,13 +80,18 @@ namespace ShadowSteps.Art3D
                     var pos = ToWorld(c);
                     var floor = alternateFloorTiles && ((x + y) % 2 == 1) && palette.floorB != null ? palette.floorB : palette.floorA;
                     Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry);
-                    if (stage.IsWall(c)) Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                    if (stage.IsWall(c))
+                    {
+                        var wall = Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        if (wall != null) wall.transform.localScale = new Vector3(wall.transform.localScale.x, wall.transform.localScale.y * palette.wallHeightScale, wall.transform.localScale.z);
+                    }
                     else if (stage.IsBlocked(c))
                     {
-                        // V4 'X': a solid 1×1 obstacle on this cell only. The rule uses the whole cell regardless of the mesh.
+                        // V4 'X': a solid 1×1 obstacle on this cell only. The rule uses the whole cell regardless of the mesh height.
                         var variants = palette.coverObstacles;
                         var prefab = variants != null && variants.Length > 0 ? variants[coverIndex++ % variants.Length] : null;
-                        Create(prefab, "Cover_X_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        var cover = Create(prefab, "Cover_X_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        if (cover != null) cover.transform.localScale = new Vector3(cover.transform.localScale.x, cover.transform.localScale.y * palette.coverHeightScale, cover.transform.localScale.z);
                     }
                     else if (renderNodeMarkers)
                     {

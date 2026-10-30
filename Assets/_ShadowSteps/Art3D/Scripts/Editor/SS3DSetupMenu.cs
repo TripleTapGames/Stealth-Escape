@@ -52,26 +52,55 @@ namespace ShadowSteps.Art3D.Editor
             EditorUtility.DisplayDialog("Shadow Steps 3D", summary + "\n\nDetails in the Console.", "OK");
         }
 
-        [MenuItem("Shadow Steps/3D/Create or update Art Palette")]
-        public static SS3DArtPalette EnsurePalette()
+        /// <summary>Fills only EMPTY slots, so manual choices (especially the characters) survive every rebuild.</summary>
+        [MenuItem("Shadow Steps/3D/Create or update Art Palette (fills empty slots only)")]
+        public static SS3DArtPalette EnsurePalette() => BuildPalette(overwriteModels: false);
+
+        /// <summary>Re-resolves every model slot from the .glb files; characters stay untouched while lockCharacterSelection is on.</summary>
+        [MenuItem("Shadow Steps/3D/Reset model slots in Art Palette (keeps characters)")]
+        public static void ResetModelSlots() => BuildPalette(overwriteModels: true);
+
+        public static SS3DArtPalette BuildPalette(bool overwriteModels)
         {
             var palette = AssetDatabase.LoadAssetAtPath<SS3DArtPalette>(PalettePath);
             if (palette == null) { palette = ScriptableObject.CreateInstance<SS3DArtPalette>(); AssetDatabase.CreateAsset(palette, PalettePath); }
-            palette.floorA = Model("Floor_Tile_A"); palette.floorB = Model("Floor_Tile_B");
-            palette.wallBlock = Model("Wall_Block_1m"); palette.wallStraight = Model("Wall_Straight_1m");
-            palette.coverObstacles = new[] { Model("Obstacle_Crate_1x1"), Model("Obstacle_Planter_1x1"), Model("Obstacle_Stone_Block_1x1") };
-            palette.node = Model("Node_Marker"); palette.exitPad = Model("Exit_Pad"); palette.collectibleKey = Model("Collectible_Key");
-            palette.lockedDoor = Model("Door_Locked_Path"); palette.openedDoor = Model("Door_Open_Path");
-            palette.spyProxy = Model("Character_Spy_PROXY"); palette.guardProxy = Model("Character_Guard_PROXY");
-            if (palette.spyCharacter == null) palette.spyCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultSpy + ".prefab");
-            if (palette.guardCharacter == null) palette.guardCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultGuard + ".prefab");
-            palette.cameraModel = Model("Security_Camera"); palette.cameraMount = Model("Security_Camera_Mount"); palette.cameraHead = Model("Security_Camera_Head");
-            palette.archFrame = Model("Entrance_Arch_Frame"); palette.palaceDoor = Model("Door_Double_Wood"); palette.stairs = Model("Stairs_3Step_2m");
-            palette.pillar = Model("Pillar_Square"); palette.water = Model("Water_Tile"); palette.bench = Model("Bench_Short");
-            palette.lantern = Model("Lantern_Wall"); palette.banner = Model("Banner_BlueGold"); palette.flowerbed = Model("Flowerbed_OutsideBoard");
+            GameObject Slot(GameObject current, string model) => overwriteModels || current == null ? Model(model) : current;
+            palette.floorA = Slot(palette.floorA, "Floor_Tile_A"); palette.floorB = Slot(palette.floorB, "Floor_Tile_B");
+            palette.wallBlock = Slot(palette.wallBlock, "Wall_Block_1m"); palette.wallStraight = Slot(palette.wallStraight, "Wall_Straight_1m");
+            if (overwriteModels || palette.coverObstacles == null || palette.coverObstacles.Length == 0 || System.Array.Exists(palette.coverObstacles, o => o == null))
+                palette.coverObstacles = new[] { Model("Obstacle_Crate_1x1"), Model("Obstacle_Planter_1x1"), Model("Obstacle_Stone_Block_1x1") };
+            palette.node = Slot(palette.node, "Node_Marker"); palette.exitPad = Slot(palette.exitPad, "Exit_Pad"); palette.collectibleKey = Slot(palette.collectibleKey, "Collectible_Key");
+            palette.lockedDoor = Slot(palette.lockedDoor, "Door_Locked_Path"); palette.openedDoor = Slot(palette.openedDoor, "Door_Open_Path");
+            palette.spyProxy = Slot(palette.spyProxy, "Character_Spy_PROXY"); palette.guardProxy = Slot(palette.guardProxy, "Character_Guard_PROXY");
+            // Characters: never overwritten once set (lockCharacterSelection); only filled when empty.
+            if (palette.spyCharacter == null && !(palette.lockCharacterSelection && palette.guardCharacter != null)) palette.spyCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultSpy + ".prefab");
+            if (palette.guardCharacter == null && !(palette.lockCharacterSelection && palette.spyCharacter != null)) palette.guardCharacter = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPrefabs + DefaultGuard + ".prefab");
+            if (palette.spyCharacter != null || palette.guardCharacter != null) palette.lockCharacterSelection = true;
+            palette.cameraModel = Slot(palette.cameraModel, "Security_Camera"); palette.cameraMount = Slot(palette.cameraMount, "Security_Camera_Mount"); palette.cameraHead = Slot(palette.cameraHead, "Security_Camera_Head");
+            palette.archFrame = Slot(palette.archFrame, "Entrance_Arch_Frame"); palette.palaceDoor = Slot(palette.palaceDoor, "Door_Double_Wood"); palette.stairs = Slot(palette.stairs, "Stairs_3Step_2m");
+            palette.pillar = Slot(palette.pillar, "Pillar_Square"); palette.water = Slot(palette.water, "Water_Tile"); palette.bench = Slot(palette.bench, "Bench_Short");
+            palette.lantern = Slot(palette.lantern, "Lantern_Wall"); palette.banner = Slot(palette.banner, "Banner_BlueGold"); palette.flowerbed = Slot(palette.flowerbed, "Flowerbed_OutsideBoard");
             EditorUtility.SetDirty(palette); AssetDatabase.SaveAssets();
-            Debug.Log("[SS3D] palette updated at " + PalettePath + (palette.spyCharacter != null ? " (characters from characters_5_02)" : " (character prefabs not found; proxies will be used)"));
+            Debug.Log("[SS3D] palette " + (overwriteModels ? "model slots reset" : "updated (empty slots only)") + " at " + PalettePath +
+                      (palette.spyCharacter != null ? "; spy = " + palette.spyCharacter.name : "; spy = proxy") + (palette.guardCharacter != null ? ", guard = " + palette.guardCharacter.name : ", guard = proxy"));
             return palette;
+        }
+
+        /// <summary>Numeric portrait framing and occlusion check for the demo stages at 9:16 and 9:19.5 (no rendering needed).</summary>
+        [MenuItem("Shadow Steps/3D/Framing report (portrait 9:16 and 9:19.5)")]
+        public static void FramingReport()
+        {
+            var palette = AssetDatabase.LoadAssetAtPath<SS3DArtPalette>(PalettePath);
+            float wallH = 0.93f * (palette != null ? palette.wallHeightScale : 0.7f), coverH = 0.88f * (palette != null ? palette.coverHeightScale : 0.85f);
+            var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+            var sb = new System.Text.StringBuilder();
+            foreach (var code in new[] { "LEVEL-2", "LEVEL-16", "LEVEL-20", "FTUE-1" })
+            {
+                var st = pack.FindByCode(code); if (st == null) continue;
+                foreach (float aspect in new[] { 9f / 16f, 9f / 19.5f })
+                    sb.AppendLine(code + " " + st.Width + "x" + st.Height + " | " + SS3DFraming.Compute(st.Width, st.Height, 63f, aspect, 0.14f, 0.22f, 1.0f, 2.4f, wallH, coverH));
+            }
+            Debug.Log("[SS3D] framing report\n" + sb);
         }
 
         [MenuItem("Shadow Steps/3D/Create demo scenes (Clockwise + Camera Basics)")]

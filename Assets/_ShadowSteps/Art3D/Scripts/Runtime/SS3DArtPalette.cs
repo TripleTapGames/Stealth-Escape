@@ -16,11 +16,17 @@ namespace ShadowSteps.Art3D
         public GameObject[] coverObstacles;
         [Tooltip("Floor top height in world units (floor tile model top).")]
         public float floorTop = 0.112f;
+        [Tooltip("Vertical scale applied to wall blocks so they cannot hide the node behind them at the camera pitch (1 = model height).")]
+        [Range(0.3f, 1.2f)] public float wallHeightScale = 0.7f;
+        [Tooltip("Vertical scale applied to blocked-cover obstacles.")]
+        [Range(0.3f, 1.2f)] public float coverHeightScale = 0.85f;
 
         [Header("Interactables")]
         public GameObject node, exitPad, collectibleKey, lockedDoor, openedDoor;
 
         [Header("Characters (characters_5_02 prefabs; proxies are the fallback)")]
+        [Tooltip("When on, palette rebuilds never touch spyCharacter/guardCharacter. Turned on automatically once you assign them.")]
+        public bool lockCharacterSelection = true;
         public GameObject spyCharacter, guardCharacter;
         public GameObject spyProxy, guardProxy;
         [Tooltip("Characters are scaled so their renderer bounds reach this height (world units).")]
