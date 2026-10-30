@@ -27,6 +27,10 @@ namespace ShadowSteps.Runtime
 
         public event Action RetryRequested;
         public event Action UndoRequested;
+        /// <summary>Optional picking override for alternative presentations (e.g. the angled 3D view): screen point → grid node, or null.</summary>
+        public Func<Vector2, GridCoord?> ScreenToNodeOverride;
+        /// <summary>Optional picking override: screen point → camera index, or -1.</summary>
+        public Func<Vector2, int> ScreenToCameraOverride;
 
         private bool _pointerDown, _gestureConsumed, _pointerStartedOverUi, _previewShown;
         private Vector2 _pointerStart;
@@ -130,27 +134,41 @@ namespace ShadowSteps.Runtime
 
         private Vector3 WorldAt(Vector2 screenPos) => BoardCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -BoardCamera.transform.position.z));
 
+        private GridCoord? NodeAt(Vector2 screenPos)
+        {
+            if (ScreenToNodeOverride != null) return ScreenToNodeOverride(screenPos);
+            if (BoardCamera == null || Session.Board == null || !Session.Board.IsBuilt) return null;
+            return Session.Board.Layout.NearestCoord(WorldAt(screenPos));
+        }
+
+        private int CameraAt(Vector2 screenPos)
+        {
+            if (ScreenToCameraOverride != null) return ScreenToCameraOverride(screenPos);
+            if (BoardCamera == null || Session.Board == null || !Session.Board.IsBuilt) return -1;
+            return Session.Board.CameraIndexNear(WorldAt(screenPos));
+        }
+
         private Direction? AdjacentDirectionAt(Vector2 screenPos)
         {
-            if (BoardCamera == null || Session.Board == null || !Session.Board.IsBuilt || Session.State == null) return null;
-            var coord = Session.Board.Layout.NearestCoord(WorldAt(screenPos));
+            if (Session.State == null) return null;
+            var coord = NodeAt(screenPos);
+            if (!coord.HasValue) return null;
             var player = Session.State.Player;
-            return DirectionUtil.FromDelta(coord.X - player.X, coord.Y - player.Y);
+            return DirectionUtil.FromDelta(coord.Value.X - player.X, coord.Value.Y - player.Y);
         }
 
         private void HandleTap(Vector2 screenPos)
         {
-            if (BoardCamera == null || Session.Board == null || !Session.Board.IsBuilt || Session.State == null) return;
-            var world = WorldAt(screenPos);
+            if (Session.State == null || Session.Stage == null) return;
             if (Session.Mode == InputMode.EmpTarget)
             {
-                int cam = Session.Board.CameraIndexNear(world);
+                int cam = CameraAt(screenPos);
                 if (cam >= 0) Session.TapCamera(cam);
                 return; // taps elsewhere keep the targeting mode
             }
-            var coord = Session.Board.Layout.NearestCoord(world);
-            if (!Session.Stage.Inside(coord)) return;
-            Session.TapNode(coord);
+            var coord = NodeAt(screenPos);
+            if (!coord.HasValue || !Session.Stage.Inside(coord.Value)) return;
+            Session.TapNode(coord.Value);
         }
 
         private static Direction DirectionFor(Vector2 delta)

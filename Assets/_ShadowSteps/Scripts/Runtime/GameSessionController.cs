@@ -46,6 +46,9 @@ namespace ShadowSteps.Runtime
         public event Action<ActionOutcome> AlarmTriggered;
         /// <summary>Raised whenever the visible state changed (load, action end, retry, undo). HUDs refresh on this.</summary>
         public event Action<StageState> StateChanged;
+        /// <summary>One-action preview requested/released by input (long-press); alternative presentations mirror the board.</summary>
+        public event Action<ActionOutcome> PreviewShown;
+        public event Action PreviewHidden;
 
         private readonly Stack<StageState> _history = new Stack<StageState>();
 
@@ -143,11 +146,13 @@ namespace ShadowSteps.Runtime
 
         public void ShowPreview(StageAction action)
         {
-            if (!HasStage || Board == null || IsBusy || Mode != InputMode.Move) return;
-            Board.ShowPreview(StageRules.Preview(Stage, State, action));
+            if (!HasStage || IsBusy || Mode != InputMode.Move) return;
+            var outcome = StageRules.Preview(Stage, State, action);
+            if (Board != null) Board.ShowPreview(outcome);
+            PreviewShown?.Invoke(outcome);
         }
 
-        public void HidePreview() { if (Board != null) Board.HidePreview(); }
+        public void HidePreview() { if (Board != null) Board.HidePreview(); PreviewHidden?.Invoke(); }
 
         /// <summary>Deterministic full reset to the authored initial state (no checkpoints).</summary>
         public void Retry()

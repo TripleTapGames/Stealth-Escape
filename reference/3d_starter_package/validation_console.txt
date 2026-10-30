@@ -1,0 +1,32 @@
+Legacy camera mount warnings:
+  3
+  Level 21: camera anchor [3, 0] on walkable tile; this is legacy V4 data, add a visual wall-mount without changing gameplay LOS.
+  Level 23: camera anchor [3, 0] on walkable tile; this is legacy V4 data, add a visual wall-mount without changing gameplay LOS.
+  Level 24: camera anchor [3, 0] on walkable tile; this is legacy V4 data, add a visual wall-mount without changing gameplay LOS.
+V4 data: 30 levels, 55 blocked cells, all valid actor/camera anchors
+Banner_BlueGold.glb geometry= 3 vertices= 24 bounds= [[-0.315, 0.0, -0.05], [0.315, 1.475, 0.147]]
+Bench_Short.glb geometry= 4 vertices= 32 bounds= [[-0.48, 0.0, -0.24], [0.48, 0.945, 0.185]]
+Character_Guard_PROXY.glb geometry= 6 vertices= 104 bounds= [[-0.195, 0.001, -0.18], [0.195, 1.125, 0.255]]
+Character_Spy_PROXY.glb geometry= 7 vertices= 146 bounds= [[-0.18, 0.001, -0.195], [0.18, 1.09, 0.18]]
+Collectible_Key.glb geometry= 3 vertices= 42 bounds= [[-0.07, 0.165, -0.07], [0.095, 0.235, 0.303]]
+Door_Double_Wood.glb geometry= 6 vertices= 116 bounds= [[-0.585, 0.01, -0.065], [0.585, 1.73, 0.24]]
+Door_Locked_Path.glb geometry= 4 vertices= 32 bounds= [[-0.575, 0.0, -0.1], [0.575, 0.92, 0.101]]
+Door_Open_Path.glb geometry= 3 vertices= 24 bounds= [[-0.97, 0.0, -0.48], [0.58, 0.92, 0.1]]
+Entrance_Arch_Frame.glb geometry= 4 vertices= 32 bounds= [[-0.75, 0.0, -0.2], [0.75, 2.17, 0.21]]
+Exit_Pad.glb geometry= 3 vertices= 102 bounds= [[-0.19, -0.0, -0.185], [0.19, 0.225, 0.185]]
+Floor_Tile_A.glb geometry= 2 vertices= 16 bounds= [[-0.5, 0.0, -0.5], [0.5, 0.112, 0.5]]
+Floor_Tile_B.glb geometry= 2 vertices= 16 bounds= [[-0.5, 0.0, -0.5], [0.5, 0.112, 0.5]]
+Flowerbed_OutsideBoard.glb geometry= 8 vertices= 302 bounds= [[-0.455, 0.0, -0.455], [0.455, 0.65, 0.455]]
+Lantern_Wall.glb geometry= 5 vertices= 46 bounds= [[-0.19, 0.0, -0.19], [0.19, 1.07, 0.19]]
+Node_Marker.glb geometry= 2 vertices= 60 bounds= [[-0.1, 0.112, -0.097], [0.1, 0.168, 0.097]]
+Obstacle_Crate_1x1.glb geometry= 6 vertices= 48 bounds= [[-0.46, 0.0, -0.46], [0.46, 0.88, 0.46]]
+Obstacle_Planter_1x1.glb geometry= 9 vertices= 276 bounds= [[-0.46, 0.0, -0.46], [0.46, 0.785, 0.46]]
+Obstacle_Stone_Block_1x1.glb geometry= 2 vertices= 16 bounds= [[-0.48, 0.0, -0.48], [0.48, 0.395, 0.48]]
+Pillar_Square.glb geometry= 4 vertices= 80 bounds= [[-0.265, 0.0, -0.265], [0.265, 1.52, 0.265]]
+Security_Camera.glb geometry= 5 vertices= 74 bounds= [[-0.185, 0.82, -0.175], [0.185, 1.06, 0.552]]
+Security_Camera_Head.glb geometry= 3 vertices= 58 bounds= [[-0.185, 0.84, 0.075], [0.185, 1.06, 0.552]]
+Security_Camera_Mount.glb geometry= 2 vertices= 16 bounds= [[-0.12, 0.82, -0.175], [0.12, 1.0, 0.195]]
+Stairs_3Step_2m.glb geometry= 4 vertices= 32 bounds= [[-1.0, 0.0, -0.88], [1.0, 0.41, 0.93]]
+Wall_Block_1m.glb geometry= 2 vertices= 16 bounds= [[-0.53, 0.0, -0.53], [0.53, 0.93, 0.53]]
+Wall_Straight_1m.glb geometry= 3 vertices= 24 bounds= [[-0.54, 0.0, -0.16], [0.54, 0.95, 0.16]]
+Water_Tile.glb geometry= 3 vertices= 24 bounds= [[-0.5, 0.0, -0.5], [0.5, 0.1, 0.5]]

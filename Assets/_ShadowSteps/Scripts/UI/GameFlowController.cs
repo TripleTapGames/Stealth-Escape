@@ -26,7 +26,7 @@ namespace ShadowSteps.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Register()
         {
-            GameSceneHooks.OnComposed = composer =>
+            GameSceneHooks.OnComposed += composer =>
             {
                 var go = new GameObject("GameFlow");
                 var flow = go.AddComponent<GameFlowController>();

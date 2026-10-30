@@ -1,0 +1,23 @@
+You are working inside my EXISTING Unity Shadow Steps URP project. I have extracted the package folder ShadowSteps_3D_Starter_Package, and I want to use its real 3D models and code to implement the new colorful, playful, miniature palace courtyard visual style.
+
+Read these package files in order:
+1. CLAUDE_START_HERE.md
+2. ART_DIRECTION_AND_TECH_SPEC.md
+3. CLAUDE_IMPLEMENTATION_PLAN.md
+4. MODEL_VALIDATION_REPORT.json
+5. ReferenceV4/ShadowSteps_ClaudeCode_Handover_V4/SHADOW_STEPS_CLAUDE_CODE_HANDOVER_V4.md (for the authoritative gameplay rules)
+
+First inspect my existing Unity code, URP setup, level renderer, level JSON, guard/camera state machine, LOS, Smoke/EMP and HUD. Make a minimal migration plan; do NOT create a replacement project, rewrite working gameplay logic, modify validated level solutions, or start final art polish before the vertical slice works.
+
+1) Import UnityDrop/Assets/_ShadowSteps/Art3D into my project, install glTFast and Newtonsoft JSON as appropriate. Confirm the 26 real GLB models are importable.
+2) Compile/fix the included 3D preview scripts for my exact Unity version and generate the Clockwise and Camera Basics art-only demo scenes via the Unity editor menu.
+3) Integrate SS3DLevelRenderer as a visual-only adapter driven by the EXISTING Unity game state. Convert node (x,y) to (worldX,0,worldZ); keep exact game rules, blocked X and structural #, all keys/doors/guards/cameras and all 30 V4 levels.
+4) Make the Clockwise rotating-guard level and the Camera Basics level actually playable with 3D models, existing touch/swipe/long-press controls and full-board portrait camera fit.
+5) Show current red guard vision as exactly TWO straight-ahead nodes, and amber wall-camera vision as exact 3-wide x 2-forward cells obeying walls, doors, Smoke, EMP and corner occlusion. Keep both danger borders when they overlap. Dashes for next-action preview.
+6) Implement correct camera static mount and independently rotating head; fixed/rotating/sweeping camera visuals. Show clockwise/counterclockwise guard/camera markers and a moving-guard NEXT arrow pointing to the next patrol node.
+7) Match the art reference: pale cream tiled courtyard, warm soft lighting, blue/gold palace façade, turquoise water and greenery OUTSIDE the gameplay area. Only place planters/crates inside the play area where V4 actually specifies X blocked cells. Use modular prefabs; no whole-level screenshot as background.
+8) After the two vertical slices work, extend this to all 5 FTUE + 25 main levels, without affecting any solver-approved gameplay. Verify level success, stars, camera alarms, gadgets, player safe start, guard occupancy and UI readability.
+
+IMPORTANT pre-existing V4 issue: camera anchors in Level 21/23/24 are [3,0] on walkable cells. Don't silently turn them into walls or change camera detection. Solve the VISUAL mounting discrepancy first and report any gameplay migration you believe necessary.
+
+Report after each milestone: edited files, what runs in Unity, screenshots, errors, tests, risks and next steps. I want a functioning mobile-friendly Unity 3D presentation, not just more concept images or documents.

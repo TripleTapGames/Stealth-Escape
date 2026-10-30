@@ -388,3 +388,22 @@ Editor log of the user's Play attempt: Bootstrap loaded 30 stages and the save, 
 
 **Next:** Unity run of the 13 PlayMode tests and a play-through of all 30 stages; design review of the wait-heavy openings (#26).
 
+## 2026-10-30 — 3D courtyard presentation layer (starter package integrated, Unity run pending)
+
+**Inputs:** `StarterPack/ShadowSteps_Unity3D_Claude_Complete_Starter.zip` (docs, scripts and models archived under `reference/3d_starter_package/`; models copied to `Assets/_ShadowSteps/Art3D/Models/`), `Assets/characters_5_02/` (user-imported rigged characters; material converted to URP Lit earlier today).
+
+**Files**
+- `Assets/_ShadowSteps/Art3D/Scripts/Runtime`: `ShadowSteps.Art3D.asmdef`, SS3DArtPalette, SS3DGrid, SS3DLevelRenderer (geometry from `Stage`; cover only on `X`; pooled red/amber/preview/target overlays; NEXT + CW/CCW markers; camera bracket + head; EMP pips; smoke clouds; reachable tint; colliders stripped), SS3DCourtyardFrame (decor strictly outside tile centres), SS3DBoardCameraFitter (fixed 63° ortho, HUD bands, safe area), SS3DPreviewController, SS3DSessionBridge (runtime adapter via `GameSceneHooks`, plane-raycast picking, tweens in step with the 2D animator).
+- `Art3D/Scripts/Editor/SS3DSetupMenu.cs`: Validate imported models, Create/update Art Palette (characters_5_02 m_1/m_2 by default), Create demo scenes (Clockwise + Camera Basics), all 30, Enable 3D presentation in Game scene.
+- Runtime: `GameSceneComposer.Use3DPresentation` + `Art3DPalette`; `GameSceneHooks.OnComposed` now multicast; `InputController` picking overrides; `GameSessionController.PreviewShown/PreviewHidden`.
+- `Packages/manifest.json`: `com.unity.cloud.gltfast` 6.8.0. `Tools/unity_compile_check.py` compiles Art3D.
+- Docs: ART3D_SETUP.md, DECISIONS D-030, KNOWN_ISSUES #28–#31.
+
+**Rules untouched:** no Core/Data change; 270 dotnet tests still green; the 3D layer only consumes `Sight`, `GuardTrack`, `CameraTrack`, `StageRules.SmokeTargets` outputs.
+
+**Starter-package discrepancies:** its DTO/Newtonsoft reader, its `extendStraightPatrols` and its camera-anchor warning for Levels 16/18/19 ("[3,0] on a walkable cell") are not applicable — our importer already converts that notch to a wall, so brackets mount on real walls with identical vision. Proxy characters are kept only as fallbacks.
+
+**Tests run:** `Tools/unity_compile_check.py` → 0 errors (incl. Art3D runtime + editor). `Tools/run_core_tests.sh` → 270 passed.
+
+**Verified in Unity editor?** No. **Next:** open Unity, let glTFast import, run the three menus, review the two demo scenes, then enable the 3D presentation in Game.unity and play LEVEL-2 and LEVEL-16.
+

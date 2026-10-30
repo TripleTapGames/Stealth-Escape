@@ -21,6 +21,11 @@ namespace ShadowSteps.Runtime
         public ScriptableObject UiPrefabs;
         [Tooltip("Stage id to open when the scene is started directly in the editor and no stage was requested (0 = first unfinished).")]
         public int DebugStageId = 0;
+        [Header("Presentation")]
+        [Tooltip("Drive the board with the 3D art layer (ShadowSteps.Art3D) instead of the 2D sprite board. The rules engine is identical either way.")]
+        public bool Use3DPresentation = false;
+        [Tooltip("SS3DArtPalette asset (from the Art3D assembly) used when Use3DPresentation is on.")]
+        public ScriptableObject Art3DPalette;
 
         public Camera BoardCamera { get; private set; }
         public BoardView Board { get; private set; }
@@ -108,7 +113,7 @@ namespace ShadowSteps.Runtime
         }
     }
 
-    /// <summary>Lets higher-level assemblies (UI flow) attach to every composed Game scene without a Runtime→UI reference.</summary>
+    /// <summary>Lets higher-level assemblies (UI flow, 3D art) attach to every composed Game scene without a Runtime→UI reference. Subscribe with +=.</summary>
     public static class GameSceneHooks
     {
         public static System.Action<GameSceneComposer> OnComposed;

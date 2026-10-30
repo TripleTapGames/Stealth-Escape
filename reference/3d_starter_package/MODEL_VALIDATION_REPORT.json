@@ -1,0 +1,482 @@
+{
+  "status": "PASS",
+  "levels": 30,
+  "blocked_nodes": 55,
+  "art_models": 26,
+  "models": [
+    {
+      "file": "Banner_BlueGold.glb",
+      "meshes": 3,
+      "vertex_count": 24,
+      "bounds_m": [
+        [
+          -0.315,
+          0.0,
+          -0.05
+        ],
+        [
+          0.315,
+          1.475,
+          0.147
+        ]
+      ],
+      "bytes": 2480
+    },
+    {
+      "file": "Bench_Short.glb",
+      "meshes": 4,
+      "vertex_count": 32,
+      "bounds_m": [
+        [
+          -0.48,
+          0.0,
+          -0.24
+        ],
+        [
+          0.48,
+          0.945,
+          0.185
+        ]
+      ],
+      "bytes": 3016
+    },
+    {
+      "file": "Character_Guard_PROXY.glb",
+      "meshes": 6,
+      "vertex_count": 104,
+      "bounds_m": [
+        [
+          -0.195,
+          0.001,
+          -0.18
+        ],
+        [
+          0.195,
+          1.125,
+          0.255
+        ]
+      ],
+      "bytes": 6856
+    },
+    {
+      "file": "Character_Spy_PROXY.glb",
+      "meshes": 7,
+      "vertex_count": 146,
+      "bounds_m": [
+        [
+          -0.18,
+          0.001,
+          -0.195
+        ],
+        [
+          0.18,
+          1.09,
+          0.18
+        ]
+      ],
+      "bytes": 8172
+    },
+    {
+      "file": "Collectible_Key.glb",
+      "meshes": 3,
+      "vertex_count": 42,
+      "bounds_m": [
+        [
+          -0.07,
+          0.165,
+          -0.07
+        ],
+        [
+          0.095,
+          0.235,
+          0.303
+        ]
+      ],
+      "bytes": 3296
+    },
+    {
+      "file": "Door_Double_Wood.glb",
+      "meshes": 6,
+      "vertex_count": 116,
+      "bounds_m": [
+        [
+          -0.585,
+          0.01,
+          -0.065
+        ],
+        [
+          0.585,
+          1.73,
+          0.24
+        ]
+      ],
+      "bytes": 6172
+    },
+    {
+      "file": "Door_Locked_Path.glb",
+      "meshes": 4,
+      "vertex_count": 32,
+      "bounds_m": [
+        [
+          -0.575,
+          0.0,
+          -0.1
+        ],
+        [
+          0.575,
+          0.92,
+          0.101
+        ]
+      ],
+      "bytes": 3192
+    },
+    {
+      "file": "Door_Open_Path.glb",
+      "meshes": 3,
+      "vertex_count": 24,
+      "bounds_m": [
+        [
+          -0.97,
+          0.0,
+          -0.48
+        ],
+        [
+          0.58,
+          0.92,
+          0.1
+        ]
+      ],
+      "bytes": 2468
+    },
+    {
+      "file": "Entrance_Arch_Frame.glb",
+      "meshes": 4,
+      "vertex_count": 32,
+      "bounds_m": [
+        [
+          -0.75,
+          0.0,
+          -0.2
+        ],
+        [
+          0.75,
+          2.17,
+          0.21
+        ]
+      ],
+      "bytes": 3104
+    },
+    {
+      "file": "Exit_Pad.glb",
+      "meshes": 3,
+      "vertex_count": 102,
+      "bounds_m": [
+        [
+          -0.19,
+          -0.0,
+          -0.185
+        ],
+        [
+          0.19,
+          0.225,
+          0.185
+        ]
+      ],
+      "bytes": 5328
+    },
+    {
+      "file": "Floor_Tile_A.glb",
+      "meshes": 2,
+      "vertex_count": 16,
+      "bounds_m": [
+        [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        [
+          0.5,
+          0.112,
+          0.5
+        ]
+      ],
+      "bytes": 1904
+    },
+    {
+      "file": "Floor_Tile_B.glb",
+      "meshes": 2,
+      "vertex_count": 16,
+      "bounds_m": [
+        [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        [
+          0.5,
+          0.112,
+          0.5
+        ]
+      ],
+      "bytes": 1884
+    },
+    {
+      "file": "Flowerbed_OutsideBoard.glb",
+      "meshes": 8,
+      "vertex_count": 302,
+      "bounds_m": [
+        [
+          -0.455,
+          0.0,
+          -0.455
+        ],
+        [
+          0.455,
+          0.65,
+          0.455
+        ]
+      ],
+      "bytes": 9832
+    },
+    {
+      "file": "Lantern_Wall.glb",
+      "meshes": 5,
+      "vertex_count": 46,
+      "bounds_m": [
+        [
+          -0.19,
+          0.0,
+          -0.19
+        ],
+        [
+          0.19,
+          1.07,
+          0.19
+        ]
+      ],
+      "bytes": 4620
+    },
+    {
+      "file": "Node_Marker.glb",
+      "meshes": 2,
+      "vertex_count": 60,
+      "bounds_m": [
+        [
+          -0.1,
+          0.112,
+          -0.097
+        ],
+        [
+          0.1,
+          0.168,
+          0.097
+        ]
+      ],
+      "bytes": 3084
+    },
+    {
+      "file": "Obstacle_Crate_1x1.glb",
+      "meshes": 6,
+      "vertex_count": 48,
+      "bounds_m": [
+        [
+          -0.46,
+          0.0,
+          -0.46
+        ],
+        [
+          0.46,
+          0.88,
+          0.46
+        ]
+      ],
+      "bytes": 4096
+    },
+    {
+      "file": "Obstacle_Planter_1x1.glb",
+      "meshes": 9,
+      "vertex_count": 276,
+      "bounds_m": [
+        [
+          -0.46,
+          0.0,
+          -0.46
+        ],
+        [
+          0.46,
+          0.785,
+          0.46
+        ]
+      ],
+      "bytes": 10132
+    },
+    {
+      "file": "Obstacle_Stone_Block_1x1.glb",
+      "meshes": 2,
+      "vertex_count": 16,
+      "bounds_m": [
+        [
+          -0.48,
+          0.0,
+          -0.48
+        ],
+        [
+          0.48,
+          0.395,
+          0.48
+        ]
+      ],
+      "bytes": 1944
+    },
+    {
+      "file": "Pillar_Square.glb",
+      "meshes": 4,
+      "vertex_count": 80,
+      "bounds_m": [
+        [
+          -0.265,
+          0.0,
+          -0.265
+        ],
+        [
+          0.265,
+          1.52,
+          0.265
+        ]
+      ],
+      "bytes": 5504
+    },
+    {
+      "file": "Security_Camera.glb",
+      "meshes": 5,
+      "vertex_count": 74,
+      "bounds_m": [
+        [
+          -0.185,
+          0.82,
+          -0.175
+        ],
+        [
+          0.185,
+          1.06,
+          0.552
+        ]
+      ],
+      "bytes": 5600
+    },
+    {
+      "file": "Security_Camera_Head.glb",
+      "meshes": 3,
+      "vertex_count": 58,
+      "bounds_m": [
+        [
+          -0.185,
+          0.84,
+          0.075
+        ],
+        [
+          0.185,
+          1.06,
+          0.552
+        ]
+      ],
+      "bytes": 4164
+    },
+    {
+      "file": "Security_Camera_Mount.glb",
+      "meshes": 2,
+      "vertex_count": 16,
+      "bounds_m": [
+        [
+          -0.12,
+          0.82,
+          -0.175
+        ],
+        [
+          0.12,
+          1.0,
+          0.195
+        ]
+      ],
+      "bytes": 1976
+    },
+    {
+      "file": "Stairs_3Step_2m.glb",
+      "meshes": 4,
+      "vertex_count": 32,
+      "bounds_m": [
+        [
+          -1.0,
+          0.0,
+          -0.88
+        ],
+        [
+          1.0,
+          0.41,
+          0.93
+        ]
+      ],
+      "bytes": 3044
+    },
+    {
+      "file": "Wall_Block_1m.glb",
+      "meshes": 2,
+      "vertex_count": 16,
+      "bounds_m": [
+        [
+          -0.53,
+          0.0,
+          -0.53
+        ],
+        [
+          0.53,
+          0.93,
+          0.53
+        ]
+      ],
+      "bytes": 1936
+    },
+    {
+      "file": "Wall_Straight_1m.glb",
+      "meshes": 3,
+      "vertex_count": 24,
+      "bounds_m": [
+        [
+          -0.54,
+          0.0,
+          -0.16
+        ],
+        [
+          0.54,
+          0.95,
+          0.16
+        ]
+      ],
+      "bytes": 2660
+    },
+    {
+      "file": "Water_Tile.glb",
+      "meshes": 3,
+      "vertex_count": 24,
+      "bounds_m": [
+        [
+          -0.5,
+          0.0,
+          -0.5
+        ],
+        [
+          0.5,
+          0.1,
+          0.5
+        ]
+      ],
+      "bytes": 2440
+    }
+  ],
+  "warnings": [
+    "Level 21: camera anchor [3, 0] on walkable tile; this is legacy V4 data, add a visual wall-mount without changing gameplay LOS.",
+    "Level 23: camera anchor [3, 0] on walkable tile; this is legacy V4 data, add a visual wall-mount without changing gameplay LOS.",
+    "Level 24: camera anchor [3, 0] on walkable tile; this is legacy V4 data, add a visual wall-mount without changing gameplay LOS."
+  ],
+  "limits": "No Unity Editor compilation, in-game state integration, or render-performance verification performed."
+}

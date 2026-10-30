@@ -30,6 +30,7 @@ globs = [
     "Assets/_ShadowSteps/Scripts/Core/**/*.cs",
     "Assets/_ShadowSteps/Scripts/Data/**/*.cs",
     "Assets/_ShadowSteps/Scripts/Runtime/**/*.cs",
+    "Assets/_ShadowSteps/Art3D/Scripts/**/*.cs",
     "Assets/_ShadowSteps/Scripts/UI/**/*.cs",
     "Assets/_ShadowSteps/Scripts/Editor/**/*.cs",
     "Assets/_ShadowSteps/Tests/EditMode/**/*.cs",

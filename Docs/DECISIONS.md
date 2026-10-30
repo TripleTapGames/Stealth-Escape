@@ -104,3 +104,13 @@ The 2026-10-29 handover replaces guard cones with 2-node straight sight, adds wa
 ## D-029 V4 blocked cover is a third cell kind, not a wall and not a cut
 The 2026-10-30 handover adds `X` cells (55 across 25 stages). They are modelled as `Stage.Blocked`: non-walkable (`IsFloor` false, so no node, no connection, no smoke target, no guard route, no key/exit/start) and fully opaque (`Stage.Occluders` = walls ∪ blocked feeds the one `Sight.Obstructed` routine, so guards, cameras, smoke throws and previews all treat the whole cell as solid, corner contact included). Walls remain '#' and may host cameras; blocked cover may not. Missing connections (`cuts`) remain sight-transparent. Rows are authoritative; the importer fails with the exact cell when `blockedNodes` disagrees, and unknown characters fail with coordinates. Routes are imported exactly as serialized (no re-extension). The shipped pack is now `levels_v4.json` / `validation_v4.json` (schema 3 unchanged); the V3 pack is kept in `reference/v3_shipped_backup_2026-10-30/`. Rendering uses a crate placeholder drawn slightly smaller than the cell while the rule uses the full cell (handover §2.1).
 
+## D-030 The 3D presentation is an adapter over the unchanged engine, selected per scene
+`ShadowSteps.Art3D` is its own assembly (refs Core, Data, Runtime). It builds geometry from the same `Stage` objects the
+game loads, mirrors `GameSessionController` events exactly like the HUD, and draws only cells supplied by `Sight` and poses
+supplied by `GuardTrack`/`CameraTrack`. It never raycasts for visibility, never simulates schedules and strips colliders
+from every instantiated mesh so decoration cannot intercept input. The 2D sprite board stays the default; the composer's
+`Use3DPresentation` flag plus a palette asset switch a scene to 3D, and `InputController` exposes picking overrides so the
+angled camera resolves taps by intersecting the floor plane. Models are referenced only through `SS3DArtPalette`, so any
+mesh can be replaced without touching level data or code. The starter package's DTO/Newtonsoft reader and its re-extension
+logic were not adopted: the engine's `StageJson` is the single source of level data.
+

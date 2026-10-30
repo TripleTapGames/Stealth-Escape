@@ -1,0 +1,21 @@
+{
+    "name": "ShadowSteps.Art3D.Editor",
+    "rootNamespace": "ShadowSteps.Art3D.Editor",
+    "references": [
+        "ShadowSteps.Core",
+        "ShadowSteps.Data",
+        "ShadowSteps.Runtime",
+        "ShadowSteps.Art3D"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

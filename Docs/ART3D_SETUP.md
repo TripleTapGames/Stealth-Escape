@@ -1,0 +1,42 @@
+# Shadow Steps — 3D presentation layer (Art3D)
+
+The 3D layer is a **visual adapter** on top of the unchanged V3/V4 rules engine. It reads the same `Stage` definitions
+(`levels_v4.json`), mirrors the same `GameSessionController` events the HUD uses, and draws every hazard cell the
+engine hands it. It never decides movement, visibility, collisions or solver results (D-030).
+
+## One-time setup in the Unity Editor (cannot be done from the command line)
+
+1. Open the project. `Packages/manifest.json` now lists `com.unity.cloud.gltfast` 6.8.0; let Package Manager resolve it
+   and let the 26 `.glb` files in `Assets/_ShadowSteps/Art3D/Models/` import (each becomes a model prefab).
+2. **Shadow Steps ▸ 3D ▸ Validate imported models** – reports missing models, models without renderers and non-URP
+   materials (pink). All 26 should be `ok`.
+3. **Shadow Steps ▸ 3D ▸ Create or update Art Palette** – fills `Assets/_ShadowSteps/Art3D/SS3DArtPalette.asset` with
+   the models and, if present, `characters_5_02/Prefabs/m_1` (spy) and `m_2` (guard). Change the character prefabs,
+   `characterTargetHeight` (0.95 tiles) and `characterYawOffset` on the asset if the models face the wrong way.
+4. **Shadow Steps ▸ 3D ▸ Create demo scenes (Clockwise + Camera Basics)** – writes
+   `Assets/_ShadowSteps/Art3D/Demo/Clockwise_Rotating_Guard.unity` and `Camera_Basics.unity`: static art previews of
+   LEVEL-2 and LEVEL-16 with the courtyard frame, the fixed angled orthographic camera and the engine's initial hazards.
+5. **Shadow Steps ▸ 3D ▸ Create demo scenes for all 30 stages** – same for every stage.
+6. **Shadow Steps ▸ 3D ▸ Enable 3D presentation in Game scene** – sets `Use3DPresentation` and the palette on the Game
+   scene's composer. Press Play: Bootstrap → Home → stage; the 2D sprite board is hidden and the 3D view mirrors the
+   session (moves, guard NEXT/rotation markers, camera heads, doors, key, smoke clouds, red/amber hazards, long-press
+   preview, smoke targets, EMP highlights). Toggle the flag off to return to the 2D board.
+
+## Files
+
+| File | Role |
+|---|---|
+| `Art3D/Scripts/Runtime/SS3DArtPalette.cs` | Modular prefab palette (ScriptableObject) incl. overlay colours. |
+| `SS3DGrid.cs` | The only logical→world mapping: `(x − (w−1)/2, 0, (h−1)/2 − y)`, N/E/S/W = +Z/+X/−Z/−X, plane ray picking. |
+| `SS3DLevelRenderer.cs` | Builds floor, walls, cover crates (only on `X`), node markers, connections, doors, exit, key, characters, camera bracket + head; setters for state; pooled hazard overlays; strips colliders from art. |
+| `SS3DCourtyardFrame.cs` | Parapets, arch, palace door, stairs, pillars, lanterns, banners, canals, flowerbeds — all outside tile centres, own root, toggleable. |
+| `SS3DBoardCameraFitter.cs` | Fixed 63° orthographic camera fitting the board + margin into the HUD-free portrait band and safe area. |
+| `SS3DPreviewController.cs` | Editor/art preview of one stage with initial hazards. |
+| `SS3DSessionBridge.cs` | Runtime adapter: subscribes to the session, hides the 2D board, swaps the camera fitter, routes taps via plane raycast, tweens actors in step with the 2D animator. |
+| `Art3D/Scripts/Editor/SS3DSetupMenu.cs` | The menus above. |
+
+## Known gaps (see KNOWN_ISSUES #28–#31)
+- Nothing has run in Unity yet; glTFast import, material look, character facing and camera framing need a visual pass.
+- Characters play the pack's `Idle`/`Walk` states; there are no turn, caught or escape animations yet.
+- The three "camera on a walkable cell" warnings from the starter package do not apply here: the V4 importer already
+  turns that notch cell into a `#` wall, so brackets mount on real walls and vision is unchanged (KNOWN_ISSUES #21).
