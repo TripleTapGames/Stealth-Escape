@@ -1,0 +1,31 @@
+id,group,label,title,width,height,blocked_node_count,blocked_nodes,optimal_actions,ghost_available,smoke_charges,emp_charges,alarm_budget,guard_count,camera_count
+1,FTUE,FTUE 1,First Steps,4,1,0,,3,False,0,0,4,0,0
+2,FTUE,FTUE 2,Follow the Lines,3,3,0,,6,False,0,0,4,0,0
+3,FTUE,FTUE 3,Stay Out of Sight,5,5,1,"2,3",8,False,0,0,4,1,0
+4,FTUE,FTUE 4,Watch the Rotation,5,5,1,"2,3",5,False,0,0,4,1,0
+5,FTUE,FTUE 5,Moving Patrol,5,5,1,"3,2",6,False,0,0,4,1,0
+6,Main,Level 1,Safe Side,6,4,2,"3,2;4,1",9,False,0,0,4,1,0
+7,Main,Level 2,Clockwise,6,4,2,"2,2;4,2",7,False,0,0,4,1,0
+8,Main,Level 3,One Step Ahead,6,4,3,"2,2;2,3;1,2",11,False,0,0,4,1,0
+9,Main,Level 4,Double Trouble,7,5,3,"3,2;4,0;2,2",14,False,0,0,4,2,0
+10,Main,Level 5,Corner Patrol,7,5,2,"3,2;5,1",8,False,0,0,4,1,0
+11,Main,Level 6,Narrow Crossing,7,5,3,"3,2;5,2;6,1",13,False,0,0,4,2,0
+12,Main,Level 7,Crossroads,7,5,3,"1,0;2,2;3,2",14,False,0,0,4,2,0
+13,Main,Level 8,Predict the Return,7,5,2,"3,2;5,2",10,False,0,0,4,2,0
+14,Main,Level 9,Around the Loop,7,5,3,"3,1;5,2;1,2",10,False,0,0,4,2,0
+15,Main,Level 10,Patrol Junction,7,5,3,"3,2;3,0;2,2",13,False,0,0,4,2,0
+16,Main,Level 11,Find the Key,7,5,3,"1,2;1,1;1,3",12,False,0,0,4,0,0
+17,Main,Level 12,Key Detour,7,5,2,"3,4;2,3",14,False,0,0,4,0,0
+18,Main,Level 13,Door as Cover,7,5,2,"1,2;4,3",10,False,0,0,4,1,0
+19,Main,Level 14,Unlock at the Right Time,7,5,3,"1,2;4,3;1,1",12,False,0,0,4,1,0
+20,Main,Level 15,Protected Corridor,7,5,2,"1,2;1,3",8,False,0,0,4,1,0
+21,Main,Level 16,Camera Basics,7,5,2,"3,3;3,2",8,True,0,0,5,0,1
+22,Main,Level 17,Race the Alarm,7,5,2,"3,3;4,2",8,False,0,0,3,0,1
+23,Main,Level 18,Rotating Security,7,5,2,"3,3;3,2",9,True,0,0,3,0,1
+24,Main,Level 19,Sweep Window,7,5,2,"3,3;4,1",10,True,0,0,2,0,1
+25,Main,Level 20,Risky Shortcut,7,6,2,"3,4;4,4",10,True,0,0,2,0,1
+26,Main,Level 21,Smoke Screen,7,4,0,,6,False,1,0,4,1,0
+27,Main,Level 22,Cloud Timing,7,5,2,"2,2;2,1",10,False,1,0,4,1,0
+28,Main,Level 23,EMP Training,7,4,0,,4,False,0,1,1,0,1
+29,Main,Level 24,Security Gap,7,5,2,"3,3;3,2",9,True,0,1,1,0,1
+30,Main,Level 25,Final Extraction,6,4,0,,4,True,1,1,1,1,1

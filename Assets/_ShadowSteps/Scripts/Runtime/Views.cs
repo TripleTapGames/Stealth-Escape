@@ -46,19 +46,22 @@ namespace ShadowSteps.Runtime
         public static Vector3 WorldDir(Direction d) => new Vector3(DirectionUtil.DeltaX(d), -DirectionUtil.DeltaY(d), 0f);
     }
 
-    /// <summary>One board cell: floor node disc or solid wall block.</summary>
+    public enum CellKind { Floor, Wall, Cover }
+
+    /// <summary>One board cell: floor node disc, solid wall block, or blocked cover crate (V4 'X': no node, no connections).</summary>
     public sealed class NodeView : MonoBehaviour
     {
         public GridCoord Coord { get; private set; }
-        public bool IsWall { get; private set; }
+        public CellKind Kind { get; private set; }
+        public bool IsWall => Kind != CellKind.Floor;
         private SpriteRenderer _sprite;
         private SpriteRenderer _outline;
         private SpriteRenderer _reachRing;
         private BoardTheme _theme;
 
-        public void Setup(GridCoord coord, bool isWall, BoardTheme theme, float spacing)
+        public void Setup(GridCoord coord, CellKind kind, BoardTheme theme, float spacing)
         {
-            Coord = coord; IsWall = isWall; _theme = theme;
+            Coord = coord; Kind = kind; _theme = theme;
             if (_sprite == null)
             {
                 _outline = ViewUtil.MakeSprite(transform, "Outline", SpriteFactory.RoundedSquare(), theme.WallOutline, 1f, BoardSorting.Node - 1);
@@ -67,12 +70,22 @@ namespace ShadowSteps.Runtime
                 _reachRing.gameObject.SetActive(false);
             }
             _reachRing.transform.localScale = Vector3.one * theme.NodeRadius * 2.4f * spacing;
-            if (isWall)
+            if (kind == CellKind.Wall)
             {
                 _outline.gameObject.SetActive(true);
+                _outline.color = theme.WallOutline;
                 _outline.transform.localScale = Vector3.one * theme.WallSize * spacing;
                 _sprite.sprite = theme.WallOrDefault; _sprite.color = theme.Wall;
                 _sprite.transform.localScale = Vector3.one * (theme.WallSize - 0.08f) * spacing;
+            }
+            else if (kind == CellKind.Cover)
+            {
+                // Temporary crate: the logical occluder is the full cell even though the sprite is drawn slightly smaller.
+                _outline.gameObject.SetActive(true);
+                _outline.color = theme.CoverOutline;
+                _outline.transform.localScale = Vector3.one * theme.CoverSize * spacing;
+                _sprite.sprite = theme.CoverOrDefault; _sprite.color = theme.Cover;
+                _sprite.transform.localScale = Vector3.one * (theme.CoverSize - 0.06f) * spacing;
             }
             else
             {

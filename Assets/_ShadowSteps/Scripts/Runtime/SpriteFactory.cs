@@ -22,6 +22,15 @@ namespace ShadowSteps.Runtime
         public static Sprite Arrow() => Get("arrow", (x, y) => (y >= 0.1f && y <= 0.9f && Mathf.Abs(x - 0.5f) <= (0.9f - y) * 0.55f) ? 1f : 0f);
         /// <summary>Chevron for one-way edges, pointing up.</summary>
         public static Sprite Chevron() => Get("chevron", (x, y) => { float v = 0.55f - Mathf.Abs(x - 0.5f) * 0.9f; return (y >= v - 0.12f && y <= v + 0.12f && Mathf.Abs(x - 0.5f) <= 0.42f) ? 1f : 0f; });
+        /// <summary>Temporary crate placeholder for V4 blocked cover: square with a cross brace. Not final art.</summary>
+        public static Sprite Crate() => Get("crate", (x, y) =>
+        {
+            float box = RoundedBox(x, y, 0.5f, 0.06f);
+            float inner = RoundedBox(x, y, 0.42f, 0.04f);
+            float frame = box * (1f - inner);
+            float brace = (Mathf.Abs(x - y) < 0.06f || Mathf.Abs(x + y - 1f) < 0.06f) ? 1f : 0f;
+            return Mathf.Max(frame, brace * inner, inner * 0.35f);
+        });
         public static Sprite Cross() => Get("cross", (x, y) => (Mathf.Abs(x - y) < 0.1f || Mathf.Abs(x + y - 1f) < 0.1f) && Mathf.Abs(x - 0.5f) < 0.4f ? 1f : 0f);
         /// <summary>Simple key glyph: ring head plus a bar.</summary>
         public static Sprite Key() => Get("key", (x, y) =>

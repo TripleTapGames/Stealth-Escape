@@ -10,11 +10,11 @@ namespace ShadowSteps.EditorTools
     /// <summary>Editor entry points for the V3 stage pack: structural + solver validation and scoring re-export.</summary>
     public static class LevelValidationMenu
     {
-        public const string PackagedStages = "Assets/StreamingAssets/ShadowSteps/levels_v3.json";
-        public const string PackagedValidation = "Assets/StreamingAssets/ShadowSteps/validation_v3.json";
-        public const string ReportPath = "Docs/Reports/stage_validation_v3.txt";
+        public const string PackagedStages = "Assets/StreamingAssets/ShadowSteps/levels_v4.json";
+        public const string PackagedValidation = "Assets/StreamingAssets/ShadowSteps/validation_v4.json";
+        public const string ReportPath = "Docs/Reports/stage_validation_v4.txt";
 
-        [MenuItem("Shadow Steps/Stages/Validate packaged levels_v3.json (structure + solver)")]
+        [MenuItem("Shadow Steps/Stages/Validate packaged levels_v4.json (structure + solver)")]
         public static void ValidatePackaged()
         {
             var pack = StageJson.Parse(File.ReadAllText(PackagedStages));
@@ -33,7 +33,7 @@ namespace ShadowSteps.EditorTools
             Debug.Log("[ShadowSteps] " + pack.Stages.Count + " stages, " + invalid + " invalid. Report: " + ReportPath + "\n" + sb);
         }
 
-        [MenuItem("Shadow Steps/Stages/Re-export scoring into levels_v3.json (with backup)")]
+        [MenuItem("Shadow Steps/Stages/Re-export scoring into levels_v4.json (with backup)")]
         public static void ReexportScoring()
         {
             var pack = StageJson.Parse(File.ReadAllText(PackagedStages));
@@ -49,7 +49,7 @@ namespace ShadowSteps.EditorTools
             }
             File.WriteAllText(PackagedStages, StageJson.ToJson(updated));
             AssetDatabase.Refresh();
-            Debug.Log("[ShadowSteps] scoring re-exported for " + updated.Count + " stages (backup " + backup + "). Run Tools/CoreTestRunner --v3-export-validation to refresh validation_v3.json.");
+            Debug.Log("[ShadowSteps] scoring re-exported for " + updated.Count + " stages (backup " + backup + "). Run Tools/CoreTestRunner --v3-export-validation to refresh validation_v4.json.");
         }
     }
 }

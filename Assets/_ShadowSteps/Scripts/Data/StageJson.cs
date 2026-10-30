@@ -208,7 +208,7 @@ namespace ShadowSteps.Data
     }
 
     /// <summary>
-    /// Converts the browser playtest export (`levels_v3_playtest_reference.json`, format "ShadowSteps-browser-playtest-v3")
+    /// Converts the browser playtest export (V3 `levels_v3_playtest_reference.json` or V4 `shadow_steps_levels_v4.json` with `X` cover and `optimalActions`/`ghostAvailable`)
     /// into schema 3 stages. Browser pars/Ghost flags are kept as notes for parity checks; scoring is recomputed later.
     /// </summary>
     public static class BrowserLevelImporter
@@ -231,6 +231,7 @@ namespace ShadowSteps.Data
 
         public static Imported ImportOne(JsonObject o, string path)
         {
+            string label = JsonAccess.OptionalString(o, "label", "", path);
             var b = new StageBuilder
             {
                 Id = JsonAccess.RequireInt(o, "id", path),
@@ -242,7 +243,6 @@ namespace ShadowSteps.Data
             };
             int budget = JsonAccess.OptionalInt(o, "budget", 4, path);
             b.AlarmBudget = budget > 0 ? budget : 4; // prototype: L.budget || 4
-            string label = JsonAccess.OptionalString(o, "label", "", path);
             b.Code = label.StartsWith("FTUE", StringComparison.OrdinalIgnoreCase) ? "FTUE-" + label.Substring(label.LastIndexOf(' ') + 1) : "LEVEL-" + label.Substring(label.LastIndexOf(' ') + 1);
             var rows = new List<string>();
             foreach (var r in JsonAccess.AsArray(JsonAccess.Require(o, "rows", path), path + ".rows")) rows.Add(JsonAccess.AsString(r, path + ".rows"));
@@ -300,8 +300,19 @@ namespace ShadowSteps.Data
                     b.Walls.Add(cam.WallCell);
                     b.Notes.Add("camera " + cam.Id + " mounting node " + cam.WallCell + " was floor in the browser export; converted to wall");
                 }
-            b.Notes.Add("imported from browser playtest v3 export (" + label + ")");
-            return new Imported { Stage = b.Build(), BrowserPar = JsonAccess.OptionalInt(o, "par", 0, path), BrowserGhost = JsonAccess.OptionalBool(o, "ghostOffered", false, path) };
+            // V4: rows are authoritative; the redundant blockedNodes list must agree exactly (handover §2.1.7).
+            if (o.TryGetValue("blockedNodes", out var bnv) && bnv != null)
+            {
+                var listed = new HashSet<GridCoord>();
+                foreach (var c in JsonAccess.AsArray(bnv, path + ".blockedNodes")) listed.Add(StageJson.Coord(c, path + ".blockedNodes"));
+                var fromRows = new HashSet<GridCoord>(b.Blocked);
+                foreach (var c in listed) if (!fromRows.Contains(c)) throw new LevelDataException(label + ": blockedNodes lists " + c + " but rows have no 'X' there");
+                foreach (var c in fromRows) if (!listed.Contains(c)) throw new LevelDataException(label + ": rows have 'X' at " + c + " but blockedNodes does not list it");
+            }
+            b.Notes.Add("imported from browser playtest export (" + label + (b.Blocked.Count > 0 ? ", " + b.Blocked.Count + " blocked cover nodes" : "") + ")");
+            int browserPar = o.ContainsKey("optimalActions") ? JsonAccess.OptionalInt(o, "optimalActions", 0, path) : JsonAccess.OptionalInt(o, "par", 0, path);
+            bool browserGhost = o.ContainsKey("ghostAvailable") ? JsonAccess.OptionalBool(o, "ghostAvailable", false, path) : JsonAccess.OptionalBool(o, "ghostOffered", false, path);
+            return new Imported { Stage = b.Build(), BrowserPar = browserPar, BrowserGhost = browserGhost };
         }
 
         private static GridCoord ParseXY(string s)

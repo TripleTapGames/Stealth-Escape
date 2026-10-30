@@ -66,11 +66,12 @@ namespace ShadowSteps.Runtime
                 for (int x = 0; x < stage.Width; x++)
                 {
                     var c = new GridCoord(x, y);
-                    var go = new GameObject((stage.IsWall(c) ? "Wall " : "Node ") + c);
+                    var kind = stage.IsWall(c) ? CellKind.Wall : stage.IsBlocked(c) ? CellKind.Cover : CellKind.Floor;
+                    var go = new GameObject(kind + " " + c);
                     go.transform.SetParent(_nodesRoot, false);
                     go.transform.position = Layout.WorldPosition(c);
                     var view = go.AddComponent<NodeView>();
-                    view.Setup(c, stage.IsWall(c), theme, s);
+                    view.Setup(c, kind, theme, s);
                     _nodes[c] = view;
                 }
 

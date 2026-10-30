@@ -25,10 +25,11 @@ namespace ShadowSteps.V3
             if (s.Id <= 0) r.Error(p + ".id", "id must be positive");
             if (s.Width < 1 || s.Height < 1 || s.Width > 16 || s.Height > 16) { r.Error(p + ".size", "size must be 1..16 on each axis, got " + s.Width + "x" + s.Height); return r; }
             if (s.Width > options.MaxComfortableWidth) r.Warn(p + ".size", s.Width + " columns may not fit a narrow portrait phone; test on device");
-            if (!s.IsFloor(s.Start)) r.Error(p + ".start", "start " + s.Start + " is not a floor node", s.Start);
-            if (!s.IsFloor(s.Exit)) r.Error(p + ".exit", "exit " + s.Exit + " is not a floor node", s.Exit);
+            if (!s.IsFloor(s.Start)) r.Error(p + ".start", "start " + s.Start + " is not a floor node (" + Kind(s, s.Start) + ")", s.Start);
+            if (!s.IsFloor(s.Exit)) r.Error(p + ".exit", "exit " + s.Exit + " is not a floor node (" + Kind(s, s.Exit) + ")", s.Exit);
+            foreach (var x in s.Blocked) if (s.IsWall(x)) r.Error(p + ".rows", "cell " + x + " is both wall and blocked cover", x);
             if (s.Start == s.Exit) r.Error(p + ".exit", "exit must differ from start", s.Exit);
-            if (s.Key.HasValue && !s.IsFloor(s.Key.Value)) r.Error(p + ".key", "key " + s.Key.Value + " is not a floor node", s.Key.Value);
+            if (s.Key.HasValue && !s.IsFloor(s.Key.Value)) r.Error(p + ".key", "key " + s.Key.Value + " is not a floor node (" + Kind(s, s.Key.Value) + ")", s.Key.Value);
             foreach (var c in s.Cuts)
                 if (c.Lo.ManhattanDistance(c.Hi) != 1) r.Error(p + ".cuts", "cut " + c + " is not between adjacent nodes", c.Lo);
             for (int i = 0; i < s.Doors.Count; i++)
@@ -50,7 +51,7 @@ namespace ShadowSteps.V3
             {
                 var c = s.Cameras[i]; string cp = p + ".cameras[" + i + "]";
                 if (!s.Inside(c.WallCell)) r.Error(cp, "camera wall " + c.WallCell + " is outside the board", c.WallCell);
-                else if (!s.IsWall(c.WallCell)) r.Error(cp, "camera must be mounted on a wall node, " + c.WallCell + " is floor", c.WallCell);
+                else if (!s.IsWall(c.WallCell)) r.Error(cp, "camera must be mounted on a structural wall ('#'); " + c.WallCell + " is " + (s.IsBlocked(c.WallCell) ? "blocked cover ('X'), which cannot host a camera" : "floor"), c.WallCell);
                 var front = c.WallCell.Neighbor(c.MountFace);
                 if (!s.IsFloor(front)) r.Error(cp + ".mountFace", "camera mounting face must look onto a floor node; " + front + " is not floor", c.WallCell);
             }
@@ -125,7 +126,7 @@ namespace ShadowSteps.V3
 
         private static void ValidateGuard(ValidationReport r, Stage s, string gp, GuardSpec g, int index, Dictionary<GridCoord, int> starts)
         {
-            foreach (var n in g.Route) if (!s.IsFloor(n)) r.Error(gp + ".route", "route node " + n + " is not floor", n);
+            foreach (var n in g.Route) if (!s.IsFloor(n)) r.Error(gp + ".route", "route node " + n + " is not floor (" + Kind(s, n) + ")", n);
             if (g.Moves)
             {
                 if (g.Route.Count < 2) r.Error(gp + ".route", "a moving guard needs at least 2 route nodes");
@@ -144,6 +145,8 @@ namespace ShadowSteps.V3
             if (starts.TryGetValue(anchor, out int other)) r.Error(gp, "guards " + other + " and " + index + " both start on " + anchor, anchor);
             else starts[anchor] = index;
         }
+
+        private static string Kind(Stage s, GridCoord c) => !s.Inside(c) ? "outside the board" : s.IsWall(c) ? "wall" : s.IsBlocked(c) ? "blocked cover 'X'" : "floor";
 
         private static void Copy(StageMetrics from, StageMetrics to)
         {

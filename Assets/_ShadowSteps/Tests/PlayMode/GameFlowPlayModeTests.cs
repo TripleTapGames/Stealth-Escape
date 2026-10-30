@@ -110,7 +110,7 @@ namespace ShadowSteps.Tests.PlayMode
             yield return null;
             Assert.IsTrue(_flow.Router.Get<ResultsScreen>().IsVisible);
             Assert.IsTrue(AppServices.Save.GetResult(21).Ghost, "alarm-free completion earns Ghost");
-            Assert.AreEqual(1, AppServices.Save.GetResult(21).BestStars, "8 actions against par 4 is one star");
+            Assert.AreEqual(StageScoring.Stars(ghostRoute.CountedActions, _composer.Session.Stage.Par), AppServices.Save.GetResult(21).BestStars, "stars follow the solver par");
         }
 
         [UnityTest]

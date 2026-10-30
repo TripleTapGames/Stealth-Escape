@@ -16,8 +16,8 @@ namespace ShadowSteps.Runtime
     /// </summary>
     public static class AppServices
     {
-        /// <summary>Schema-3 stage pack (5 FTUE + 25 main). Scoring inside the file is solver-written.</summary>
-        public const string StagePackRelativePath = "ShadowSteps/levels_v3.json";
+        /// <summary>Schema-3 stage pack with the V4 blocked-cover geometry (5 FTUE + 25 main). Scoring inside the file is solver-written.</summary>
+        public const string StagePackRelativePath = "ShadowSteps/levels_v4.json";
         public const string SaveFileName = "shadowsteps_save.json";
 
         public static StageCatalog Stages { get; private set; }
@@ -40,7 +40,7 @@ namespace ShadowSteps.Runtime
             if (IsInitialized) return true;
             try
             {
-                if (!File.Exists(StagePackPath)) { LastError = "levels_v3.json not found at " + StagePackPath; return false; }
+                if (!File.Exists(StagePackPath)) { LastError = "levels_v4.json not found at " + StagePackPath; return false; }
                 InstallStages(File.ReadAllText(StagePackPath));
                 InstallSave();
                 return true;
@@ -65,7 +65,7 @@ namespace ShadowSteps.Runtime
                 yield return req.SendWebRequest();
                 if (req.result != UnityWebRequest.Result.Success)
                 {
-                    LastError = "could not read levels_v3.json: " + req.error;
+                    LastError = "could not read levels_v4.json: " + req.error;
                     Debug.LogError("[ShadowSteps] " + LastError);
                     done?.Invoke(false);
                     yield break;
@@ -91,11 +91,11 @@ namespace ShadowSteps.Runtime
         public static void InstallStages(string json)
         {
             var pack = StageJson.Parse(json);
-            foreach (var w in pack.Warnings) Debug.LogWarning("[ShadowSteps] levels_v3.json: " + w);
+            foreach (var w in pack.Warnings) Debug.LogWarning("[ShadowSteps] levels_v4.json: " + w);
             var report = StageValidator.ValidatePack(pack.Stages, new StageValidationOptions { RunSolver = false });
             foreach (var issue in report.Issues)
                 if (issue.Severity == ValidationSeverity.Warning) Debug.LogWarning("[ShadowSteps] " + issue);
-            if (!report.IsValid) throw new LevelDataException("levels_v3.json failed validation:\n" + report);
+            if (!report.IsValid) throw new LevelDataException("levels_v4.json failed validation:\n" + report);
             Stages = new StageCatalog(pack.Stages);
             Debug.Log("[ShadowSteps] loaded " + Stages.Count + " stages (schema " + Stage.SchemaVersion + ")");
         }

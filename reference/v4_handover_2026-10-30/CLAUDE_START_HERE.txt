@@ -1,0 +1,12 @@
+SHADOW STEPS — CLAUDE CODE START HERE (V4 BLOCKED-NODE UPDATE)
+
+Work INSIDE MY EXISTING Unity Shadow Steps project. Do not start a replacement project.
+
+Read SHADOW_STEPS_CLAUDE_CODE_HANDOVER_V4.md first, especially sections 2.1, 10, 11.1 and 18.
+Use shadow_steps_levels_v4.json as the latest 30-level (5 FTUE + 25 main) reference and shadow_steps_30_level_playtest_v4.html for playable comparison. Older V3 levels/par are superseded. RULES_AND_GENERATOR_REFERENCE_LEGACY.md is for migration context only, not current rules.
+
+Implement/verify V4 blocked cover cell 'X': it is NON-WALKABLE and fully opaque to guard vision, camera vision, and Smoke throws including corner-grazing trajectories. It cannot contain players, guards, keys, exits or Smoke targets. Keep it DISTINCT from a missing movement edge (cuts) that blocks travel but not sight, and from structural '#' walls. Place all 55 obstacles across the 25 affected V4 stages exactly as serialized, without reapplying coordinates or re-extending normalized patrols.
+
+First inspect the repo and briefly state your migration plan. Implement in milestones with tests; import all V4 levels, compute solver par and validate no guard occupancy overlap. Do not silently overwrite legacy data, and report any Unity-vs-browser discrepancies. Preserve game mechanics/controls and direction badges. Use temporary crate art only; DO NOT start final asset or visual style production.
+
+Definition of done: All 30 V4 levels playable in Unity; solid-cover traversal/vision/Smoke behavior correct; deterministic solver validates all; current score/ghost metadata either matches or differences are documented; mobile UI still readable.

@@ -1,0 +1,1261 @@
+{
+  "schemaVersion": 3,
+  "format": "ShadowSteps stage pack",
+  "coordinateSystem": "origin top-left, x right, y down",
+  "levels": [
+    {
+      "id": 1,
+      "code": "FTUE-1",
+      "group": "FTUE",
+      "title": "First Steps",
+      "intro": "Tap an adjacent node or swipe to move one step. Reach the green exit!",
+      "rows": ["...."],
+      "start": [0, 0],
+      "exit": [3, 0],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 3,
+        "threeStar": 4,
+        "twoStar": 5,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (FTUE 1)", "browser par 3, browser ghostOffered False"]
+    },
+    {
+      "id": 2,
+      "code": "FTUE-2",
+      "group": "FTUE",
+      "title": "Follow the Lines",
+      "intro": "You can move only along connected nodes. Find the route around the walls.",
+      "rows": ["...", "##.", "..."],
+      "start": [0, 0],
+      "exit": [0, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (FTUE 2)", "browser par 6, browser ghostOffered False"]
+    },
+    {
+      "id": 3,
+      "code": "FTUE-3",
+      "group": "FTUE",
+      "title": "Stay Out of Sight",
+      "intro": "Red outlines show guard vision. Guards see two nodes straight ahead.",
+      "rows": [".....", ".....", ".....", "..X..", "....."],
+      "start": [0, 2],
+      "exit": [4, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [2, 0]
+          ],
+          "facing": "S"
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (FTUE 3, 1 blocked cover nodes)", "browser par 8, browser ghostOffered False"]
+    },
+    {
+      "id": 4,
+      "code": "FTUE-4",
+      "group": "FTUE",
+      "title": "Watch the Rotation",
+      "intro": "Rotating guards turn 90° after each action. Use WAIT to change their direction.",
+      "rows": [".....", ".....", ".....", "..X..", "....."],
+      "start": [0, 2],
+      "exit": [4, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [2, 1]
+          ],
+          "facing": "E",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 5,
+        "threeStar": 6,
+        "twoStar": 7,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (FTUE 4, 1 blocked cover nodes)", "browser par 5, browser ghostOffered False"]
+    },
+    {
+      "id": 5,
+      "code": "FTUE-5",
+      "group": "FTUE",
+      "title": "Moving Patrol",
+      "intro": "Moving guards reach the final corridor node before reversing. The cyan NEXT arrow shows their upcoming step.",
+      "rows": [".....", ".....", "...X.", ".....", "....."],
+      "start": [0, 2],
+      "exit": [4, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [2, 0],
+            [2, 1],
+            [2, 2],
+            [2, 3],
+            [2, 4]
+          ],
+          "facing": "N",
+          "offset": 1
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (FTUE 5, 1 blocked cover nodes)", "browser par 6, browser ghostOffered False"]
+    },
+    {
+      "id": 6,
+      "code": "LEVEL-1",
+      "group": "Main",
+      "title": "Safe Side",
+      "intro": "Plan your route around a stationary guard.",
+      "rows": ["......", "....X.", "...X..", "......"],
+      "start": [0, 2],
+      "exit": [5, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [2, 1]
+          ],
+          "facing": "S"
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 9,
+        "threeStar": 10,
+        "twoStar": 12,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 1, 2 blocked cover nodes)", "browser par 9, browser ghostOffered False"]
+    },
+    {
+      "id": 7,
+      "code": "LEVEL-2",
+      "group": "Main",
+      "title": "Clockwise",
+      "intro": "Wait and watch the rotating guard.",
+      "rows": ["......", "......", "..X.X.", "......"],
+      "start": [0, 2],
+      "exit": [5, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [3, 1]
+          ],
+          "facing": "E",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 2, 2 blocked cover nodes)", "browser par 7, browser ghostOffered False"]
+    },
+    {
+      "id": 8,
+      "code": "LEVEL-3",
+      "group": "Main",
+      "title": "One Step Ahead",
+      "intro": "A patrol can cross your route. Watch both detection phases.",
+      "rows": ["......", "......", ".XX...", "..X..."],
+      "start": [0, 2],
+      "exit": [5, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [3, 0],
+            [3, 1],
+            [3, 2],
+            [3, 3]
+          ],
+          "facing": "N",
+          "offset": 1
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 11,
+        "threeStar": 12,
+        "twoStar": 15,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 3, 3 blocked cover nodes)", "browser par 11, browser ghostOffered False"]
+    },
+    {
+      "id": 9,
+      "code": "LEVEL-4",
+      "group": "Main",
+      "title": "Double Trouble",
+      "intro": "Two guards watch different lanes.",
+      "rows": ["....X..", ".......", "..XX...", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [2, 1]
+          ],
+          "facing": "E",
+          "clockwise": true
+        },
+        {
+          "id": "g2",
+          "kind": "static",
+          "route": [
+            [4, 4]
+          ],
+          "facing": "N"
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 14,
+        "threeStar": 15,
+        "twoStar": 19,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 4, 3 blocked cover nodes)", "browser par 14, browser ghostOffered False"]
+    },
+    {
+      "id": 10,
+      "code": "LEVEL-5",
+      "group": "Main",
+      "title": "Corner Patrol",
+      "intro": "Route patrols turn naturally at corners.",
+      "rows": [".......", ".....X.", "...X...", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "loop",
+          "route": [
+            [3, 1],
+            [4, 1],
+            [4, 2],
+            [4, 3],
+            [3, 3],
+            [2, 3],
+            [2, 2],
+            [2, 1]
+          ],
+          "facing": "N",
+          "offset": 0
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 5, 2 blocked cover nodes)", "browser par 8, browser ghostOffered False"]
+    },
+    {
+      "id": 11,
+      "code": "LEVEL-6",
+      "group": "Main",
+      "title": "Narrow Crossing",
+      "intro": "Multiple patrols move together each action.",
+      "rows": [".......", "......X", "...X.X.", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [2, 0],
+            [2, 1],
+            [2, 2],
+            [2, 3],
+            [2, 4]
+          ],
+          "facing": "N",
+          "offset": 1
+        },
+        {
+          "id": "g2",
+          "kind": "pingPong",
+          "route": [
+            [4, 4],
+            [4, 3],
+            [4, 2],
+            [4, 1],
+            [4, 0]
+          ],
+          "facing": "N",
+          "offset": 1
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 13,
+        "threeStar": 14,
+        "twoStar": 17,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 6, 3 blocked cover nodes)", "browser par 13, browser ghostOffered False"]
+    },
+    {
+      "id": 12,
+      "code": "LEVEL-7",
+      "group": "Main",
+      "title": "Crossroads",
+      "intro": "The safest route is not always the shortest.",
+      "rows": [".X.....", ".......", "..XX...", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [3, 1]
+          ],
+          "facing": "E",
+          "clockwise": true
+        },
+        {
+          "id": "g2",
+          "kind": "static",
+          "route": [
+            [3, 4]
+          ],
+          "facing": "N"
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 14,
+        "threeStar": 15,
+        "twoStar": 19,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 7, 3 blocked cover nodes)", "browser par 14, browser ghostOffered False"]
+    },
+    {
+      "id": 13,
+      "code": "LEVEL-8",
+      "group": "Main",
+      "title": "Predict the Return",
+      "intro": "The cyan NEXT badge shows a patrol’s next move, including its reversal at the end node.",
+      "rows": [".......", ".......", "...X.X.", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [2, 0],
+            [2, 1],
+            [2, 2],
+            [2, 3],
+            [2, 4]
+          ],
+          "facing": "N",
+          "offset": 2
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [4, 1]
+          ],
+          "facing": "W",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 10,
+        "threeStar": 11,
+        "twoStar": 13,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 8, 2 blocked cover nodes)", "browser par 10, browser ghostOffered False"]
+    },
+    {
+      "id": 14,
+      "code": "LEVEL-9",
+      "group": "Main",
+      "title": "Around the Loop",
+      "intro": "Time your crossing with a looping patrol.",
+      "rows": [".......", "...X...", ".X...X.", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "loop",
+          "route": [
+            [3, 0],
+            [4, 0],
+            [4, 1],
+            [4, 2],
+            [3, 2],
+            [2, 2],
+            [2, 1],
+            [2, 0]
+          ],
+          "facing": "N",
+          "offset": 0
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [5, 3]
+          ],
+          "facing": "N",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 10,
+        "threeStar": 11,
+        "twoStar": 13,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 9, 3 blocked cover nodes)", "browser par 10, browser ghostOffered False"]
+    },
+    {
+      "id": 15,
+      "code": "LEVEL-10",
+      "group": "Main",
+      "title": "Patrol Junction",
+      "intro": "Guards never occupy the same node at a turn boundary.",
+      "rows": ["...X...", ".......", "..XX...", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [0, 1],
+            [1, 1],
+            [2, 1],
+            [3, 1],
+            [4, 1],
+            [5, 1],
+            [6, 1]
+          ],
+          "facing": "N",
+          "offset": 1
+        },
+        {
+          "id": "g2",
+          "kind": "pingPong",
+          "route": [
+            [4, 4],
+            [4, 3],
+            [4, 2],
+            [4, 1],
+            [4, 0]
+          ],
+          "facing": "N",
+          "offset": 1
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 13,
+        "threeStar": 14,
+        "twoStar": 17,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 10, 3 blocked cover nodes)", "browser par 13, browser ghostOffered False"]
+    },
+    {
+      "id": 16,
+      "code": "LEVEL-11",
+      "group": "Main",
+      "title": "Find the Key",
+      "intro": "Walk onto the key, then physically cross the locked connection.",
+      "rows": [".......", ".X.#...", ".X.....", ".X.#...", "......."],
+      "start": [0, 2],
+      "exit": [6, 4],
+      "key": [2, 2],
+      "cuts": [
+        [
+          [3, 0],
+          [4, 0]
+        ],
+        [
+          [3, 4],
+          [4, 4]
+        ]
+      ],
+      "doors": [
+        {
+          "a": [3, 2],
+          "b": [4, 2]
+        }
+      ],
+      "guards": [],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 12,
+        "threeStar": 13,
+        "twoStar": 16,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 11, 3 blocked cover nodes)", "browser par 12, browser ghostOffered False"]
+    },
+    {
+      "id": 17,
+      "code": "LEVEL-12",
+      "group": "Main",
+      "title": "Key Detour",
+      "intro": "The key is reusable; collecting it does not open the lock remotely.",
+      "rows": [".......", ".......", ".......", "..X....", "...X..."],
+      "start": [0, 2],
+      "exit": [6, 4],
+      "key": [2, 4],
+      "cuts": [
+        [
+          [4, 0],
+          [5, 0]
+        ],
+        [
+          [4, 1],
+          [5, 1]
+        ],
+        [
+          [4, 2],
+          [5, 2]
+        ],
+        [
+          [4, 3],
+          [5, 3]
+        ]
+      ],
+      "doors": [
+        {
+          "a": [4, 4],
+          "b": [5, 4]
+        }
+      ],
+      "guards": [],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 14,
+        "threeStar": 15,
+        "twoStar": 19,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 12, 2 blocked cover nodes)", "browser par 14, browser ghostOffered False"]
+    },
+    {
+      "id": 18,
+      "code": "LEVEL-13",
+      "group": "Main",
+      "title": "Door as Cover",
+      "intro": "A closed door blocks sight. Opening it can expose you.",
+      "rows": [".......", "...#...", ".X.....", "...#X..", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": [2, 2],
+      "cuts": [
+        [
+          [3, 0],
+          [4, 0]
+        ],
+        [
+          [3, 4],
+          [4, 4]
+        ]
+      ],
+      "doors": [
+        {
+          "a": [3, 2],
+          "b": [4, 2]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [5, 1]
+          ],
+          "facing": "W",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 10,
+        "threeStar": 11,
+        "twoStar": 13,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 13, 2 blocked cover nodes)", "browser par 10, browser ghostOffered False"]
+    },
+    {
+      "id": 19,
+      "code": "LEVEL-14",
+      "group": "Main",
+      "title": "Unlock at the Right Time",
+      "intro": "Plan the guard phase before crossing the locked door.",
+      "rows": [".......", ".X.#...", ".X.....", "...#X..", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": [2, 2],
+      "cuts": [
+        [
+          [3, 0],
+          [4, 0]
+        ],
+        [
+          [3, 4],
+          [4, 4]
+        ]
+      ],
+      "doors": [
+        {
+          "a": [3, 2],
+          "b": [4, 2]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [5, 2]
+          ],
+          "facing": "N",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 12,
+        "threeStar": 13,
+        "twoStar": 16,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 14, 3 blocked cover nodes)", "browser par 12, browser ghostOffered False"]
+    },
+    {
+      "id": 20,
+      "code": "LEVEL-15",
+      "group": "Main",
+      "title": "Protected Corridor",
+      "intro": "Enemy patrols never cross locked-door connections.",
+      "rows": [".......", "...#...", ".X.....", ".X.#...", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": [2, 2],
+      "cuts": [
+        [
+          [3, 0],
+          [4, 0]
+        ],
+        [
+          [3, 4],
+          [4, 4]
+        ]
+      ],
+      "doors": [
+        {
+          "a": [3, 2],
+          "b": [4, 2]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [5, 0],
+            [5, 1],
+            [5, 2],
+            [5, 3],
+            [5, 4]
+          ],
+          "facing": "N",
+          "offset": 1
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 15, 2 blocked cover nodes)", "browser par 8, browser ghostOffered False"]
+    },
+    {
+      "id": 21,
+      "code": "LEVEL-16",
+      "group": "Main",
+      "title": "Camera Basics",
+      "intro": "Amber vision starts a lockdown, not immediate capture.",
+      "rows": ["#######", "#.....#", "#..X..#", "#..X..#", "#######"],
+      "start": [1, 3],
+      "exit": [5, 3],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [3, 0],
+          "mountFace": "S",
+          "facing": "S",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 5,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": true
+      },
+      "notes": ["camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall", "imported from browser playtest export (Level 16, 2 blocked cover nodes)", "browser par 8, browser ghostOffered True"]
+    },
+    {
+      "id": 22,
+      "code": "LEVEL-17",
+      "group": "Main",
+      "title": "Race the Alarm",
+      "intro": "Escape before the lockdown action counter reaches zero.",
+      "rows": ["#######", "#.....#", "#...X.#", "#..X..#", "#######"],
+      "start": [1, 3],
+      "exit": [5, 3],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [6, 2],
+          "mountFace": "W",
+          "facing": "W",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 3,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 17, 2 blocked cover nodes)", "browser par 8, browser ghostOffered False"]
+    },
+    {
+      "id": 23,
+      "code": "LEVEL-18",
+      "group": "Main",
+      "title": "Rotating Security",
+      "intro": "Wall cameras rotate every action, even when facing a wall.",
+      "rows": ["#######", "#.....#", "#..X..#", "#..X..#", "#######"],
+      "start": [1, 3],
+      "exit": [5, 3],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [3, 0],
+          "mountFace": "S",
+          "facing": "S",
+          "kind": "rotating",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 3,
+      "scoring": {
+        "par": 9,
+        "threeStar": 10,
+        "twoStar": 12,
+        "ghostOffered": true
+      },
+      "notes": ["camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall", "imported from browser playtest export (Level 18, 2 blocked cover nodes)", "browser par 9, browser ghostOffered True"]
+    },
+    {
+      "id": 24,
+      "code": "LEVEL-19",
+      "group": "Main",
+      "title": "Sweep Window",
+      "intro": "Sweeping cameras hold each direction for two actions.",
+      "rows": ["#######", "#...X.#", "#.....#", "#..X..#", "#######"],
+      "start": [1, 3],
+      "exit": [5, 3],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [3, 0],
+          "mountFace": "S",
+          "facing": "S",
+          "kind": "sweeping",
+          "clockwise": false
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 2,
+      "scoring": {
+        "par": 10,
+        "threeStar": 11,
+        "twoStar": 13,
+        "ghostOffered": true
+      },
+      "notes": ["camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall", "imported from browser playtest export (Level 19, 2 blocked cover nodes)", "browser par 10, browser ghostOffered True"]
+    },
+    {
+      "id": 25,
+      "code": "LEVEL-20",
+      "group": "Main",
+      "title": "Risky Shortcut",
+      "intro": "Try a faster alarm route or a slower Ghost escape.",
+      "rows": ["#######", "#.....#", "#.###.#", "#.....#", "#..XX.#", "#######"],
+      "start": [1, 4],
+      "exit": [5, 4],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [6, 3],
+          "mountFace": "W",
+          "facing": "W",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 2,
+      "scoring": {
+        "par": 10,
+        "threeStar": 11,
+        "twoStar": 13,
+        "ghostOffered": true
+      },
+      "notes": ["imported from browser playtest export (Level 20, 2 blocked cover nodes)", "browser par 10, browser ghostOffered True"]
+    },
+    {
+      "id": 26,
+      "code": "LEVEL-21",
+      "group": "Main",
+      "title": "Smoke Screen",
+      "intro": "Tap Smoke, then tap a nearby node. Smoke blocks vision for two actions.",
+      "rows": ["#######", "###.###", ".......", "#######"],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [3, 1]
+          ],
+          "facing": "S"
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 1,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 21)", "browser par 6, browser ghostOffered False"]
+    },
+    {
+      "id": 27,
+      "code": "LEVEL-22",
+      "group": "Main",
+      "title": "Cloud Timing",
+      "intro": "Smoke stays on its node while guards keep moving.",
+      "rows": [".......", "..X....", "..X....", ".......", "......."],
+      "start": [0, 2],
+      "exit": [6, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [3, 0],
+            [3, 1],
+            [3, 2],
+            [3, 3],
+            [3, 4]
+          ],
+          "facing": "N",
+          "offset": 1
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 1,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "scoring": {
+        "par": 10,
+        "threeStar": 11,
+        "twoStar": 13,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 22, 2 blocked cover nodes)", "browser par 10, browser ghostOffered False"]
+    },
+    {
+      "id": 28,
+      "code": "LEVEL-23",
+      "group": "Main",
+      "title": "EMP Training",
+      "intro": "Tap EMP and select a wall camera. It is disabled for two actions.",
+      "rows": ["#######", "#######", ".....##", "#######"],
+      "start": [0, 2],
+      "exit": [4, 2],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [4, 1],
+          "mountFace": "S",
+          "facing": "W",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 1
+      },
+      "alarmBudget": 1,
+      "scoring": {
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
+        "ghostOffered": false
+      },
+      "notes": ["imported from browser playtest export (Level 23)", "browser par 4, browser ghostOffered False"]
+    },
+    {
+      "id": 29,
+      "code": "LEVEL-24",
+      "group": "Main",
+      "title": "Security Gap",
+      "intro": "The EMP expires after two counted actions, then the camera rechecks vision.",
+      "rows": ["#######", "#.....#", "#..X..#", "#..X..#", "#######"],
+      "start": [1, 3],
+      "exit": [5, 3],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [6, 2],
+          "mountFace": "W",
+          "facing": "W",
+          "kind": "sweeping",
+          "clockwise": false
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 1
+      },
+      "alarmBudget": 1,
+      "scoring": {
+        "par": 9,
+        "threeStar": 10,
+        "twoStar": 12,
+        "ghostOffered": true
+      },
+      "notes": ["imported from browser playtest export (Level 24, 2 blocked cover nodes)", "browser par 9, browser ghostOffered True"]
+    },
+    {
+      "id": 30,
+      "code": "LEVEL-25",
+      "group": "Main",
+      "title": "Final Extraction",
+      "intro": "Combine keys, Smoke, EMP and the security countdown to escape.",
+      "rows": ["######", "###.##", ".....#", "######"],
+      "start": [0, 2],
+      "exit": [4, 2],
+      "key": [1, 2],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [1, 2],
+          "b": [2, 2]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [3, 1]
+          ],
+          "facing": "S"
+        }
+      ],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [4, 1],
+          "mountFace": "S",
+          "facing": "W",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 1,
+        "emp": 1
+      },
+      "alarmBudget": 1,
+      "scoring": {
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
+        "ghostOffered": true
+      },
+      "notes": ["imported from browser playtest export (Level 25)", "browser par 4, browser ghostOffered True"]
+    }
+  ]
+}

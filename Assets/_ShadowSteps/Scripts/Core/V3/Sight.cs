@@ -16,7 +16,7 @@ namespace ShadowSteps.V3
     /// <summary>
     /// The single occlusion/vision routine shared by guards, cameras, smoke throws, preview and the solver (handover §2).
     /// Port of <c>hitsRect</c>, <c>segmentsMeet</c>, <c>obstructed</c>, <c>guardVision</c>, <c>camVision</c> from the v3
-    /// prototype. A line touching the edge or corner of a wall node or a closed door counts as blocked.
+    /// prototype. A line touching the edge or corner of a wall node, a blocked cover node ('X') or a closed door counts as blocked.
     /// </summary>
     public static class Sight
     {
@@ -63,10 +63,10 @@ namespace ShadowSteps.V3
                 && Math.Max(Math.Min(a.Y, b.Y), Math.Min(c.Y, d.Y)) <= Math.Min(Math.Max(a.Y, b.Y), Math.Max(c.Y, d.Y)) + Eps;
         }
 
-        /// <summary>True when any wall node or closed door lies on the segment a→b (endpoints included).</summary>
+        /// <summary>True when any wall node, blocked cover node (V4 'X') or closed door lies on the segment a→b (endpoints included; corner contact counts).</summary>
         public static bool Obstructed(Stage stage, int openDoorMask, Vec2 a, Vec2 b)
         {
-            foreach (var w in stage.Walls) if (HitsRect(a, b, w.X, w.Y)) return true;
+            foreach (var w in stage.Occluders) if (HitsRect(a, b, w.X, w.Y)) return true;
             for (int i = 0; i < stage.Doors.Count; i++)
             {
                 if ((openDoorMask & (1 << i)) != 0) continue;

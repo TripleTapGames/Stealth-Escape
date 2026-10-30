@@ -367,3 +367,24 @@ Exhaustive check: the solver's explored-state counts for the unsolvable levels a
 
 Editor log of the user's Play attempt: Bootstrap loaded 30 stages and the save, opened Home, no errors, then nothing. Cause: the rewritten `MenuSceneComposer` no longer created an `EventSystem`, so uGUI received no taps in the Home scene. Fix: `UiBuilder.CreateCanvas` now calls `EnsureEventSystem()` (every canvas, every scene) and `MenuSceneComposer` calls it too; `MenuScenePlayModeTests` asserts the EventSystem and the wired PLAY action. Compile check 0 errors. Unity Play-mode verification still pending on the user's side.
 
+## 2026-10-30 — V4 blocked cover nodes and the 30 updated levels
+
+**Handover:** `reference/v4_handover_2026-10-30/` (SHADOW_STEPS_CLAUDE_CODE_HANDOVER_V4.md §2.1, 10, 11.1). V3 shipped pack backed up to `reference/v3_shipped_backup_2026-10-30/`.
+
+**Files**
+- Core/V3: Stage.cs (`Blocked` set from 'X', `IsBlocked`, `Occluders`, `IsFloor` excludes cover, rows round-trip, unknown characters fail with the cell), Sight.cs (occlusion over walls ∪ blocked), StageValidator.cs (cell-kind messages, cover cannot host cameras, both-wall-and-cover error).
+- Data/StageJson.cs: importer reads V4 `optimalActions`/`ghostAvailable`, cross-checks `blockedNodes` against rows and fails on mismatch; routes imported as serialized.
+- Runtime: SpriteFactory.Crate (temporary cross-braced crate), BoardTheme cover colours/size, NodeView `CellKind.Cover` (no node disc, no reachable ring, no connections), AppServices loads `levels_v4.json`. Editor menu paths updated.
+- Content: `Assets/StreamingAssets/ShadowSteps/levels_v4.json` (30 stages, 55 `X` on 25 stages, solver scoring), `validation_v4.json`.
+- Tests: V4BlockedNodeTests (9 fixtures from §11.1: rows parsing/unknown char, move onto X/# free and no enemy update, guard sight stopped by X, camera 3×2 filtered per node incl. corner contact, corner-grazing rays, smoke target/throw rules, cut vs cover, validator rejections, importer cross-check); V3PackParityTests retargeted to V4 (30/30 par + Ghost, browser report, 55 obstacles, Ghost set, mandatory gadget sets); PlayMode flow test uses the scoring policy instead of a literal.
+
+**Parity with the browser prototype (C# solver vs `v4_validation_report.json`):** 30/30 pars equal, 30/30 Ghost offers equal, 0 structural errors, no guard overlap over any full cycle. Differences from V3 are listed in KNOWN_ISSUES #27; design flags in #26.
+
+**Tests run:** `Tools/run_core_tests.sh` → 270 passed, 0 failed. `Tools/unity_compile_check.py` → 0 errors.
+
+**Verified in Unity editor?** No. **Verified on device?** No.
+
+**Manual steps:** press Play; FTUE 3 shows a crate at (2,3); Level 1 shows two crates; try to tap or swipe into a crate (nothing happens, no action counted); on Level 21/22 open SMOKE mode and confirm crates are never highlighted; on Level 16 the amber footprint excludes the crate column.
+
+**Next:** Unity run of the 13 PlayMode tests and a play-through of all 30 stages; design review of the wait-heavy openings (#26).
+

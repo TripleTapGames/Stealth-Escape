@@ -97,7 +97,8 @@ namespace ShadowSteps.V3
     /// <summary>
     /// One authored level under the V3 rules (handover §2). Immutable; built by <see cref="StageBuilder"/>.
     /// Movement graph: every pair of cardinally adjacent floor nodes is connected unless the pair is listed in
-    /// <see cref="Cuts"/>; door pairs are connected but locked. Walls are the only physical occluders besides closed doors.
+    /// <see cref="Cuts"/>; door pairs are connected but locked. Physical occluders are walls ('#'), blocked cover nodes ('X',
+    /// V4) and closed doors. Walls and blocked nodes are both non-walkable and opaque; a blocked node is drawn as a crate.
     /// </summary>
     public sealed class Stage
     {
@@ -130,6 +131,7 @@ namespace ShadowSteps.V3
         public IReadOnlyList<string> Notes { get; }
 
         private readonly HashSet<GridCoord> _walls;
+        private readonly HashSet<GridCoord> _blocked;
         private readonly HashSet<EdgeKey> _cuts;
         private readonly Dictionary<EdgeKey, int> _doorIndex;
         private int _period = -1;
@@ -143,19 +145,26 @@ namespace ShadowSteps.V3
             Par = b.Par; ThreeStarActions = b.ThreeStarActions; TwoStarActions = b.TwoStarActions; GhostOffered = b.GhostOffered;
             Notes = new List<string>(b.Notes);
             _walls = new HashSet<GridCoord>(b.Walls);
+            _blocked = new HashSet<GridCoord>(b.Blocked);
             _cuts = new HashSet<EdgeKey>(b.Cuts);
             _doorIndex = new Dictionary<EdgeKey, int>();
             for (int i = 0; i < Doors.Count; i++) _doorIndex[Doors[i].Key] = i;
         }
 
         public IEnumerable<GridCoord> Walls => _walls;
+        /// <summary>V4 solid cover nodes ('X'): non-walkable, fully opaque, no node, no connections, no smoke target.</summary>
+        public IEnumerable<GridCoord> Blocked => _blocked;
+        public int BlockedCount => _blocked.Count;
+        /// <summary>Every physical occluder cell: walls and blocked cover. Used by the shared line-of-sight routine.</summary>
+        public IEnumerable<GridCoord> Occluders { get { foreach (var w in _walls) yield return w; foreach (var b in _blocked) yield return b; } }
         public IEnumerable<EdgeKey> Cuts => _cuts;
         public int DoorCount => Doors.Count;
 
         public bool Inside(GridCoord c) => c.X >= 0 && c.X < Width && c.Y >= 0 && c.Y < Height;
         public bool IsWall(GridCoord c) => _walls.Contains(c);
-        /// <summary>A standable node: inside the board and not a wall.</summary>
-        public bool IsFloor(GridCoord c) => Inside(c) && !_walls.Contains(c);
+        public bool IsBlocked(GridCoord c) => _blocked.Contains(c);
+        /// <summary>A standable node: inside the board, not a wall, not blocked cover.</summary>
+        public bool IsFloor(GridCoord c) => Inside(c) && !_walls.Contains(c) && !_blocked.Contains(c);
         public bool IsCut(GridCoord a, GridCoord b) => _cuts.Contains(new EdgeKey(a, b));
         /// <summary>Index of the door on this edge, or -1.</summary>
         public int DoorIndex(GridCoord a, GridCoord b) => _doorIndex.TryGetValue(new EdgeKey(a, b), out int i) ? i : -1;
@@ -184,7 +193,7 @@ namespace ShadowSteps.V3
                 for (int x = 0; x < Width; x++)
                 {
                     var c = new GridCoord(x, y);
-                    if (!_walls.Contains(c)) yield return c;
+                    if (!_walls.Contains(c) && !_blocked.Contains(c)) yield return c;
                 }
         }
 
@@ -197,7 +206,7 @@ namespace ShadowSteps.V3
                 SmokeCharges = SmokeCharges, EmpCharges = EmpCharges, AlarmBudget = AlarmBudget, Par = Par, ThreeStarActions = ThreeStarActions,
                 TwoStarActions = TwoStarActions, GhostOffered = GhostOffered
             };
-            b.Walls.AddRange(_walls); b.Cuts.AddRange(_cuts); b.Doors.AddRange(Doors); b.Guards.AddRange(Guards); b.Cameras.AddRange(Cameras); b.Notes.AddRange(Notes);
+            b.Walls.AddRange(_walls); b.Blocked.AddRange(_blocked); b.Cuts.AddRange(_cuts); b.Doors.AddRange(Doors); b.Guards.AddRange(Guards); b.Cameras.AddRange(Cameras); b.Notes.AddRange(Notes);
             return b;
         }
 
@@ -214,6 +223,7 @@ namespace ShadowSteps.V3
         public GridCoord Start, Exit;
         public GridCoord? Key;
         public List<GridCoord> Walls = new List<GridCoord>();
+        public List<GridCoord> Blocked = new List<GridCoord>();
         public List<EdgeKey> Cuts = new List<EdgeKey>();
         public List<DoorSpec> Doors = new List<DoorSpec>();
         public List<GuardSpec> Guards = new List<GuardSpec>();
@@ -224,15 +234,24 @@ namespace ShadowSteps.V3
         public bool GhostOffered;
         public List<string> Notes = new List<string>();
 
-        /// <summary>Parses ASCII rows ('#' = wall, anything else floor); sets Width/Height and Walls.</summary>
+        /// <summary>
+        /// Parses ASCII rows: '#' = wall, 'X' = blocked cover (V4), '.' = floor. Any other character fails with the exact
+        /// cell (handover §2.1.7: never repair silently). Sets Width/Height, Walls and Blocked.
+        /// </summary>
         public StageBuilder FromRows(IReadOnlyList<string> rows)
         {
             Height = rows.Count; Width = rows.Count > 0 ? rows[0].Length : 0;
-            Walls.Clear();
+            Walls.Clear(); Blocked.Clear();
             for (int y = 0; y < Height; y++)
             {
                 if (rows[y].Length != Width) throw new ArgumentException("row " + y + " has length " + rows[y].Length + ", expected " + Width);
-                for (int x = 0; x < Width; x++) if (rows[y][x] == '#') Walls.Add(new GridCoord(x, y));
+                for (int x = 0; x < Width; x++)
+                {
+                    char ch = rows[y][x];
+                    if (ch == '#') Walls.Add(new GridCoord(x, y));
+                    else if (ch == 'X') Blocked.Add(new GridCoord(x, y));
+                    else if (ch != '.') throw new ArgumentException("unknown cell character '" + ch + "' at (" + x + ", " + y + ") in stage " + (Code ?? Id.ToString()) + "; expected '.', '#' or 'X'");
+                }
             }
             return this;
         }
@@ -244,7 +263,7 @@ namespace ShadowSteps.V3
             for (int y = 0; y < s.Height; y++)
             {
                 var sb = new System.Text.StringBuilder(s.Width);
-                for (int x = 0; x < s.Width; x++) sb.Append(s.IsWall(new GridCoord(x, y)) ? '#' : '.');
+                for (int x = 0; x < s.Width; x++) { var c = new GridCoord(x, y); sb.Append(s.IsWall(c) ? '#' : s.IsBlocked(c) ? 'X' : '.'); }
                 rows[y] = sb.ToString();
             }
             return rows;

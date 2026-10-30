@@ -8,15 +8,15 @@ using ShadowSteps.V3;
 namespace ShadowSteps.Tests.EditMode.V3
 {
     /// <summary>
-    /// M4 gate: the 30 browser levels import, validate, and the C# solver reproduces every browser par and Ghost flag;
-    /// the shipped schema-3 pack and its validation traces agree with the solver.
+    /// M4/V4 gate: the 30 browser levels (V4 blocked-cover geometry) import, validate, and the C# solver reproduces every
+    /// browser par and Ghost flag; the shipped schema-3 pack and its validation traces agree with the solver.
     /// </summary>
     public class V3PackParityTests
     {
-        public const string BrowserRelative = "reference/v3_handover_2026-10-29/levels_v3_playtest_reference.json";
-        public const string BrowserReportRelative = "reference/v3_handover_2026-10-29/playtest_validation_report.json";
-        public const string PackRelative = "Assets/StreamingAssets/ShadowSteps/levels_v3.json";
-        public const string ValidationRelative = "Assets/StreamingAssets/ShadowSteps/validation_v3.json";
+        public const string BrowserRelative = "reference/v4_handover_2026-10-30/shadow_steps_levels_v4.json";
+        public const string BrowserReportRelative = "reference/v4_handover_2026-10-30/v4_validation_report.json";
+        public const string PackRelative = "Assets/StreamingAssets/ShadowSteps/levels_v4.json";
+        public const string ValidationRelative = "Assets/StreamingAssets/ShadowSteps/validation_v4.json";
 
         private static string P(string rel) => Path.Combine(TestPaths.ProjectRoot, rel);
         private static List<BrowserLevelImporter.Imported> _imported;
@@ -59,9 +59,13 @@ namespace ShadowSteps.Tests.EditMode.V3
         public void BrowserReport_OptimalLengths_MatchTheCSharpSolver()
         {
             var report = JsonAccess.AsObject(MiniJson.Parse(File.ReadAllText(P(BrowserReportRelative))), "report");
-            var byCode = new Dictionary<string, int>();
-            foreach (JsonObject e in JsonAccess.AsArray(report["levels"], "levels")) byCode[(string)e["id"]] = JsonAccess.AsInt(e["optimal"], "optimal");
-            foreach (var s in Pack().Stages) Assert.AreEqual(byCode[s.Code], s.Par, s.Code);
+            var byLabel = new Dictionary<string, int>();
+            foreach (JsonObject e in JsonAccess.AsArray(report["levels"], "levels")) byLabel[(string)e["label"]] = JsonAccess.AsInt(e["optimalActions"], "optimalActions");
+            foreach (var s in Pack().Stages)
+            {
+                string label = s.Code.Replace("FTUE-", "FTUE ").Replace("LEVEL-", "Level ");
+                Assert.AreEqual(byLabel[label], s.Par, s.Code);
+            }
         }
 
         [Test]
@@ -85,7 +89,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         public void ShippedValidation_ReplaysToWins_AndMatchesTheSolver()
         {
             var pack = Pack();
-            var entries = JsonAccess.AsArray(MiniJson.Parse(File.ReadAllText(P(ValidationRelative))), "validation_v3");
+            var entries = JsonAccess.AsArray(MiniJson.Parse(File.ReadAllText(P(ValidationRelative))), "validation_v4");
             Assert.AreEqual(30, entries.Count);
             foreach (JsonObject e in entries)
             {
@@ -115,9 +119,24 @@ namespace ShadowSteps.Tests.EditMode.V3
                 if (m.EmpRequired) empRequired.Add(s.Code);
                 if (m.ForcedAlarm) forcedAlarm.Add(s.Code);
             }
+            // V4 measured: LEVEL-24 became EMP-mandatory and LEVEL-19 is no longer forced-alarm (Docs/PROGRESS.md 2026-10-30).
             CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25" }, smokeRequired);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25" }, empRequired);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-17", "LEVEL-19", "LEVEL-23" }, forcedAlarm);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-24", "LEVEL-25" }, empRequired);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-17", "LEVEL-23" }, forcedAlarm);
+        }
+
+        [Test]
+        public void V4_ImportsExactly55BlockedNodesAcross25Stages_AndShipsThem()
+        {
+            int blocked = 0, stagesWithCover = 0;
+            foreach (var im in Imported()) { blocked += im.Stage.BlockedCount; if (im.Stage.BlockedCount > 0) stagesWithCover++; }
+            Assert.AreEqual(55, blocked); Assert.AreEqual(25, stagesWithCover);
+            int shipped = 0;
+            foreach (var s in Pack().Stages) shipped += s.BlockedCount;
+            Assert.AreEqual(55, shipped, "shipped pack carries every obstacle");
+            var ghost = new List<string>();
+            foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-18", "LEVEL-19", "LEVEL-20", "LEVEL-24", "LEVEL-25" }, ghost);
         }
     }
 }

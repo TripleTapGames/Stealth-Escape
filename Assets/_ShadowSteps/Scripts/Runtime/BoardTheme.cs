@@ -33,6 +33,9 @@ namespace ShadowSteps.Runtime
         public Color ConnectionReachable = new Color(0.45f, 0.85f, 0.95f);
         public Color Wall = new Color(0.12f, 0.14f, 0.19f);
         public Color WallOutline = new Color(0.45f, 0.50f, 0.60f);
+        public Color Cover = new Color(0.62f, 0.46f, 0.28f);
+        public Color CoverOutline = new Color(0.30f, 0.20f, 0.10f);
+        public float CoverSize = 0.84f;
         public Color Exit = new Color(0.25f, 0.85f, 0.55f);
         public Color Key = new Color(1.00f, 0.84f, 0.30f);
         public Color DoorClosed = new Color(0.95f, 0.55f, 0.20f);
@@ -80,6 +83,7 @@ namespace ShadowSteps.Runtime
         [Header("Optional sprite overrides (leave empty for generated shapes)")]
         public Sprite NodeSprite;
         public Sprite WallSprite;
+        public Sprite CoverSprite;
         public Sprite ExitSprite;
         public Sprite KeySprite;
         public Sprite DoorSprite;
@@ -92,6 +96,7 @@ namespace ShadowSteps.Runtime
 
         public Sprite NodeOrDefault => NodeSprite != null ? NodeSprite : SpriteFactory.Circle();
         public Sprite WallOrDefault => WallSprite != null ? WallSprite : SpriteFactory.RoundedSquare();
+        public Sprite CoverOrDefault => CoverSprite != null ? CoverSprite : SpriteFactory.Crate();
         public Sprite ExitOrDefault => ExitSprite != null ? ExitSprite : SpriteFactory.Ring();
         public Sprite KeyOrDefault => KeySprite != null ? KeySprite : SpriteFactory.Key();
         public Sprite DoorOrDefault => DoorSprite != null ? DoorSprite : SpriteFactory.Padlock();
