@@ -5,7 +5,9 @@
         "ShadowSteps.Core",
         "ShadowSteps.Data",
         "ShadowSteps.Runtime",
-        "ShadowSteps.Art3D"
+        "ShadowSteps.Art3D",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [
         "Editor"

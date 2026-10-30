@@ -22,6 +22,7 @@ namespace ShadowSteps.Art3D
 
         private GameSessionController _session;
         private GameSceneComposer _composer;
+        private SS3DArtPalette _palette;
         private Coroutine _tween;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -37,6 +38,7 @@ namespace ShadowSteps.Art3D
             var bridge = root.AddComponent<SS3DSessionBridge>();
             bridge.Renderer = root.AddComponent<SS3DLevelRenderer>(); bridge.Renderer.palette = palette;
             bridge.Frame = root.AddComponent<SS3DCourtyardFrame>(); bridge.Frame.palette = palette;
+            bridge._palette = palette;
             bridge.Bind(composer);
         }
 
@@ -46,8 +48,10 @@ namespace ShadowSteps.Art3D
             // Hide the 2D board (it still runs its sync so rules/HUD paths stay identical) and retire its camera fitter.
             if (composer.Board != null) { var fitter2D = composer.BoardCamera.GetComponent<CameraFitter>(); if (fitter2D != null) fitter2D.enabled = false; composer.Board.gameObject.SetActive(false); }
             Fitter = composer.BoardCamera.GetComponent<SS3DBoardCameraFitter>() ?? composer.BoardCamera.gameObject.AddComponent<SS3DBoardCameraFitter>();
-            Fitter.board = Renderer;
+            var palette = _palette != null ? _palette : Renderer.palette;
+            Fitter.board = Renderer; Fitter.usePerspective = palette.usePerspectiveCamera; Fitter.fieldOfView = palette.fieldOfView;
             SS3DArtTuning.ApplyLighting(Renderer.palette, composer.BoardCamera);
+            SS3DArtTuning.ApplyPostProcessing(Renderer.palette, composer.BoardCamera);
             if (composer.Input != null)
             {
                 composer.Input.ScreenToNodeOverride = ScreenToNode;

@@ -22,6 +22,13 @@ engine hands it. It never decides movement, visibility, collisions or solver res
    session (moves, guard NEXT/rotation markers, camera heads, doors, key, smoke clouds, red/amber hazards, long-press
    preview, smoke targets, EMP highlights). Toggle the flag off to return to the 2D board.
 
+## Rendering pass (milestone 4)
+
+- **Shadow Steps ▸ 3D ▸ Configure URP rendering** writes HDR, depth texture, soft shadows, 80 m shadow distance, 2 cascades, MSAA 2 and an SSAO feature into every pipeline asset and renderer under `Assets/Settings`. Auto-setup runs it once on the upgrade to generator version 6; it is safe to run again.
+- The camera is perspective (26°) by default; `usePerspectiveCamera` / `fieldOfView` on the palette switch back to orthographic. Post-processing (ACES, bloom, grading, vignette, depth of field) is a runtime global `Volume` named `SS3D_PostProcessing`, tuned from the palette's "Rendering" section; `postProcessing = false` disables it.
+- The floor is procedural stone (`proceduralFloorTiles`); set it to false to use the glb floor tiles.
+- Demo scenes rebuild themselves on load (`SS3DPreviewController.rebuildOnLoad`), which marks the scene dirty; that is expected for previews.
+
 ## Files
 
 | File | Role |

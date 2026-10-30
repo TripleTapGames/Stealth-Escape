@@ -137,6 +137,57 @@ namespace ShadowSteps.Art3D.Editor
             Debug.Log("[SS3D] Game scene now uses the 3D presentation (toggle Use3DPresentation on the composer to go back).");
         }
 
+        /// <summary>
+        /// Enables what the post-processing look needs on every URP pipeline asset and renderer in Assets/Settings:
+        /// HDR, depth texture (depth of field, SSAO), soft shadows with an 80 m shadow distance (the perspective camera is 30-45 units away) and 2 cascades, and a Screen Space Ambient Occlusion renderer feature (added once, via reflection because the
+        /// feature type is internal in URP 14). Safe to run repeatedly.
+        /// </summary>
+        [MenuItem("Shadow Steps/3D/Configure URP rendering (HDR, soft shadows, depth, SSAO)")]
+        public static void ConfigureUrp()
+        {
+            int assets = 0, features = 0;
+            foreach (var guid in AssetDatabase.FindAssets("t:UniversalRenderPipelineAsset", new[] { "Assets/Settings" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var so = new SerializedObject(AssetDatabase.LoadMainAssetAtPath(path));
+                void SetInt(string name, int v) { var pr = so.FindProperty(name); if (pr != null) pr.intValue = v; }
+                void SetBool(string name, bool v) { var pr = so.FindProperty(name); if (pr != null) pr.boolValue = v; }
+                void SetFloat(string name, float v) { var pr = so.FindProperty(name); if (pr != null) pr.floatValue = v; }
+                SetBool("m_SupportsHDR", true); SetBool("m_RequireDepthTexture", true); SetBool("m_SoftShadowsSupported", true);
+                SetFloat("m_ShadowDistance", 80f); // perspective camera sits ~30-45 units from the board SetInt("m_ShadowCascadeCount", 2); SetInt("m_MainLightShadowmapResolution", 2048); SetInt("m_MSAA", 2);
+                so.ApplyModifiedPropertiesWithoutUndo(); assets++;
+            }
+            var ssaoType = System.Type.GetType("UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion, Unity.RenderPipelines.Universal.Runtime");
+            foreach (var guid in AssetDatabase.FindAssets("t:UniversalRendererData", new[] { "Assets/Settings" }))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var data = AssetDatabase.LoadMainAssetAtPath(path) as UnityEngine.Rendering.Universal.ScriptableRendererData;
+                if (data == null || ssaoType == null) continue;
+                UnityEngine.Rendering.Universal.ScriptableRendererFeature feature = null;
+                foreach (var f in data.rendererFeatures) if (f != null && f.GetType() == ssaoType) feature = f;
+                if (feature == null)
+                {
+                    feature = ScriptableObject.CreateInstance(ssaoType) as UnityEngine.Rendering.Universal.ScriptableRendererFeature;
+                    feature.name = "ScreenSpaceAmbientOcclusion";
+                    AssetDatabase.AddObjectToAsset(feature, data);
+                    var so = new SerializedObject(data);
+                    var list = so.FindProperty("m_RendererFeatures"); list.arraySize++; list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = feature;
+                    var map = so.FindProperty("m_RendererFeatureMap"); map.arraySize++; map.GetArrayElementAtIndex(map.arraySize - 1).longValue = feature.GetInstanceID();
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                    features++;
+                }
+                var fso = new SerializedObject(feature);
+                void F(string n, float v) { var pr = fso.FindProperty("m_Settings." + n); if (pr != null) pr.floatValue = v; }
+                void B(string n, bool v) { var pr = fso.FindProperty("m_Settings." + n); if (pr != null) pr.boolValue = v; }
+                var active = fso.FindProperty("m_Active"); if (active != null) active.boolValue = true;
+                F("Intensity", 0.9f); F("Radius", 0.35f); F("DirectLightingStrength", 0.5f); B("Downsample", true); B("AfterOpaque", false);
+                fso.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(feature); EditorUtility.SetDirty(data);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SS3D] URP configured: " + assets + " pipeline asset(s) updated (HDR, depth texture, soft shadows, 2 cascades, 80 m shadow distance), SSAO added to " + features + " renderer(s) and retuned on all.");
+        }
+
         private static GameObject Model(string name) => AssetDatabase.LoadAssetAtPath<GameObject>(Models + name + ".glb");
 
         /// <summary>

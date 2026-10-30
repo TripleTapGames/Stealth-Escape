@@ -4,7 +4,9 @@
     "references": [
         "ShadowSteps.Core",
         "ShadowSteps.Data",
-        "ShadowSteps.Runtime"
+        "ShadowSteps.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

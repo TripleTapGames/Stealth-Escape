@@ -79,6 +79,24 @@ namespace ShadowSteps.Art3D
         public Color ambientEquator = new Color(0.92f, 0.86f, 0.78f);
         public Color ambientGround = new Color(0.70f, 0.62f, 0.52f);
 
+        [Header("Rendering (milestone 4: perspective camera + post-processing)")]
+        public bool usePerspectiveCamera = true;
+        [Range(15f, 60f)] public float fieldOfView = 26f;
+        public bool postProcessing = true;
+        [Range(0f, 1f)] public float bloomIntensity = 0.35f;
+        public float bloomThreshold = 1.0f;
+        [Range(0f, 1f)] public float vignetteIntensity = 0.22f;
+        public float postExposure = 0.15f;
+        [Range(-100f, 100f)] public float saturation = 12f;
+        [Range(-100f, 100f)] public float contrast = 8f;
+        public bool depthOfField = true;
+        [Tooltip("Gaussian depth of field blur strength (0 = off).")]
+        [Range(0f, 1f)] public float depthOfFieldStrength = 0.6f;
+        public bool proceduralFloorTiles = true;
+        [Range(0f, 0.08f)] public float floorTileChamfer = 0.035f;
+        [Range(0f, 0.15f)] public float floorColorVariation = 0.05f;
+        [Range(0f, 1f)] public float floorSmoothness = 0.35f;
+
         [Header("Material tints by role (applied to material INSTANCES, never to the imported assets)")]
         public bool tintMaterials = true;
         public Color floorA_Cream = new Color(0.949f, 0.871f, 0.741f);

@@ -83,11 +83,15 @@ namespace ShadowSteps.Art3D
                 {
                     var c = new GridCoord(x, y);
                     var pos = ToWorld(c);
-                    bool altTile = alternateFloorTiles && ((x + y) % 2 == 1) && palette.floorB != null;
-                    var floor = altTile ? palette.floorB : palette.floorA;
-                    var tile = Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry);
-                    if (tile != null) tile.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset); // grout gap between stones
-                    SS3DArtTuning.Tint(tile, altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
+                    bool altTile = alternateFloorTiles && ((x + y) % 2 == 1);
+                    if (palette.proceduralFloorTiles) CreateStoneTile("Floor_" + x + "_" + y, pos, altTile, x * 73 + y * 151);
+                    else
+                    {
+                        var floor = altTile && palette.floorB != null ? palette.floorB : palette.floorA;
+                        var tile = Create(floor, "Floor_" + x + "_" + y, pos, Quaternion.identity, _geometry);
+                        if (tile != null) tile.transform.localScale = new Vector3(palette.tileInset, 1f, palette.tileInset);
+                        SS3DArtTuning.Tint(tile, altTile ? SS3DTint.FloorB : SS3DTint.FloorA, palette);
+                    }
                     if (stage.IsWall(c))
                     {
                         var wall = Create(palette.wallBlock, "SolidWall_" + x + "_" + y, pos, Quaternion.identity, _geometry);
@@ -221,7 +225,7 @@ namespace ShadowSteps.Art3D
             }
             _guards.Clear(); _guardAnimators.Clear(); _guardFacing.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraBadges.Clear(); _cameraHighlights.Clear(); _cameraHeadRenderers.Clear(); _cameraLights.Clear(); _cameraPools.Clear();
-            _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear();
+            _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear(); _stoneMats.Clear();
             _player = null; _playerAnimator = null; _key = null; _previewMarker = null;
             foreach (var pool in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) pool.Reset();
             Stage = null;
@@ -361,6 +365,33 @@ namespace ShadowSteps.Art3D
         }
 
         // ---------------------------------------------------------------- helpers
+
+        private readonly List<Material> _stoneMats = new List<Material>();
+
+        /// <summary>A bevelled stone slab with the procedural cream-stone texture; a few shared material variations keep draw calls low.</summary>
+        public GameObject CreateStoneTile(string name, Vector3 pos, bool alt, int seed)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_geometry, false);
+            go.transform.position = pos;
+            float size = palette.tileInset * tileSpacing;
+            go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(size, FloorTop, size, palette.floorTileChamfer);
+            if (_stoneMats.Count == 0)
+                for (int i = 0; i < 6; i++)
+                {
+                    var baseColor = i % 2 == 0 ? palette.floorA_Cream : palette.floorB_Cream;
+                    float v = 1f + ((i / 2) - 1) * palette.floorColorVariation;
+                    var m = MakeLitMaterial("SS3D Stone " + i, new Color(baseColor.r * v, baseColor.g * v, baseColor.b * v, 1f));
+                    var tex = SS3DArtTuning.StoneTexture();
+                    if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", tex); if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", tex);
+                    if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", palette.floorSmoothness);
+                    _stoneMats.Add(m);
+                }
+            int variant = (alt ? 0 : 1) + 2 * (Mathf.Abs(seed) % 3);
+            go.AddComponent<MeshRenderer>().sharedMaterial = _stoneMats[variant % _stoneMats.Count];
+            go.transform.rotation = Quaternion.Euler(0f, 90f * (Mathf.Abs(seed / 7) % 4), 0f); // rotate the texture per tile to hide repetition
+            return go;
+        }
 
         private void AddConnection(GridCoord a, GridCoord b)
         {
@@ -635,11 +666,14 @@ namespace ShadowSteps.Art3D
             if (_boxes.TryGetValue(key, out var cached) && cached != null) return cached;
             chamfer = Mathf.Clamp(chamfer, 0f, Mathf.Min(sizeX, sizeZ, height) * 0.49f);
             float hx = sizeX * 0.5f, hz = sizeZ * 0.5f, yb = height - chamfer, ix = hx - chamfer, iz = hz - chamfer;
-            var verts = new List<Vector3>(); var norms = new List<Vector3>(); var tris = new List<int>();
+            var verts = new List<Vector3>(); var norms = new List<Vector3>(); var tris = new List<int>(); var uvs = new List<Vector2>();
             void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
             {
                 int i = verts.Count; var n = Vector3.Cross(b - a, d - a).normalized;
                 verts.Add(a); verts.Add(b); verts.Add(c); verts.Add(d); norms.Add(n); norms.Add(n); norms.Add(n); norms.Add(n);
+                // planar UVs: top/bottom by XZ, sides by the dominant horizontal axis and Y (0..1 across the block)
+                foreach (var v in new[] { a, b, c, d })
+                    uvs.Add(Mathf.Abs(n.y) > 0.5f ? new Vector2(v.x / sizeX + 0.5f, v.z / sizeZ + 0.5f) : Mathf.Abs(n.x) > 0.5f ? new Vector2(v.z / sizeZ + 0.5f, v.y / height) : new Vector2(v.x / sizeX + 0.5f, v.y / height));
                 tris.Add(i); tris.Add(i + 1); tris.Add(i + 2); tris.Add(i); tris.Add(i + 2); tris.Add(i + 3);
             }
             // vertical sides (counter-clockwise seen from outside)
@@ -656,7 +690,7 @@ namespace ShadowSteps.Art3D
             Quad(new Vector3(-ix, height, -iz), new Vector3(-ix, height, iz), new Vector3(ix, height, iz), new Vector3(ix, height, -iz));
             Quad(new Vector3(-hx, 0, hz), new Vector3(-hx, 0, -hz), new Vector3(hx, 0, -hz), new Vector3(hx, 0, hz));
             var m = new Mesh { name = "SS3D ChamferedBox " + key };
-            m.SetVertices(verts); m.SetNormals(norms); m.SetTriangles(tris, 0); m.RecalculateBounds();
+            m.SetVertices(verts); m.SetNormals(norms); m.SetUVs(0, uvs); m.SetTriangles(tris, 0); m.RecalculateBounds();
             _boxes[key] = m;
             return m;
         }

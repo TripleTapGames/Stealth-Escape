@@ -114,3 +114,12 @@ angled camera resolves taps by intersecting the floor plane. Models are referenc
 mesh can be replaced without touching level data or code. The starter package's DTO/Newtonsoft reader and its re-extension
 logic were not adopted: the engine's `StageJson` is the single source of level data.
 
+
+## D-031 Rendering quality comes from URP features first; prop quality needs real assets
+The milestone 3 courtyard did not approach the mock art because the gap is in the props (sculpted trims, foliage, water
+shader, texture work), which procedural chamfered boxes and the starter kit's untextured models cannot close. Rather than
+keep adding procedural blockouts, the project upgrades what every frame gets for free: a narrow-FOV perspective camera,
+ACES tonemapping, bloom, colour grading, vignette, depth of field on the perimeter, SSAO, soft shadows and a generated
+stone albedo. All of it is adapter-side (`ShadowSteps.Art3D`) plus URP settings written by an editor menu, so swapping
+the props later (purchased stylized kit or Blender hero models, the user's choice) changes nothing in gameplay or in this
+pass. Post-processing values live on the palette asset so artists tune them without code.

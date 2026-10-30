@@ -23,6 +23,17 @@ namespace ShadowSteps.Art3D
         public SS3DCourtyardFrame exteriorFrame;
         public SS3DBoardCameraFitter boardFitter;
         public bool showInitialHazards = true;
+        [Tooltip("Rebuild the preview whenever the scene loads. Generated meshes, materials and the post-processing profile are not assets, so a saved scene only stores the seed; this keeps it self-healing.")]
+        public bool rebuildOnLoad = true;
+
+        private void OnEnable()
+        {
+            if (!rebuildOnLoad || levelRenderer == null || palette == null) return; // freshly added by the generator: it calls BuildPreview itself
+            if (Application.isPlaying) { BuildPreview(); return; }
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.delayCall += () => { if (this != null && !Application.isPlaying && isActiveAndEnabled) BuildPreview(); };
+#endif
+        }
 
         private SS3DArtPalette ResolvePalette()
         {
@@ -62,9 +73,11 @@ namespace ShadowSteps.Art3D
                 for (int i = 0; i < stage.Cameras.Count; i++) { var cells = Sight.CameraVision(stage, state, i, 0); levelRenderer.SetCameraCoverage(i, cells); camCells.AddRange(cells); }
                 levelRenderer.SetVision(guardCells, camCells);
             }
-            if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.Fit(levelRenderer.BoardBounds()); }
+            if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.usePerspective = resolved.usePerspectiveCamera; boardFitter.fieldOfView = resolved.fieldOfView; boardFitter.Fit(levelRenderer.BoardBounds()); }
             if (exteriorFrame != null) { exteriorFrame.fitter = boardFitter; exteriorFrame.Build(levelRenderer); }
-            SS3DArtTuning.ApplyLighting(levelRenderer.palette, boardFitter != null ? boardFitter.GetComponent<Camera>() : Camera.main);
+            var cam = boardFitter != null ? boardFitter.GetComponent<Camera>() : Camera.main;
+            SS3DArtTuning.ApplyLighting(levelRenderer.palette, cam);
+            SS3DArtTuning.ApplyPostProcessing(levelRenderer.palette, cam);
             Debug.Log("[SS3D] preview built: " + stage.Code + " " + stage.Title);
         }
     }

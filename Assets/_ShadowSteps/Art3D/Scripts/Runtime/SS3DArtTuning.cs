@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace ShadowSteps.Art3D
 {
@@ -42,6 +43,70 @@ namespace ShadowSteps.Art3D
                     if (emission.maxColorComponent > 0f && m.HasProperty("_EmissionColor")) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", emission); }
                 }
             }
+        }
+
+        private static Texture2D _stone;
+        /// <summary>Procedural cream limestone albedo: soft value noise, faint veining and a light edge darkening (generated once, 256²).</summary>
+        public static Texture2D StoneTexture()
+        {
+            if (_stone != null) return _stone;
+            const int n = 256;
+            _stone = new Texture2D(n, n, TextureFormat.RGBA32, true) { name = "SS3D Stone", wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear, hideFlags = HideFlags.DontSave }; // regenerated on load; keeps it out of saved scenes
+            var px = new Color[n * n];
+            var rnd = new System.Random(1234);
+            float Noise(float x, float y, float scale, int seed) => Mathf.PerlinNoise(x * scale + seed * 17.13f, y * scale + seed * 9.71f);
+            for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+            {
+                float u = (float)x / n, v = (float)y / n;
+                float grain = Noise(u, v, 18f, 1) * 0.5f + Noise(u, v, 47f, 2) * 0.3f + Noise(u, v, 120f, 3) * 0.2f;
+                float vein = Mathf.Pow(1f - Mathf.Abs(Noise(u, v, 4f, 4) - 0.5f) * 2f, 8f) * 0.12f;
+                float edge = Mathf.Clamp01(Mathf.Min(Mathf.Min(u, 1f - u), Mathf.Min(v, 1f - v)) * 14f); // slight darkening toward the tile rim
+                float val = 0.86f + (grain - 0.5f) * 0.16f - vein;
+                val *= 0.92f + 0.08f * edge;
+                float speck = ((float)rnd.NextDouble() < 0.004f) ? 0.9f : 1f;
+                px[y * n + x] = new Color(val * speck, (val - 0.01f) * speck, (val - 0.04f) * speck, 1f);
+            }
+            _stone.SetPixels(px); _stone.Apply(true);
+            return _stone;
+        }
+
+        /// <summary>
+        /// Global post-processing volume built at runtime (no profile asset needed): ACES tonemapping, soft bloom, colour
+        /// adjustments, vignette and optional Gaussian depth of field. The camera gets post-processing + SMAA enabled.
+        /// SSAO is a renderer feature and is enabled by Shadow Steps ▸ 3D ▸ Configure URP rendering (editor only).
+        /// </summary>
+        public static Volume ApplyPostProcessing(SS3DArtPalette palette, Camera camera)
+        {
+            if (palette == null) return null;
+            const string volumeName = "SS3D_PostProcessing";
+            var existing = GameObject.Find(volumeName);
+            var volume = existing != null ? existing.GetComponent<Volume>() : null;
+            if (volume == null) { volume = new GameObject(volumeName).AddComponent<Volume>(); volume.isGlobal = true; volume.priority = 10f; }
+            volume.enabled = palette.postProcessing;
+            var profile = ScriptableObject.CreateInstance<VolumeProfile>(); profile.name = "SS3D Runtime Profile";
+            var tone = profile.Add<Tonemapping>(true); tone.mode.Override(TonemappingMode.ACES);
+            var bloom = profile.Add<Bloom>(true); bloom.intensity.Override(palette.bloomIntensity); bloom.threshold.Override(palette.bloomThreshold); bloom.scatter.Override(0.65f);
+            var adj = profile.Add<ColorAdjustments>(true); adj.postExposure.Override(palette.postExposure); adj.saturation.Override(palette.saturation); adj.contrast.Override(palette.contrast);
+            var vig = profile.Add<Vignette>(true); vig.intensity.Override(palette.vignetteIntensity); vig.smoothness.Override(0.5f);
+            if (palette.depthOfField && palette.depthOfFieldStrength > 0f && camera != null)
+            {
+                var dof = profile.Add<DepthOfField>(true);
+                dof.mode.Override(DepthOfFieldMode.Gaussian);
+                float d = Vector3.Distance(camera.transform.position, Vector3.zero);
+                float start = d + 2.5f; // past the far edge of a 7-8 tile board seen at ~58°; only the perimeter softens
+                dof.gaussianStart.Override(start); dof.gaussianEnd.Override(start + 10f * (1.05f - palette.depthOfFieldStrength));
+                dof.gaussianMaxRadius.Override(1.0f); dof.highQualitySampling.Override(false);
+            }
+            volume.sharedProfile = profile;
+            if (camera != null)
+            {
+                var data = camera.GetUniversalAdditionalCameraData();
+                data.renderPostProcessing = palette.postProcessing;
+                data.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+                data.requiresDepthOption = CameraOverrideOption.On;
+                data.renderShadows = true;
+            }
+            return volume;
         }
 
         /// <summary>Warm afternoon sun with soft shadows and a warm gradient ambient. Idempotent: reuses an existing sun named by this method.</summary>
