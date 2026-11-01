@@ -1,0 +1,180 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df7a242ed8453406abc3c53e8c803152, type: 3}
+  m_Name: SS2DSpriteLibrary
+  m_EditorClassIdentifier: 
+  boardPanel: {fileID: 21300000, guid: db6086d7747a047fb9319ba19ad4142c, type: 3}
+  boardShadow: {fileID: 21300000, guid: fd563aec20f0442f186d9ca5f8979213, type: 3}
+  tile: {fileID: 21300000, guid: af651ecbbd6e446b48ceb7efe49564f4, type: 3}
+  tileAlt: {fileID: 21300000, guid: 14cc5a35ea1c747fab558348c5bf8844, type: 3}
+  node: {fileID: 21300000, guid: ca0a8fef9d5fd428a8d39ec3f8b86294, type: 3}
+  nodeRing: {fileID: 21300000, guid: dbf157806761a47328947c2b62bb871b, type: 3}
+  line: {fileID: 21300000, guid: 0ad70ffc5f3224685beb5c8d60051059, type: 3}
+  lineGlow: {fileID: 21300000, guid: a24cc6837f9f741069d7f399aee77eff, type: 3}
+  crate: {fileID: 21300000, guid: bcc45a059cd154b1680b290d8dca3f8c, type: 3}
+  crateShadow: {fileID: 21300000, guid: 61b0df671f44f4e238636e20abf243f8, type: 3}
+  wall: {fileID: 21300000, guid: 95ca46e9440364e6eba8c6c48aa86338, type: 3}
+  doorLocked: {fileID: 21300000, guid: ea0314571449f45eabbd641c4ca62419, type: 3}
+  doorOpen: {fileID: 21300000, guid: 3c90ef629440d453c9aa14f23cf3fff8, type: 3}
+  exit: {fileID: 21300000, guid: a61de9dfde7054a6498b7852e1a1116c, type: 3}
+  key: {fileID: 21300000, guid: d3d7cd8d67337436da7d8ca1bfa425a9, type: 3}
+  cameraBody: {fileID: 21300000, guid: 6f75390f885994958b4ebecfb8605f9f, type: 3}
+  cameraHead: {fileID: 21300000, guid: 781ccbe0ea65b4a44b1e2b9bcc4a0064, type: 3}
+  cloud: {fileID: 21300000, guid: c9c20dd7066324d76a2377b76b669896, type: 3}
+  empBadge: {fileID: 21300000, guid: c8f97e50d6326490a8ca2284980c5c05, type: 3}
+  shadowBlob: {fileID: 21300000, guid: 0eb185f456290402dbf8a55172177392, type: 3}
+  visionCell: {fileID: 21300000, guid: fa29f471a337f4a76afd29cc41152efa, type: 3}
+  visionRing: {fileID: 21300000, guid: a73605b740f4147a286467b26787f16a, type: 3}
+  arrow: {fileID: 21300000, guid: 6ec46f0e763e54e0a9787f47afe87e52, type: 3}
+  nextMarker: {fileID: 21300000, guid: 7ad217a9d6dc24e1cb8a7abf48e8a518, type: 3}
+  rotationMarker: {fileID: 21300000, guid: 1646de7ee9ddf43fb90c3e1653669363, type: 3}
+  highlightRing: {fileID: 21300000, guid: 3a7de0cc0492f49f8888d1bcde328ae2, type: 3}
+  pip: {fileID: 21300000, guid: 7005c21f52db24775b3722655046e719, type: 3}
+  spy:
+    sourcePrefab: Assets/characters_5_02/Prefabs/m_1.prefab
+    facings:
+    - idle:
+      - {fileID: 21300000, guid: 2ccececc98f364544b1481fce8255821, type: 3}
+      - {fileID: 21300000, guid: 8e4d8b7104cc84e86b5d04302fac9e1d, type: 3}
+      walk:
+      - {fileID: 21300000, guid: 48fc9ab877bc041558d9ce676dcaa2d8, type: 3}
+      - {fileID: 21300000, guid: 7b793524a268f482486649d91e342978, type: 3}
+      - {fileID: 21300000, guid: 29dc059c1618646f69ae18a98ba0d101, type: 3}
+      - {fileID: 21300000, guid: 4a7aee72a8f7e4566b958a57f76cb173, type: 3}
+      - {fileID: 21300000, guid: 208a2158889bc4ea28ff28b7e334de67, type: 3}
+      - {fileID: 21300000, guid: 7c0f26d655bb14e81aa58df2419eb325, type: 3}
+    - idle:
+      - {fileID: 21300000, guid: afb39d2d5fab64abf979b01480ef447b, type: 3}
+      - {fileID: 21300000, guid: d5c49b6e0567e47a38dbb10be8e3d3c9, type: 3}
+      walk:
+      - {fileID: 21300000, guid: c8fc2a6c2da5545f0bf856f019be2f31, type: 3}
+      - {fileID: 21300000, guid: 6a0ee131e36d748f6b10d80b014bf51a, type: 3}
+      - {fileID: 21300000, guid: 710ced905bcae4b8fbad2708c0ced81a, type: 3}
+      - {fileID: 21300000, guid: 90976a8c76c014e90b7f705783373174, type: 3}
+      - {fileID: 21300000, guid: 20bf6036950b14661a5a71dd4328ade4, type: 3}
+      - {fileID: 21300000, guid: 691414440004844f5bef04fe98884c48, type: 3}
+    - idle:
+      - {fileID: 21300000, guid: 6652b85f6a04043d9a41116d12e7a58c, type: 3}
+      - {fileID: 21300000, guid: 4e4d83a48332b41ad80211b9ca019d27, type: 3}
+      walk:
+      - {fileID: 21300000, guid: 486c9a81cebd84bb599d4050fc90e5de, type: 3}
+      - {fileID: 21300000, guid: a8819d7320aff4b5da44d9ee907efef4, type: 3}
+      - {fileID: 21300000, guid: 0fe951890bf0a45d69c31af4f510c7e7, type: 3}
+      - {fileID: 21300000, guid: 35d019422e6734f6f9f2dcb7ec385e48, type: 3}
+      - {fileID: 21300000, guid: 7c995da5f05774d37b1c636318bc602a, type: 3}
+      - {fileID: 21300000, guid: c07826aa4a181488083b581ba8b568b3, type: 3}
+    - idle:
+      - {fileID: 21300000, guid: 8f90cea5b74b242d697880a5b877e605, type: 3}
+      - {fileID: 21300000, guid: 5ac82a564cab8482bbd915fb19146101, type: 3}
+      walk:
+      - {fileID: 21300000, guid: e447d4575fde24b5b93d3e0cb3030be4, type: 3}
+      - {fileID: 21300000, guid: 44b123fe9cf6b464ab3bcf95e91ec13b, type: 3}
+      - {fileID: 21300000, guid: c00e0a81f220e4a65a42d85600f73ce8, type: 3}
+      - {fileID: 21300000, guid: 36dd6dcf084704f7798e084a18aefde9, type: 3}
+      - {fileID: 21300000, guid: 29b6e0a197e844f598e4a15bf22a4ad9, type: 3}
+      - {fileID: 21300000, guid: 484890319628f4b21aad030adc6a50a7, type: 3}
+    walkFrameRate: 10
+    idleFrameRate: 2
+  guard:
+    sourcePrefab: Assets/characters_5_02/Prefabs/m_2.prefab
+    facings:
+    - idle:
+      - {fileID: 21300000, guid: a85f74b68e6bc44ec9326ba2e91303cb, type: 3}
+      - {fileID: 21300000, guid: 6215ba85dc31a4263812941a14cf17ba, type: 3}
+      walk:
+      - {fileID: 21300000, guid: 3f43e7d45aa554780a81426f8c074375, type: 3}
+      - {fileID: 21300000, guid: 305a3cf1ca9ec4fdba50d6e6fd95f226, type: 3}
+      - {fileID: 21300000, guid: 093916f6213a246b9b70c635e5ee5e76, type: 3}
+      - {fileID: 21300000, guid: 0815f0c29848d4acfabd61d85e2aa4d4, type: 3}
+      - {fileID: 21300000, guid: 2b40a0e88c7a04bf4b81f58ec7035041, type: 3}
+      - {fileID: 21300000, guid: 9ec1ba55039654d07a7c5851edc6087f, type: 3}
+    - idle:
+      - {fileID: 21300000, guid: 83a3da1c7491c4617b06c6b17861d572, type: 3}
+      - {fileID: 21300000, guid: 5690cb859679c4bc08b262f7b14d32d3, type: 3}
+      walk:
+      - {fileID: 21300000, guid: 6913bc87aac3a439db1d6e7e34c31865, type: 3}
+      - {fileID: 21300000, guid: b99b4a90eb7c1405fb6ecadf008d97aa, type: 3}
+      - {fileID: 21300000, guid: 3ae6880e3b544414eb87514338465550, type: 3}
+      - {fileID: 21300000, guid: 977c9b4099bfe498893a32a1f749efda, type: 3}
+      - {fileID: 21300000, guid: df452699e6dce4e02a2d938efd1c5e80, type: 3}
+      - {fileID: 21300000, guid: 44dd02cc0a0fe4724b26618d7e744b34, type: 3}
+    - idle:
+      - {fileID: 21300000, guid: 98db12b2079874a76a6b6fd5cc141115, type: 3}
+      - {fileID: 21300000, guid: a12fd4d965acb4746a1707a44b68d46e, type: 3}
+      walk:
+      - {fileID: 21300000, guid: 1a57284222565456489af12a24a2597a, type: 3}
+      - {fileID: 21300000, guid: 7aac23fe4854345f1be844aafbcea749, type: 3}
+      - {fileID: 21300000, guid: 10905130097d941108d300ad0e87b904, type: 3}
+      - {fileID: 21300000, guid: 2f01102485e4748cd80f76d15292401f, type: 3}
+      - {fileID: 21300000, guid: 3fed8f6b573bb4d40ab2779772af5809, type: 3}
+      - {fileID: 21300000, guid: 83d945d5542c241bb9c24f45a9a0dc2f, type: 3}
+    - idle:
+      - {fileID: 21300000, guid: 7af0e052b2aab4e5899d737fdbd0fc85, type: 3}
+      - {fileID: 21300000, guid: e3530cfe1e4624d9889c946bc6e00128, type: 3}
+      walk:
+      - {fileID: 21300000, guid: b022a643eb8b54058b830139f49dc365, type: 3}
+      - {fileID: 21300000, guid: f704e368a066f4ad386b1418094356dd, type: 3}
+      - {fileID: 21300000, guid: 719067e3b1fca4ca186b56417d6e75eb, type: 3}
+      - {fileID: 21300000, guid: 5a23c81efc4684e61a75b8aa5d57ee75, type: 3}
+      - {fileID: 21300000, guid: cd02fd6b2e1de4b619e233a7ea0ec890, type: 3}
+      - {fileID: 21300000, guid: 57bc7fe8dd75948c4aa27a961cd79a74, type: 3}
+    walkFrameRate: 10
+    idleFrameRate: 2
+  boardMargin: 0.62
+  tileSize: 0.94
+  nodeSize: 0.3
+  lineWidth: 0.09
+  crateSize: 0.86
+  wallSize: 0.94
+  characterHeight: 1.05
+  characterShadow: 0.62
+  propSize: 0.52
+  exitSize: 0.78
+  exitPulse: 0.08
+  hazardFade: 0.16
+  hudTop: 0.115
+  hudBottom: 0.165
+  cameraSize: 0.62
+  markerSize: 0.26
+  cloudSize: 0.92
+  visionCellSize: 0.92
+  background: {r: 0.33, g: 0.53, b: 0.56, a: 1}
+  boardTint: {r: 1, g: 1, b: 1, a: 1}
+  tileTint: {r: 1, g: 1, b: 1, a: 1}
+  tileAltTint: {r: 0.975, g: 0.965, b: 0.95, a: 1}
+  nodeTint: {r: 1, g: 1, b: 1, a: 1}
+  nodeReachable: {r: 0.4, g: 0.86, b: 0.9, a: 1}
+  lineTint: {r: 0.66, g: 0.6, b: 0.52, a: 1}
+  lineReachable: {r: 0.4, g: 0.86, b: 0.9, a: 1}
+  playerAccent: {r: 0.12, g: 0.16, b: 0.3, a: 1}
+  guardAccent: {r: 0.2, g: 0.45, b: 0.9, a: 1}
+  guardVisionFill: {r: 0.95, g: 0.24, b: 0.24, a: 0.3}
+  guardVisionBorder: {r: 0.9, g: 0.18, b: 0.18, a: 0.95}
+  cameraVisionFill: {r: 1, g: 0.72, b: 0.18, a: 0.3}
+  cameraVisionBorder: {r: 0.98, g: 0.62, b: 0.1, a: 0.95}
+  previewFill: {r: 1, g: 0.85, b: 0.4, a: 0.14}
+  previewBorder: {r: 1, g: 0.85, b: 0.4, a: 0.75}
+  previewSafe: {r: 0.3, g: 0.9, b: 0.55, a: 0.9}
+  previewDanger: {r: 1, g: 0.25, b: 0.25, a: 0.9}
+  previewAlarm: {r: 1, g: 0.7, b: 0.15, a: 0.9}
+  smokeTarget: {r: 0.4, g: 0.95, b: 0.9, a: 0.4}
+  exitTint: {r: 0.2, g: 0.85, b: 0.5, a: 1}
+  keyTint: {r: 1, g: 1, b: 1, a: 1}
+  nextMarkerTint: {r: 0.2, g: 0.8, b: 1, a: 1}
+  rotationMarkerTint: {r: 1, g: 0.86, b: 0.35, a: 1}
+  cameraDisabled: {r: 0.45, g: 0.88, b: 0.95, a: 1}
+  cameraHighlight: {r: 0.4, g: 1, b: 0.9, a: 1}
+  shadowTint: {r: 0, g: 0, b: 0, a: 0.28}
+  captured: {r: 1, g: 0.35, b: 0.35, a: 1}
+  won: {r: 0.55, g: 1, b: 0.7, a: 1}
+  lockdown: {r: 1, g: 0.65, b: 0.25, a: 1}
+  moveDuration: 0.18

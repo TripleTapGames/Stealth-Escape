@@ -118,7 +118,7 @@ namespace ShadowSteps.Art3D
                         var prefab = variants != null && variants.Length > 0 ? variants[coverIndex++ % variants.Length] : null;
                         var cover = Create(prefab, "Cover_X_" + x + "_" + y, pos, Quaternion.identity, _geometry);
                         SS3DArtTuning.Tint(cover, coverIndex % 3 == 2 ? SS3DTint.Foliage : SS3DTint.Cover, palette);
-                        if (cover != null && palette.kitMode) { cover.transform.rotation = Quaternion.Euler(0f, 90f * ((x * 3 + y * 5) % 4), 0f); SS3DKitFit.FitUniform(cover, pos + Vector3.up * FloorTop, 0.74f * s, palette.coverHeightScale); }
+                        if (cover != null && palette.kitMode) { cover.transform.rotation = Quaternion.Euler(0f, 90f * ((x * 3 + y * 5) % 4), 0f); SS3DKitFit.FitUniform(cover, pos + Vector3.up * FloorTop, 0.74f * s, overrides != null && overrides.coverHeight > 0f ? overrides.coverHeight : palette.coverHeightScale); }
                         else if (cover != null) cover.transform.localScale = new Vector3(cover.transform.localScale.x, cover.transform.localScale.y * palette.coverHeightScale, cover.transform.localScale.z);
                     }
                     else if (renderNodeMarkers)
@@ -133,7 +133,7 @@ namespace ShadowSteps.Art3D
             var grout = new GameObject("Floor_Grout"); grout.transform.SetParent(_geometry, false);
             grout.transform.position = transform.TransformPoint(new Vector3(0f, 0f, 0f));
             var gf = grout.AddComponent<MeshFilter>(); gf.sharedMesh = SS3DMeshes.ChamferedBox(stage.Width * s, FloorTop - 0.015f, stage.Height * s, 0f);
-            grout.AddComponent<MeshRenderer>().sharedMaterial = MakeLitMaterial("SS3D Grout", palette.groutColor);
+            grout.AddComponent<MeshRenderer>().sharedMaterial = MakeLitMaterial("SS3D Grout", overrides != null && overrides.overrideGrout ? overrides.groutColor : palette.groutColor);
 
             if (renderConnectionLines)
                 foreach (var a in stage.FloorNodes())
@@ -154,7 +154,9 @@ namespace ShadowSteps.Art3D
                         }
                     }
 
-            SS3DArtTuning.Tint(Create(palette.exitPad, "Exit", ToWorld(stage.Exit), Quaternion.identity, _geometry), SS3DTint.Exit, palette);
+            var exit = Create(palette.exitPad, "Exit", ToWorld(stage.Exit), Quaternion.identity, _geometry);
+            SS3DArtTuning.Tint(exit, SS3DTint.Exit, palette);
+            if (exit != null && overrides != null && overrides.exitScale > 0f) exit.transform.localScale *= overrides.exitScale;
             if (stage.Key.HasValue) { var k = Create(palette.collectibleKey, "Key", ToWorld(stage.Key.Value), Quaternion.identity, _geometry); _key = k != null ? k.transform : null; }
 
             var spy = CreateCharacter(palette.Spy, "Spy", ToWorld(stage.Start), SS3DGrid.Facing(Direction.North));
@@ -239,7 +241,7 @@ namespace ShadowSteps.Art3D
             }
             _guards.Clear(); _guardAnimators.Clear(); _guardFacing.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraBadges.Clear(); _cameraHighlights.Clear(); _cameraHeadRenderers.Clear(); _cameraLights.Clear(); _cameraPools.Clear();
-            _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear(); _stoneMats.Clear(); _blockMats.Clear();
+            _doors.Clear(); _doorOpen.Clear(); _nodeMarkers.Clear(); _connectionRenderers.Clear(); _connectionByEdge.Clear(); _clouds.Clear(); _stoneMats.Clear(); _blockMats.Clear(); _pavementMats.Clear();
             _player = null; _playerAnimator = null; _key = null; _previewMarker = null;
             foreach (var pool in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) pool.Reset();
             Stage = null;
@@ -456,8 +458,9 @@ namespace ShadowSteps.Art3D
             var go = new GameObject(name);
             go.transform.SetParent(parent != null ? parent : _geometry, false);
             go.transform.position = pos;
-            float size = palette.tileInset * tileSpacing;
-            float sx = sizeX > 0f ? sizeX * palette.tileInset : size, sz = sizeZ > 0f ? sizeZ * palette.tileInset : size;
+            float inset = overrides != null && overrides.tileInset > 0f ? overrides.tileInset : palette.tileInset;
+            float size = inset * tileSpacing;
+            float sx = sizeX > 0f ? sizeX * inset : size, sz = sizeZ > 0f ? sizeZ * inset : size;
             go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(sx, FloorTop, sz, palette.floorTileChamfer);
             if (_stoneMats.Count == 0)
                 for (int i = 0; i < 6; i++)
@@ -465,15 +468,48 @@ namespace ShadowSteps.Art3D
                     var baseColor = overrides != null && overrides.tintFloor ? (i % 2 == 0 ? overrides.floorA : overrides.floorB) : (i % 2 == 0 ? palette.floorA_Cream : palette.floorB_Cream);
                     float v = 1f + ((i / 2) - 1) * palette.floorColorVariation;
                     var m = MakeLitMaterial("SS3D Stone " + i, new Color(baseColor.r * v, baseColor.g * v, baseColor.b * v, 1f));
-                    var tex = SS3DArtTuning.StoneTexture();
-                    if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", tex); if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", tex);
-                    if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", palette.floorSmoothness);
+                    bool plain = overrides != null && overrides.plainTiles;
+                    if (!plain) { var tex = overrides != null && overrides.flatStone ? SS3DArtTuning.FlagstoneTexture() : SS3DArtTuning.StoneTexture(); if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", tex); if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", tex); }
+                    if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", plain && overrides.tileSmoothness > 0f ? overrides.tileSmoothness : palette.floorSmoothness);
                     _stoneMats.Add(m);
                 }
             int variant = (alt ? 0 : 1) + 2 * (Mathf.Abs(seed) % 3);
             go.AddComponent<MeshRenderer>().sharedMaterial = _stoneMats[variant % _stoneMats.Count];
             if (sizeX <= 0f && sizeZ <= 0f) go.transform.rotation = Quaternion.Euler(0f, 90f * (Mathf.Abs(seed / 7) % 4), 0f); // rotate square tiles to hide repetition
             return go;
+        }
+
+        private readonly Dictionary<string, Material[]> _pavementMats = new Dictionary<string, Material[]>();
+        /// <summary>Fills a ground rectangle (outside the grid) with bevelled stone tiles in the given tints, one tile per spacing; used by the authored town plaza for its pavement margin.</summary>
+        public void FillStoneTiles(float x0, float x1, float z0, float z1, string name, Transform parent, Color a, Color b, float tile = -1f)
+        {
+            float s = tile > 0f ? tile : tileSpacing, w = x1 - x0, d = z1 - z0; if (w < 0.05f || d < 0.05f) return;
+            string key = ColorUtility.ToHtmlStringRGB(a) + ColorUtility.ToHtmlStringRGB(b);
+            if (!_pavementMats.TryGetValue(key, out var mats) || mats == null || mats.Length == 0 || mats[0] == null)
+            {
+                mats = new Material[6];
+                for (int i = 0; i < 6; i++)
+                {
+                    var baseColor = i % 2 == 0 ? a : b; float v = 1f + ((i / 2) - 1) * palette.floorColorVariation;
+                    var m = MakeLitMaterial("SS3D Pavement " + key + " " + i, new Color(baseColor.r * v, baseColor.g * v, baseColor.b * v, 1f));
+                    var tex = overrides != null && overrides.flatStone ? SS3DArtTuning.FlagstoneTexture() : SS3DArtTuning.StoneTexture(); if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", tex);
+                    if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", palette.floorSmoothness);
+                    mats[i] = m;
+                }
+                _pavementMats[key] = mats;
+            }
+            int nx = Mathf.Max(1, Mathf.CeilToInt(w / s - 1e-3f)), nz = Mathf.Max(1, Mathf.CeilToInt(d / s - 1e-3f));
+            float tw = w / nx, td = d / nz;
+            for (int i = 0; i < nx; i++) for (int j = 0; j < nz; j++)
+            {
+                var go = new GameObject(name + "_" + i + "_" + j);
+                go.transform.SetParent(parent != null ? parent : _geometry, false);
+                bool outer = name.StartsWith("Outer_");
+                go.transform.position = transform.TransformPoint(new Vector3(x0 + tw * (i + 0.5f), outer ? -0.06f : 0f, z0 + td * (j + 0.5f)));
+                go.AddComponent<MeshFilter>().sharedMesh = SS3DMeshes.ChamferedBox(tw * (outer ? 0.985f : palette.tileInset), outer ? 0.05f : FloorTop, td * (outer ? 0.985f : palette.tileInset), outer ? 0.01f : palette.floorTileChamfer);
+                int variant = ((i + j) % 2) + 2 * ((i * 31 + j * 17 + name.Length) % 3);
+                go.AddComponent<MeshRenderer>().sharedMaterial = mats[variant % mats.Length];
+            }
         }
 
         private void AddConnection(GridCoord a, GridCoord b)
@@ -484,7 +520,8 @@ namespace ShadowSteps.Art3D
             line.transform.SetParent(_lines, false);
             line.transform.position = (start + end) * 0.5f + Vector3.up * (FloorTop + 0.012f);
             line.transform.rotation = Quaternion.LookRotation(end - start, Vector3.up);
-            line.transform.localScale = new Vector3(connectionWidth * tileSpacing, 0.012f, Vector3.Distance(start, end) - 0.5f * tileSpacing);
+            float lw = overrides != null && overrides.overrideConnection && overrides.connectionWidth > 0f ? overrides.connectionWidth : connectionWidth;
+            line.transform.localScale = new Vector3(lw * tileSpacing, 0.012f, Vector3.Distance(start, end) - 0.5f * tileSpacing);
             StripColliders(line);
             var r = line.GetComponent<Renderer>();
             r.sharedMaterial = LineMaterial(false);
@@ -495,7 +532,7 @@ namespace ShadowSteps.Art3D
         private Material LineMaterial(bool reachable)
         {
             if (reachable) return _lineReachableMat != null ? _lineReachableMat : (_lineReachableMat = MakeLitMaterial("SS3D Connection Reachable", palette.reachable));
-            return _lineMat != null ? _lineMat : (_lineMat = MakeLitMaterial("SS3D Connection", palette.connection));
+            return _lineMat != null ? _lineMat : (_lineMat = MakeLitMaterial("SS3D Connection", overrides != null && overrides.overrideConnection ? overrides.connectionColor : palette.connection));
         }
 
         private void Tint(Renderer r, bool reachable)
@@ -742,6 +779,12 @@ namespace ShadowSteps.Art3D
         [Tooltip("Height of the wall prop in tiles (0 = palette wallHeightScale).")] public float wallHeight;
         public bool tintFloor;
         public Color floorA = Color.white, floorB = Color.white;
+        [Tooltip("Height of blocked-cover props in tiles (0 = palette coverHeightScale).")] public float coverHeight;
+        public bool overrideGrout; public Color groutColor = Color.white;
+        [Tooltip("Connection line colour/width for this scene (node paths must stay readable on light pavement).")] public bool overrideConnection; public Color connectionColor = Color.white; public float connectionWidth;
+        [Tooltip("Visual scale of the exit pad (0 = model size).")] public float exitScale;
+        [Tooltip("Plain flagstone albedo instead of the veined cream stone.")] public bool flatStone;
+        [Tooltip("Untextured flat-colour tiles (minimal look) with this smoothness; tileInset 0 = palette value.")] public bool plainTiles; public float tileSmoothness; public float tileInset;
     }
 
     /// <summary>Tiny procedural meshes for direction markers and architectural trim (no external art needed).</summary>

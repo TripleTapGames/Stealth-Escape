@@ -1,0 +1,21 @@
+{
+    "generated": "2026-11-02T00:08:09",
+    "scene": "Assets/_ShadowSteps/Art3D/Levels/Town/SS3D_Town_Plaza_Authored.unity",
+    "layout": "Assets/_ShadowSteps/Art3D/Town/TownPlaza_Layout.asset",
+    "stage": "LEVEL-4",
+    "width": 7,
+    "height": 5,
+    "floorNodes": 32,
+    "nodeMarkers": 32,
+    "coverCells": 3,
+    "coverProps": 3,
+    "wallCells": 0,
+    "wallPieces": 0,
+    "guards": 2,
+    "guardActors": 2,
+    "placements": 37,
+    "placedObjects": 47,
+    "ok": true,
+    "problems": [],
+    "missingPrefabs": []
+}

@@ -1,0 +1,16 @@
+{
+    "generated": "2026-11-02T00:22:30",
+    "scene": "Assets/_ShadowSteps/Art3D/Levels/Minimal/SS3D_Minimal_Tabletop.unity",
+    "stage": "LEVEL-4",
+    "width": 7,
+    "height": 5,
+    "floorNodes": 32,
+    "nodeMarkers": 32,
+    "coverCells": 3,
+    "coverProps": 3,
+    "guards": 2,
+    "guardActors": 2,
+    "decorationObjects": 4,
+    "ok": true,
+    "problems": []
+}

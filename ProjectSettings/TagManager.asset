@@ -41,3 +41,30 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Board
+    uniqueID: 3146218501
+    locked: 0
+  - name: Floor
+    uniqueID: 1468772311
+    locked: 0
+  - name: Paths
+    uniqueID: 2659431803
+    locked: 0
+  - name: Nodes
+    uniqueID: 3892735281
+    locked: 0
+  - name: Overlays
+    uniqueID: 1079281747
+    locked: 0
+  - name: Props
+    uniqueID: 2321657569
+    locked: 0
+  - name: Actors
+    uniqueID: 3521180389
+    locked: 0
+  - name: Markers
+    uniqueID: 1898732143
+    locked: 0
+  - name: FX
+    uniqueID: 2777081609
+    locked: 0

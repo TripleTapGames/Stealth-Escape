@@ -104,6 +104,29 @@ namespace ShadowSteps.Art3D
             return _waterMat;
         }
 
+        private static Texture2D _flagstone;
+        /// <summary>Plain warm flagstone albedo: fine grain and a soft rim darkening, no veining (town plaza look).</summary>
+        public static Texture2D FlagstoneTexture()
+        {
+            if (_flagstone != null) return _flagstone;
+            const int n = 256;
+            _flagstone = new Texture2D(n, n, TextureFormat.RGBA32, true) { name = "SS3D Flagstone", wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear, hideFlags = HideFlags.DontSave };
+            var px = new Color[n * n];
+            var rnd = new System.Random(4321);
+            for (int y = 0; y < n; y++) for (int x = 0; x < n; x++)
+            {
+                float u = (float)x / n, v = (float)y / n;
+                float grain = Mathf.PerlinNoise(u * 24f + 3.3f, v * 24f + 8.1f) * 0.6f + Mathf.PerlinNoise(u * 90f + 1.7f, v * 90f + 5.9f) * 0.4f;
+                float edge = Mathf.Clamp01(Mathf.Min(Mathf.Min(u, 1f - u), Mathf.Min(v, 1f - v)) * 10f);
+                float val = 0.9f + (grain - 0.5f) * 0.08f;
+                val *= 0.9f + 0.1f * edge;
+                float speck = ((float)rnd.NextDouble() < 0.003f) ? 0.93f : 1f;
+                px[y * n + x] = new Color(val * speck, (val - 0.005f) * speck, (val - 0.02f) * speck, 1f);
+            }
+            _flagstone.SetPixels(px); _flagstone.Apply(true);
+            return _flagstone;
+        }
+
         private static Texture2D _stone;
         /// <summary>Procedural cream limestone albedo: soft value noise, faint veining and a light edge darkening (generated once, 256²).</summary>
         public static Texture2D StoneTexture()

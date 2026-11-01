@@ -1,0 +1,1631 @@
+{
+    "cell": 220,
+    "cols": 8,
+    "prefabs": [
+        {
+            "index": 0,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_01.prefab",
+            "name": "SM_Bld_House_Preset_01",
+            "size": {
+                "x": 6.371227264404297,
+                "y": 5.769235134124756,
+                "z": 8.871219635009766
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 1,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_02.prefab",
+            "name": "SM_Bld_House_Preset_02",
+            "size": {
+                "x": 5.693126678466797,
+                "y": 4.140917778015137,
+                "z": 5.698265075683594
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 2,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_03.prefab",
+            "name": "SM_Bld_House_Preset_03",
+            "size": {
+                "x": 13.87122917175293,
+                "y": 6.457820892333984,
+                "z": 13.871230125427246
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 3,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_04.prefab",
+            "name": "SM_Bld_House_Preset_04",
+            "size": {
+                "x": 13.522781372070313,
+                "y": 6.457820892333984,
+                "z": 13.871230125427246
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 4,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_05.prefab",
+            "name": "SM_Bld_House_Preset_05",
+            "size": {
+                "x": 8.87122917175293,
+                "y": 6.472774505615234,
+                "z": 13.871230125427246
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 5,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_06.prefab",
+            "name": "SM_Bld_House_Preset_06",
+            "size": {
+                "x": 11.37122631072998,
+                "y": 6.3592753410339359,
+                "z": 13.87122631072998
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 6,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_07.prefab",
+            "name": "SM_Bld_House_Preset_07",
+            "size": {
+                "x": 13.203421592712403,
+                "y": 7.7021803855896,
+                "z": 13.871230125427246
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 7,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_08.prefab",
+            "name": "SM_Bld_House_Preset_08",
+            "size": {
+                "x": 13.87122917175293,
+                "y": 6.408774375915527,
+                "z": 18.87122917175293
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 8,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_09.prefab",
+            "name": "SM_Bld_House_Preset_09",
+            "size": {
+                "x": 8.871228218078614,
+                "y": 8.67068862915039,
+                "z": 11.371219635009766
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 9,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_10.prefab",
+            "name": "SM_Bld_House_Preset_10",
+            "size": {
+                "x": 13.496940612792969,
+                "y": 8.67068862915039,
+                "z": 8.53732681274414
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 10,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/Presets/SM_Bld_House_Preset_11.prefab",
+            "name": "SM_Bld_House_Preset_11",
+            "size": {
+                "x": 18.163028717041017,
+                "y": 9.35927677154541,
+                "z": 13.537322998046875
+            },
+            "renderers": 1,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 11,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_Shop_01.prefab",
+            "name": "SM_Bld_Shop_01",
+            "size": {
+                "x": 10.564720153808594,
+                "y": 4.876364231109619,
+                "z": 10.399700164794922
+            },
+            "renderers": 5,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 12,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_Shop_02.prefab",
+            "name": "SM_Bld_Shop_02",
+            "size": {
+                "x": 15.476080894470215,
+                "y": 3.902177572250366,
+                "z": 10.942349433898926
+            },
+            "renderers": 4,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 13,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_Shop_03.prefab",
+            "name": "SM_Bld_Shop_03",
+            "size": {
+                "x": 14.622404098510743,
+                "y": 4.626158237457275,
+                "z": 14.269041061401368
+            },
+            "renderers": 4,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 14,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_Shop_Concrete_01.prefab",
+            "name": "SM_Bld_Shop_Concrete_01",
+            "size": {
+                "x": 10.207996368408204,
+                "y": 0.1617744415998459,
+                "z": 8.100507736206055
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 15,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_Church_01.prefab",
+            "name": "SM_Bld_Church_01",
+            "size": {
+                "x": 10.37122917175293,
+                "y": 16.52299690246582,
+                "z": 14.388204574584961
+            },
+            "renderers": 4,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 16,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_GardenShed_01.prefab",
+            "name": "SM_Bld_GardenShed_01",
+            "size": {
+                "x": 2.3459179401397707,
+                "y": 2.7800939083099367,
+                "z": 2.501314640045166
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 17,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_ExteriorWall_GroundFloor_01.prefab",
+            "name": "SM_Bld_House_ExteriorWall_GroundFloor_01",
+            "size": {
+                "x": 2.5,
+                "y": 3.9427847862243654,
+                "z": 0.20000028610229493
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 18,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_ExteriorWall_GroundFloor_Window_01.prefab",
+            "name": "SM_Bld_House_ExteriorWall_GroundFloor_Window_01",
+            "size": {
+                "x": 2.500004768371582,
+                "y": 3.9427847862243654,
+                "z": 0.20000101625919343
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 19,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_ExteriorWall_GroundFloor_Door_01.prefab",
+            "name": "SM_Bld_House_ExteriorWall_GroundFloor_Door_01",
+            "size": {
+                "x": 2.500000238418579,
+                "y": 3.9427847862243654,
+                "z": 0.20000052452087403
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 20,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_ExteriorWall_UpperFloor_Window_01.prefab",
+            "name": "SM_Bld_House_ExteriorWall_UpperFloor_Window_01",
+            "size": {
+                "x": 2.500000238418579,
+                "y": 2.999999761581421,
+                "z": 0.20000101625919343
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 21,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_Roof_Angled_Middle_01.prefab",
+            "name": "SM_Bld_House_Roof_Angled_Middle_01",
+            "size": {
+                "x": 2.5000059604644777,
+                "y": 1.3429036140441895,
+                "z": 2.5
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 22,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_Window_Shutters_Open_01.prefab",
+            "name": "SM_Bld_House_Window_Shutters_Open_01",
+            "size": {
+                "x": 1.8792005777359009,
+                "y": 1.7158875465393067,
+                "z": 0.051614582538604739
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 23,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_Window_01.prefab",
+            "name": "SM_Bld_House_Window_01",
+            "size": {
+                "x": 1.2212982177734376,
+                "y": 2.0014445781707765,
+                "z": 0.48801231384277346
+            },
+            "renderers": 2,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 24,
+            "path": "Assets/PolygonTown/Prefabs/Buildings/SM_Bld_House_Door_01.prefab",
+            "name": "SM_Bld_House_Door_01",
+            "size": {
+                "x": 1.279832363128662,
+                "y": 2.4483163356781008,
+                "z": 0.3673436641693115
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 25,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Fence_White_Straight_01.prefab",
+            "name": "SM_Env_Fence_White_Straight_01",
+            "size": {
+                "x": 2.4999990463256838,
+                "y": 1.109600305557251,
+                "z": 0.1048876941204071
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 26,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Fence_White_Post_01.prefab",
+            "name": "SM_Env_Fence_White_Post_01",
+            "size": {
+                "x": 0.177259624004364,
+                "y": 1.2845357656478882,
+                "z": 0.16964232921600343
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 27,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Fence_White_Gate_01.prefab",
+            "name": "SM_Env_Fence_White_Gate_01",
+            "size": {
+                "x": 2.5886292457580568,
+                "y": 1.2845357656478882,
+                "z": 0.1696496605873108
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 28,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Fence_Wood_Straight_01.prefab",
+            "name": "SM_Env_Fence_Wood_Straight_01",
+            "size": {
+                "x": 2.509124755859375,
+                "y": 2.1108036041259767,
+                "z": 0.13969482481479646
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 29,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Fence_Wood_Post_01.prefab",
+            "name": "SM_Env_Fence_Wood_Post_01",
+            "size": {
+                "x": 0.14396224915981294,
+                "y": 2.028217077255249,
+                "z": 0.1398327648639679
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 30,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Fence_Wood_Gate_01.prefab",
+            "name": "SM_Env_Fence_Wood_Gate_01",
+            "size": {
+                "x": 2.6398327350616457,
+                "y": 2.3677501678466799,
+                "z": 0.315041184425354
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 31,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Hedge_01.prefab",
+            "name": "SM_Env_Hedge_01",
+            "size": {
+                "x": 6.2060546875,
+                "y": 2.2162628173828127,
+                "z": 1.2664718627929688
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 32,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Hedge_02.prefab",
+            "name": "SM_Env_Hedge_02",
+            "size": {
+                "x": 2.22625732421875,
+                "y": 2.184032440185547,
+                "z": 1.2016868591308594
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 33,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Hedge_03.prefab",
+            "name": "SM_Env_Hedge_03",
+            "size": {
+                "x": 5.355973243713379,
+                "y": 1.1652541160583497,
+                "z": 1.0432870388031006
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 34,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Gardenbox_Single_01.prefab",
+            "name": "SM_Env_Gardenbox_Single_01",
+            "size": {
+                "x": 2.053377628326416,
+                "y": 0.748607337474823,
+                "z": 2.091954231262207
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 35,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Gardenbox_Double_01.prefab",
+            "name": "SM_Env_Gardenbox_Double_01",
+            "size": {
+                "x": 3.934404134750366,
+                "y": 0.7572202682495117,
+                "z": 2.091954231262207
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 36,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Garden_Straight_01.prefab",
+            "name": "SM_Env_Garden_Straight_01",
+            "size": {
+                "x": 1.2500005960464478,
+                "y": 0.2469068020582199,
+                "z": 2.500000476837158
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 37,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Garden_Straight_02.prefab",
+            "name": "SM_Env_Garden_Straight_02",
+            "size": {
+                "x": 1.2500005960464478,
+                "y": 0.2151128649711609,
+                "z": 1.250000238418579
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 38,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Garden_Corner_01.prefab",
+            "name": "SM_Env_Garden_Corner_01",
+            "size": {
+                "x": 1.2500011920928956,
+                "y": 0.22132651507854463,
+                "z": 1.2707024812698365
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 39,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_FlowerPatch_01.prefab",
+            "name": "SM_Env_FlowerPatch_01",
+            "size": {
+                "x": 0.5848779082298279,
+                "y": 0.346477210521698,
+                "z": 0.4724053740501404
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 40,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_FlowerPatch_02.prefab",
+            "name": "SM_Env_FlowerPatch_02",
+            "size": {
+                "x": 0.47295287251472475,
+                "y": 0.346477210521698,
+                "z": 0.530450701713562
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 41,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_FlowerPatch_03.prefab",
+            "name": "SM_Env_FlowerPatch_03",
+            "size": {
+                "x": 0.4426220655441284,
+                "y": 0.346477210521698,
+                "z": 0.255980521440506
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 42,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Bush_01.prefab",
+            "name": "SM_Env_Bush_01",
+            "size": {
+                "x": 1.6166455745697022,
+                "y": 1.4558327198028565,
+                "z": 1.5671956539154053
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 43,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Bush_02.prefab",
+            "name": "SM_Env_Bush_02",
+            "size": {
+                "x": 1.2334442138671876,
+                "y": 1.5584564208984376,
+                "z": 1.0804595947265626
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 44,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Bush_03.prefab",
+            "name": "SM_Env_Bush_03",
+            "size": {
+                "x": 1.3405036926269532,
+                "y": 1.4854354858398438,
+                "z": 1.3739242553710938
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 45,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Bush_04.prefab",
+            "name": "SM_Env_Bush_04",
+            "size": {
+                "x": 1.4906344413757325,
+                "y": 0.9039608240127564,
+                "z": 1.4876171350479127
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 46,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_01.prefab",
+            "name": "SM_Env_Tree_01",
+            "size": {
+                "x": 2.2965545654296877,
+                "y": 4.68914794921875,
+                "z": 2.261260986328125
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 47,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_02.prefab",
+            "name": "SM_Env_Tree_02",
+            "size": {
+                "x": 1.07421875,
+                "y": 2.1395583152770998,
+                "z": 1.058837890625
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 48,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_03.prefab",
+            "name": "SM_Env_Tree_03",
+            "size": {
+                "x": 0.924669623374939,
+                "y": 3.0382890701293947,
+                "z": 1.0865583419799805
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 49,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_Large_01.prefab",
+            "name": "SM_Env_Tree_Large_01",
+            "size": {
+                "x": 12.217778205871582,
+                "y": 11.62193489074707,
+                "z": 11.98095703125
+            },
+            "renderers": 4,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 50,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_Tall_01.prefab",
+            "name": "SM_Env_Tree_Tall_01",
+            "size": {
+                "x": 3.1294896602630617,
+                "y": 5.217876434326172,
+                "z": 1.844399094581604
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 51,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_Tall_02.prefab",
+            "name": "SM_Env_Tree_Tall_02",
+            "size": {
+                "x": 3.3097338676452638,
+                "y": 6.0881571769714359,
+                "z": 3.3517656326293947
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 52,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Tree_Pine_01.prefab",
+            "name": "SM_Env_Tree_Pine_01",
+            "size": {
+                "x": 2.512847900390625,
+                "y": 5.476742267608643,
+                "z": 2.3574600219726564
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 53,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Grass_01.prefab",
+            "name": "SM_Env_Grass_01",
+            "size": {
+                "x": 5.000006198883057,
+                "y": 0.06947630643844605,
+                "z": 5.0000081062316898
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 54,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Concrete_Base_01.prefab",
+            "name": "SM_Env_Concrete_Base_01",
+            "size": {
+                "x": 5.0,
+                "y": 0.07483609765768051,
+                "z": 5.0
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 55,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Path_01.prefab",
+            "name": "SM_Env_Path_01",
+            "size": {
+                "x": 5.000007152557373,
+                "y": 0.06839299201965332,
+                "z": 5.000008583068848
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 56,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Path_02.prefab",
+            "name": "SM_Env_Path_02",
+            "size": {
+                "x": 5.000007152557373,
+                "y": 0.06839299201965332,
+                "z": 5.000008583068848
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 57,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_PathBlock_01.prefab",
+            "name": "SM_Env_PathBlock_01",
+            "size": {
+                "x": 1.5,
+                "y": 0.1990635097026825,
+                "z": 1.5
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 58,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Sidewalk_Straight_01.prefab",
+            "name": "SM_Env_Sidewalk_Straight_01",
+            "size": {
+                "x": 5.000013828277588,
+                "y": 0.2999913692474365,
+                "z": 5.000000476837158
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 59,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Sidewalk_Straight_02.prefab",
+            "name": "SM_Env_Sidewalk_Straight_02",
+            "size": {
+                "x": 5.0000152587890629,
+                "y": 1.2004014253616334,
+                "z": 5.000000476837158
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 60,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Sidewalk_Straight_03.prefab",
+            "name": "SM_Env_Sidewalk_Straight_03",
+            "size": {
+                "x": 5.000007152557373,
+                "y": 0.2999913692474365,
+                "z": 5.0
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 61,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Sidewalk_Straight_04.prefab",
+            "name": "SM_Env_Sidewalk_Straight_04",
+            "size": {
+                "x": 5.0000152587890629,
+                "y": 0.2999913692474365,
+                "z": 4.999991416931152
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 62,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Road_01.prefab",
+            "name": "SM_Env_Road_01",
+            "size": {
+                "x": 5.0,
+                "y": 0.0,
+                "z": 5.0
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 63,
+            "path": "Assets/PolygonTown/Prefabs/Environment/SM_Env_Driveway_01.prefab",
+            "name": "SM_Env_Driveway_01",
+            "size": {
+                "x": 5.000006198883057,
+                "y": 0.040686264634132388,
+                "z": 5.0000081062316898
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 64,
+            "path": "Assets/PolygonTown/Prefabs/Generic/SM_Generic_Ground_Tile_01.prefab",
+            "name": "SM_Generic_Ground_Tile_01",
+            "size": {
+                "x": 5.0,
+                "y": 1.1102230246251566e-15,
+                "z": 5.0
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 65,
+            "path": "Assets/PolygonTown/Prefabs/Generic/SM_Generic_Ground_Flat_01.prefab",
+            "name": "SM_Generic_Ground_Flat_01",
+            "size": {
+                "x": 20.738584518432618,
+                "y": 0.4643063247203827,
+                "z": 19.22612953186035
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 66,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Streetlamp_01.prefab",
+            "name": "SM_Prop_Streetlamp_01",
+            "size": {
+                "x": 0.40608975291252139,
+                "y": 4.367374897003174,
+                "z": 1.7177995443344117
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 67,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Streetlamp_02.prefab",
+            "name": "SM_Prop_Streetlamp_02",
+            "size": {
+                "x": 0.6450381278991699,
+                "y": 3.108804941177368,
+                "z": 0.558619499206543
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 68,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_ParkBench_01.prefab",
+            "name": "SM_Prop_ParkBench_01",
+            "size": {
+                "x": 2.0794646739959719,
+                "y": 1.0482580661773682,
+                "z": 0.6325680613517761
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 69,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_RubbishBin_01.prefab",
+            "name": "SM_Prop_RubbishBin_01",
+            "size": {
+                "x": 0.579286515712738,
+                "y": 0.9038602113723755,
+                "z": 0.5792871117591858
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 70,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_RubbishBin_02.prefab",
+            "name": "SM_Prop_RubbishBin_02",
+            "size": {
+                "x": 0.7830712795257568,
+                "y": 1.153645396232605,
+                "z": 1.048966884613037
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 71,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Barrel_01.prefab",
+            "name": "SM_Prop_Barrel_01",
+            "size": {
+                "x": 0.6664013266563416,
+                "y": 1.1821810007095338,
+                "z": 0.66705322265625
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 72,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_CardboardBox_01.prefab",
+            "name": "SM_Prop_CardboardBox_01",
+            "size": {
+                "x": 0.5,
+                "y": 0.46508094668388369,
+                "z": 0.5
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 73,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_CardboardBox_02.prefab",
+            "name": "SM_Prop_CardboardBox_02",
+            "size": {
+                "x": 0.5,
+                "y": 0.46508094668388369,
+                "z": 0.5
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 74,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_CardboardBox_03.prefab",
+            "name": "SM_Prop_CardboardBox_03",
+            "size": {
+                "x": 0.5452447533607483,
+                "y": 0.7036873698234558,
+                "z": 0.7675927877426148
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 75,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_CardboardBox_04.prefab",
+            "name": "SM_Prop_CardboardBox_04",
+            "size": {
+                "x": 0.5519036650657654,
+                "y": 0.4837341606616974,
+                "z": 0.7080273628234863
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 76,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_CardboardBox_05.prefab",
+            "name": "SM_Prop_CardboardBox_05",
+            "size": {
+                "x": 0.5,
+                "y": 0.46508094668388369,
+                "z": 0.5
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 77,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Cart_01.prefab",
+            "name": "SM_Prop_Cart_01",
+            "size": {
+                "x": 1.0810424089431763,
+                "y": 0.9517203569412231,
+                "z": 0.5630735754966736
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 78,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Fountain_01.prefab",
+            "name": "SM_Prop_Fountain_01",
+            "size": {
+                "x": 1.6045894622802735,
+                "y": 1.517452359199524,
+                "z": 1.597426414489746
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 79,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Fountain_Base_01.prefab",
+            "name": "SM_Prop_Fountain_Base_01",
+            "size": {
+                "x": 2.419041395187378,
+                "y": 0.1470959484577179,
+                "z": 2.4190406799316408
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 80,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_BirdBath_01.prefab",
+            "name": "SM_Prop_BirdBath_01",
+            "size": {
+                "x": 0.5525259375572205,
+                "y": 0.7932980060577393,
+                "z": 0.5469018220901489
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 81,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_PotPlant_01.prefab",
+            "name": "SM_Prop_PotPlant_01",
+            "size": {
+                "x": 0.4365893602371216,
+                "y": 0.7957764267921448,
+                "z": 0.3935473561286926
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 82,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_PotPlant_02.prefab",
+            "name": "SM_Prop_PotPlant_02",
+            "size": {
+                "x": 0.48124510049819949,
+                "y": 0.4412985146045685,
+                "z": 0.47014403343200686
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 83,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_PotPlant_03.prefab",
+            "name": "SM_Prop_PotPlant_03",
+            "size": {
+                "x": 0.4601067900657654,
+                "y": 0.6981045603752136,
+                "z": 0.46971189975738528
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 84,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_PotPlant_04.prefab",
+            "name": "SM_Prop_PotPlant_04",
+            "size": {
+                "x": 0.28530699014663699,
+                "y": 0.6572589874267578,
+                "z": 0.332550048828125
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 85,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_PotPlant_05.prefab",
+            "name": "SM_Prop_PotPlant_05",
+            "size": {
+                "x": 0.43228209018707278,
+                "y": 0.5431699752807617,
+                "z": 0.3406805396080017
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 86,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_01.prefab",
+            "name": "SM_Prop_Pot_01",
+            "size": {
+                "x": 0.28901001811027529,
+                "y": 0.27095356583595278,
+                "z": 0.28901031613349917
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 87,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_02.prefab",
+            "name": "SM_Prop_Pot_02",
+            "size": {
+                "x": 0.263937383890152,
+                "y": 0.1624106764793396,
+                "z": 0.2639239430427551
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 88,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_03.prefab",
+            "name": "SM_Prop_Pot_03",
+            "size": {
+                "x": 0.5429806709289551,
+                "y": 0.17672494053840638,
+                "z": 0.5429849624633789
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 89,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_04.prefab",
+            "name": "SM_Prop_Pot_04",
+            "size": {
+                "x": 0.49810731410980227,
+                "y": 0.4789837896823883,
+                "z": 0.498068630695343
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 90,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_05.prefab",
+            "name": "SM_Prop_Pot_05",
+            "size": {
+                "x": 0.28080272674560549,
+                "y": 0.28167587518692019,
+                "z": 0.2721153497695923
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 91,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_06.prefab",
+            "name": "SM_Prop_Pot_06",
+            "size": {
+                "x": 0.25100454688072207,
+                "y": 0.2745823860168457,
+                "z": 0.2512367367744446
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 92,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Pot_07.prefab",
+            "name": "SM_Prop_Pot_07",
+            "size": {
+                "x": 0.24236252903938294,
+                "y": 0.11422048509120941,
+                "z": 0.2503605782985687
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 93,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Plant_01.prefab",
+            "name": "SM_Prop_Plant_01",
+            "size": {
+                "x": 0.44709885120391848,
+                "y": 0.5522930026054382,
+                "z": 0.4420998692512512
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 94,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Plant_02.prefab",
+            "name": "SM_Prop_Plant_02",
+            "size": {
+                "x": 0.7162117958068848,
+                "y": 1.4319143295288087,
+                "z": 0.7118765115737915
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 95,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Flowers_01.prefab",
+            "name": "SM_Prop_Flowers_01",
+            "size": {
+                "x": 0.23786070942878724,
+                "y": 0.5751250982284546,
+                "z": 0.21642577648162843
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 96,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Flowers_02.prefab",
+            "name": "SM_Prop_Flowers_02",
+            "size": {
+                "x": 0.3205541968345642,
+                "y": 0.4981822073459625,
+                "z": 0.34873533248901369
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 97,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Flowers_03.prefab",
+            "name": "SM_Prop_Flowers_03",
+            "size": {
+                "x": 0.27680298686027529,
+                "y": 0.5164400935173035,
+                "z": 0.24832092225551606
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 98,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Outdoor_Light_01.prefab",
+            "name": "SM_Prop_Outdoor_Light_01",
+            "size": {
+                "x": 0.09176269173622132,
+                "y": 0.2432248294353485,
+                "z": 0.09176208078861237
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 99,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Outdoor_Light_02.prefab",
+            "name": "SM_Prop_Outdoor_Light_02",
+            "size": {
+                "x": 0.16779235005378724,
+                "y": 0.23167067766189576,
+                "z": 0.1677905172109604
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 100,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_WallLight_01.prefab",
+            "name": "SM_Prop_WallLight_01",
+            "size": {
+                "x": 0.28376585245132449,
+                "y": 0.17696182429790498,
+                "z": 0.20738036930561067
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 101,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_SecurityLights_01.prefab",
+            "name": "SM_Prop_SecurityLights_01",
+            "size": {
+                "x": 0.4315728545188904,
+                "y": 0.3001110851764679,
+                "z": 0.27430784702301028
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 102,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Flag_Wall_01.prefab",
+            "name": "SM_Prop_Flag_Wall_01",
+            "size": {
+                "x": 0.46356725692749026,
+                "y": 1.9534879922866822,
+                "z": 2.262446165084839
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 103,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Sign_01.prefab",
+            "name": "SM_Prop_Sign_01",
+            "size": {
+                "x": 0.8646450042724609,
+                "y": 2.1811723709106447,
+                "z": 0.12737205624580384
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 104,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Art_Standing_01.prefab",
+            "name": "SM_Prop_Art_Standing_01",
+            "size": {
+                "x": 0.3484179675579071,
+                "y": 0.46458372473716738,
+                "z": 0.23677366971969605
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 105,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Art_Standing_02.prefab",
+            "name": "SM_Prop_Art_Standing_02",
+            "size": {
+                "x": 0.3356884717941284,
+                "y": 0.44671720266342165,
+                "z": 0.23616759479045869
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 106,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Wheelbarrow_01.prefab",
+            "name": "SM_Prop_Wheelbarrow_01",
+            "size": {
+                "x": 0.8632737398147583,
+                "y": 1.0148849487304688,
+                "z": 1.6840380430221558
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 107,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_LetterBox_01.prefab",
+            "name": "SM_Prop_LetterBox_01",
+            "size": {
+                "x": 0.24130478501319886,
+                "y": 1.3510499000549317,
+                "z": 0.45173710584640505
+            },
+            "renderers": 3,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 108,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_BikeStand_01.prefab",
+            "name": "SM_Prop_BikeStand_01",
+            "size": {
+                "x": 1.4142894744873047,
+                "y": 0.4542634189128876,
+                "z": 0.5802526473999023
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 109,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Brazier_01.prefab",
+            "name": "SM_Prop_Brazier_01",
+            "size": {
+                "x": 0.790169358253479,
+                "y": 0.5750693082809448,
+                "z": 0.7557946443557739
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 110,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Outdoor_Table_01.prefab",
+            "name": "SM_Prop_Outdoor_Table_01",
+            "size": {
+                "x": 2.3280391693115236,
+                "y": 2.4998252391815187,
+                "z": 2.3280389308929445
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 111,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Outdoor_Table_02.prefab",
+            "name": "SM_Prop_Outdoor_Table_02",
+            "size": {
+                "x": 0.9754791259765625,
+                "y": 0.7473714351654053,
+                "z": 0.9813549518585205
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 112,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Chair_01.prefab",
+            "name": "SM_Prop_Chair_01",
+            "size": {
+                "x": 0.5566555857658386,
+                "y": 1.0419597625732422,
+                "z": 0.5448614358901978
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 113,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Deckchair_01.prefab",
+            "name": "SM_Prop_Deckchair_01",
+            "size": {
+                "x": 0.6729828119277954,
+                "y": 0.9414929747581482,
+                "z": 0.6169289946556091
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 114,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Keg_01.prefab",
+            "name": "SM_Prop_Keg_01",
+            "size": {
+                "x": 0.5275237560272217,
+                "y": 0.7314805388450623,
+                "z": 0.5471545457839966
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 115,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Bucket_01.prefab",
+            "name": "SM_Prop_Bucket_01",
+            "size": {
+                "x": 0.39295336604118349,
+                "y": 0.5385041832923889,
+                "z": 0.35197263956069949
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 116,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Manhole_01.prefab",
+            "name": "SM_Prop_Manhole_01",
+            "size": {
+                "x": 1.0167405605316163,
+                "y": 0.058268871158361438,
+                "z": 0.995132327079773
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 117,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Drain_01.prefab",
+            "name": "SM_Prop_Drain_01",
+            "size": {
+                "x": 0.6300878524780273,
+                "y": 0.12499674409627915,
+                "z": 0.3775341808795929
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 118,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Propane_01.prefab",
+            "name": "SM_Prop_Propane_01",
+            "size": {
+                "x": 3.30352520942688,
+                "y": 1.4573251008987427,
+                "z": 1.0029345750808716
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 119,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Doghouse_01.prefab",
+            "name": "SM_Prop_Doghouse_01",
+            "size": {
+                "x": 1.2308926582336426,
+                "y": 1.2637181282043458,
+                "z": 1.189477562904358
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 120,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Compost_01.prefab",
+            "name": "SM_Prop_Compost_01",
+            "size": {
+                "x": 0.8569939136505127,
+                "y": 1.1259775161743165,
+                "z": 0.8429887294769287
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 121,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Sign_BusStop_01.prefab",
+            "name": "SM_Prop_Sign_BusStop_01",
+            "size": {
+                "x": 0.4287538528442383,
+                "y": 2.1077427864074709,
+                "z": 0.12107246369123459
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 122,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_StreetSign_01.prefab",
+            "name": "SM_Prop_StreetSign_01",
+            "size": {
+                "x": 0.6539758443832398,
+                "y": 0.28736260533332827,
+                "z": 0.04398803785443306
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 123,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_WashingLine_01.prefab",
+            "name": "SM_Prop_WashingLine_01",
+            "size": {
+                "x": 5.488563537597656,
+                "y": 2.2690227031707765,
+                "z": 1.0736162662506104
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 124,
+            "path": "Assets/PolygonTown/Prefabs/Props/SM_Prop_Ladder_01.prefab",
+            "name": "SM_Prop_Ladder_01",
+            "size": {
+                "x": 3.4064443111419679,
+                "y": 0.09003173559904099,
+                "z": 0.42938536405563357
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        }
+    ]
+}

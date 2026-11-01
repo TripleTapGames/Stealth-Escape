@@ -46,6 +46,12 @@ engine hands it. It never decides movement, visibility, collisions or solver res
 - Import the pack to `Assets/PolygonTown`. Shadow Steps ▸ 3D ▸ Town ▸ *Create or update the 10 environment profiles* resolves prefabs by path into `Art3D/Town/Profiles`; *Generate 10 town environment scenes + preview* writes `Art3D/Levels/Town/SS3D_Town_01…10` and `SS3D_Town_Preview.unity` (select `Town_Preview_Switcher` for the 1–10 buttons). Auto-setup runs both once.
 - Profiles are plain ScriptableObjects: swap any prefab, tint or count and regenerate. Gameplay geometry is never in a profile.
 
+## Town Plaza (authored environment, mock recreation)
+
+- Reference `ArtReferences/ShadowSteps_Town_Target.png`. Shadow Steps ▸ 3D ▸ Town ▸ **Generate authored Town Plaza scene** writes `Art3D/Town/TownPlaza_Layout.asset` and `Art3D/Levels/Town/SS3D_Town_Plaza_Authored.unity` (LEVEL-4), validates it and writes `Docs/Reports/Town_Plaza_Manifest.json` + `Docs/ART3D_TOWN_PLAZA_MAPPING.md`. *Create or update the authored Town Plaza layout* rewrites only the asset (the placements are authored in `TownPlazaSetup.CreateLayout`; edit there, or edit the asset by hand and stop running the menu).
+- Placements are anchored to the plaza edges (x −1 west … +1 east, y −1 south … +1 north) plus a tile offset; with the 45° camera the west edge is bottom-left, north top-left, east top-right, south bottom-right.
+- Rendering without the Game view: `Tools/render_batch.sh ShadowSteps.Art3D.Editor.SS3DBatchRender.RenderScene -ssScene <scene> -ssOut Docs/Reports/Renders/x.png -ssGuides` (runs in the clone `../StealthEscape_render`), or Shadow Steps ▸ 3D ▸ Render ▸ *Render open scene to PNG* inside the editor. Prefab contact sheets: `...SS3DBatchRender.PrefabSheet -ssList <txt of prefab paths> -ssOut sheet.png`.
+
 ## Files
 
 | File | Role |
@@ -58,6 +64,8 @@ engine hands it. It never decides movement, visibility, collisions or solver res
 | `SS3DPreviewController.cs` | Editor/art preview of one stage with initial hazards. |
 | `SS3DSessionBridge.cs` | Runtime adapter: subscribes to the session, hides the 2D board, swaps the camera fitter, routes taps via plane raycast, tweens actors in step with the 2D animator. |
 | `Art3D/Scripts/Editor/SS3DSetupMenu.cs` | The menus above. |
+| `Town/TownPlazaLayout.cs`, `Town/TownPlazaComposer.cs`, `Editor/TownPlazaSetup.cs` | Authored plaza layout asset, its builder, and the generator with the mock→prefab mapping. |
+| `Editor/SS3DBatchRender.cs`, `Tools/render_batch.sh` | Headless PNG renders and prefab contact sheets (clone-based while the editor holds the lock). |
 
 ## Known gaps (see KNOWN_ISSUES #28–#31)
 - Nothing has run in Unity yet; glTFast import, material look, character facing and camera framing need a visual pass.

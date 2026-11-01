@@ -1,0 +1,26 @@
+{
+    "name": "ShadowSteps.Art2D.Tests.PlayMode",
+    "rootNamespace": "ShadowSteps.Art2D.Tests",
+    "references": [
+        "ShadowSteps.Core",
+        "ShadowSteps.Data",
+        "ShadowSteps.Runtime",
+        "ShadowSteps.UI",
+        "ShadowSteps.Art2D",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -84,6 +84,7 @@ namespace ShadowSteps.UI
 
             _hud = Composer.Hud as GameHudController;
             if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
+            else if (Composer.Hud is IGameHudPause pausable) pausable.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
             AudioService.Ensure();
         }
 

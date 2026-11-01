@@ -26,6 +26,10 @@ namespace ShadowSteps.Runtime
         public bool Use3DPresentation = false;
         [Tooltip("SS3DArtPalette asset (from the Art3D assembly) used when Use3DPresentation is on.")]
         public ScriptableObject Art3DPalette;
+        [Tooltip("Drive the board with the 2D sprite art layer (ShadowSteps.Art2D: generated sprites, captured character frames) instead of the placeholder sprite board. Ignored when Use3DPresentation is on.")]
+        public bool Use2DArtPresentation = false;
+        [Tooltip("SS2DSpriteLibrary asset (from the Art2D assembly) used when Use2DArtPresentation is on.")]
+        public ScriptableObject Art2DLibrary;
 
         public Camera BoardCamera { get; private set; }
         public BoardView Board { get; private set; }
@@ -124,6 +128,12 @@ namespace ShadowSteps.Runtime
     {
         void Bind(GameSessionController session);
         void ShowMessage(string message);
+    }
+
+    /// <summary>Optional: a HUD that owns a pause button raises this so the flow controller can open the pause screen.</summary>
+    public interface IGameHudPause
+    {
+        event System.Action PauseRequested;
     }
 
     /// <summary>Lets the UI assembly (which Runtime cannot reference) provide the default HUD without a hard dependency.</summary>

@@ -31,6 +31,8 @@ namespace ShadowSteps.Runtime
         public Func<Vector2, GridCoord?> ScreenToNodeOverride;
         /// <summary>Optional picking override: screen point → camera index, or -1.</summary>
         public Func<Vector2, int> ScreenToCameraOverride;
+        /// <summary>Optional mapping from a screen direction (swipe, arrow key) to the logical direction, for presentations that draw the board rotated.</summary>
+        public Func<Direction, Direction> ScreenToLogicalDirection;
 
         private bool _pointerDown, _gestureConsumed, _pointerStartedOverUi, _previewShown;
         private Vector2 _pointerStart;
@@ -74,6 +76,7 @@ namespace ShadowSteps.Runtime
         private void Move(Direction d)
         {
             if (Session.Mode != InputMode.Move) return; // gadget modes never move the player
+            if (ScreenToLogicalDirection != null) d = ScreenToLogicalDirection(d);
             Session.TrySubmit(StageAction.Move(d));
         }
 

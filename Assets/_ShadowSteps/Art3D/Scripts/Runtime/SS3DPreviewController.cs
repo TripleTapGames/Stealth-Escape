@@ -24,6 +24,10 @@ namespace ShadowSteps.Art3D
         public SS3DBoardCameraFitter boardFitter;
         [Tooltip("Optional town environment; when set with a profile it replaces the courtyard frame and supplies cover/wall props and floor tints.")]
         public TownEnvironmentGenerator townEnvironment;
+        [Tooltip("Optional authored plaza layout; takes precedence over the town environment generator and the courtyard frame.")]
+        public TownPlazaComposer plazaComposer;
+        [Tooltip("Optional minimalist tabletop board (isolated prototype); takes precedence over every other environment.")]
+        public MinimalBoardComposer minimalBoard;
         [Tooltip("Camera padding in tiles for this scene (0 = palette value).")]
         public float paddingOverride = 0f;
         public bool showInitialHazards = true;
@@ -65,8 +69,10 @@ namespace ShadowSteps.Art3D
             string json = packJson != null ? packJson.text : File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json"));
             var pack = StageJson.Parse(json);
             var stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
-            bool town = townEnvironment != null && townEnvironment.profile != null;
-            levelRenderer.overrides = town ? townEnvironment.profile.RendererOverrides() : null;
+            bool minimal = minimalBoard != null;
+            bool plaza = !minimal && plazaComposer != null && plazaComposer.layout != null;
+            bool town = !plaza && !minimal && townEnvironment != null && townEnvironment.profile != null;
+            levelRenderer.overrides = minimal ? minimalBoard.RendererOverrides() : plaza ? plazaComposer.layout.RendererOverrides() : town ? townEnvironment.profile.RendererOverrides() : null;
             levelRenderer.Build(stage);
             var state = StageState.Initial(stage);
             for (int i = 0; i < stage.Guards.Count; i++) levelRenderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], 0), GuardTrack.NextStep(stage.Guards[i], 0));
@@ -79,8 +85,24 @@ namespace ShadowSteps.Art3D
                 for (int i = 0; i < stage.Cameras.Count; i++) { var cells = Sight.CameraVision(stage, state, i, 0); levelRenderer.SetCameraCoverage(i, cells); camCells.AddRange(cells); }
                 levelRenderer.SetVision(guardCells, camCells);
             }
-            if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.usePerspective = resolved.usePerspectiveCamera; boardFitter.fieldOfView = resolved.fieldOfView; boardFitter.paddingTiles = paddingOverride > 0f ? paddingOverride : resolved.cameraPaddingTiles; boardFitter.minWidthTiles = town ? 0f : resolved.minFramedTiles.x; boardFitter.minDepthTiles = town ? 0f : resolved.minFramedTiles.y; boardFitter.Fit(levelRenderer.BoardBounds()); }
+            if (boardFitter != null) { boardFitter.board = levelRenderer; boardFitter.usePerspective = resolved.usePerspectiveCamera; boardFitter.fieldOfView = resolved.fieldOfView; boardFitter.paddingTiles = paddingOverride > 0f ? paddingOverride : resolved.cameraPaddingTiles; boardFitter.minWidthTiles = town || plaza || minimal ? 0f : resolved.minFramedTiles.x; boardFitter.minDepthTiles = town || plaza || minimal ? 0f : resolved.minFramedTiles.y; if (plaza) plazaComposer.ApplyCamera(boardFitter); if (minimal) minimalBoard.ApplyCamera(boardFitter); boardFitter.Fit(levelRenderer.BoardBounds()); }
             var cam = boardFitter != null ? boardFitter.GetComponent<Camera>() : Camera.main;
+            if (minimal)
+            {
+                minimalBoard.palette = resolved; minimalBoard.Build(levelRenderer);
+                if (exteriorFrame != null) exteriorFrame.Clear(); if (townEnvironment != null) townEnvironment.Clear(); if (plazaComposer != null) plazaComposer.Clear();
+                minimalBoard.ApplyLighting(cam);
+                Debug.Log("[SS3D] preview built: " + stage.Code + " " + stage.Title + " (minimal tabletop)");
+                return;
+            }
+            if (plaza)
+            {
+                plazaComposer.fitter = boardFitter; plazaComposer.palette = resolved; plazaComposer.Build(levelRenderer);
+                if (exteriorFrame != null) exteriorFrame.Clear(); if (townEnvironment != null) townEnvironment.Clear();
+                plazaComposer.ApplyLighting(cam);
+                Debug.Log("[SS3D] preview built: " + stage.Code + " " + stage.Title + " (plaza layout " + plazaComposer.layout.name + ")");
+                return;
+            }
             if (town) { townEnvironment.fitter = boardFitter; townEnvironment.palette = resolved; townEnvironment.Build(levelRenderer); if (exteriorFrame != null) exteriorFrame.Clear(); townEnvironment.profile.ApplyLighting(resolved, cam); }
             else
             {

@@ -1,0 +1,955 @@
+{
+    "cell": 220,
+    "cols": 8,
+    "prefabs": [
+        {
+            "index": 0,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Fence_01.prefab",
+            "name": "SM_Prop_Fence_01",
+            "size": {
+                "x": 2.470686197280884,
+                "y": 1.6387419700622559,
+                "z": 0.15674979984760285
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 1,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Fence_02.prefab",
+            "name": "SM_Prop_Fence_02",
+            "size": {
+                "x": 2.472691059112549,
+                "y": 1.6416263580322266,
+                "z": 0.15674979984760285
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 2,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Fence_03.prefab",
+            "name": "SM_Prop_Fence_03",
+            "size": {
+                "x": 2.4725501537323,
+                "y": 1.6387419700622559,
+                "z": 0.15674979984760285
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 3,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Fence_04.prefab",
+            "name": "SM_Prop_Fence_04",
+            "size": {
+                "x": 2.473048686981201,
+                "y": 1.7303106784820557,
+                "z": 0.16115805506706239
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 4,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Fence_Gate_01.prefab",
+            "name": "SM_Prop_Fence_Gate_01",
+            "size": {
+                "x": 2.6416659355163576,
+                "y": 1.0431267023086548,
+                "z": 0.12909230589866639
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 5,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Bar_Gate_01.prefab",
+            "name": "SM_Prop_Bar_Gate_01",
+            "size": {
+                "x": 0.7370024919509888,
+                "y": 0.1507265567779541,
+                "z": 1.105984091758728
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 6,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Street_Lamp_01.prefab",
+            "name": "SM_Prop_Street_Lamp_01",
+            "size": {
+                "x": 0.3201914131641388,
+                "y": 2.9430902004241945,
+                "z": 0.8330252766609192
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 7,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Street_Lamp_02.prefab",
+            "name": "SM_Prop_Street_Lamp_02",
+            "size": {
+                "x": 0.3201914131641388,
+                "y": 2.9430902004241945,
+                "z": 1.3872514963150025
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 8,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Bracket_Lamp_01.prefab",
+            "name": "SM_Prop_Bracket_Lamp_01",
+            "size": {
+                "x": 0.428581178188324,
+                "y": 1.240708827972412,
+                "z": 0.42858535051345827
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 9,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Crate_Wood_01.prefab",
+            "name": "SM_Prop_Crate_Wood_01",
+            "size": {
+                "x": 1.0709824562072755,
+                "y": 1.0709832906723023,
+                "z": 1.0709800720214844
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 10,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Items/SM_Item_Crate_01.prefab",
+            "name": "SM_Item_Crate_01",
+            "size": {
+                "x": 0.7557360529899597,
+                "y": 0.3911750614643097,
+                "z": 0.452614426612854
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 11,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Crate_Stack_01.prefab",
+            "name": "SM_Prop_Crate_Stack_01",
+            "size": {
+                "x": 3.2497262954711916,
+                "y": 2.1419661045074465,
+                "z": 1.219422698020935
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 12,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Crate_Stack_02.prefab",
+            "name": "SM_Prop_Crate_Stack_02",
+            "size": {
+                "x": 3.2497262954711916,
+                "y": 2.1652212142944338,
+                "z": 1.9315221309661866
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 13,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Crate_Stack_03.prefab",
+            "name": "SM_Prop_Crate_Stack_03",
+            "size": {
+                "x": 1.7915472984313965,
+                "y": 0.9450662732124329,
+                "z": 1.2693448066711426
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 14,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Crate_Stack_04.prefab",
+            "name": "SM_Prop_Crate_Stack_04",
+            "size": {
+                "x": 2.681591510772705,
+                "y": 1.1536624431610108,
+                "z": 1.7786420583724976
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 15,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Barrel_01.prefab",
+            "name": "SM_Prop_Barrel_01",
+            "size": {
+                "x": 0.7175686359405518,
+                "y": 0.9097827076911926,
+                "z": 0.7175594568252564
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 16,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Barrel_Stack_01.prefab",
+            "name": "SM_Prop_Barrel_Stack_01",
+            "size": {
+                "x": 1.0610582828521729,
+                "y": 1.9848251342773438,
+                "z": 3.7049078941345217
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 17,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Barrel_Stack_02.prefab",
+            "name": "SM_Prop_Barrel_Stack_02",
+            "size": {
+                "x": 2.250152587890625,
+                "y": 1.9741401672363282,
+                "z": 0.9097827672958374
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 18,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Bench_Seat_01.prefab",
+            "name": "SM_Prop_Bench_Seat_01",
+            "size": {
+                "x": 2.917649984359741,
+                "y": 0.5956923365592957,
+                "z": 0.5939829349517822
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 19,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Bench_Seat_02.prefab",
+            "name": "SM_Prop_Bench_Seat_02",
+            "size": {
+                "x": 1.5333980321884156,
+                "y": 0.5767656564712524,
+                "z": 0.5109639167785645
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 20,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Bench_Seat_03.prefab",
+            "name": "SM_Prop_Bench_Seat_03",
+            "size": {
+                "x": 1.7599035501480103,
+                "y": 1.0318576097488404,
+                "z": 0.5435836911201477
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 21,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Bench_Seat_04.prefab",
+            "name": "SM_Prop_Bench_Seat_04",
+            "size": {
+                "x": 2.4687018394470217,
+                "y": 0.5436161160469055,
+                "z": 0.45941007137298586
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 22,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Bench_Seat_05.prefab",
+            "name": "SM_Prop_Bench_Seat_05",
+            "size": {
+                "x": 2.50750994682312,
+                "y": 0.48520612716674807,
+                "z": 0.57415771484375
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 23,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Bench_Seat_06.prefab",
+            "name": "SM_Prop_Bench_Seat_06",
+            "size": {
+                "x": 2.1279516220092775,
+                "y": 0.5496991872787476,
+                "z": 0.7663080096244812
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 24,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Banner_01.prefab",
+            "name": "SM_Prop_Banner_01",
+            "size": {
+                "x": 0.710781455039978,
+                "y": 2.1978566646575929,
+                "z": 0.09261702001094818
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 25,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Banner_02.prefab",
+            "name": "SM_Prop_Banner_02",
+            "size": {
+                "x": 0.710781455039978,
+                "y": 2.9534895420074465,
+                "z": 0.09261702001094818
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 26,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Banner_03.prefab",
+            "name": "SM_Prop_Banner_03",
+            "size": {
+                "x": 0.710781455039978,
+                "y": 2.17592716217041,
+                "z": 0.09261702001094818
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 27,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Banner_04.prefab",
+            "name": "SM_Prop_Banner_04",
+            "size": {
+                "x": 0.710781455039978,
+                "y": 2.6190853118896486,
+                "z": 0.09261702001094818
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 28,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Flag_01.prefab",
+            "name": "SM_Prop_Flag_01",
+            "size": {
+                "x": 2.7006640434265138,
+                "y": 5.164708614349365,
+                "z": 0.33052247762680056
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 29,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Flag_Wall_Attachment_01.prefab",
+            "name": "SM_Prop_Flag_Wall_Attachment_01",
+            "size": {
+                "x": 2.5644774436950685,
+                "y": 0.5156921148300171,
+                "z": 0.7597509622573853
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 30,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Banners/SM_Prop_Flag_Pole_01.prefab",
+            "name": "SM_Prop_Flag_Pole_01",
+            "size": {
+                "x": 0.29969727993011477,
+                "y": 2.6539745330810549,
+                "z": 0.3460693359375
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 31,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Sack_01.prefab",
+            "name": "SM_Prop_Sack_01",
+            "size": {
+                "x": 0.6212477087974548,
+                "y": 0.23154567182064057,
+                "z": 0.40631476044654848
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 32,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Sack_02.prefab",
+            "name": "SM_Prop_Sack_02",
+            "size": {
+                "x": 0.6212476491928101,
+                "y": 0.2355046421289444,
+                "z": 0.40631476044654848
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 33,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Sack_Stack_01.prefab",
+            "name": "SM_Prop_Sack_Stack_01",
+            "size": {
+                "x": 1.0023661851882935,
+                "y": 0.9621604084968567,
+                "z": 0.9988311529159546
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 34,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Sack_Stack_02.prefab",
+            "name": "SM_Prop_Sack_Stack_02",
+            "size": {
+                "x": 0.7530539035797119,
+                "y": 0.8009344935417175,
+                "z": 1.2906088829040528
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 35,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_PlanterBox_01.prefab",
+            "name": "SM_Prop_PlanterBox_01",
+            "size": {
+                "x": 2.0971055030822756,
+                "y": 0.7262892723083496,
+                "z": 0.8325469493865967
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 36,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_PlanterBox_Preset_01.prefab",
+            "name": "SM_Prop_PlanterBox_Preset_01",
+            "size": {
+                "x": 2.09710693359375,
+                "y": 2.0536699295043947,
+                "z": 0.8325469493865967
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 37,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_PlanterBox_Preset_02.prefab",
+            "name": "SM_Prop_PlanterBox_Preset_02",
+            "size": {
+                "x": 2.0971055030822756,
+                "y": 0.9402779340744019,
+                "z": 0.8325469493865967
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 38,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_PlanterBox_Preset_03.prefab",
+            "name": "SM_Prop_PlanterBox_Preset_03",
+            "size": {
+                "x": 2.0971055030822756,
+                "y": 1.1572571992874146,
+                "z": 0.8660390973091126
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 39,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_PlanterBox_Small_Preset_01.prefab",
+            "name": "SM_Prop_PlanterBox_Small_Preset_01",
+            "size": {
+                "x": 1.4808205366134644,
+                "y": 0.9057919383049011,
+                "z": 0.8325469493865967
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 40,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Box_01.prefab",
+            "name": "SM_Env_Planter_Box_01",
+            "size": {
+                "x": 1.5262010097503663,
+                "y": 0.5070342421531677,
+                "z": 5.043737888336182
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 41,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Box_02.prefab",
+            "name": "SM_Env_Planter_Box_02",
+            "size": {
+                "x": 1.855625867843628,
+                "y": 0.7873114347457886,
+                "z": 5.0261993408203129
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 42,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Preset_01.prefab",
+            "name": "SM_Env_Planter_Preset_01",
+            "size": {
+                "x": 2.091931104660034,
+                "y": 1.7888007164001465,
+                "z": 4.964637756347656
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 43,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Preset_02.prefab",
+            "name": "SM_Env_Planter_Preset_02",
+            "size": {
+                "x": 1.5773910284042359,
+                "y": 1.559596061706543,
+                "z": 4.660673141479492
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 44,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Pot_01.prefab",
+            "name": "SM_Env_Planter_Pot_01",
+            "size": {
+                "x": 0.9168297052383423,
+                "y": 1.0417349338531495,
+                "z": 0.916828989982605
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 45,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Pot_03.prefab",
+            "name": "SM_Env_Planter_Pot_03",
+            "size": {
+                "x": 0.6345803737640381,
+                "y": 1.0102342367172242,
+                "z": 0.6345797777175903
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 46,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Planter_Pedestal_01_Preset_01.prefab",
+            "name": "SM_Env_Planter_Pedestal_01_Preset_01",
+            "size": {
+                "x": 0.5906646847724915,
+                "y": 1.7692452669143677,
+                "z": 0.5967822670936585
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 47,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Ivy_Pot_01.prefab",
+            "name": "SM_Env_Ivy_Pot_01",
+            "size": {
+                "x": 0.5906646847724915,
+                "y": 1.119899034500122,
+                "z": 0.5967822670936585
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 48,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Fountain_01.prefab",
+            "name": "SM_Env_Fountain_01",
+            "size": {
+                "x": 4.897299766540527,
+                "y": 2.9544572830200197,
+                "z": 4.64878511428833
+            },
+            "renderers": 5,
+            "materials": 2,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 49,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Hay_Cart_01.prefab",
+            "name": "SM_Prop_Hay_Cart_01",
+            "size": {
+                "x": 1.65098237991333,
+                "y": 1.2278640270233155,
+                "z": 2.643889904022217
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 50,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Vehicles/SM_Veh_Cart_01.prefab",
+            "name": "SM_Veh_Cart_01",
+            "size": {
+                "x": 1.8795592784881592,
+                "y": 1.3199007511138917,
+                "z": 4.418278694152832
+            },
+            "renderers": 5,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 51,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Vehicles/SM_Veh_Cart_02.prefab",
+            "name": "SM_Veh_Cart_02",
+            "size": {
+                "x": 1.8795592784881592,
+                "y": 1.0233029127120972,
+                "z": 4.4365997314453129
+            },
+            "renderers": 5,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 52,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Vehicles/SM_Veh_Cart_03.prefab",
+            "name": "SM_Veh_Cart_03",
+            "size": {
+                "x": 1.8795592784881592,
+                "y": 1.3199007511138917,
+                "z": 3.2145371437072756
+            },
+            "renderers": 3,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 53,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Vehicles/SM_Veh_Wheelbarrow_01.prefab",
+            "name": "SM_Veh_Wheelbarrow_01",
+            "size": {
+                "x": 0.7058173418045044,
+                "y": 0.9029999375343323,
+                "z": 2.0899648666381838
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 54,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Pot_01.prefab",
+            "name": "SM_Prop_Pot_01",
+            "size": {
+                "x": 0.42100486159324648,
+                "y": 0.2800910174846649,
+                "z": 0.42141783237457278
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 55,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Pot_02.prefab",
+            "name": "SM_Prop_Pot_02",
+            "size": {
+                "x": 0.33099597692489626,
+                "y": 0.5570979714393616,
+                "z": 0.3285824656486511
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 56,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Flowers_01.prefab",
+            "name": "SM_Env_Flowers_01",
+            "size": {
+                "x": 1.0407661199569703,
+                "y": 0.7454971075057983,
+                "z": 1.4771606922149659
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 57,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Flowers_05.prefab",
+            "name": "SM_Env_Flowers_05",
+            "size": {
+                "x": 0.90190589427948,
+                "y": 0.5028877854347229,
+                "z": 0.9531066417694092
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 58,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Flowers_10.prefab",
+            "name": "SM_Env_Flowers_10",
+            "size": {
+                "x": 0.8989394903182983,
+                "y": 0.5500032901763916,
+                "z": 0.8820350170135498
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 59,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Bush_Flowers_01.prefab",
+            "name": "SM_Env_Bush_Flowers_01",
+            "size": {
+                "x": 0.8650082945823669,
+                "y": 1.5706851482391358,
+                "z": 0.8108779788017273
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 60,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Bush_Flowers_03.prefab",
+            "name": "SM_Env_Bush_Flowers_03",
+            "size": {
+                "x": 1.9077270030975342,
+                "y": 1.871297001838684,
+                "z": 1.3992946147918702
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 61,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Bush_01.prefab",
+            "name": "SM_Env_Bush_01",
+            "size": {
+                "x": 3.695742130279541,
+                "y": 2.6667873859405519,
+                "z": 3.545839786529541
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 62,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Bush_Cluster_01.prefab",
+            "name": "SM_Env_Bush_Cluster_01",
+            "size": {
+                "x": 15.257694244384766,
+                "y": 9.423652648925782,
+                "z": 10.592226028442383
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 63,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Tree_Round_01.prefab",
+            "name": "SM_Env_Tree_Round_01",
+            "size": {
+                "x": 2.887979030609131,
+                "y": 5.982126235961914,
+                "z": 2.391130208969116
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 64,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Tree_Round_02.prefab",
+            "name": "SM_Env_Tree_Round_02",
+            "size": {
+                "x": 3.3824462890625,
+                "y": 8.079309463500977,
+                "z": 3.221160888671875
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 65,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Tree_Round_03.prefab",
+            "name": "SM_Env_Tree_Round_03",
+            "size": {
+                "x": 4.428372859954834,
+                "y": 8.268080711364746,
+                "z": 3.8583295345306398
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 66,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Tree_Large_01.prefab",
+            "name": "SM_Env_Tree_Large_01",
+            "size": {
+                "x": 14.527421951293946,
+                "y": 16.887941360473634,
+                "z": 9.883203506469727
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 67,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Tree_Thin_01.prefab",
+            "name": "SM_Env_Tree_Thin_01",
+            "size": {
+                "x": 1.19794499874115,
+                "y": 3.740600109100342,
+                "z": 1.356353759765625
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 68,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Environments/SM_Env_Big_Tree_01.prefab",
+            "name": "SM_Env_Big_Tree_01",
+            "size": {
+                "x": 8.758913040161133,
+                "y": 12.735112190246582,
+                "z": 10.98299789428711
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 69,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Table_Barrel_01.prefab",
+            "name": "SM_Prop_Table_Barrel_01",
+            "size": {
+                "x": 0.9174438118934631,
+                "y": 0.4792777895927429,
+                "z": 0.9085562825202942
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 70,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Bread_Crate_01.prefab",
+            "name": "SM_Prop_Bread_Crate_01",
+            "size": {
+                "x": 0.8267661333084106,
+                "y": 0.6709656119346619,
+                "z": 0.5241690278053284
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 71,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/Furniture/SM_Prop_Workbench_01_Preset.prefab",
+            "name": "SM_Prop_Workbench_01_Preset",
+            "size": {
+                "x": 2.4437575340270998,
+                "y": 1.636322259902954,
+                "z": 1.2529441118240357
+            },
+            "renderers": 1,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        },
+        {
+            "index": 72,
+            "path": "Assets/PolygonFantasyKingdom/Prefabs/Props/SM_Prop_Cage_Cart_01.prefab",
+            "name": "SM_Prop_Cage_Cart_01",
+            "size": {
+                "x": 1.1434282064437867,
+                "y": 2.0947988033294679,
+                "z": 2.0001158714294435
+            },
+            "renderers": 2,
+            "materials": 1,
+            "shader": "Universal Render Pipeline/Lit"
+        }
+    ]
+}

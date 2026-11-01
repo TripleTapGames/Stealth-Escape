@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73cefa42c860e47c7f3ca1ddc08e3ed4, type: 3}
+  m_Name: Town_03_Residential_Driveway
+  m_EditorClassIdentifier: 
+  displayName: Residential Driveway
+  description: Garages, vehicles and driveway details.
+  seed: 54
+  groundPrefab: {fileID: 1902952277092618, guid: 0b302a0ec5a7a2a48879f3ca6ac1abad,
+    type: 3}
+  groundTint: {r: 0.9, g: 0.9, b: 0.88, a: 1}
+  floorA: {r: 0.78, g: 0.78, b: 0.76, a: 1}
+  floorB: {r: 0.74, g: 0.74, b: 0.72, a: 1}
+  kerbColor: {r: 0.78, g: 0.78, b: 0.76, a: 1}
+  marginTiles: 1.2
+  coverProps:
+  - {fileID: 1299846362916210, guid: 183e952709142f144bc3668ec857b2df, type: 3}
+  - {fileID: 1553826968180558, guid: 3ad8a79aa34ec764885be45c25593d3d, type: 3}
+  - {fileID: 1316042046803048, guid: 3fdf20d49caeacc478c3e5886a0eb454, type: 3}
+  - {fileID: 1327906085710106, guid: aed17f0b12409a641ab8ae9e3eebd895, type: 3}
+  wallProp: {fileID: 1299282625427246, guid: 9b1348552d66bd1438b9ddee5b470167, type: 3}
+  wallHeight: 0.55
+  roadNorth: 0
+  roadTile: {fileID: 0}
+  sidewalkTile: {fileID: 0}
+  buildings:
+  - {fileID: 1453203562746868, guid: c967b3d3b3d988144acf28f592fdb2fe, type: 3}
+  - {fileID: 1185575685447016, guid: aba168a0966599544980000f122159b4, type: 3}
+  buildingHeight: 3
+  roadVehicles: []
+  roadSouth: 0
+  southVehicles:
+  - {fileID: 1968802732931520, guid: 03cb2a4568ff1a942aa83dc550cdfcf9, type: 3}
+  - {fileID: 1847148240549790, guid: bfec9736616e0d74fa58c16f2e83dcdc, type: 3}
+  southProps: []
+  southPropCount: 4
+  fenceSegment: {fileID: 1719411279065754, guid: ffe16f9903d0b604aab93d16dfb3281d,
+    type: 3}
+  fencePost: {fileID: 1330766047959420, guid: 957c0d3270bfd844aba900730d2fbad9, type: 3}
+  fenceGate: {fileID: 0}
+  hedge: {fileID: 0}
+  trees:
+  - {fileID: 1380769908907772, guid: 223aa9d7d1bf62b40997651754341f4c, type: 3}
+  treeCount: 2
+  bushes:
+  - {fileID: 1888910535514012, guid: 08f2f2026c32bca4987f070e974fd111, type: 3}
+  bushCount: 3
+  streetLamp: {fileID: 1222605844096246, guid: 407790dd1c3280640a785d19f9c4c7b1, type: 3}
+  bench: {fileID: 0}
+  bin: {fileID: 1976048941788026, guid: f3670e9426db5f14282125c41eb76a18, type: 3}
+  accents:
+  - {fileID: 1979539875909978, guid: 634a52dd3611dbb4eb4015e379e8f198, type: 3}
+  - {fileID: 1526559398329862, guid: d6904a7e4834d6c4cadc8051de58e778, type: 3}
+  - {fileID: 1359723901517416, guid: 68eeb5e60d5733d44af1f5c84ee8d8b4, type: 3}
+  accentCount: 3
+  sunColor: {r: 1, g: 0.95, b: 0.85, a: 1}
+  sunIntensity: 1.5
+  sunAngles: {x: 52, y: -34}
+  background: {r: 0.62, g: 0.8, b: 0.86, a: 1}
+  ambientSky: {r: 0.86, g: 0.9, b: 0.96, a: 1}
+  ambientEquator: {r: 0.9, g: 0.88, b: 0.82, a: 1}
+  ambientGround: {r: 0.6, g: 0.6, b: 0.56, a: 1}
