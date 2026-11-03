@@ -60,6 +60,8 @@ namespace ShadowSteps.Art2D
         public Rect backgroundBoardRect = new Rect(0f, 0f, 1f, 1f);
         [Tooltip("Room around the tile grid inside backgroundBoardRect; 1 = the grid exactly fills the rect.")]
         public float backgroundBoardPadding = 1f;
+        [Tooltip("When the level's outer ring is all walls, frame only the interior cells into backgroundBoardRect so the painted boundary wall coincides with the logical one (rays clipped by the hidden ring stop at the painted wall).")]
+        public bool backgroundFrameInsideBoundaryWalls = true;
         [Tooltip("Draw the rounded board panel and its shadow under the tiles. Off when the background itself is the board surface.")]
         public bool showBoardPanel = true;
         [Tooltip("Draw the per-cell floor tiles. Off when the background paints the ground (nodes, paths, walls, cover and overlays still draw).")]
@@ -89,6 +91,12 @@ namespace ShadowSteps.Art2D
         public float characterCastShadowSize = 1.85f;
         [Tooltip("Tint for the cast shadow sprite (the art is already soft black; use white with alpha).")]
         public Color characterCastShadowTint = new Color(1f, 1f, 1f, 0.85f);
+        [Header("Camera art (final): one upright sprite per drawn facing, pivot at the base plate; replaces the rotated generated head")]
+        [Tooltip("Index = drawn Direction (North = back view, East = side right, South = front with the lens, West = side left). Leave empty to use the generated bracket + head.")]
+        public Sprite[] cameraArt = new Sprite[4];
+        [Tooltip("Scale of the camera art in node spacings per sprite unit (2048 px = 1 unit).")] public float cameraArtSize = 0.9f;
+        [Tooltip("Tint of the camera art while EMP-disabled (the lens is baked into the art).")] public Color cameraArtDisabledTint = new Color(0.55f, 0.85f, 1f, 1f);
+        public bool HasCameraArt { get { if (cameraArt == null || cameraArt.Length != 4) return false; foreach (var s in cameraArt) if (s == null) return false; return true; } }
         [Header("Camera mounts (decorative anchors; the logical wall cell and facing never move)")]
         [Tooltip("Wall stub / parapet piece drawn against the wall-cell edge behind a wall-mounted camera. Authored with the board side up.")]
         public Sprite cameraWallPlate;

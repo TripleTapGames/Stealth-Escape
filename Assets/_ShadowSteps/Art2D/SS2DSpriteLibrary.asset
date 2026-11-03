@@ -22,6 +22,7 @@ MonoBehaviour:
     width: 0.432
     height: 0.368
   backgroundBoardPadding: 1
+  backgroundFrameInsideBoundaryWalls: 1
   showBoardPanel: 0
   showFloorTiles: 0
   showPerimeterWalls: 0
@@ -60,6 +61,13 @@ MonoBehaviour:
     type: 3}
   characterCastShadowSize: 1.85
   characterCastShadowTint: {r: 1, g: 1, b: 1, a: 0.85}
+  cameraArt:
+  - {fileID: 21300000, guid: 6a59fd7fd6d0c4c72979cf17323f51ab, type: 3}
+  - {fileID: 21300000, guid: 5ebccec4f1fee41429efecdf66a19082, type: 3}
+  - {fileID: 21300000, guid: 947c17c1cda3b45de818407b24b77342, type: 3}
+  - {fileID: 21300000, guid: 92861a690bc4640cfa016b99b1626c8d, type: 3}
+  cameraArtSize: 0.9
+  cameraArtDisabledTint: {r: 0.55, g: 0.85, b: 1, a: 1}
   cameraWallPlate: {fileID: 21300000, guid: db083b650c2ca4900acaf2f66d01306b, type: 3}
   cameraPole: {fileID: 21300000, guid: e783e77da5b824c11a21d09a14172e4c, type: 3}
   exitDoorClosed: {fileID: 21300000, guid: b4897bed104e24db3adb2994072d1459, type: 3}
@@ -121,7 +129,7 @@ MonoBehaviour:
     includesBase: 1
   boardMargin: 0.62
   tileSize: 0.94
-  nodeSize: 0.2
+  nodeSize: 0.27
   lineWidth: 0.05
   crateSize: 0.86
   wallSize: 0.94

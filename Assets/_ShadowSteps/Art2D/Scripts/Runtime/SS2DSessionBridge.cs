@@ -290,7 +290,10 @@ namespace ShadowSteps.Art2D
                     if (!turned[i] && e >= 0.5f) { Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); turned[i] = true; }
                 }
                 for (int i = 0; i < stage.Cameras.Count; i++)
-                    Renderer.CameraHeads[i].localRotation = Quaternion.Slerp(Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T)), Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T + 1)), e);
+                {
+                    if (Renderer.UsesDirectionalCameraArt) { if (e >= 0.5f) Renderer.SetCameraVisualFacing(i, CameraTrack.FacingAt(stage.Cameras[i], o.Before.T + 1)); } // per-facing art: swap at the half-way point
+                    else Renderer.CameraHeads[i].localRotation = Quaternion.Slerp(Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T)), Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T + 1)), e);
+                }
                 yield return null;
             }
             for (int i = 0; i < n; i++) { Renderer.SetGuardWalking(i, false); if (!turned[i]) Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); }

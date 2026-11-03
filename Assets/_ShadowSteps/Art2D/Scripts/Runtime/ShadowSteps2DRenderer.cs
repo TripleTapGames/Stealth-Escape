@@ -76,7 +76,9 @@ namespace ShadowSteps.Art2D
             if (library.backgroundFit == SS2DBackgroundFit.FrameBoard && IsBuilt && r.width > 0.01f && r.height > 0.01f)
             {
                 float s = Layout.NodeSpacing, pad = Mathf.Max(0.1f, library.backgroundBoardPadding);
-                float gridW = ViewLayout.Width * s * pad, gridH = ViewLayout.Height * s * pad;
+                // With an all-wall boundary ring the playable area is the interior; mapping that onto the painted floor puts the hidden ring under the painted walls.
+                int ring = library.backgroundFrameInsideBoundaryWalls && BoundaryIsAllWalls(Stage) ? 1 : 0;
+                float gridW = Mathf.Max(1, ViewLayout.Width - 2 * ring) * s * pad, gridH = Mathf.Max(1, ViewLayout.Height - 2 * ring) * s * pad;
                 float k = Mathf.Max(gridW / (r.width * size.x), gridH / (r.height * size.y));
                 // Ground-rect centre relative to the image centre (sprite units at scale 1); the grid centre is this transform's origin.
                 var off = new Vector2((r.center.x - 0.5f) * size.x, (r.center.y - 0.5f) * size.y);
@@ -122,6 +124,15 @@ namespace ShadowSteps.Art2D
         private readonly List<SpriteRenderer> _cameraHighlights = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _cameraLenses = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _cameraTypeMarkers = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _cameraBodies = new List<SpriteRenderer>();
+        /// <summary>True when the library carries the four per-facing camera sprites: the head transform still turns (logical facing), the visible body swaps sprites and stays upright.</summary>
+        public bool UsesDirectionalCameraArt => library != null && library.HasCameraArt;
+        /// <summary>Visual-only sprite swap (used mid-tween by the bridge); the logical facing and the cone follow the state.</summary>
+        public void SetCameraVisualFacing(int i, Direction facing)
+        {
+            if (i < 0 || i >= _cameraBodies.Count || _cameraBodies[i] == null) return;
+            _cameraBodies[i].sprite = library.cameraArt[(int)View(facing)];
+        }
         private readonly List<bool> _cameraPoleMounted = new List<bool>();
         // Last presented camera facings / EMP state, door mask and clouds: the cone silhouettes are traced from these with the engine's ray-cast.
         private readonly List<Direction> _cameraFacings = new List<Direction>();
@@ -142,6 +153,12 @@ namespace ShadowSteps.Art2D
             return true;
         }
         private static bool OnPerimeter(Stage stage, GridCoord c) => c.X == 0 || c.Y == 0 || c.X == stage.Width - 1 || c.Y == stage.Height - 1;
+        public static bool BoundaryIsAllWalls(Stage stage)
+        {
+            for (int x = 0; x < stage.Width; x++) if (!stage.IsWall(new GridCoord(x, 0)) || !stage.IsWall(new GridCoord(x, stage.Height - 1))) return false;
+            for (int y = 0; y < stage.Height; y++) if (!stage.IsWall(new GridCoord(0, y)) || !stage.IsWall(new GridCoord(stage.Width - 1, y))) return false;
+            return true;
+        }
 
         /// <summary>Level decoration in use (null = library defaults).</summary>
         public SS2DLevelArtLayout ArtLayout { get; private set; }
@@ -162,6 +179,8 @@ namespace ShadowSteps.Art2D
         }
         /// <summary>Logical offset (node spacings) → drawn offset with the rotation.</summary>
         private Vector3 Offset(Vector2 logical, float s) { var v = new Vector3(logical.x, -logical.y, 0f) * s; return Rotated ? new Vector3(-v.y, v.x, 0f) : v; }
+        /// <summary>Drawn offset for a logical (node-spacing) offset, with the portrait rotation applied.</summary>
+        public Vector3 DrawnOffset(Vector2 logical) => Offset(logical, Layout.NodeSpacing);
 
         private struct InteriorWallPlan { public SS2DObstacleArt art; public SS2DWallAxis axis; public Vector2 shift; public Vector2 offset; public int sortingOffset; public float scale; }
         private readonly Dictionary<GridCoord, InteriorWallPlan> _interiorArt = new Dictionary<GridCoord, InteriorWallPlan>();
@@ -421,8 +440,19 @@ namespace ShadowSteps.Art2D
                 bracket.transform.localRotation = RotationFor(cam.MountFace); bracket.gameObject.SetActive(!pole);
                 var head = Make(holder.transform, "Head", lib.cameraHead, Vector3.zero, lib.cameraSize * 1.15f * s, Color.white, SS2DLayers.Props, 51);
                 _cameraHeads.Add(head.transform);
+                if (lib.HasCameraArt)
+                {
+                    // Final art: the head keeps its logical rotation (invisible), the body child shows the sprite for the drawn facing, upright, pivot on the base plate at the anchor.
+                    head.sprite = null; bracket.gameObject.SetActive(false);
+                    var body = Make(head.transform, "Body", lib.cameraArt[(int)View(cam.Facing)], Vector3.zero, 1f, Color.white, SS2DLayers.Props, 51);
+                    body.transform.localScale = Vector3.one * (lib.cameraArtSize * s / Mathf.Max(0.01f, lib.cameraSize * 1.15f * s)); // undo the head's scale
+                    _cameraBodies.Add(body);
+                    if (pole) { var m = holder.transform.Find("Mount"); if (m != null) m.gameObject.SetActive(false); } // the art has its own pedestal and plate
+                }
+                else _cameraBodies.Add(null);
                 // The lens is its own sprite (child of the head, so it turns with it): amber while active, cyan while EMP-disabled.
                 var lens = Make(head.transform, "Lens", lib.cameraLens, new Vector3(0f, 0.30f, 0f), 0.34f, lib.cameraLensActive, SS2DLayers.Props, 52);
+                if (lib.HasCameraArt) lens.gameObject.SetActive(false); // the lens is baked into the art; the EMP state tints the body
                 _cameraLenses.Add(lens);
                 // Type indicator beside the mount: circular arrow for rotating (flipped for counter-clockwise), two-way arc for sweeping.
                 var side = Quaternion.Euler(0f, 0f, 90f) * WorldDir(View(cam.MountFace));
@@ -463,7 +493,7 @@ namespace ShadowSteps.Art2D
         {
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
-            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
+            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
             Player = null; _key = null; _exit = null; _previewMarker = null; _background = null; _door = null;
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Reset();
             Stage = null;
@@ -495,6 +525,12 @@ namespace ShadowSteps.Art2D
             if (i < 0 || i >= _cameraHeads.Count) return;
             _cameraFacings[i] = facing; _cameraDisabledNow[i] = disabledActionsLeft > 0;
             _cameraHeads[i].localRotation = RotationFor(facing);
+            if (i < _cameraBodies.Count && _cameraBodies[i] != null)
+            {
+                _cameraBodies[i].sprite = library.cameraArt[(int)View(facing)];
+                _cameraBodies[i].transform.localRotation = Quaternion.Inverse(_cameraHeads[i].localRotation); // upright on screen
+                _cameraBodies[i].color = disabledActionsLeft > 0 ? library.cameraArtDisabledTint : Color.white;
+            }
             _cameraBadges[i].gameObject.SetActive(disabledActionsLeft > 0);
             for (int k = 0; k < _cameraPips[i].Length; k++) _cameraPips[i][k].gameObject.SetActive(k < disabledActionsLeft);
             _cameraLenses[i].color = disabledActionsLeft > 0 ? library.cameraLensDisabled : library.cameraLensActive;

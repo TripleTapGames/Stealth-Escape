@@ -125,6 +125,23 @@ namespace ShadowSteps.Art2D.Editor
             catch (System.Exception e) { Debug.LogError("[SS2D] environment failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
+        /// <summary>Batch entry: review frames of every sweeping/rotating camera state (LEVEL-24 t0/t2, LEVEL-19 t1/t3, LEVEL-18 t2/t3) for cone debugging.</summary>
+        public static void RenderCameraStates()
+        {
+            try
+            {
+                RenderReview(ScenePath, "LEVEL-18", null, "Art2D_Debug_LEVEL-18_t0");
+                RenderReview(ScenePath, "LEVEL-24", null, "Art2D_Debug_LEVEL-24_t0");
+                RenderReview(ScenePath, "LEVEL-24", new[] { "WAIT", "WAIT" }, "Art2D_Debug_LEVEL-24_t2");
+                RenderReview(ScenePath, "LEVEL-19", new[] { "WAIT" }, "Art2D_Debug_LEVEL-19_t1");
+                RenderReview(ScenePath, "LEVEL-19", new[] { "WAIT", "WAIT", "WAIT" }, "Art2D_Debug_LEVEL-19_t3");
+                RenderReview(ScenePath, "LEVEL-18", new[] { "WAIT", "WAIT" }, "Art2D_Debug_LEVEL-18_t2");
+                RenderReview(ScenePath, "LEVEL-18", new[] { "WAIT", "WAIT", "WAIT" }, "Art2D_Debug_LEVEL-18_t3");
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] debug frames failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
         /// <summary>Synthetic review stage: a lone wall cell in the middle of the floor carrying a fixed camera (pole mount). Not shipped.</summary>
         public static Stage PoleMountDemoStage()
         {

@@ -38,6 +38,12 @@ namespace ShadowSteps.Art2D.Editor
         static readonly Vector2 BushPivot = new Vector2(0.515f, 0.502f), WallSidePivot = new Vector2(0.50f, 0.60f), WallFrontPivot = new Vector2(0.518f, 0.61f);
         public const string LevelArtDir = "Assets/_ShadowSteps/Art2D/LevelArt/";
         public const string CastShadowPath = SpritesRoot + "Characters/character_shadow.png";
+        public const string CameraDir = SpritesRoot + "Cameras/";
+        /// <summary>Drawn-direction order (North, East, South, West): back view, side right, front (lens), side left.</summary>
+        static readonly string[] CameraFiles = { "cam_back.png", "cam_right.png", "cam_front.png", "cam_left.png" };
+        /// <summary>Centre of the base plate, shared by all four views (plate x 625–1357, y 1410–1740 of 2048).</summary>
+        static readonly Vector2 CameraPivot = new Vector2(0.483f, 0.23f);
+        public static bool HasCameraArt() { foreach (var f in CameraFiles) if (!File.Exists(CameraDir + f)) return false; return true; }
         /// <summary>Centre of the shadow's round lobe (the base-disc shadow), measured from the alpha: (1180, 1180) of 2048.</summary>
         static readonly Vector2 CastShadowPivot = new Vector2(0.576f, 0.424f);
 
@@ -93,6 +99,14 @@ namespace ShadowSteps.Art2D.Editor
                 lib.characterCastShadow = AssetDatabase.LoadAssetAtPath<Sprite>(CastShadowPath);
                 lib.characterCastShadowSize = 1.85f; lib.characterCastShadowTint = new Color(1f, 1f, 1f, 0.85f);
             }
+            if (HasCameraArt())
+            {
+                var art = new Sprite[4];
+                for (int d = 0; d < 4; d++) { Configure(CameraDir + CameraFiles[d], CharacterPpu, CameraPivot, 1024, SpriteMeshType.Tight); }
+                AssetDatabase.Refresh();
+                for (int d = 0; d < 4; d++) art[d] = AssetDatabase.LoadAssetAtPath<Sprite>(CameraDir + CameraFiles[d]);
+                lib.cameraArt = art; lib.cameraArtSize = 0.9f;
+            }
             if (HasObstacleArt())
             {
                 Configure(BushPath, ObstaclePpu, BushPivot, 1024, SpriteMeshType.Tight);
@@ -124,7 +138,8 @@ namespace ShadowSteps.Art2D.Editor
             layout.stageCode = "LEVEL-19"; layout.defaultObstacle = SS2DObstacleArt.BushPlanter;
             layout.obstacles = new System.Collections.Generic.List<SS2DObstacleArtEntry>
             {
-                new SS2DObstacleArtEntry { x = 4, y = 1, art = SS2DObstacleArt.StoneWall, wallAxis = SS2DWallAxis.LogicalY },
+                // Slid 0.36 toward the camera side (logical −x) so the thin stone body sits on the cell edge where the camera's rays are clipped by this cover cell.
+                new SS2DObstacleArtEntry { x = 4, y = 1, art = SS2DObstacleArt.StoneWall, wallAxis = SS2DWallAxis.LogicalY, offset = new Vector2(-0.36f, 0f) },
                 new SS2DObstacleArtEntry { x = 1, y = 3, art = SS2DObstacleArt.BushPlanter },
             };
             layout.cameras = new System.Collections.Generic.List<SS2DCameraArtEntry> { new SS2DCameraArtEntry { cameraId = "cam1", mount = SS2DCameraMountArt.StoneWall } };

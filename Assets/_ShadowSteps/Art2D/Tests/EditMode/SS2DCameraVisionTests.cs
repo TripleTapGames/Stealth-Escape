@@ -96,7 +96,7 @@ namespace ShadowSteps.Art2D.Tests
                 var art = r.library.FindLevelArt("LEVEL-19");
                 bool stone = r.library.wallSide != null && (art != null && art.FindCamera("cam1") != null && art.FindCamera("cam1").mount == SS2DCameraMountArt.StoneWall || art == null && r.library.preferStoneCameraMounts);
                 Assert.AreEqual(stone ? r.library.wallSide : r.library.cameraWallPlate, mount.sprite, stone ? "final stone piece along the rotated boundary" : "generated wall stub");
-                Assert.IsTrue(r.transform.Find("Props/Camera_0/Bracket").gameObject.activeSelf, "wall bracket shown");
+                if (r.UsesDirectionalCameraArt) Assert.IsNotNull(r.transform.Find("Props/Camera_0/Head/Body"), "final camera art body"); else Assert.IsTrue(r.transform.Find("Props/Camera_0/Bracket").gameObject.activeSelf, "wall bracket shown");
                 Assert.IsNull(r.transform.Find("Props/Wall_3_0"), "no grey block under the wall-mounted camera when perimeter walls are hidden");
                 // Anchor: the wall-cell edge toward the lens node, after rotation; the stub lies just inside the wall cell.
                 var edge = r.Pos(cam.WallCell) + (r.Pos(cam.WallCell.Neighbor(cam.MountFace)) - r.Pos(cam.WallCell)) * 0.5f;
@@ -213,7 +213,9 @@ namespace ShadowSteps.Art2D.Tests
                 var bush = r.transform.Find("Props/Cover_X_1_3").GetComponent<SpriteRenderer>();
                 Assert.AreEqual(lib.wallFront, wall.sprite, "(4,1) is a stone wall running along logical Y: drawn horizontal after the rotation → front piece");
                 Assert.AreEqual(lib.bush, bush.sprite, "(1,3) is the bush planter");
-                Assert.Less(Vector3.Distance(wall.transform.localPosition, r.Pos(new GridCoord(4, 1))), 1e-4f, "aligned with its node");
+                var entry = art.Find(new GridCoord(4, 1));
+                Assert.Less(Vector3.Distance(wall.transform.localPosition, r.Pos(new GridCoord(4, 1)) + r.DrawnOffset(entry.offset)), 1e-4f, "on its node plus the layout's decorative offset (slid to the cell edge where the cone is clipped)");
+                Assert.LessOrEqual(Mathf.Abs(entry.offset.x) + Mathf.Abs(entry.offset.y), 0.5f, "offset stays inside the cell");
                 Assert.Less(Vector3.Distance(bush.transform.localPosition, r.Pos(new GridCoord(1, 3))), 1e-4f);
                 // Camera: logical anchor unchanged (wall-face edge), mounted on the stone side piece (drawn vertical along the rotated boundary).
                 var cam = stage.Cameras[0];
@@ -373,6 +375,34 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsFalse(PolyContains(r2.GuardCones, r2.Pos(new GridCoord(3, 2))));
             }
             finally { Object.DestroyImmediate(r2.gameObject); }
+        }
+
+        [Test]
+        public void DirectionalCameraArt_SwapsTheSpritePerDrawnFacing_StaysUpright_AndTintsWhenDisabled()
+        {
+            var stage = Pack().FindByCode("LEVEL-18"); var lib = Library();
+            if (!lib.HasCameraArt) Assert.Ignore("no final camera art imported");
+            var r = Build(stage); var cam = stage.Cameras[0];
+            try
+            {
+                var body = r.transform.Find("Props/Camera_0/Head/Body").GetComponent<SpriteRenderer>();
+                Assert.IsFalse(r.transform.Find("Props/Camera_0/Head/Lens").gameObject.activeSelf, "lens is baked into the art");
+                Assert.IsFalse(r.transform.Find("Props/Camera_0/Bracket").gameObject.activeSelf);
+                var state = StageState.Initial(stage);
+                for (int t = 0; t < 4; t++)
+                {
+                    Present(r, stage, state);
+                    var facing = CameraTrack.FacingAt(cam, t);
+                    Assert.AreEqual(lib.cameraArt[(int)r.View(facing)], body.sprite, "sprite for the drawn facing at t=" + t);
+                    Assert.Less(Quaternion.Angle(Quaternion.identity, body.transform.rotation), 0.01f, "body upright on screen at t=" + t);
+                    Assert.Less(Quaternion.Angle(r.RotationFor(facing), r.CameraHeads[0].localRotation), 0.01f, "logical head rotation kept");
+                    state = After(stage, state, "WAIT");
+                }
+                Assert.AreEqual(Color.white, body.color);
+                r.SetCamera(0, cam.Facing, 2, false); Assert.AreEqual(lib.cameraArtDisabledTint, body.color, "EMP tint on the body");
+                r.SetCamera(0, cam.Facing, 0, false); Assert.AreEqual(Color.white, body.color);
+            }
+            finally { Object.DestroyImmediate(r.gameObject); }
         }
 
         private static int CountCovers(ShadowSteps2DRenderer r) { int n = 0; foreach (Transform t in r.transform.Find("Props")) if (t.name.StartsWith("Cover_X_") && !t.name.EndsWith("_Shadow")) n++; return n; }
