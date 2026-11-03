@@ -34,6 +34,106 @@ namespace ShadowSteps.Art2D.Editor
         [MenuItem("Shadow Steps/2D/Generate sprites, capture characters and build the prototype scene")]
         public static void GenerateAll() { Generate(render: false); }
 
+        /// <summary>Standard level scene for any stage: the same composition as the prototype (composer + 2D presentation + HUD prefab + edit-mode preview). Path: Art2D/Levels/SS2D_&lt;code&gt;.unity.</summary>
+        public static string CreateLevelScene(string stageCode)
+        {
+            var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+            if (lib == null) lib = SS2DSpriteGenerator.Generate();
+            string path = "Assets/_ShadowSteps/Art2D/Levels/SS2D_" + stageCode.Replace("-", "_") + ".unity";
+            CreateScene(lib, stageCode, path);
+            return path;
+        }
+
+        /// <summary>Batch entry: configure and assign the final PNG art (Sprites/Backgrounds, Sprites/Characters/Player|Guards), rebuild the prototype scene and render one 1080×1920 frame.</summary>
+        public static void ApplyFinalArtAndRender()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) lib = SS2DSpriteGenerator.Generate();
+                if (!SS2DFinalArtImporter.Import(lib)) throw new System.IO.FileNotFoundException("final art PNGs missing under " + SS2DFinalArtImporter.SpritesRoot);
+                lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                CreateScene(lib, StageCode, ScenePath);
+                RenderSceneTo(ScenePath, "Docs/Reports/Renders/Art2D_FinalArt_LEVEL-2_1080x1920.png", 1080, 1920, false);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] final art failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>
+        /// Batch entry for the camera-mount milestone: regenerate the placeholder sprites (adds camera_wall_plate / camera_pole),
+        /// re-apply the final art, then render LEVEL-19 (wall-mounted sweeping camera, active vision), a synthetic lone-wall
+        /// stage (pole mount), LEVEL-18 at t=1 (rotating) and LEVEL-23 after EMP#0 (disabled) from the prototype scene.
+        /// </summary>
+        public static void RenderCameraMounts()
+        {
+            try
+            {
+                var lib = SS2DSpriteGenerator.Generate();
+                lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                SS2DFinalArtImporter.ImportIfPresent(lib);
+                lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                CreateScene(lib, StageCode, ScenePath);
+                RenderReview(ScenePath, "LEVEL-19", null, "Art2D_Camera_Mounts_LEVEL-19_1080x1920");
+                RenderReview(ScenePath, "LEVEL-18", new[] { "WAIT" }, "Art2D_Camera_Mounts_Rotating_t1_LEVEL-18_1080x1920");
+                RenderReview(ScenePath, "LEVEL-23", new[] { "EMP#0" }, "Art2D_Camera_Mounts_EMP_LEVEL-23_1080x1920");
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                var pv = Object.FindObjectOfType<SS2DPreviewController>();
+                if (pv != null) { pv.OverrideStage = PoleMountDemoStage(); pv.previewActions = null; pv.BuildPreview(); RenderOpenScene("Docs/Reports/Renders/Art2D_Camera_Mounts_Pole_Demo_1080x1920.png", 1080, 1920, false); pv.OverrideStage = null; }
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single); // leave the saved LEVEL-2 scene untouched
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] camera mounts failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>Batch entry for the cone-vision milestone: no regeneration; renders LEVEL-19 (sweeping camera, t=0 active cone and t=2 clipped by cover), LEVEL-18 t=1, LEVEL-23 after EMP#0 and the pole demo.</summary>
+        public static void RenderCameraCone()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) throw new System.IO.FileNotFoundException(SS2DSpriteLibrary.DefaultAssetPath);
+                RenderReview(ScenePath, "LEVEL-19", null, "Art2D_Camera_Cone_LEVEL-19_1080x1920");
+                RenderReview(ScenePath, "LEVEL-19", new[] { "WAIT", "WAIT" }, "Art2D_Camera_Cone_t2_LEVEL-19_1080x1920");
+                RenderReview(ScenePath, "LEVEL-18", new[] { "WAIT" }, "Art2D_Camera_Cone_Rotating_t1_LEVEL-18_1080x1920");
+                RenderReview(ScenePath, "LEVEL-23", new[] { "EMP#0" }, "Art2D_Camera_Cone_EMP_LEVEL-23_1080x1920");
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                var pv = Object.FindObjectOfType<SS2DPreviewController>();
+                if (pv != null) { pv.OverrideStage = PoleMountDemoStage(); pv.previewActions = null; pv.BuildPreview(); RenderOpenScene("Docs/Reports/Renders/Art2D_Camera_Cone_Pole_Demo_1080x1920.png", 1080, 1920, false); pv.OverrideStage = null; }
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] camera cone render failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>Batch entry for the environment milestone: import the obstacle art + LEVEL-19 layout, build the LEVEL-19 level scene and render it.</summary>
+        public static void ApplyEnvironmentAndRender()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) lib = SS2DSpriteGenerator.Generate();
+                if (!SS2DFinalArtImporter.Import(lib)) throw new System.IO.FileNotFoundException("final art missing");
+                if (!SS2DFinalArtImporter.HasObstacleArt()) throw new System.IO.FileNotFoundException("obstacle art missing under " + SS2DFinalArtImporter.ObstacleDir);
+                AssetDatabase.SaveAssets();
+                string scene = CreateLevelScene("LEVEL-19");
+                RenderSceneTo(scene, "Docs/Reports/Renders/Art2D_Environment_LEVEL-19_1080x1920.png", 1080, 1920, false);
+                RenderReview(scene, "LEVEL-19", new[] { "WAIT", "WAIT" }, "Art2D_Environment_t2_LEVEL-19_1080x1920");
+                RenderReview(scene, "LEVEL-23", null, "Art2D_Environment_LEVEL-23_1080x1920");
+                RenderReview(scene, "LEVEL-2", null, "Art2D_Environment_LEVEL-2_1080x1920");
+                RenderReview(scene, "LEVEL-25", null, "Art2D_Environment_LEVEL-25_1080x1920");
+                RenderReview(scene, "LEVEL-11", null, "Art2D_Environment_LEVEL-11_1080x1920");
+                EditorSceneManager.OpenScene(scene, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] environment failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>Synthetic review stage: a lone wall cell in the middle of the floor carrying a fixed camera (pole mount). Not shipped.</summary>
+        public static Stage PoleMountDemoStage()
+        {
+            var b = new ShadowSteps.V3.StageBuilder { Id = 990, Code = "DEMO-POLE", Title = "Pole Mount", Start = new GridCoord(1, 1), Exit = new GridCoord(5, 3), AlarmBudget = 3 }
+                .FromRows(new[] { "#######", "#.....#", "#..#..#", "#.....#", "#######" });
+            b.Cameras.Add(new ShadowSteps.V3.CameraSpec("cam1", new GridCoord(3, 2), Direction.South, Direction.South, ShadowSteps.V3.CameraKind.Fixed));
+            return b.Build();
+        }
+
         /// <summary>Batch entry: everything plus the 1080×1920 renders (plain and with HUD guides) and the extra verification frames.</summary>
         public static void GenerateAndRender()
         {
@@ -46,6 +146,8 @@ namespace ShadowSteps.Art2D.Editor
             if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             var lib = SS2DSpriteGenerator.Generate();
             SS2DCharacterCapture.Capture(lib, out var capture);
+            lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+            SS2DFinalArtImporter.ImportIfPresent(lib); // the generator and capture refill the placeholder slots; final art wins when it is on disk
             lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
             var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
             var stage = pack.FindByCode(StageCode);
@@ -133,12 +235,13 @@ namespace ShadowSteps.Art2D.Editor
                 else if (rx(n, "^Camera_\\d+$")) r.cameraSprites++;
                 else if (n == "Key") r.keySprites++;
                 else if (n == "Exit") r.exitSprites++;
-                else if (n == "Overlay_Fill" && t.gameObject.activeSelf) r.visionOverlaySprites++;
+                else if (n == "Door") r.doorSprites += 0; // exit door is counted separately below
+                else if (n == "NodeRing" && t.gameObject.activeSelf && t.parent != null && (t.parent.name == "CameraVision" || t.parent.name == "GuardVision")) r.visionOverlaySprites++;
             }
             var scene = EditorSceneManager.GetActiveScene();
             foreach (var go in scene.GetRootGameObjects())
             {
-                r.meshRenderers += go.GetComponentsInChildren<MeshRenderer>(true).Length;
+                foreach (var mr in go.GetComponentsInChildren<MeshRenderer>(true)) if (mr.GetComponentInParent<CameraVisionOverlayRenderer>() == null) r.meshRenderers++; // the camera region is a flat 2D mesh on a sprite layer
                 r.skinnedMeshRenderers += go.GetComponentsInChildren<SkinnedMeshRenderer>(true).Length;
                 r.spriteRenderers += go.GetComponentsInChildren<SpriteRenderer>(true).Length;
             }
@@ -155,6 +258,9 @@ namespace ShadowSteps.Art2D.Editor
             if (r.cameraSprites != r.cameras) r.problems.Add("camera sprites " + r.cameraSprites + " != cameras " + r.cameras);
             if (r.keySprites != r.keyExpected) r.problems.Add("key sprites " + r.keySprites + " != " + r.keyExpected);
             if (r.exitSprites != 1) r.problems.Add("exit sprites " + r.exitSprites + " != 1");
+            var doorT = rend.transform.Find("Props/Door");
+            if (doorT == null) r.problems.Add("exit door missing");
+            else if (stage.Inside(rend.ToGrid(doorT.position)) && !stage.IsWall(rend.ToGrid(doorT.position)) && stage.IsFloor(rend.ToGrid(doorT.position))) r.problems.Add("exit door is drawn on a floor node");
             if (r.visionOverlaySprites != r.guardVisionCells + r.cameraVisionCells) r.problems.Add("vision overlay cells " + r.visionOverlaySprites + " != engine cells " + (r.guardVisionCells + r.cameraVisionCells));
             if (r.meshRenderers + r.skinnedMeshRenderers > 0) r.problems.Add("scene contains 3D renderers: " + r.meshRenderers + " mesh, " + r.skinnedMeshRenderers + " skinned");
             if (r.threeDAssetsReferenced.Count > 0) r.problems.Add("scene depends on 3D assets: " + string.Join(", ", r.threeDAssetsReferenced));
@@ -172,6 +278,58 @@ namespace ShadowSteps.Art2D.Editor
 
         // ---- headless render (same approach as the 3D batch renderer; the HUD canvas is screen-space-camera so it is included)
 
+        /// <summary>
+        /// Camera demonstration: the standard level scene for LEVEL-16 (fixed camera) plus review frames rendered from
+        /// real engine states for every camera kind and effect: active (LEVEL-16), EMP-disabled (LEVEL-23 after EMP#0),
+        /// rotating (LEVEL-18 at t=1), sweeping (LEVEL-19 at t=2), guard + camera overlap with a door and smoke charge (LEVEL-25).
+        /// </summary>
+        public static void GenerateCameraDemo()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null || lib.cameraLens == null) lib = SS2DSpriteGenerator.Generate();
+                string scene = CreateLevelScene("LEVEL-16");
+                RenderSceneTo(scene, "Docs/Reports/Renders/Art2D_Camera_Active_LEVEL-16_1080x1920.png", 1080, 1920, false);
+                RenderReview(scene, "LEVEL-23", new[] { "EMP#0" }, "Art2D_Camera_EMP_LEVEL-23_1080x1920");
+                RenderReview(scene, "LEVEL-18", new[] { "WAIT" }, "Art2D_Camera_Rotating_t1_LEVEL-18_1080x1920");
+                RenderReview(scene, "LEVEL-19", new[] { "WAIT", "WAIT" }, "Art2D_Camera_Sweeping_t2_LEVEL-19_1080x1920");
+                RenderReview(scene, "LEVEL-25", null, "Art2D_Camera_Overlap_LEVEL-25_1080x1920");
+                EditorSceneManager.OpenScene(scene, OpenSceneMode.Single); // leave the saved LEVEL-16 scene untouched
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] camera demo failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>Opens the scene, switches the edit-mode preview to another stage/state (not saved) and renders it.</summary>
+        private static void RenderReview(string scenePath, string stageCode, string[] actions, string name)
+        {
+            EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            var pv = Object.FindObjectOfType<SS2DPreviewController>(); if (pv == null) return;
+            pv.stageCode = stageCode; pv.previewActions = actions; pv.BuildPreview();
+            RenderOpenScene("Docs/Reports/Renders/" + name + ".png", 1080, 1920, false);
+        }
+
+        /// <summary>Batch entry: re-render the saved prototype scene without regenerating anything (-ssName optional).</summary>
+        public static void RenderOnly()
+        {
+            try
+            {
+                string name = "Art2D_Prototype_LEVEL-2_1080x1920";
+                var args = System.Environment.GetCommandLineArgs();
+                for (int i = 0; i < args.Length - 1; i++) if (args[i] == "-ssName") name = args[i + 1];
+                RenderSceneTo(ScenePath, "Docs/Reports/Renders/" + name + ".png", 1080, 1920, false);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] render failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        private static void LogHudState()
+        {
+            var hud = Object.FindObjectOfType<SS2DHudCanvas>();
+            if (hud == null) { Debug.Log("[SS2D] HUD: none in scene"); return; }
+            var c = hud.canvas;
+            Debug.Log("[SS2D] HUD: active=" + hud.gameObject.activeInHierarchy + " canvas=" + (c != null) + (c != null ? " mode=" + c.renderMode + " layer=" + c.sortingLayerName + " order=" + c.sortingOrder + " cam=" + (c.worldCamera != null ? c.worldCamera.name : "null") + " plane=" + c.planeDistance + " children=" + c.transform.childCount + " enabled=" + c.enabled + " scale=" + c.transform.localScale : ""));
+        }
+
         public static void RenderSceneTo(string scenePath, string outPath, int w, int h, bool guides)
         {
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
@@ -185,6 +343,7 @@ namespace ShadowSteps.Art2D.Editor
             var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             cam.targetTexture = rt; cam.aspect = (float)w / h;
             var fitter = cam.GetComponent<SS2DCameraFitter>(); if (fitter != null) fitter.Fit((float)w / h);
+            LogHudState();
             Canvas.ForceUpdateCanvases();
             cam.Render();
             var prev = RenderTexture.active; RenderTexture.active = rt;

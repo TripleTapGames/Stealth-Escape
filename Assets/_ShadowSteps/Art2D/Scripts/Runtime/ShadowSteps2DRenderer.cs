@@ -29,6 +29,12 @@ namespace ShadowSteps.Art2D
 
         /// <summary>Drawn (local) position of a logical cell.</summary>
         public Vector3 Pos(GridCoord c) { var p = Layout.WorldPosition(c); return Rotated ? new Vector3(-p.y, p.x, 0f) : p; }
+        /// <summary>Continuous logical board point (node centres at integers) → drawn local position, with the same portrait rotation as <see cref="Pos"/>.</summary>
+        public Vector3 PosF(double x, double y)
+        {
+            var p = new Vector3(Layout.Origin.x + (float)x * Layout.NodeSpacing, Layout.Origin.y - (float)y * Layout.NodeSpacing, 0f);
+            return Rotated ? new Vector3(-p.y, p.x, 0f) : p;
+        }
         /// <summary>Logical cell nearest to a world point (inverse of <see cref="Pos"/>), for tap picking.</summary>
         public GridCoord ToGrid(Vector3 world) { var l = transform.InverseTransformPoint(world); var p = Rotated ? new Vector3(l.y, -l.x, 0f) : l; return Layout.NearestCoord(p); }
         /// <summary>Screen direction a logical direction is drawn as (rotation only).</summary>
@@ -36,6 +42,64 @@ namespace ShadowSteps.Art2D
         /// <summary>Logical direction for a screen direction (swipes, arrow keys); inverse of <see cref="View"/>.</summary>
         public Direction Logical(Direction screen) => Rotated ? (Direction)(((int)screen + 1) % 4) : screen;
         public Quaternion RotationFor(Direction logical) => BoardLayout.RotationFor(View(logical));
+
+        /// <summary>Drawn (local) position of the exit door, one step beyond the exit node along the board edge it sits on.</summary>
+        public Vector3 DoorPosition { get; private set; }
+        /// <summary>Screen direction from the exit node to the door.</summary>
+        public Direction DoorOutward { get; private set; }
+        /// <summary>Local rectangle (XY) of everything the camera should frame: board panel plus the door.</summary>
+        public Rect ViewBounds { get; private set; }
+        private SpriteRenderer _background, _door;
+
+        /// <summary>Board edge the exit touches (logical direction pointing off the board); nearest edge when it is interior.</summary>
+        public static Direction ExitEdge(Stage stage)
+        {
+            var e = stage.Exit;
+            if (e.X == stage.Width - 1) return Direction.East; if (e.X == 0) return Direction.West; if (e.Y == 0) return Direction.North; if (e.Y == stage.Height - 1) return Direction.South;
+            int dE = stage.Width - 1 - e.X, dW = e.X, dN = e.Y, dS = stage.Height - 1 - e.Y, m = Mathf.Min(Mathf.Min(dE, dW), Mathf.Min(dN, dS));
+            return m == dN ? Direction.North : m == dE ? Direction.East : m == dS ? Direction.South : Direction.West;
+        }
+
+        /// <summary>
+        /// Places the background (call after the camera fit). Always a uniform scale, never stretched.
+        /// CoverView: centred on the camera, scaled to cover the view. FrameBoard: the library's
+        /// <c>backgroundBoardRect</c> (the painted ground) is scaled to enclose the tile grid and centred on it, then
+        /// enlarged only as far as needed so the camera view stays covered on every side.
+        /// </summary>
+        public void FitBackground(Camera cam)
+        {
+            if (_background == null || cam == null || _background.sprite == null) return;
+            float viewH = cam.orthographicSize * 2f, viewW = viewH * Mathf.Max(0.3f, cam.aspect);
+            var size = _background.sprite.bounds.size; size.x = Mathf.Max(0.01f, size.x); size.y = Mathf.Max(0.01f, size.y);
+            var camP = cam.transform.position;
+            var r = library.backgroundBoardRect;
+            if (library.backgroundFit == SS2DBackgroundFit.FrameBoard && IsBuilt && r.width > 0.01f && r.height > 0.01f)
+            {
+                float s = Layout.NodeSpacing, pad = Mathf.Max(0.1f, library.backgroundBoardPadding);
+                float gridW = ViewLayout.Width * s * pad, gridH = ViewLayout.Height * s * pad;
+                float k = Mathf.Max(gridW / (r.width * size.x), gridH / (r.height * size.y));
+                // Ground-rect centre relative to the image centre (sprite units at scale 1); the grid centre is this transform's origin.
+                var off = new Vector2((r.center.x - 0.5f) * size.x, (r.center.y - 0.5f) * size.y);
+                var grid = transform.position;
+                // Coverage: for each view edge, the scale at which the image edge reaches it (image centre = grid − off·k).
+                float need = 0f;
+                need = Mathf.Max(need, (grid.x - camP.x + viewW * 0.5f) / Mathf.Max(0.01f, off.x + size.x * 0.5f));
+                need = Mathf.Max(need, (camP.x + viewW * 0.5f - grid.x) / Mathf.Max(0.01f, size.x * 0.5f - off.x));
+                need = Mathf.Max(need, (grid.y - camP.y + viewH * 0.5f) / Mathf.Max(0.01f, off.y + size.y * 0.5f));
+                need = Mathf.Max(need, (camP.y + viewH * 0.5f - grid.y) / Mathf.Max(0.01f, size.y * 0.5f - off.y));
+                k = Mathf.Max(k, need * 1.01f);
+                _background.transform.localScale = Vector3.one * k;
+                _background.transform.position = new Vector3(grid.x - off.x * k, grid.y - off.y * k, 5f);
+                return;
+            }
+            float cover = Mathf.Max(viewW * 1.04f / size.x, viewH * 1.04f / size.y);
+            _background.transform.localScale = Vector3.one * cover;
+            _background.transform.position = new Vector3(camP.x, camP.y, 5f);
+        }
+
+        public void SetExitDoorOpen(bool open) { if (_door != null) _door.sprite = open && library.exitDoorOpen != null ? library.exitDoorOpen : library.exitDoorClosed; }
+        /// <summary>True when the exit door sprite is drawn (library.showExitDoor).</summary>
+        public bool HasExitDoor => _door != null;
         public bool IsBuilt => Stage != null;
         public SS2DCharacter Player { get; private set; }
         public IReadOnlyList<SS2DCharacter> Guards => _guards;
@@ -57,6 +121,151 @@ namespace ShadowSteps.Art2D
         private readonly List<SpriteRenderer[]> _cameraPips = new List<SpriteRenderer[]>();
         private readonly List<SpriteRenderer> _cameraHighlights = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _cameraLenses = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _cameraTypeMarkers = new List<SpriteRenderer>();
+        private readonly List<bool> _cameraPoleMounted = new List<bool>();
+        // Last presented camera facings / EMP state, door mask and clouds: the cone silhouettes are traced from these with the engine's ray-cast.
+        private readonly List<Direction> _cameraFacings = new List<Direction>();
+        private readonly List<bool> _cameraDisabledNow = new List<bool>();
+        private int _openDoorMask;
+        private IReadOnlyList<SmokeCloud> _cloudState;
+        /// <summary>Drawn cone polygons (local positions, apex first) of the active cameras, as last shown.</summary>
+        public IReadOnlyList<Vector3[]> CameraCones => _cameraCones;
+        private readonly List<Vector3[]> _cameraCones = new List<Vector3[]>();
+        /// <summary>True when camera i is drawn on a pole (its wall cell is a lone block inside the floor); false for a wall stub / bracket.</summary>
+        public bool IsPoleMounted(int i) => i >= 0 && i < _cameraPoleMounted.Count && _cameraPoleMounted[i];
+        /// <summary>Wall-mount when the camera's wall cell is on the grid boundary or part of a wall run; pole when it is a lone block inside the floor (presentation only).</summary>
+        public static bool UsesPoleMount(Stage stage, CameraSpec cam)
+        {
+            var w = cam.WallCell;
+            if (w.X == 0 || w.Y == 0 || w.X == stage.Width - 1 || w.Y == stage.Height - 1) return false;
+            for (int d = 0; d < 4; d++) { var n = w.Neighbor((Direction)d); if (stage.Inside(n) && stage.IsWall(n)) return false; }
+            return true;
+        }
+        private static bool OnPerimeter(Stage stage, GridCoord c) => c.X == 0 || c.Y == 0 || c.X == stage.Width - 1 || c.Y == stage.Height - 1;
+
+        /// <summary>Level decoration in use (null = library defaults).</summary>
+        public SS2DLevelArtLayout ArtLayout { get; private set; }
+        /// <summary>Art chosen for an authored X cell (presentation only).</summary>
+        public SS2DObstacleArt CoverArt(GridCoord c)
+        {
+            var art = ArtLayout != null ? ArtLayout.ArtFor(c) : library.defaultObstacleArt;
+            if (art == SS2DObstacleArt.Default) art = library.defaultObstacleArt;
+            if (art == SS2DObstacleArt.BushPlanter && library.bush == null) art = SS2DObstacleArt.Crate;
+            if (art == SS2DObstacleArt.StoneWall && (library.wallSide == null || library.wallFront == null)) art = SS2DObstacleArt.Crate;
+            return art;
+        }
+        /// <summary>The stone sprite for a piece running along a logical axis, after the portrait rotation: a run drawn vertically uses the side piece, drawn horizontally the front piece.</summary>
+        public Sprite StoneSpriteFor(SS2DWallAxis axis)
+        {
+            bool drawnVertical = (axis == SS2DWallAxis.LogicalY) != Rotated;
+            return drawnVertical ? library.wallSide : library.wallFront;
+        }
+        /// <summary>Logical offset (node spacings) → drawn offset with the rotation.</summary>
+        private Vector3 Offset(Vector2 logical, float s) { var v = new Vector3(logical.x, -logical.y, 0f) * s; return Rotated ? new Vector3(-v.y, v.x, 0f) : v; }
+
+        private struct InteriorWallPlan { public SS2DObstacleArt art; public SS2DWallAxis axis; public Vector2 shift; public Vector2 offset; public int sortingOffset; public float scale; }
+        private readonly Dictionary<GridCoord, InteriorWallPlan> _interiorArt = new Dictionary<GridCoord, InteriorWallPlan>();
+        private readonly HashSet<GridCoord> _stoneWallCells = new HashSet<GridCoord>();
+        /// <summary>True when the wall cell is drawn with a stone piece of its own (interior run), so a camera on it needs no separate mount piece.</summary>
+        public bool IsStoneWallCell(GridCoord c) => _stoneWallCells.Contains(c);
+
+        /// <summary>
+        /// Interior '#' cells (inside the boundary ring) get final art instead of the grey block: each run of adjacent wall
+        /// cells is drawn with one stone piece per cell along the run's axis (corners follow their longer side); a lone
+        /// interior wall becomes a bush planter. A run that carries a camera is slid toward that camera's face so the camera
+        /// sits on the stone. The level layout may override any cell. Presentation only: the cells stay walls for the rules.
+        /// </summary>
+        private void PlanInteriorWalls(Stage stage, HashSet<GridCoord> poleCells)
+        {
+            _interiorArt.Clear();
+            var lib = library;
+            bool stoneOk = lib.wallSide != null && lib.wallFront != null, bushOk = lib.bush != null;
+            if (lib.interiorWallArt == SS2DObstacleArt.Crate || !stoneOk) return;
+            var interior = new List<GridCoord>();
+            for (int y = 1; y < stage.Height - 1; y++) for (int x = 1; x < stage.Width - 1; x++) { var c = new GridCoord(x, y); if (stage.IsWall(c) && !poleCells.Contains(c)) interior.Add(c); }
+            int WallsAlong(GridCoord c, int dx, int dy) { int n = 0; var a = new GridCoord(c.X + dx, c.Y + dy); var b = new GridCoord(c.X - dx, c.Y - dy); if (stage.Inside(a) && stage.IsWall(a)) n++; if (stage.Inside(b) && stage.IsWall(b)) n++; return n; }
+            // Axis per cell; runs = connected cells sharing an axis.
+            var axisOf = new Dictionary<GridCoord, SS2DWallAxis?>();
+            foreach (var c in interior)
+            {
+                var entry = ArtLayout != null ? ArtLayout.Find(c) : null;
+                int ax = WallsAlong(c, 1, 0), ay = WallsAlong(c, 0, 1);
+                SS2DWallAxis? axis = entry != null && entry.art == SS2DObstacleArt.StoneWall ? entry.wallAxis : (ax == 0 && ay == 0 ? (SS2DWallAxis?)null : (ax >= ay ? SS2DWallAxis.LogicalX : SS2DWallAxis.LogicalY));
+                if (entry != null && entry.art == SS2DObstacleArt.BushPlanter) axis = null;
+                axisOf[c] = axis;
+            }
+            var visited = new HashSet<GridCoord>();
+            foreach (var start in interior)
+            {
+                if (visited.Contains(start)) continue;
+                var axis = axisOf[start];
+                var run = new List<GridCoord>(); var queue = new Queue<GridCoord>(); queue.Enqueue(start); visited.Add(start);
+                while (queue.Count > 0)
+                {
+                    var c = queue.Dequeue(); run.Add(c);
+                    if (axis == null) continue;
+                    int dx = axis == SS2DWallAxis.LogicalX ? 1 : 0, dy = axis == SS2DWallAxis.LogicalY ? 1 : 0;
+                    foreach (var n in new[] { new GridCoord(c.X + dx, c.Y + dy), new GridCoord(c.X - dx, c.Y - dy) })
+                        if (axisOf.TryGetValue(n, out var na) && na == axis && visited.Add(n)) queue.Enqueue(n);
+                }
+                // Hug the first camera mounted on this run (face direction in logical units).
+                var shift = Vector2.zero;
+                foreach (var cam in stage.Cameras)
+                    if (run.Contains(cam.WallCell) && axis != null) { shift = new Vector2(DirectionUtil.DeltaX(cam.MountFace), DirectionUtil.DeltaY(cam.MountFace)) * lib.wallRunCameraHug; break; }
+                foreach (var c in run)
+                {
+                    var entry = ArtLayout != null ? ArtLayout.Find(c) : null;
+                    var plan = new InteriorWallPlan
+                    {
+                        art = axis == null ? (bushOk ? SS2DObstacleArt.BushPlanter : SS2DObstacleArt.Crate) : SS2DObstacleArt.StoneWall,
+                        axis = axis ?? SS2DWallAxis.LogicalX, shift = shift,
+                        offset = entry != null ? entry.offset : Vector2.zero, sortingOffset = entry != null ? entry.sortingOffset : 0, scale = entry != null ? Mathf.Max(0.1f, entry.scale) : 1f,
+                    };
+                    if (plan.art == SS2DObstacleArt.Crate) continue;
+                    _interiorArt[c] = plan;
+                    if (plan.art == SS2DObstacleArt.StoneWall) _stoneWallCells.Add(c);
+                }
+            }
+        }
+
+        private void DrawInteriorWall(GridCoord c, Vector3 p, float s, InteriorWallPlan plan)
+        {
+            var lib = library;
+            var pos = p + Offset(plan.shift + plan.offset, s);
+            int order = PropOrder(pos) + plan.sortingOffset;
+            if (plan.art == SS2DObstacleArt.BushPlanter) Make(_props, "Wall_" + c.X + "_" + c.Y, lib.bush, pos, lib.bushSize * plan.scale * s, Color.white, SS2DLayers.Props, order);
+            else Make(_props, "Wall_" + c.X + "_" + c.Y, StoneSpriteFor(plan.axis), pos, lib.stoneWallSize * plan.scale * s, Color.white, SS2DLayers.Props, order);
+        }
+
+        private void DrawCover(GridCoord c, Vector3 p, float s)
+        {
+            var lib = library; var entry = ArtLayout != null ? ArtLayout.Find(c) : null;
+            var art = CoverArt(c);
+            string name = "Cover_X_" + c.X + "_" + c.Y;
+            var pos = p + (entry != null ? Offset(entry.offset, s) : Vector3.zero);
+            int order = PropOrder(pos) + (entry != null ? entry.sortingOffset : 0);
+            float k = entry != null ? Mathf.Max(0.1f, entry.scale) : 1f;
+            switch (art)
+            {
+                case SS2DObstacleArt.BushPlanter:
+                    Make(_props, name, lib.bush, pos, lib.bushSize * k * s, Color.white, SS2DLayers.Props, order); // shadow is baked into the art
+                    break;
+                case SS2DObstacleArt.StoneWall:
+                    Make(_props, name, StoneSpriteFor(entry != null ? entry.wallAxis : SS2DWallAxis.LogicalX), pos, lib.stoneWallSize * k * s, Color.white, SS2DLayers.Props, order);
+                    break;
+                default:
+                    if (lib.crateShadow != null) Make(_props, name + "_Shadow", lib.crateShadow, pos + new Vector3(0.03f, -0.06f, 0f) * s, lib.crateSize * 1.12f * k * s, Color.white, SS2DLayers.Props, order - 1);
+                    Make(_props, name, lib.crate, pos, lib.crateSize * k * s, Color.white, SS2DLayers.Props, order);
+                    break;
+            }
+        }
+        public CameraVisionOverlayRenderer CameraOverlay { get; private set; }
+        /// <summary>Red sight fans of the guards (same overlay component as the cameras, hazard colours, drawn above the amber cones).</summary>
+        public CameraVisionOverlayRenderer GuardOverlay { get; private set; }
+        public IReadOnlyList<Vector3[]> GuardCones => _guardCones;
+        private readonly List<Vector3[]> _guardCones = new List<Vector3[]>();
+        private readonly Dictionary<int, GuardPose3> _guardPoses = new Dictionary<int, GuardPose3>();
+        public bool HasNode(GridCoord c) => _nodeSprites.ContainsKey(c);
         private readonly List<Transform> _clouds = new List<Transform>();
         private SpriteRenderer _key, _exit, _previewMarker;
         private readonly Overlay _guardVision = new Overlay(), _cameraVision = new Overlay(), _previewGuard = new Overlay(), _previewCamera = new Overlay(), _targets = new Overlay();
@@ -74,6 +283,7 @@ namespace ShadowSteps.Art2D
             if (!library.Validate(problems)) throw new System.InvalidOperationException("SS2DSpriteLibrary '" + library.name + "' is incomplete:\n - " + string.Join("\n - ", problems));
             Clear();
             Stage = stage;
+            ArtLayout = library.FindLevelArt(stage.Code);
             Layout = BoardLayout.For(stage);
             Rotated = autoRotatePortrait && stage.Width > stage.Height;
             ViewLayout = Rotated ? new BoardLayout(stage.Height, stage.Width, Layout.NodeSpacing) : Layout;
@@ -81,26 +291,38 @@ namespace ShadowSteps.Art2D
             _board = Root("Board"); _floor = Root("Floor"); _paths = Root("Paths"); _nodes = Root("Nodes"); _overlays = Root("Overlays"); _props = Root("Props"); _actors = Root("Actors"); _markers = Root("Markers"); _fx = Root("FX");
             _placeholderDisc = lib.node;
 
+            if (lib.backgroundSprite != null) _background = Make(_board, "Background", lib.backgroundSprite, Vector3.zero, 1f, lib.backgroundTint, SS2DLayers.Background, 0);
             // Board panel (9-sliced) with its soft shadow, sized to the grid plus the margin.
             var panelSize = new Vector2(ViewLayout.Width * s + 2f * lib.boardMargin * s, ViewLayout.Height * s + 2f * lib.boardMargin * s);
-            if (lib.boardShadow != null) Sliced(_board, "Board_Shadow", lib.boardShadow, panelSize + new Vector2(0.10f, 0.10f) * s, new Vector3(0f, -0.045f * s, 0f), new Color(1f, 1f, 1f, 0.85f), SS2DLayers.Board, 0);
-            Sliced(_board, "Board_Panel", lib.boardPanel, panelSize, Vector3.zero, lib.boardTint, SS2DLayers.Board, 1);
+            ViewBounds = new Rect(-panelSize * 0.5f, panelSize);
+            if (lib.showBoardPanel)
+            {
+                if (lib.boardShadow != null) Sliced(_board, "Board_Shadow", lib.boardShadow, panelSize + new Vector2(0.10f, 0.10f) * s, new Vector3(0f, -0.045f * s, 0f), new Color(1f, 1f, 1f, 0.85f), SS2DLayers.Board, 0);
+                Sliced(_board, "Board_Panel", lib.boardPanel, panelSize, Vector3.zero, lib.boardTint, SS2DLayers.Board, 1);
+            }
+
+            // Cells whose only structure is a pole-mounted camera: the post's base marks the blocked cell instead of a wall block.
+            var poleCells = new HashSet<GridCoord>();
+            foreach (var cam in stage.Cameras) if (lib.cameraPole != null && UsesPoleMount(stage, cam)) poleCells.Add(cam.WallCell);
+            _stoneWallCells.Clear(); PlanInteriorWalls(stage, poleCells);
 
             for (int y = 0; y < stage.Height; y++)
                 for (int x = 0; x < stage.Width; x++)
                 {
                     var c = new GridCoord(x, y); var p = Pos(c);
                     bool alt = (x + y) % 2 == 1;
-                    var tile = Make(_floor, "Tile_" + x + "_" + y, alt && lib.tileAlt != null ? lib.tileAlt : lib.tile, p, lib.tileSize * s, alt ? lib.tileAltTint : lib.tileTint, SS2DLayers.Floor, 0);
+                    if (lib.showFloorTiles) Make(_floor, "Tile_" + x + "_" + y, alt && lib.tileAlt != null ? lib.tileAlt : lib.tile, p, lib.tileSize * s, alt ? lib.tileAltTint : lib.tileTint, SS2DLayers.Floor, 0);
                     if (stage.IsWall(c))
                     {
-                        Make(_props, "Wall_" + x + "_" + y, lib.wall, p, lib.wallSize * s, Color.white, SS2DLayers.Props, PropOrder(p));
+                        bool hidden = poleCells.Contains(c) || (!lib.showPerimeterWalls && OnPerimeter(stage, c));
+                        if (hidden) { }
+                        else if (_interiorArt.TryGetValue(c, out var plan)) DrawInteriorWall(c, p, s, plan);
+                        else Make(_props, "Wall_" + x + "_" + y, lib.wall, p, lib.wallSize * s, Color.white, SS2DLayers.Props, PropOrder(p));
                     }
                     else if (stage.IsBlocked(c))
                     {
-                        // V4 'X': blocked cover. The rule treats the whole cell as solid; the crate is drawn slightly inside it.
-                        if (lib.crateShadow != null) Make(_props, "Cover_X_" + x + "_" + y + "_Shadow", lib.crateShadow, p + new Vector3(0.03f, -0.06f, 0f) * s, lib.crateSize * 1.12f * s, Color.white, SS2DLayers.Props, PropOrder(p) - 1);
-                        Make(_props, "Cover_X_" + x + "_" + y, lib.crate, p, lib.crateSize * s, Color.white, SS2DLayers.Props, PropOrder(p));
+                        // V4 'X': blocked cover. The rule treats the whole cell as solid whatever art is chosen for it.
+                        DrawCover(c, p, s);
                     }
                     else
                     {
@@ -129,20 +351,84 @@ namespace ShadowSteps.Art2D
                     }
                 }
 
-            _exit = Make(_props, "Exit", lib.exit, Pos(stage.Exit), lib.exitSize * s, lib.exitTint, SS2DLayers.Nodes, 2);
+            // Exit: highlight on the node (the logical exit) and a door beyond the board edge as the visible destination, joined by a doorstep path.
+            _exit = Make(_props, "Exit", lib.exitHighlight != null ? lib.exitHighlight : lib.exit, Pos(stage.Exit), lib.exitSize * s, lib.exitTint, SS2DLayers.Nodes, 2);
             var pulse = _exit.gameObject.AddComponent<SS2DPulse>(); pulse.amplitude = lib.exitPulse; pulse.baseScale = lib.exitSize * s;
+            DoorOutward = View(ExitEdge(stage));
+            var outVec = WorldDir(DoorOutward);
+            DoorPosition = Pos(stage.Exit) + outVec * (lib.doorOffset * s);
+            var stepLen = lib.doorOffset * s - lib.doorSize * 0.42f * s - lib.nodeSize * 0.55f * s;
+            if (lib.showExitDoor)
+            {
+                var step = Sliced(_paths, "Door_Path", lib.line, new Vector2(Mathf.Max(0.1f, stepLen), lib.lineWidth * s), Pos(stage.Exit) + outVec * (lib.nodeSize * 0.55f * s + stepLen * 0.5f), lib.lineTint, SS2DLayers.Paths, 1);
+                step.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(outVec.y, outVec.x) * Mathf.Rad2Deg);
+            }
+            if (lib.showExitDoor && lib.exitDoorClosed != null)
+            {
+                _door = Make(_props, "Door", lib.exitDoorClosed, DoorPosition, lib.doorSize * s, Color.white, SS2DLayers.Props, 500);
+                _door.transform.localRotation = BoardLayout.RotationFor(DoorOutward);
+                float half = lib.doorSize * 0.5f * s;
+                var doorRect = new Rect(DoorPosition.x - half, DoorPosition.y - half, 2f * half, 2f * half);
+                ViewBounds = Rect.MinMaxRect(Mathf.Min(ViewBounds.xMin, doorRect.xMin), Mathf.Min(ViewBounds.yMin, doorRect.yMin), Mathf.Max(ViewBounds.xMax, doorRect.xMax), Mathf.Max(ViewBounds.yMax, doorRect.yMax));
+            }
             if (stage.Key.HasValue) _key = Make(_props, "Key", lib.key, Pos(stage.Key.Value) + new Vector3(0f, 0.08f, 0f) * s, lib.propSize * s, lib.keyTint, SS2DLayers.Props, PropOrder(Pos(stage.Key.Value)));
 
             for (int i = 0; i < stage.Cameras.Count; i++)
             {
                 var cam = stage.Cameras[i];
-                var p = Pos(cam.WallCell) + WorldDir(View(cam.MountFace)) * (0.5f * s);
+                // Logical anchor: the wall-cell edge toward the lens node. Wall mount: camera on that edge over a wall stub.
+                // Pole mount (lone wall cell inside the floor): screen-upright post from the cell centre, camera head on top.
+                var camArt = ArtLayout != null ? ArtLayout.FindCamera(cam.Id) : null;
+                var mountArt = camArt != null ? camArt.mount : SS2DCameraMountArt.Auto;
+                if (mountArt == SS2DCameraMountArt.Pole && lib.cameraPole != null) poleCells.Add(cam.WallCell);
+                bool pole = poleCells.Contains(cam.WallCell) && mountArt != SS2DCameraMountArt.StoneWall && mountArt != SS2DCameraMountArt.Plate;
+                bool stone = !pole && lib.wallSide != null && lib.wallFront != null && (mountArt == SS2DCameraMountArt.StoneWall || (mountArt == SS2DCameraMountArt.Auto && lib.preferStoneCameraMounts));
+                bool onStoneRun = IsStoneWallCell(cam.WallCell); // the run itself (slid toward this face) is the mounting surface
+                var faceDir = WorldDir(View(cam.MountFace));
+                var p = pole ? Pos(cam.WallCell) + new Vector3(0f, lib.cameraPoleHeight * s, 0f) : Pos(cam.WallCell) + faceDir * (0.5f * s);
+                _cameraPoleMounted.Add(pole);
+                _cameraFacings.Add(cam.Facing); _cameraDisabledNow.Add(false);
                 _cameraPositions.Add(transform.TransformPoint(p));
                 var holder = new GameObject("Camera_" + i); holder.transform.SetParent(_props, false); holder.transform.localPosition = p;
                 var hl = Make(holder.transform, "Highlight", lib.highlightRing, Vector3.zero, lib.cameraSize * 2.2f * s, lib.cameraHighlight, SS2DLayers.Markers, 0); hl.gameObject.SetActive(false); _cameraHighlights.Add(hl);
-                Make(holder.transform, "Bracket", lib.cameraBody, Vector3.zero, lib.cameraSize * s, Color.white, SS2DLayers.Props, 50).transform.localRotation = RotationFor(cam.MountFace);
+                if (pole)
+                {
+                    // Post sprite: 1 unit tall at scale 1 with its pivot at the base, so scale = pole height; the base sits on the blocked cell centre.
+                    Make(holder.transform, "Mount", lib.cameraPole, new Vector3(0f, -lib.cameraPoleHeight * s, 0f), lib.cameraPoleHeight * s, Color.white, SS2DLayers.Props, 49);
+                }
+                else if (onStoneRun)
+                {
+                    var tag = new GameObject("Mount"); tag.transform.SetParent(holder.transform, false); tag.SetActive(false); // the run piece Wall_x_y is the mount
+                }
+                else if (stone)
+                {
+                    // Final stone wall piece along the mounting wall (perpendicular to the face), placed so its body ends flush with the wall face.
+                    // Side piece (drawn vertical): body half-width ≈ 0.13 → centre 0.36 behind the face. Front piece (drawn horizontal): the top
+                    // face is 0.15 tall above its pivot and the front face hangs 0.5 below it, so the centre sits 0.5 behind an upward face and 0.15 behind a downward one.
+                    var alongAxis = (cam.MountFace == Direction.North || cam.MountFace == Direction.South) ? SS2DWallAxis.LogicalX : SS2DWallAxis.LogicalY;
+                    var sprite = StoneSpriteFor(alongAxis);
+                    float back = sprite == lib.wallSide ? 0.36f : (faceDir.y > 0.5f ? 0.5f : 0.15f);
+                    var extra = camArt != null ? Offset(camArt.offset, s) : Vector3.zero;
+                    int so = camArt != null ? camArt.sortingOffset : 0;
+                    Make(holder.transform, "Mount", sprite, -faceDir * (back * s) + extra, lib.stoneWallSize * s, Color.white, SS2DLayers.Props, 49 + so);
+                }
+                else if (lib.cameraWallPlate != null)
+                {
+                    // Generated wall stub just inside the wall cell, flush with the edge, turned so its board side faces the floor.
+                    Make(holder.transform, "Mount", lib.cameraWallPlate, -faceDir * (0.13f * s), lib.cameraSize * 1.25f * s, Color.white, SS2DLayers.Props, 49).transform.localRotation = RotationFor(cam.MountFace);
+                }
+                var bracket = Make(holder.transform, "Bracket", lib.cameraBody, Vector3.zero, lib.cameraSize * s, Color.white, SS2DLayers.Props, 50);
+                bracket.transform.localRotation = RotationFor(cam.MountFace); bracket.gameObject.SetActive(!pole);
                 var head = Make(holder.transform, "Head", lib.cameraHead, Vector3.zero, lib.cameraSize * 1.15f * s, Color.white, SS2DLayers.Props, 51);
-                _cameraHeads.Add(head.transform); _cameraLenses.Add(head);
+                _cameraHeads.Add(head.transform);
+                // The lens is its own sprite (child of the head, so it turns with it): amber while active, cyan while EMP-disabled.
+                var lens = Make(head.transform, "Lens", lib.cameraLens, new Vector3(0f, 0.30f, 0f), 0.34f, lib.cameraLensActive, SS2DLayers.Props, 52);
+                _cameraLenses.Add(lens);
+                // Type indicator beside the mount: circular arrow for rotating (flipped for counter-clockwise), two-way arc for sweeping.
+                var side = Quaternion.Euler(0f, 0f, 90f) * WorldDir(View(cam.MountFace));
+                var marker = Make(holder.transform, "TypeMarker", cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, side * (0.46f * s), lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.Markers, 12);
+                marker.flipX = !cam.Clockwise; marker.gameObject.SetActive(cam.Kind != CameraKind.Fixed && marker.sprite != null);
+                _cameraTypeMarkers.Add(marker);
                 var badge = Make(holder.transform, "Disabled", lib.empBadge, new Vector3(0f, 0.30f, 0f) * s, lib.markerSize * 1.1f * s, lib.cameraDisabled, SS2DLayers.Markers, 2); badge.gameObject.SetActive(false); _cameraBadges.Add(badge);
                 var pips = new SpriteRenderer[2];
                 for (int k = 0; k < 2; k++) { pips[k] = Make(holder.transform, "Pip" + k, lib.pip, new Vector3((k - 0.5f) * 0.14f, -0.30f, 0f) * s, 0.08f * s, lib.cameraDisabled, SS2DLayers.Markers, 3); pips[k].gameObject.SetActive(false); }
@@ -162,6 +448,12 @@ namespace ShadowSteps.Art2D
                 rot.flipX = !stage.Guards[i].Clockwise; rot.gameObject.SetActive(stage.Guards[i].Kind == GuardKind.Rotating); _guardRotation.Add(rot);
             }
 
+            var camHost = new GameObject("CameraVisionHost"); camHost.transform.SetParent(_overlays, false);
+            CameraOverlay = camHost.AddComponent<CameraVisionOverlayRenderer>();
+            CameraOverlay.Setup(this, lib, _overlays);
+            var guardHost = new GameObject("GuardVisionHost"); guardHost.transform.SetParent(_overlays, false);
+            GuardOverlay = guardHost.AddComponent<CameraVisionOverlayRenderer>();
+            GuardOverlay.Setup(this, lib, _overlays, "GuardVision", lib.guardVisionFill, lib.guardVisionBorder, lib.guardVisionGlow, 6);
             _previewMarker = Make(_markers, "PreviewMarker", lib.highlightRing, Vector3.zero, lib.nodeSize * 2.6f * s, lib.previewSafe, SS2DLayers.Markers, 20);
             _previewMarker.gameObject.SetActive(false);
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Attach(this, _overlays);
@@ -171,8 +463,8 @@ namespace ShadowSteps.Art2D
         {
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
-            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _clouds.Clear();
-            Player = null; _key = null; _exit = null; _previewMarker = null;
+            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
+            Player = null; _key = null; _exit = null; _previewMarker = null; _background = null; _door = null;
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Reset();
             Stage = null;
         }
@@ -188,6 +480,7 @@ namespace ShadowSteps.Art2D
         {
             if (i < 0 || i >= _guards.Count) return;
             float s = Layout.NodeSpacing; var p = Pos(pose.Position);
+            _guardPoses[i] = pose;
             _guards[i].transform.localPosition = p; _guards[i].SetFacing(View(pose.Facing)); _guards[i].SetSortingOrderFromY();
             _guardNext[i].gameObject.SetActive(nextStep.HasValue);
             float my = _guards[i].MarkerY;
@@ -200,14 +493,19 @@ namespace ShadowSteps.Art2D
         public void SetCamera(int i, Direction facing, int disabledActionsLeft, bool highlight)
         {
             if (i < 0 || i >= _cameraHeads.Count) return;
+            _cameraFacings[i] = facing; _cameraDisabledNow[i] = disabledActionsLeft > 0;
             _cameraHeads[i].localRotation = RotationFor(facing);
             _cameraBadges[i].gameObject.SetActive(disabledActionsLeft > 0);
             for (int k = 0; k < _cameraPips[i].Length; k++) _cameraPips[i][k].gameObject.SetActive(k < disabledActionsLeft);
-            _cameraLenses[i].color = disabledActionsLeft > 0 ? library.cameraDisabled : Color.white;
+            _cameraLenses[i].color = disabledActionsLeft > 0 ? library.cameraLensDisabled : library.cameraLensActive;
             _cameraHighlights[i].gameObject.SetActive(highlight);
         }
 
-        public void SetDoor(int i, bool open) { if (_doors.TryGetValue(i, out var d) && d != null) { d.sprite = open ? library.doorOpen : library.doorLocked; var c = d.color; c.a = open ? 0.75f : 1f; d.color = c; } }
+        public void SetDoor(int i, bool open)
+        {
+            if (open) _openDoorMask |= 1 << i; else _openDoorMask &= ~(1 << i);
+            if (_doors.TryGetValue(i, out var d) && d != null) { d.sprite = open ? library.doorOpen : library.doorLocked; var c = d.color; c.a = open ? 0.75f : 1f; d.color = c; }
+        }
         public void SetKeyCollected(bool collected) { if (_key != null) _key.gameObject.SetActive(!collected); }
 
         public void SetReachable(IEnumerable<GridCoord> nodes, IEnumerable<EdgeKey> connections)
@@ -220,6 +518,7 @@ namespace ShadowSteps.Art2D
 
         public void SetClouds(IReadOnlyList<SmokeCloud> clouds)
         {
+            _cloudState = clouds;
             foreach (var c in _clouds) c.gameObject.SetActive(false);
             float s = Layout.NodeSpacing;
             for (int i = 0; i < clouds.Count; i++)
@@ -237,22 +536,49 @@ namespace ShadowSteps.Art2D
             }
         }
 
-        /// <summary>Exactly the cells the engine reports: red guard sight, amber camera footprint (both drawn so overlaps show).</summary>
+        /// <summary>Exactly the cells the engine reports: red guard cells (border drawn above everything, order 6) and the merged amber camera region (orders 1–4), so an overlapped node shows a red outer border around the amber inner region.</summary>
         public void SetVision(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells)
         {
-            _guardVision.Show(guardCells, library.guardVisionFill, library.guardVisionBorder, library.visionCellSize, 0);
-            _cameraVision.Show(cameraCells, library.cameraVisionFill, library.cameraVisionBorder, library.visionCellSize * 0.80f, 2);
+            // Guard sight as narrow red fans from each guard's node along its facing (traced by the engine, clipped like the detection), plus rings on the seen nodes.
+            var guardList = new List<GridCoord>(guardCells ?? System.Array.Empty<GridCoord>());
+            _guardCones.Clear();
+            foreach (var kv in _guardPoses)
+            {
+                var pts = Sight.GuardConeOutline(Stage, _openDoorMask, _cloudState, kv.Value, library.guardConeHalfAngleDegrees, 24, library.guardConeOvershoot, library.guardConeCurvature);
+                if (pts.Count < 3) continue;
+                var poly = new Vector3[pts.Count];
+                for (int k = 0; k < pts.Count; k++) poly[k] = PosF(pts[k].X, pts[k].Y);
+                _guardCones.Add(poly);
+            }
+            if (GuardOverlay != null) GuardOverlay.Show(guardList, _guardCones);
+            var camList = new List<GridCoord>(cameraCells ?? System.Array.Empty<GridCoord>());
+            // Cone silhouettes of the active cameras, traced by the engine (same occluders, doors and smoke as the detection) and mapped like nodes.
+            _cameraCones.Clear();
+            for (int i = 0; i < Stage.Cameras.Count && i < _cameraFacings.Count; i++)
+            {
+                if (_cameraDisabledNow[i]) continue;
+                var pts = Sight.CameraConeOutline(Stage, _openDoorMask, _cloudState, Stage.Cameras[i], _cameraFacings[i], Sight.ConeOutlineRays, library.cameraConeCurvature);
+                var poly = new Vector3[pts.Count];
+                for (int k = 0; k < pts.Count; k++) poly[k] = PosF(pts[k].X, pts[k].Y);
+                _cameraCones.Add(poly);
+            }
+            if (CameraOverlay != null) CameraOverlay.Show(camList, _cameraCones);
+            var camSet = new HashSet<GridCoord>(camList);
+            foreach (var kv in _nodeSprites) kv.Value.color = camSet.Contains(kv.Key) ? library.nodeCameraTint : library.nodeTint;
         }
+
+        /// <summary>Brief amber brightening of the camera region (detection / alarm).</summary>
+        public void FlashCameraVision() { if (CameraOverlay != null) CameraOverlay.Flash(); }
         public void SetPreview(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells, GridCoord? marker, Color markerColor)
         {
-            _previewGuard.Show(guardCells, library.previewFill, library.previewBorder, library.visionCellSize * 0.84f, 4);
-            _previewCamera.Show(cameraCells, library.previewFill, library.previewBorder, library.visionCellSize * 0.64f, 6);
+            _previewGuard.Show(guardCells, library.previewFill, library.previewBorder, library.visionCellSize * 0.84f, 7, 8);
+            _previewCamera.Show(cameraCells, library.previewFill, library.previewBorder, library.visionCellSize * 0.64f, 7, 8);
             if (_previewMarker == null) return;
             _previewMarker.gameObject.SetActive(marker.HasValue);
             if (marker.HasValue) { _previewMarker.transform.localPosition = Pos(marker.Value); _previewMarker.color = markerColor; }
         }
         public void ClearPreview() { _previewGuard.Clear(); _previewCamera.Clear(); if (_previewMarker != null) _previewMarker.gameObject.SetActive(false); }
-        public void SetTargets(IEnumerable<GridCoord> cells) => _targets.Show(cells, library.smokeTarget, library.smokeTarget, library.visionCellSize * 0.56f, 8);
+        public void SetTargets(IEnumerable<GridCoord> cells) => _targets.Show(cells, library.smokeTarget, library.smokeTarget, library.visionCellSize * 0.56f, 9, 10);
         public void ClearTargets() => _targets.Clear();
 
         /// <summary>Index of the camera within half a node of a world point (EMP targeting), or −1.</summary>
@@ -301,8 +627,9 @@ namespace ShadowSteps.Art2D
             private ShadowSteps2DRenderer _r; private Transform _parent; private int _count;
             public void Attach(ShadowSteps2DRenderer r, Transform parent) { _r = r; _parent = parent; _fills.Clear(); _rings.Clear(); _count = 0; }
             public void Reset() { _fills.Clear(); _rings.Clear(); _parent = null; _count = 0; }
-            public void Show(IEnumerable<GridCoord> cells, Color fill, Color border, float size, int order)
+            public void Show(IEnumerable<GridCoord> cells, Color fill, Color border, float size, int order, int borderOrder = -1)
             {
+                if (borderOrder < 0) borderOrder = order + 1;
                 Clear(); if (_parent == null || cells == null) return;
                 float s = _r.Layout.NodeSpacing;
                 foreach (var c in cells)
@@ -315,7 +642,7 @@ namespace ShadowSteps.Art2D
                         _rings.Add(Make(_parent, "Overlay_Ring", _r.library.visionRing, Vector3.zero, 1f, border, SS2DLayers.Overlays, order + 1));
                     }
                     var f = _fills[_count]; var b = _rings[_count];
-                    f.color = fill; b.color = border; f.sortingOrder = order; b.sortingOrder = order + 1;
+                    f.color = fill; b.color = border; f.sortingOrder = order; b.sortingOrder = borderOrder;
                     f.transform.localPosition = b.transform.localPosition = _r.Pos(c);
                     f.transform.localScale = b.transform.localScale = Vector3.one * size * s;
                     f.gameObject.SetActive(true); b.gameObject.SetActive(true);

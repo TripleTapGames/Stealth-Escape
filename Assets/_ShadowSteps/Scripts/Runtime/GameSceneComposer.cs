@@ -31,6 +31,14 @@ namespace ShadowSteps.Runtime
         [Tooltip("SS2DSpriteLibrary asset (from the Art2D assembly) used when Use2DArtPresentation is on.")]
         public ScriptableObject Art2DLibrary;
 
+        /// <summary>Optional presentation hook: called after a win is recorded with the outcome and a continuation (the results screen). Return true to take over and call the continuation later (or advance to the next stage yourself).</summary>
+        public System.Func<ShadowSteps.V3.ActionOutcome, System.Action, bool> WinTransition;
+        /// <summary>
+        /// Optional presentation hook for a capture or lockdown: called before the failure screen; return true to own the
+        /// timing (finish the guard's step/turn, play the capture beat) and invoke the continuation when the screen may appear.
+        /// </summary>
+        public System.Func<ShadowSteps.V3.ActionOutcome, System.Action, bool> CaptureTransition;
+
         public Camera BoardCamera { get; private set; }
         public BoardView Board { get; private set; }
         public GameSessionController Session { get; private set; }

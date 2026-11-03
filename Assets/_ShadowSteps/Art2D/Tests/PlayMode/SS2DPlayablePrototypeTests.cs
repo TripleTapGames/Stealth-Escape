@@ -63,9 +63,8 @@ namespace ShadowSteps.Art2D.Tests
 
         private HashSet<GridCoord> DrawnHazardCells()
         {
-            var set = new HashSet<GridCoord>();
-            foreach (var t in R.GetComponentsInChildren<Transform>(false))
-                if (t.name == "Overlay_Fill" && t.gameObject.activeInHierarchy && t.GetComponent<SpriteRenderer>().sortingOrder < 4) set.Add(R.ToGrid(t.position));
+            // Guard hazards are now drawn by the guard overlay (red fan + rings on the seen nodes); cameras by the camera overlay.
+            var set = new HashSet<GridCoord>(R.GuardOverlay.DrawnCells);
             return set;
         }
 
@@ -77,7 +76,8 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsTrue(R.Rotated, "6×4 stage drawn rotated for portrait");
             Assert.IsInstanceOf<SS2DHudCanvas>(_composer.Hud, "the 2D HUD prefab is the game HUD");
             foreach (var r in _composer.Board.GetComponentsInChildren<Renderer>(true)) Assert.IsFalse(r.enabled, "placeholder board hidden: " + r.name);
-            Assert.AreEqual(0, Object.FindObjectsOfType<MeshRenderer>().Length); Assert.AreEqual(0, Object.FindObjectsOfType<SkinnedMeshRenderer>().Length);
+            foreach (var mr in Object.FindObjectsOfType<MeshRenderer>()) Assert.IsNotNull(mr.GetComponentInParent<CameraVisionOverlayRenderer>(), "only the flat camera-region meshes may exist: " + mr.name);
+            Assert.AreEqual(0, Object.FindObjectsOfType<SkinnedMeshRenderer>().Length);
             Assert.IsNull(Object.FindObjectOfType<SS2DPreviewController>()?.boardRenderer.Stage, "art preview steps aside in play mode");
             Assert.AreEqual(new GridCoord(0, 2), S.State.Player); Assert.AreEqual(0, S.State.T);
             Assert.AreEqual("0", ((SS2DHudCanvas)_composer.Hud).actionsValue.text);
@@ -154,7 +154,18 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle();
             Assert.AreEqual(StageResult.Caught, S.State.Result);
-            Assert.IsTrue(_flow.Router.AnyModalOpen, "failure screen with Retry is shown");
+            // The failure screen waits for the guard to finish its turn and for the capture beat.
+            Assert.IsTrue(_bridge.CaptureSequenceRunning || _flow.Router.AnyModalOpen, "capture choreography owns the timing");
+            if (_bridge.CaptureSequenceRunning) Assert.IsFalse(_flow.Router.AnyModalOpen, "no failure screen while the guard is still finishing its move/turn and the capture beat plays");
+            float waited = 0f; while (_bridge.CaptureSequenceRunning && waited < 5f) { waited += Time.deltaTime; yield return null; }
+            yield return null;
+            // The rules keep the clock at the old index on a capture; the guard that caught the player by turning is shown at T+1 (its new facing), and so is its fan.
+            var caughtPose = GuardTrack.PoseAt(S.Stage.Guards[0], S.State.T + 1);
+            Assert.AreEqual(R.View(caughtPose.Facing), R.Guards[0].Facing, "guard completed its turn and stays turned (no snap back)");
+            Assert.AreNotEqual(R.View(GuardTrack.PoseAt(S.Stage.Guards[0], S.State.T).Facing), R.Guards[0].Facing, "not the pre-turn facing");
+            Assert.IsTrue(new HashSet<GridCoord>(Sight.GuardVision(S.Stage, S.State, caughtPose)).SetEquals(DrawnHazardCells()), "fan drawn for the new facing");
+            Assert.IsTrue(DrawnHazardCells().Contains(S.State.Player), "the fan covers the caught player");
+            Assert.IsTrue(_flow.Router.AnyModalOpen, "failure screen with Retry is shown after the choreography");
             Assert.IsNotNull(_flow.Router.Get<FailureScreen>()); Assert.IsTrue(_flow.Router.Get<FailureScreen>().IsVisible);
             Assert.IsTrue(S.InputLocked, "input locked behind the modal");
             var lib = R.library;
@@ -187,12 +198,49 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual(StageResult.Won, S.State.Result);
             Assert.AreEqual(7, S.State.T);
             Assert.AreEqual(3, StageScoring.Stars(S.State.T, S.Stage.Par));
-            Assert.IsTrue(_flow.Router.Get<ResultsScreen>().IsVisible, "results screen shown");
-            var result = AppServices.Save.GetResult(S.Stage.Id);
-            Assert.IsNotNull(result); Assert.IsTrue(result.Completed); Assert.AreEqual(7, result.BestTurns); Assert.AreEqual(3, result.BestStars);
+            int wonStageId = S.Stage.Id; var exitPos = R.Pos(S.Stage.Exit); var doorPos = R.DoorPosition;
+            var result = AppServices.Save.GetResult(wonStageId);
+            Assert.IsNotNull(result, "win recorded before the door sequence"); Assert.IsTrue(result.Completed); Assert.AreEqual(7, result.BestTurns); Assert.AreEqual(3, result.BestStars);
             Assert.IsFalse(result.Ghost, "Ghost is not offered on LEVEL-2");
-            Assert.IsTrue(AppServices.Save.IsUnlocked(S.Stage.Id + 1), "next stage unlocked");
-            Assert.IsTrue(((SS2DHudCanvas)_composer.Hud).messageLabel.text.Contains("★★★"));
+            Assert.IsTrue(AppServices.Save.IsUnlocked(wonStageId + 1), "next stage unlocked");
+            Assert.IsTrue(((SS2DHudCanvas)_composer.Hud).messageLabel.text.Contains("\u2605\u2605\u2605"));
+            // No exit door any more: the spy stays on the exit node and the results screen appears straight away.
+            Assert.IsFalse(R.library.playExitDoorSequence); Assert.IsFalse(_bridge.DoorSequenceRunning, "no door sequence");
+            Assert.IsFalse(R.HasExitDoor); Assert.IsNull(R.transform.Find("Props/Door"));
+            Assert.IsTrue(_flow.Router.AnyModalOpen, "results modal shown after the winning action");
+            Assert.IsNotNull(_flow.Router.Get<ResultsScreen>()); Assert.IsTrue(_flow.Router.Get<ResultsScreen>().IsVisible);
+            Assert.Less(Vector3.Distance(R.Player.transform.localPosition, exitPos), 1e-3f, "spy stays on the exit node");
+            Assert.AreEqual(wonStageId, S.Stage.Id, "no auto-advance; the results screen offers Next");
+            Assert.Greater(doorPos.y, exitPos.y, "the logical door anchor is still computed (unused)");
+            // Next from the results screen: the next stage opens in the same scene; the HUD and renderer follow.
+            var next = AppServices.Stages.NextAfter(wonStageId); Assert.IsNotNull(next);
+            _flow.Router.PopAllModals(); _composer.OpenStage(next); yield return null; yield return null;
+            Assert.AreEqual("LEVEL-3", S.Stage.Code); Assert.AreEqual(0, S.State.T); Assert.IsTrue(R.IsBuilt);
+            Assert.IsTrue(((SS2DHudCanvas)_composer.Hud).levelLabel.text.StartsWith("LEVEL 3"));
+            Assert.AreEqual(Color.white, R.Player.body.color); Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(S.State.Player)), 1e-3f);
+        }
+
+        /// <summary>Levels opened from the menus load Assets/_ShadowSteps/Scenes/Game.unity; it must compose with the 2D layer too, not the placeholder board.</summary>
+        [UnityTest]
+        public IEnumerator GameScene_OpenedFromMenus_UsesThe2DPresentation()
+        {
+            AppServices.ResetForTests();
+            AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
+            AppServices.InstallSaveForTests(new SaveData());
+            AppServices.PendingStageId = 21; // LEVEL-16, as the level-select would request it
+#if UNITY_EDITOR
+            EditorSceneManager.LoadSceneInPlayMode("Assets/_ShadowSteps/Scenes/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
+#endif
+            yield return null; yield return null; yield return null;
+            var composer = Object.FindObjectOfType<GameSceneComposer>(); Assert.IsNotNull(composer);
+            float t0 = Time.realtimeSinceStartup; while (!composer.Ready && Time.realtimeSinceStartup - t0 < 10f) yield return null;
+            Assert.IsTrue(composer.Ready);
+            Assert.IsTrue(composer.Use2DArtPresentation, "Game scene flag"); Assert.IsFalse(composer.Use3DPresentation);
+            Assert.AreEqual("LEVEL-16", composer.Session.Stage.Code);
+            var bridge = Object.FindObjectOfType<SS2DSessionBridge>(); Assert.IsNotNull(bridge, "2D bridge attached in the Game scene"); Assert.IsTrue(bridge.Renderer.IsBuilt);
+            Assert.IsInstanceOf<SS2DHudCanvas>(composer.Hud, "2D HUD prefab used by the Game scene");
+            foreach (var r in composer.Board.GetComponentsInChildren<Renderer>(true)) Assert.IsFalse(r.enabled, "placeholder board hidden");
+            Assert.Greater(bridge.Renderer.CameraOverlay.DrawnCells.Count, 0, "camera region drawn for LEVEL-16");
         }
 
         [UnityTest]

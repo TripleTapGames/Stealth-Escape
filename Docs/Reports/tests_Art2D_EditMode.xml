@@ -1,31 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.1057567">
-  <test-suite type="TestSuite" id="1323" name="Shadow Steps" fullname="Shadow Steps" runstate="Runnable" testcasecount="274" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.105757" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="13" result="Passed" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.1540923">
+  <test-suite type="TestSuite" id="1333" name="Shadow Steps" fullname="Shadow Steps" runstate="Runnable" testcasecount="283" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.154092" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties />
-    <test-suite type="Assembly" id="1329" name="ShadowSteps.Art2D.Tests.EditMode.dll" fullname="/Volumes/UnitySSD/Projects/StealthEscape_render/Library/ScriptAssemblies/ShadowSteps.Art2D.Tests.EditMode.dll" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.094393" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1349" name="ShadowSteps.Art2D.Tests.EditMode.dll" fullname="/Volumes/UnitySSD/Projects/StealthEscape_render/Library/ScriptAssemblies/ShadowSteps.Art2D.Tests.EditMode.dll" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.142875" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="16362" />
+        <property name="_PID" value="44919" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
       </properties>
-      <test-suite type="TestSuite" id="1330" name="ShadowSteps" fullname="ShadowSteps" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.094032" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestSuite" id="1350" name="ShadowSteps" fullname="ShadowSteps" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.142469" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-suite type="TestSuite" id="1331" name="Art2D" fullname="ShadowSteps.Art2D" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.090383" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-suite type="TestSuite" id="1351" name="Art2D" fullname="ShadowSteps.Art2D" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.138828" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
           <properties />
-          <test-suite type="TestSuite" id="1332" name="Tests" fullname="ShadowSteps.Art2D.Tests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.086843" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <test-suite type="TestSuite" id="1352" name="Tests" fullname="ShadowSteps.Art2D.Tests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.135144" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
             <properties />
-            <test-suite type="TestFixture" id="1324" name="SS2DPortraitRotationTests" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.082546" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <test-suite type="TestFixture" id="1334" name="SS2DCameraVisionTests" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.105387" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
               <properties />
-              <test-case id="1326" name="DirectionMapping_IsConsistentWithDrawnPositions" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.DirectionMapping_IsConsistentWithDrawnPositions" methodname="DirectionMapping_IsConsistentWithDrawnPositions" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="1691267417" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.056586" asserts="0">
+              <test-case id="1338" name="ClosedDoor_BlocksCameraVision_UntilOpened" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.ClosedDoor_BlocksCameraVision_UntilOpened" methodname="ClosedDoor_BlocksCameraVision_UntilOpened" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="479400765" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.052801" asserts="0">
                 <properties />
               </test-case>
-              <test-case id="1327" name="GuardVisionOverlay_ShowsExactlyTheEngineCells_AfterRotation" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.GuardVisionOverlay_ShowsExactlyTheEngineCells_AfterRotation" methodname="GuardVisionOverlay_ShowsExactlyTheEngineCells_AfterRotation" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="565767392" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.011480" asserts="0">
+              <test-case id="1340" name="Emp_DisablesForExactlyTwoCountedActions_ThenRestores" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.Emp_DisablesForExactlyTwoCountedActions_ThenRestores" methodname="Emp_DisablesForExactlyTwoCountedActions_ThenRestores" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="50703026" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.010736" asserts="0">
                 <properties />
               </test-case>
-              <test-case id="1325" name="Level2_IsDrawnRotated_AndEveryCellRoundTrips" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.Level2_IsDrawnRotated_AndEveryCellRoundTrips" methodname="Level2_IsDrawnRotated_AndEveryCellRoundTrips" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="213925534" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.004766" asserts="0">
+              <test-case id="1335" name="FixedCamera_Level16_MatchesEngine_AndIsBlockedBySolidCover" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.FixedCamera_Level16_MatchesEngine_AndIsBlockedBySolidCover" methodname="FixedCamera_Level16_MatchesEngine_AndIsBlockedBySolidCover" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="199047666" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.005772" asserts="0">
                 <properties />
               </test-case>
-              <test-case id="1328" name="TallOrSquareStages_AreNotRotated" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.TallOrSquareStages_AreNotRotated" methodname="TallOrSquareStages_AreNotRotated" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="636642077" result="Passed" start-time="2026-11-01 20:00:47Z" end-time="2026-11-01 20:00:47Z" duration="0.002546" asserts="0">
+              <test-case id="1341" name="GuardAndCameraOverlap_KeepsBothIndicators" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.GuardAndCameraOverlap_KeepsBothIndicators" methodname="GuardAndCameraOverlap_KeepsBothIndicators" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="326049809" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.007633" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1342" name="RotatedBoard_DrawsCameraRegionAtRotatedPositions_AndNeverOverNonNodes" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.RotatedBoard_DrawsCameraRegionAtRotatedPositions_AndNeverOverNonNodes" methodname="RotatedBoard_DrawsCameraRegionAtRotatedPositions_AndNeverOverNonNodes" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="625296947" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.004205" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1336" name="RotatingCamera_Level18_TurnsEveryCountedAction" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.RotatingCamera_Level18_TurnsEveryCountedAction" methodname="RotatingCamera_Level18_TurnsEveryCountedAction" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="718419287" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.004367" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1339" name="Smoke_BlocksCameraVision_ThroughTheRealSmokeAction" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.Smoke_BlocksCameraVision_ThroughTheRealSmokeAction" methodname="Smoke_BlocksCameraVision_ThroughTheRealSmokeAction" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="1839128122" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.002662" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1337" name="SweepingCamera_Level19_HoldsEachFacingForTwoActions" fullname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests.SweepingCamera_Level19_HoldsEachFacingForTwoActions" methodname="SweepingCamera_Level19_HoldsEachFacingForTwoActions" classname="ShadowSteps.Art2D.Tests.SS2DCameraVisionTests" runstate="Runnable" seed="1235021685" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.009704" asserts="0">
+                <properties />
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1343" name="SS2DPortraitRotationTests" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.025553" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1345" name="DirectionMapping_IsConsistentWithDrawnPositions" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.DirectionMapping_IsConsistentWithDrawnPositions" methodname="DirectionMapping_IsConsistentWithDrawnPositions" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="849695425" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.006896" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1347" name="ExitDoor_IsDrawnBeyondTheExitNode_OnItsBoardEdge" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.ExitDoor_IsDrawnBeyondTheExitNode_OnItsBoardEdge" methodname="ExitDoor_IsDrawnBeyondTheExitNode_OnItsBoardEdge" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="1977762738" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.003564" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1346" name="GuardVisionOverlay_ShowsExactlyTheEngineCells_AfterRotation" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.GuardVisionOverlay_ShowsExactlyTheEngineCells_AfterRotation" methodname="GuardVisionOverlay_ShowsExactlyTheEngineCells_AfterRotation" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="1421652661" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.005550" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1344" name="Level2_IsDrawnRotated_AndEveryCellRoundTrips" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.Level2_IsDrawnRotated_AndEveryCellRoundTrips" methodname="Level2_IsDrawnRotated_AndEveryCellRoundTrips" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="1124578653" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.004364" asserts="0">
+                <properties />
+              </test-case>
+              <test-case id="1348" name="TallOrSquareStages_AreNotRotated" fullname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests.TallOrSquareStages_AreNotRotated" methodname="TallOrSquareStages_AreNotRotated" classname="ShadowSteps.Art2D.Tests.SS2DPortraitRotationTests" runstate="Runnable" seed="1953961443" result="Passed" start-time="2026-11-03 07:18:00Z" end-time="2026-11-03 07:18:00Z" duration="0.003678" asserts="0">
                 <properties />
               </test-case>
             </test-suite>

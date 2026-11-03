@@ -38,12 +38,14 @@ namespace ShadowSteps.Tests.EditMode.V3
             }
         }
 
+        /// <summary>Camera stages left browser parity on 2026-11-03 (the camera footprint now starts at the node in front of the lens; LEVEL-18/19 were redesigned), so the browser is the authority only for stages without cameras.</summary>
         [Test]
-        public void Solver_ReproducesEveryBrowserPar_AndGhostOffer()
+        public void Solver_ReproducesEveryBrowserPar_AndGhostOffer_ForStagesWithoutCameras()
         {
-            var lines = new List<string>();
+            var lines = new List<string>(); int checkedCount = 0;
             foreach (var im in Imported())
             {
+                if (im.Stage.Cameras.Count > 0) continue;
                 var m = StageMetrics.Analyze(im.Stage);
                 lines.Add(im.Stage.Code + " par " + m.Par + " (browser " + im.BrowserPar + ") ghost " + m.GhostOffered + " (browser " + im.BrowserGhost + ")");
                 Assert.AreEqual(im.BrowserPar, m.Par, "par of " + im.Stage.Code);
@@ -51,7 +53,9 @@ namespace ShadowSteps.Tests.EditMode.V3
                 var replay = StageReplay.Run(im.Stage, m.Solution);
                 Assert.IsTrue(replay.Won, im.Stage.Code + "\n" + replay.Trace());
                 Assert.AreEqual(m.Par, replay.CountedActions, "counted actions of " + im.Stage.Code);
+                checkedCount++;
             }
+            Assert.AreEqual(22, checkedCount, "22 stages without cameras");
             TestContext.WriteLine(string.Join("\n", lines));
         }
 
@@ -63,6 +67,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             foreach (JsonObject e in JsonAccess.AsArray(report["levels"], "levels")) byLabel[(string)e["label"]] = JsonAccess.AsInt(e["optimalActions"], "optimalActions");
             foreach (var s in Pack().Stages)
             {
+                if (s.Cameras.Count > 0) continue; // camera stages: C# solver authority (new footprint), see validation_v4.json
                 string label = s.Code.Replace("FTUE-", "FTUE ").Replace("LEVEL-", "Level ");
                 Assert.AreEqual(byLabel[label], s.Par, s.Code);
             }
@@ -119,10 +124,10 @@ namespace ShadowSteps.Tests.EditMode.V3
                 if (m.EmpRequired) empRequired.Add(s.Code);
                 if (m.ForcedAlarm) forcedAlarm.Add(s.Code);
             }
-            // V4 measured: LEVEL-24 became EMP-mandatory and LEVEL-19 is no longer forced-alarm (Docs/PROGRESS.md 2026-10-30).
+            // Front-node camera footprint (2026-11-03, D-035): LEVEL-16/20/24 lose their alarm-free route; 23 and 25 were extended so EMP (and Smoke on 25) stay mandatory.
             CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25" }, smokeRequired);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-24", "LEVEL-25" }, empRequired);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-17", "LEVEL-23" }, forcedAlarm);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-20", "LEVEL-23", "LEVEL-24" }, forcedAlarm);
         }
 
         [Test]
@@ -136,7 +141,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55, shipped, "shipped pack carries every obstacle");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-18", "LEVEL-19", "LEVEL-20", "LEVEL-24", "LEVEL-25" }, ghost);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-18", "LEVEL-19", "LEVEL-25" }, ghost); // front-node footprint: only the redesigned 18/19 and extended 25 keep an alarm-free route
         }
     }
 }

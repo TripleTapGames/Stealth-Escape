@@ -15,13 +15,16 @@ namespace ShadowSteps.Art2D
     public sealed class SS2DHudCanvas : MonoBehaviour, IGameHud, IGameHudPause
     {
         public Canvas canvas;
-        public Text levelLabel, actionsValue, starsLabel, smokeCount, empCount, messageLabel;
+        public Text levelLabel, actionsValue, starsLabel, smokeCount, empCount, messageLabel, lockdownLabel;
+        public RectTransform lockdownPanel;
         public RectTransform smokeButton, empButton, waitButton, pauseButton, retryButton;
         public Image alertOverlay;
         public Color pill = new Color(0.09f, 0.13f, 0.21f, 0.80f);
         public Color button = new Color(0.13f, 0.18f, 0.28f, 0.96f);
         public Color accent = new Color(0.22f, 0.80f, 0.76f, 1f);
         public Color danger = new Color(0.92f, 0.30f, 0.30f, 1f);
+        public Color amber = new Color(1.00f, 0.72f, 0.18f, 1f);
+        private Color _alertColor;
         public Color textColor = new Color(0.97f, 0.98f, 1f);
         public Color dimText = new Color(0.70f, 0.78f, 0.86f);
 
@@ -35,7 +38,7 @@ namespace ShadowSteps.Art2D
         public void Show(Stage stage, StageState state, Camera cam)
         {
             Build(); // generated shapes are not saved with the scene (DontSave), so the hierarchy is rebuilt on every show
-            canvas.worldCamera = cam; canvas.planeDistance = 5f;
+            AttachCamera(cam);
             ApplyStage(stage); ApplyState(stage, state);
         }
 
@@ -45,7 +48,7 @@ namespace ShadowSteps.Art2D
         {
             _session = session;
             Build();
-            canvas.worldCamera = Camera.main; canvas.planeDistance = 5f;
+            AttachCamera(Camera.main);
             _session.StateChanged += OnStateChanged; _session.StageLoaded += OnStageLoaded; _session.ModeChanged += OnModeChanged;
             _session.ActionRejected += OnActionRejected; _session.Won += OnWon; _session.Caught += OnCaught; _session.LockedDown += OnLockedDown; _session.AlarmTriggered += OnAlarm;
             Wire(waitButton, () => { if (_session.Mode == InputMode.Move) _session.TrySubmit(StageAction.Wait); });
@@ -77,7 +80,7 @@ namespace ShadowSteps.Art2D
             if (alertOverlay != null)
             {
                 float a = _alertUntil > Time.unscaledTime ? Mathf.Clamp01((_alertUntil - Time.unscaledTime) / 0.45f) * 0.35f : 0f;
-                var c = alertOverlay.color; c.a = a; alertOverlay.color = c;
+                var ac = _alertColor.a > 0f ? _alertColor : danger; alertOverlay.color = new Color(ac.r, ac.g, ac.b, a);
             }
         }
 
@@ -92,9 +95,16 @@ namespace ShadowSteps.Art2D
         }
         private void OnActionRejected(StageAction a, RejectReason r) { ShowMessage(r.ToString().Replace("_", " "), 1.2f); }
         private void OnWon(ActionOutcome o) { ShowMessage("Escaped in " + o.After.T + " actions  ·  " + new string('★', StageScoring.Stars(o.After.T, _session.Stage.Par)), 0f); }
-        private void OnCaught(ActionOutcome o) { _alertUntil = Time.unscaledTime + 0.45f; ShowMessage("Spotted! Tap Retry", 0f); }
-        private void OnLockedDown(ActionOutcome o) { _alertUntil = Time.unscaledTime + 0.45f; ShowMessage("Lockdown! Tap Retry", 0f); }
-        private void OnAlarm(ActionOutcome o) { _alertUntil = Time.unscaledTime + 0.45f; }
+        /// <summary>Set by a presentation that owns the capture timing (the 2D bridge): the flash and message then wait for <see cref="PresentCapture"/>.</summary>
+        public bool deferCaptureFeedback;
+        private void OnCaught(ActionOutcome o) { if (!deferCaptureFeedback) PresentCapture(o); }
+        private void OnLockedDown(ActionOutcome o) { if (!deferCaptureFeedback) PresentCapture(o); }
+        public void PresentCapture(ActionOutcome o)
+        {
+            if (o.Caught) { _alertColor = danger; _alertUntil = Time.unscaledTime + 0.45f; ShowMessage("Spotted! Tap Retry", 0f); }
+            else { _alertColor = amber; _alertUntil = Time.unscaledTime + 0.6f; ShowMessage("Lockdown! Tap Retry", 0f); }
+        }
+        private void OnAlarm(ActionOutcome o) { _alertColor = amber; _alertUntil = Time.unscaledTime + 0.6f; ShowMessage("Camera spotted you!", 1.5f); }
 
         private void ApplyStage(Stage stage)
         {
@@ -107,10 +117,22 @@ namespace ShadowSteps.Art2D
         {
             actionsValue.text = state.T.ToString();
             smokeCount.text = state.SmokeCharges.ToString(); empCount.text = state.EmpCharges.ToString();
+            bool lockdown = state.AlarmActive && !state.IsTerminal;
+            if (lockdownPanel != null) lockdownPanel.gameObject.SetActive(lockdown);
+            if (lockdownLabel != null) lockdownLabel.text = lockdown ? "LOCKDOWN  \u00b7  " + state.Alarm + (state.Alarm == 1 ? " action" : " actions") + " to escape" : string.Empty;
             SetInteractable(waitButton, !state.IsTerminal); SetInteractable(smokeButton, state.SmokeCharges > 0 && !state.IsTerminal); SetInteractable(empButton, state.EmpCharges > 0 && !state.IsTerminal);
         }
 
         // ---------------------------------------------------------------- build
+
+        /// <summary>Camera-space canvas on the topmost sprite sorting layer (FX) so the full-screen background and board never cover it. The layer must be set after the camera is attached or Unity drops it.</summary>
+        private void AttachCamera(Camera cam)
+        {
+            canvas.worldCamera = cam; canvas.planeDistance = 5f;
+            int id = SortingLayer.NameToID(SS2DLayers.FX);
+            if (id != 0) canvas.sortingLayerID = id;
+            canvas.sortingOrder = 10;
+        }
 
         private static Font DefaultFont()
         {
@@ -140,8 +162,14 @@ namespace ShadowSteps.Art2D
             var cap = Label("ActionsCaption", top, "ACTIONS", 16, TextAnchor.LowerCenter, font, true); cap.color = dimText; Anchor(cap.rectTransform, 0.56f, 0.04f, 0.72f, 0.34f);
             pauseButton = Circle("PauseButton", top, button, 0.795f, 0.5f, 84f, true); Label("Icon", pauseButton, "II", 30, TextAnchor.MiddleCenter, font, true);
             retryButton = Circle("RetryButton", top, button, 0.905f, 0.5f, 84f, true); Label("Icon", retryButton, "↺", 36, TextAnchor.MiddleCenter, font, true);
-            starsLabel = Label("Stars", canvas.transform, "", 24, TextAnchor.MiddleLeft, font, false); starsLabel.color = dimText; Anchor(starsLabel.rectTransform, 0.075f, 0.896f, 0.70f, 0.922f);
-            messageLabel = Label("Message", canvas.transform, "", 28, TextAnchor.MiddleRight, font, true); Anchor(messageLabel.rectTransform, 0.30f, 0.896f, 0.965f, 0.922f);
+            // Slim second pill under the top bar so the star thresholds and messages stay legible over any painted background.
+            var sub = Panel("SubPill", canvas.transform, new Color(pill.r, pill.g, pill.b, pill.a * 0.8f), 0.035f, 0.886f, 0.965f, 0.922f, 34f);
+            starsLabel = Label("Stars", sub, "", 24, TextAnchor.MiddleLeft, font, false); starsLabel.color = dimText; Anchor(starsLabel.rectTransform, 0.045f, 0f, 0.70f, 1f);
+            messageLabel = Label("Message", sub, "", 28, TextAnchor.MiddleRight, font, true); Anchor(messageLabel.rectTransform, 0.28f, 0f, 0.955f, 1f);
+            // Lockdown indicator: amber pill under the top bar while the camera alarm budget is counting down.
+            lockdownPanel = Panel("LockdownPanel", canvas.transform, amber, 0.20f, 0.838f, 0.80f, 0.878f, 38f);
+            lockdownLabel = Label("LockdownLabel", lockdownPanel, "", 26, TextAnchor.MiddleCenter, font, true); lockdownLabel.color = new Color(0.20f, 0.12f, 0.02f);
+            lockdownPanel.gameObject.SetActive(false);
 
             // ---- bottom: big round WAIT right, round gadget buttons left with small badges
             waitButton = Circle("WaitButton", canvas.transform, accent, 0.84f, 0.085f, 220f, true);

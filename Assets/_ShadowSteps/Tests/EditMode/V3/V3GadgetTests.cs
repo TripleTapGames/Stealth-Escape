@@ -104,7 +104,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             b.Cameras.Add(Camera(C(4, 1), Direction.South, Direction.West));
             var stage = b.Build();
             var s = StageState.Initial(stage);
-            CollectionAssert.AreEquivalent(Cells((3, 2), (2, 2)), Sight.CameraVision(stage, s, 0, 0));
+            CollectionAssert.AreEquivalent(Cells((3, 2), (2, 2)), Sight.CameraVision(stage, s, 0, 0), "cone from (4,1.5) facing W: forward 1 and 2 along the corridor; (4,2) is beside the origin");
             Step(stage, ref s, E); // (1,2) dark
             var emp = Step(stage, ref s, StageAction.Emp(0));
             Assert.IsTrue(emp.Free); Assert.AreEqual(0, s.EmpCharges); Assert.AreEqual(2, s.EmpLeftOn(0)); Assert.AreEqual(1, s.T);

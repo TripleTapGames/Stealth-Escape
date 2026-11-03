@@ -11,9 +11,10 @@ namespace ShadowSteps.Art2D.Editor
     /// </summary>
     public sealed class SS2DPainter
     {
-        public readonly int N; private readonly Color[] _px;
+        public readonly int N; public readonly int H; private readonly Color[] _px;
         public delegate float Sdf(float x, float y); // pixel coordinates, negative inside
-        public SS2DPainter(int n) { N = n; _px = new Color[n * n]; }
+        public SS2DPainter(int n) : this(n, n) { }
+        public SS2DPainter(int w, int h) { N = w; H = h; _px = new Color[w * h]; }
 
         public static Sdf Circle(float cx, float cy, float r) => (x, y) => Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)) - r;
         public static Sdf RoundRect(float cx, float cy, float hw, float hh, float r) => (x, y) =>
@@ -54,8 +55,8 @@ namespace ShadowSteps.Art2D.Editor
         /// <summary>Fills a shape with a vertical gradient (top colour at the top of the shape's bounds, bottom at its bottom), optionally soft-edged.</summary>
         public void Fill(Sdf s, Color top, Color bottom, float soft = 1f, float gradientY0 = 0f, float gradientY1 = -1f)
         {
-            float y0 = gradientY0, y1 = gradientY1 < 0f ? N : gradientY1;
-            for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+            float y0 = gradientY0, y1 = gradientY1 < 0f ? H : gradientY1;
+            for (int y = 0; y < H; y++) for (int x = 0; x < N; x++)
             {
                 float a = Coverage(s, x, y, soft); if (a <= 0f) continue;
                 float t = Mathf.Clamp01((y - y0) / Mathf.Max(1f, y1 - y0));
@@ -72,10 +73,12 @@ namespace ShadowSteps.Art2D.Editor
         /// <summary>Soft shadow of a shape, offset and blurred.</summary>
         public void Shadow(Sdf s, float dx, float dy, float blur, Color color)
         {
-            for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+            for (int y = 0; y < H; y++) for (int x = 0; x < N; x++)
             {
                 float d = s(x + 0.5f - dx, y + 0.5f - dy);
-                float a = 1f - Mathf.SmoothStep(-blur * 0.5f, blur, d);
+                // Soft falloff from fully covered (inside, d ≤ −blur/2) to clear (d ≥ blur). Unity's Mathf.SmoothStep takes a 0..1 parameter, so inverse-lerp first.
+                float t = Mathf.Clamp01((d + blur * 0.5f) / (blur * 1.5f));
+                float a = 1f - t * t * (3f - 2f * t);
                 if (a > 0f) Over(x, y, color, a * color.a);
             }
         }
@@ -83,7 +86,7 @@ namespace ShadowSteps.Art2D.Editor
         public void Highlight(Sdf s, float inset, float strength, float topY, float midY)
         {
             Sdf inner = (x, y) => s(x, y) + inset;
-            for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+            for (int y = 0; y < H; y++) for (int x = 0; x < N; x++)
             {
                 float a = Coverage(inner, x, y, 1f); if (a <= 0f) continue;
                 float t = Mathf.Clamp01((y - midY) / Mathf.Max(1f, topY - midY));
@@ -92,13 +95,14 @@ namespace ShadowSteps.Art2D.Editor
         }
         public void Over(int x, int y, Color c, float a)
         {
-            if (x < 0 || y < 0 || x >= N || y >= N || a <= 0f) return;
+            if (x < 0 || y < 0 || x >= N || y >= H || a <= 0f) return;
+            a = Mathf.Min(1f, a);
             int i = y * N + x; var d = _px[i];
             float oa = a + d.a * (1f - a);
             if (oa <= 0f) { _px[i] = Color.clear; return; }
             _px[i] = new Color((c.r * a + d.r * d.a * (1f - a)) / oa, (c.g * a + d.g * d.a * (1f - a)) / oa, (c.b * a + d.b * d.a * (1f - a)) / oa, oa);
         }
-        public Texture2D ToTexture(string name) { var t = new Texture2D(N, N, TextureFormat.RGBA32, false) { name = name }; t.SetPixels(_px); t.Apply(); return t; }
+        public Texture2D ToTexture(string name) { var t = new Texture2D(N, H, TextureFormat.RGBA32, false) { name = name }; t.SetPixels(_px); t.Apply(); return t; }
     }
 
     /// <summary>
@@ -143,15 +147,17 @@ namespace ShadowSteps.Art2D.Editor
             }));
             lib.node = Save("node", Paint(p =>
             {
-                var disc = SS2DPainter.Circle(c, c, c - 14);
-                p.Fill(disc, Color.white, Color.white);
-                p.Outline(disc, 8f, new Color(0.60f, 0.65f, 0.76f));
-                p.Fill(SS2DPainter.Circle(c, c, 18f), new Color(0.60f, 0.65f, 0.76f, 0.55f));
+                // Mock style (Camera Vision Guide): a plain solid white disc with a soft contact shadow, no outline, no centre dot.
+                var disc = SS2DPainter.Circle(c, c, c - 26);
+                p.Shadow(disc, 0f, -7f, 22f, new Color(0.12f, 0.10f, 0.08f, 0.30f));
+                p.Fill(disc, Color.white, new Color(0.97f, 0.97f, 0.98f));
             }));
             lib.nodeRing = Save("node_ring", Paint(p => { var r = SS2DPainter.Ring(SS2DPainter.Circle(c, c, c - 24), 7f); p.Fill(r, Color.white, 1.2f); }));
             lib.line = Save("line", Paint(p =>
             {
+                // Mock style: solid white path with a faint shadow underneath so it reads on the pale courtyard.
                 var bar = SS2DPainter.RoundRect(c, c, c - 2, 22f, 16f);
+                p.Shadow(bar, 0f, -5f, 14f, new Color(0.12f, 0.10f, 0.08f, 0.42f));
                 p.Fill(bar, Color.white, Color.white);
             }), border: 40, sliceVertical: false);
             lib.lineGlow = Save("line_glow", Paint(p => p.Shadow(SS2DPainter.RoundRect(c, c, c - 20, 10f, 10f), 0f, 0f, 30f, new Color(1f, 1f, 1f, 0.9f))), border: 60, sliceVertical: false);
@@ -199,6 +205,31 @@ namespace ShadowSteps.Art2D.Editor
                     p.Fill(chev, new Color(1f, 1f, 1f, 0.96f));
                 }
             }), tintable: true);
+            lib.backgroundSprite = SaveTall("background", PaintTall(p =>
+            {
+                // Muted teal gradient with a few soft pale discs (bokeh) and a faint vignette: a quiet 2D backdrop behind the board.
+                int W = p.N, H = p.N * 2;
+                p.Fill((x, y) => -1f, new Color(0.42f, 0.62f, 0.64f), new Color(0.30f, 0.48f, 0.52f), 1f, 0f, H);
+                foreach (var b in new[] { new Vector3(60, H - 120, 70), new Vector3(W - 50, H - 300, 90), new Vector3(40, 260, 60), new Vector3(W - 70, 120, 50), new Vector3(W * 0.5f, H * 0.52f, 110) })
+                    p.Shadow(SS2DPainter.Circle(b.x, b.y, b.z * 0.5f), 0f, 0f, b.z, new Color(1f, 1f, 1f, 0.045f));
+            }), 256, 512);
+            lib.exitDoorClosed = Save("door_closed", Paint(p => Door(p, c, false)));
+            lib.exitDoorOpen = Save("door_open", Paint(p => Door(p, c, true)));
+            lib.exitHighlight = Save("exit_highlight", Paint(p =>
+            {
+                var disc = SS2DPainter.Circle(c, c, c - 34);
+                p.Shadow(disc, 0f, 0f, 30f, new Color(1f, 1f, 1f, 0.30f));
+                p.Fill(disc, new Color(1f, 1f, 1f, 0.22f), new Color(1f, 1f, 1f, 0.22f));
+                p.Fill(SS2DPainter.Ring(SS2DPainter.Circle(c, c, c - 40), 9f), Color.white, Color.white);
+                var chev = SS2DPainter.Polygon(new Vector2(c - 30, c - 12), new Vector2(c, c + 20), new Vector2(c + 30, c - 12), new Vector2(c + 30, c + 4), new Vector2(c, c + 36), new Vector2(c - 30, c + 4));
+                p.Fill(chev, new Color(1f, 1f, 1f, 0.95f));
+            }));
+            lib.vfxGlow = Save("vfx_glow", Paint(p => p.Shadow(SS2DPainter.Circle(c, c, c - 90), 0f, 0f, 90f, Color.white)));
+            lib.vfxSparkle = Save("vfx_sparkle", Paint(p =>
+            {
+                var star = SS2DPainter.Union(SS2DPainter.Polygon(new Vector2(c, c + 100), new Vector2(c + 16, c + 16), new Vector2(c + 100, c), new Vector2(c + 16, c - 16), new Vector2(c, c - 100), new Vector2(c - 16, c - 16), new Vector2(c - 100, c), new Vector2(c - 16, c + 16)), SS2DPainter.Circle(c, c, 22));
+                p.Shadow(star, 0f, 0f, 24f, new Color(1f, 1f, 1f, 0.5f)); p.Fill(star, Color.white, Color.white, 1.5f);
+            }));
             lib.key = Save("key", Paint(p =>
             {
                 var head = SS2DPainter.Ring(SS2DPainter.Circle(c - 48, c + 30, 44), 16f);
@@ -211,24 +242,72 @@ namespace ShadowSteps.Art2D.Editor
             }));
             lib.cameraBody = Save("camera_body", Paint(p =>
             {
-                var plate = SS2DPainter.RoundRect(c, c - 30, 70, 26, 10); var arm = SS2DPainter.RoundRect(c, c + 10, 22, 40, 8);
+                // Wall bracket: a short dark arm with a round base plate, authored pointing up (toward the board).
+                var plate = SS2DPainter.Circle(c, c - 34, 30f); var arm = SS2DPainter.RoundRect(c, c + 6, 14, 44, 6);
                 var body = SS2DPainter.Union(plate, arm);
-                p.Fill(body, new Color(0.32f, 0.36f, 0.46f), new Color(0.18f, 0.21f, 0.30f));
+                p.Fill(body, new Color(0.30f, 0.34f, 0.44f), new Color(0.18f, 0.21f, 0.30f));
                 p.Outline(body, 4f, new Color(0.10f, 0.12f, 0.18f));
-                
+                p.Fill(SS2DPainter.Circle(c, c - 34, 8f), new Color(0.55f, 0.60f, 0.70f));
             }));
             lib.cameraHead = Save("camera_head", Paint(p =>
             {
-                var head = SS2DPainter.Polygon(new Vector2(c - 46, c - 30), new Vector2(c + 46, c - 30), new Vector2(c + 62, c + 58), new Vector2(c - 62, c + 58));
-                var cap = SS2DPainter.RoundRect(c, c + 62, 68, 14, 8);
-                var shape = SS2DPainter.Union(head, cap);
-                p.Fill(shape, new Color(0.80f, 0.84f, 0.90f), new Color(0.52f, 0.57f, 0.66f));
+                // Security camera housing seen from above, lens end pointing up: light grey box, darker lens hood, no lens (the lens is its own tinted sprite).
+                var box = SS2DPainter.RoundRect(c, c + 2, 50, 70, 16);
+                var hood = SS2DPainter.RoundRect(c, c + 58, 44, 22, 10);
+                var shape = SS2DPainter.Union(box, hood);
+                p.Shadow(shape, 0f, -6f, 18f, new Color(0.05f, 0.08f, 0.12f, 0.28f));
+                p.Fill(box, new Color(0.93f, 0.95f, 0.98f), new Color(0.74f, 0.78f, 0.85f));
+                p.Fill(hood, new Color(0.30f, 0.34f, 0.44f), new Color(0.20f, 0.23f, 0.32f));
+                p.Fill(SS2DPainter.RoundRect(c, c - 40, 34, 5, 2), new Color(0.55f, 0.60f, 0.70f, 0.8f));
+                p.Fill(SS2DPainter.Circle(c - 22, c - 10, 6f), new Color(0.35f, 0.85f, 0.95f, 0.9f)); // small status LED
                 p.Outline(shape, 4f, new Color(0.18f, 0.21f, 0.30f));
-                p.Fill(SS2DPainter.Circle(c, c + 30, 20), new Color(1f, 0.80f, 0.30f), new Color(0.95f, 0.55f, 0.10f));
-                p.Outline(SS2DPainter.Circle(c, c + 30, 20), 3f, new Color(0.35f, 0.20f, 0.05f));
-                p.Fill(SS2DPainter.Circle(c - 6, c + 36, 6), new Color(1f, 1f, 1f, 0.8f));
-                
             }));
+            lib.cameraLens = Save("camera_lens", Paint(p =>
+            {
+                // Lens: dark ring with a tintable iris (drawn white) and a glint; the renderer tints it amber (active) or cyan (EMP-disabled).
+                var iris = SS2DPainter.Circle(c, c, c - 70);
+                p.Shadow(iris, 0f, 0f, 46f, new Color(1f, 1f, 1f, 0.45f));
+                p.Fill(iris, Color.white, new Color(0.85f, 0.85f, 0.85f));
+                p.Outline(SS2DPainter.Circle(c, c, c - 62), 14f, new Color(0.12f, 0.14f, 0.20f));
+                p.Fill(SS2DPainter.Circle(c - 20, c + 24, 14f), new Color(1f, 1f, 1f, 0.85f));
+            }));
+            lib.sweepMarker = Save("sweep_marker", Paint(p =>
+            {
+                // Sweeping indicator: a short arc with an arrowhead at both ends.
+                var arc = SS2DPainter.Intersect(SS2DPainter.Ring(SS2DPainter.Circle(c, c - 30, c - 60), 13f), (x, y) => (c - 30) - y);
+                p.Fill(arc, Color.white); p.Outline(arc, 4f, new Color(0.14f, 0.18f, 0.30f));
+                var tipL = SS2DPainter.Polygon(new Vector2(c - 110, c - 28), new Vector2(c - 62, c - 58), new Vector2(c - 62, c + 2));
+                var tipR = SS2DPainter.Polygon(new Vector2(c + 110, c - 28), new Vector2(c + 62, c + 2), new Vector2(c + 62, c - 58));
+                p.Fill(tipL, Color.white); p.Outline(tipL, 4f, new Color(0.14f, 0.18f, 0.30f));
+                p.Fill(tipR, Color.white); p.Outline(tipR, 4f, new Color(0.14f, 0.18f, 0.30f));
+            }));
+            lib.cameraWallPlate = Save("camera_wall_plate", Paint(p =>
+            {
+                // Wall stub / parapet piece, board side up: ivory top face, warm stone front face below it, two anchor bolts.
+                var top = SS2DPainter.RoundRect(c, c + 22, 112, 30, 10);
+                var front = SS2DPainter.RoundRect(c, c - 24, 108, 22, 8);
+                p.Shadow(SS2DPainter.Union(top, front), 0f, -10f, 22f, new Color(0.25f, 0.18f, 0.10f, 0.30f));
+                p.Fill(front, new Color(0.80f, 0.73f, 0.64f), new Color(0.70f, 0.62f, 0.53f));
+                p.Fill(top, new Color(0.98f, 0.95f, 0.89f), new Color(0.92f, 0.88f, 0.80f));
+                p.Fill(SS2DPainter.RoundRect(c, c + 46, 108, 3f, 1.5f), new Color(1f, 1f, 1f, 0.55f));
+                p.Outline(top, 3f, new Color(0.62f, 0.54f, 0.44f)); p.Outline(front, 3f, new Color(0.55f, 0.47f, 0.38f));
+                foreach (float bx in new[] { c - 78f, c + 78f }) { p.Fill(SS2DPainter.Circle(bx, c + 22, 8f), new Color(0.40f, 0.43f, 0.50f)); p.Fill(SS2DPainter.Circle(bx - 2, c + 24, 3f), new Color(0.75f, 0.78f, 0.84f)); }
+            }));
+            lib.cameraPole = Save("camera_pole", Paint(p =>
+            {
+                // Slim security post, pivot at the base: dark base plate, narrow slate post with a highlight, round cap, short bracket arm at the top.
+                var basePlate = SS2DPainter.RoundRect(c, 34, 40, 12, 10);
+                p.Shadow(basePlate, 0f, -4f, 18f, new Color(0f, 0f, 0f, 0.35f));
+                p.Fill(basePlate, new Color(0.34f, 0.37f, 0.45f), new Color(0.20f, 0.23f, 0.30f));
+                var post = SS2DPainter.RoundRect(c, 138, 9, 104, 4);
+                p.Fill(post, new Color(0.56f, 0.60f, 0.68f), new Color(0.38f, 0.42f, 0.50f));
+                p.Fill(SS2DPainter.RoundRect(c - 4, 138, 2f, 98, 1f), new Color(1f, 1f, 1f, 0.45f));
+                p.Outline(post, 2.5f, new Color(0.18f, 0.21f, 0.30f));
+                var arm = SS2DPainter.RoundRect(c + 10, 236, 18, 5, 2.5f);
+                p.Fill(arm, new Color(0.30f, 0.34f, 0.44f)); p.Outline(arm, 2f, new Color(0.14f, 0.17f, 0.24f));
+                var cap = SS2DPainter.Circle(c, 238, 12f);
+                p.Fill(cap, new Color(0.62f, 0.66f, 0.74f), new Color(0.40f, 0.44f, 0.52f)); p.Outline(cap, 2.5f, new Color(0.18f, 0.21f, 0.30f));
+            }), pivotBottom: true);
             lib.cloud = Save("cloud", Paint(p =>
             {
                 var puff = SS2DPainter.Union(SS2DPainter.Union(SS2DPainter.Circle(c - 50, c - 10, 58), SS2DPainter.Circle(c + 46, c - 4, 64)), SS2DPainter.Union(SS2DPainter.Circle(c - 4, c + 38, 66), SS2DPainter.Circle(c + 2, c - 44, 52)));
@@ -285,6 +364,33 @@ namespace ShadowSteps.Art2D.Editor
             return lib;
         }
 
+        /// <summary>Exit door placeholder, authored upright with the threshold at the bottom (the player walks up into it): arched frame, closed wooden door with a handle, or an open dark doorway with a warm glow.</summary>
+        private static void Door(SS2DPainter p, float c, bool open)
+        {
+            float w = 150f, h = 196f; float bottom = c - 92f;
+            var frame = SS2DPainter.Union(SS2DPainter.RoundRect(c, bottom + h * 0.5f, w * 0.5f, h * 0.5f, 10f), SS2DPainter.Circle(c, bottom + h - w * 0.5f, w * 0.5f));
+            var opening = SS2DPainter.Union(SS2DPainter.RoundRect(c, bottom + h * 0.5f - 6f, w * 0.5f - 18f, h * 0.5f - 6f, 4f), SS2DPainter.Circle(c, bottom + h - w * 0.5f - 6f, w * 0.5f - 18f));
+            var step = SS2DPainter.RoundRect(c, bottom - 6f, w * 0.5f + 14f, 10f, 6f);
+            p.Shadow(frame, 0f, -8f, 26f, new Color(0.05f, 0.08f, 0.12f, 0.30f));
+            p.Fill(step, new Color(0.80f, 0.76f, 0.70f), new Color(0.70f, 0.66f, 0.60f));
+            p.Fill(frame, new Color(0.22f, 0.30f, 0.44f), new Color(0.15f, 0.21f, 0.32f));
+            if (open)
+            {
+                p.Fill(opening, new Color(0.08f, 0.14f, 0.20f), new Color(0.12f, 0.20f, 0.26f));
+                p.Shadow(SS2DPainter.Circle(c, bottom + 30f, 30f), 0f, 0f, 60f, new Color(1f, 0.85f, 0.55f, 0.55f));
+            }
+            else
+            {
+                p.Fill(opening, new Color(0.80f, 0.58f, 0.36f), new Color(0.64f, 0.44f, 0.26f));
+                p.Fill(SS2DPainter.Intersect(opening, SS2DPainter.RoundRect(c, bottom + h * 0.5f, 1.5f, h * 0.5f, 0.5f)), new Color(0.50f, 0.33f, 0.18f, 0.8f));
+                p.Fill(SS2DPainter.Intersect(opening, SS2DPainter.RoundRect(c, bottom + h * 0.62f, w * 0.5f, 1.5f, 0.5f)), new Color(0.50f, 0.33f, 0.18f, 0.8f));
+                p.Fill(SS2DPainter.Circle(c + 22f, bottom + 86f, 7f), new Color(1f, 0.85f, 0.45f), new Color(0.85f, 0.65f, 0.25f));
+            }
+            p.Outline(frame, 4f, new Color(0.10f, 0.14f, 0.22f));
+        }
+
+        private static SS2DPainter.Sdf Ring(SS2DPainter.Sdf s, float hw) => SS2DPainter.Ring(s, hw);
+
         private static void Padlock(SS2DPainter p, float c, Color top, Color bottom, Color edge, bool open)
         {
             var body = SS2DPainter.RoundRect(c, c - 36, 66, 52, 16);
@@ -301,6 +407,22 @@ namespace ShadowSteps.Art2D.Editor
         }
 
         private static Texture2D Paint(System.Action<SS2DPainter> draw) { var p = new SS2DPainter(S); draw(p); return p.ToTexture("sprite"); }
+        private static Texture2D PaintTall(System.Action<SS2DPainter> draw) { var p = new SS2DPainter(S, S * 2); draw(p); return p.ToTexture("sprite"); }
+
+        private static Sprite SaveTall(string name, Texture2D tex, int w, int h)
+        {
+            string path = Dir + "/" + name + ".png";
+            File.WriteAllBytes(path, tex.EncodeToPNG()); Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            var imp = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (imp != null)
+            {
+                imp.textureType = TextureImporterType.Sprite; imp.spriteImportMode = SpriteImportMode.Single; imp.spritePixelsPerUnit = S; imp.mipmapEnabled = false; imp.filterMode = FilterMode.Bilinear;
+                imp.alphaIsTransparency = true; imp.textureCompression = TextureImporterCompression.Uncompressed; imp.maxTextureSize = 1024; imp.wrapMode = TextureWrapMode.Clamp;
+                var settings = new TextureImporterSettings(); imp.ReadTextureSettings(settings); settings.spriteMeshType = SpriteMeshType.FullRect; imp.SetTextureSettings(settings); imp.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
 
         /// <summary>Writes the PNG, configures the importer (sprite, PPU = size, no mips, bilinear, optional 9-slice border) and returns the imported sprite.</summary>
         private static Sprite Save(string name, Texture2D tex, int border = 0, bool sliceVertical = true, bool pivotBottom = false, bool tintable = true)

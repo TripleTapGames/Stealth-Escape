@@ -35,8 +35,8 @@ namespace ShadowSteps.Art2D
             _cam.orthographic = true; _cam.transform.rotation = Quaternion.identity;
             var layout = board.ViewLayout; float s = layout.NodeSpacing;
             if (board.library != null) { topReservedFraction = board.library.hudTop; bottomReservedFraction = board.library.hudBottom; }
-            float margin = (board.library.boardMargin + marginNodes) * s;
-            float boardW = layout.BoardSize.x + margin * 2f, boardH = layout.BoardSize.y + margin * 2f;
+            var vb = board.ViewBounds; // panel + door, already including the board margin
+            float boardW = vb.width + marginNodes * s * 2f, boardH = vb.height + marginNodes * s * 2f;
             Rect safe = respectSafeArea && Application.isPlaying ? Screen.safeArea : new Rect(0, 0, Screen.width, Screen.height);
             float safeBottom = safe.yMin / Mathf.Max(1, Screen.height), safeTop = 1f - safe.yMax / Mathf.Max(1, Screen.height);
             float safeLeft = safe.xMin / Mathf.Max(1, Screen.width), safeRight = 1f - safe.xMax / Mathf.Max(1, Screen.width);
@@ -48,8 +48,9 @@ namespace ShadowSteps.Art2D
             float offsetY = (0.5f - bandCentre) * 2f * size;
             float bandCentreX = (safeLeft + (1f - safeRight)) * 0.5f;
             float offsetX = (0.5f - bandCentreX) * 2f * size * aspect;
-            var c = board.transform.position;
+            var c = board.transform.TransformPoint(new Vector3(vb.center.x, vb.center.y, 0f));
             _cam.transform.position = new Vector3(c.x + offsetX, c.y + offsetY, -10f);
+            board.FitBackground(_cam);
             _cam.nearClipPlane = 0.1f; _cam.farClipPlane = 50f;
         }
     }

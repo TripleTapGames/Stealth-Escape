@@ -20,10 +20,11 @@ namespace ShadowSteps.Art2D
         private float _markerY = 1f;
         public float MarkerY => _markerY;
         private Sprite _placeholder;
+        private float _spacing = 1f;
 
         public void Setup(SS2DSpriteLibrary lib, SS2DCharacterSet characterSet, Color accent, bool showChevron, float spacing, Sprite placeholder)
         {
-            set = characterSet; _placeholder = placeholder;
+            set = characterSet; _placeholder = placeholder; _spacing = spacing;
             if (body == null)
             {
                 shadow = Make("Shadow", lib.shadowBlob, SS2DLayers.Actors, 0); shadow.color = lib.shadowTint;
@@ -31,11 +32,26 @@ namespace ShadowSteps.Art2D
                 body = Make("Body", null, SS2DLayers.Actors, 2);
                 chevron = Make("Facing", lib.arrow, SS2DLayers.Markers, 4); chevron.color = new Color(accent.r, accent.g, accent.b, 0.95f);
             }
-            shadow.transform.localScale = new Vector3(lib.characterShadow * spacing, lib.characterShadow * 0.55f * spacing, 1f);
-            shadow.transform.localPosition = new Vector3(0f, -0.02f * spacing, 0f);
+            bool castShadow = lib.characterCastShadow != null;
+            if (castShadow)
+            {
+                // Final cast shadow: screen-space light from the upper right (matches the planters), pivot on the base-disc centre, never rotated with the board.
+                shadow.sprite = lib.characterCastShadow; shadow.color = lib.characterCastShadowTint;
+                shadow.transform.localScale = Vector3.one * lib.characterCastShadowSize * spacing;
+                shadow.transform.localPosition = Vector3.zero;
+            }
+            else
+            {
+                shadow.sprite = lib.shadowBlob; shadow.color = lib.shadowTint;
+                shadow.transform.localScale = new Vector3(lib.characterShadow * spacing, lib.characterShadow * 0.55f * spacing, 1f);
+                shadow.transform.localPosition = new Vector3(0f, -0.02f * spacing, 0f);
+            }
             ring.transform.localScale = new Vector3(0.56f * spacing, 0.34f * spacing, 1f);
             ring.transform.localPosition = new Vector3(0f, 0.0f, 0f);
             body.transform.localScale = Vector3.one * lib.characterHeight * spacing;
+            // Final art paints its own base disc and shadow: the generated ring and blob would double it.
+            bool ownBase = set == null || !set.includesBase;
+            shadow.gameObject.SetActive(ownBase || castShadow); ring.gameObject.SetActive(ownBase);
             chevron.gameObject.SetActive(showChevron);
             chevron.transform.localScale = Vector3.one * 0.24f * spacing;
             _markerY = lib.characterHeight * 0.92f * spacing;
@@ -68,6 +84,14 @@ namespace ShadowSteps.Art2D
 
         public void SetSortingOrderFromY() { if (body != null) { int o = Mathf.RoundToInt(-transform.position.y * 10f) * 4; body.sortingOrder = o + 2; shadow.sortingOrder = o; ring.sortingOrder = o + 1; } }
 
+        /// <summary>Facing badge height follows the drawn sprite (its top edge plus a small gap), so any frame size or pivot works.</summary>
+        private void PlaceMarker()
+        {
+            if (body != null && body.sprite != null)
+                _markerY = body.sprite.bounds.max.y * body.transform.localScale.y + 0.10f * _spacing;
+            if (chevron != null) chevron.transform.localPosition = new Vector3(0f, _markerY, 0f);
+        }
+
         private void Update()
         {
             if (!Application.isPlaying || set == null) return;
@@ -85,6 +109,7 @@ namespace ShadowSteps.Art2D
             var s = set != null ? set.Frame(Facing, Walking, _frame) : null;
             body.sprite = s != null ? s : _placeholder;
             body.color = _tint;
+            PlaceMarker();
         }
     }
 }

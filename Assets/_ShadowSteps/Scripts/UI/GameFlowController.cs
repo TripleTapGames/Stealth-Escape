@@ -136,7 +136,9 @@ namespace ShadowSteps.UI
                 AppServices.PersistSave();
             }
             var next = catalog?.NextAfter(stage.Id);
-            Router.Push<ResultsScreen>().Present(stage, actions, best, newBest, ghostEarned, ghostEver, next != null);
+            System.Action showResults = () => Router.Push<ResultsScreen>().Present(stage, actions, best, newBest, ghostEarned, ghostEver, next != null);
+            if (Composer.WinTransition != null && Composer.WinTransition(o, showResults)) return; // presentation plays its completion sequence first
+            showResults();
         }
 
         /// <summary>First camera detection of the attempt: sound, haptic and the countdown popup (unless the same action already ended the stage).</summary>
@@ -148,18 +150,21 @@ namespace ShadowSteps.UI
             Router.Push<AlarmPopupScreen>().Present(o.After.Alarm);
         }
 
-        private void OnCaught(ActionOutcome o)
-        {
-            AudioService.Instance?.Play(Sfx.Alert);
-            HapticsService.Pulse();
-            Router.Push<FailureScreen>().Present(o, Session.DebugUndoEnabled);
-        }
+        private void OnCaught(ActionOutcome o) => PresentFailure(o);
 
-        private void OnLockedDown(ActionOutcome o)
+        private void OnLockedDown(ActionOutcome o) => PresentFailure(o);
+
+        /// <summary>The state is already final; a presentation may finish the enemy's step/turn and its capture beat before the screen appears.</summary>
+        private void PresentFailure(ActionOutcome o)
         {
-            AudioService.Instance?.Play(Sfx.Alert);
-            HapticsService.Pulse();
-            Router.Push<FailureScreen>().Present(o, Session.DebugUndoEnabled);
+            System.Action present = () =>
+            {
+                AudioService.Instance?.Play(Sfx.Alert);
+                HapticsService.Pulse();
+                Router.Push<FailureScreen>().Present(o, Session.DebugUndoEnabled);
+            };
+            if (Composer.CaptureTransition != null && Composer.CaptureTransition(o, present)) return;
+            present();
         }
 
         private void NextStage()

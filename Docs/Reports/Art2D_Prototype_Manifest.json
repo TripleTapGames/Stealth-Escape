@@ -1,5 +1,5 @@
 {
-    "generated": "2026-11-02T01:28:47",
+    "generated": "2026-11-03T12:47:50",
     "scene": "Assets/_ShadowSteps/Art2D/Demo/ShadowSteps_2D_Prototype.unity",
     "library": "Assets/_ShadowSteps/Art2D/SS2DSpriteLibrary.asset",
     "stage": "LEVEL-2",
@@ -27,7 +27,7 @@
     "visionOverlaySprites": 2,
     "meshRenderers": 0,
     "skinnedMeshRenderers": 0,
-    "spriteRenderers": 120,
+    "spriteRenderers": 123,
     "threeDAssetsReferenced": [],
     "spyFramesComplete": true,
     "guardFramesComplete": true,
@@ -35,7 +35,7 @@
     "ok": true,
     "problems": [],
     "capture": {
-        "generated": "2026-11-02T01:28:41",
+        "generated": "2026-11-03T12:47:44",
         "files": [
             "Assets/_ShadowSteps/Art2D/Sprites/Characters/spy_North_idle_0.png",
             "Assets/_ShadowSteps/Art2D/Sprites/Characters/spy_North_idle_1.png",

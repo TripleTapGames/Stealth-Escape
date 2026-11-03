@@ -11,6 +11,8 @@ namespace ShadowSteps.Art2D
         public Sprite[] walk;
     }
 
+    public enum SS2DBackgroundFit { CoverView, FrameBoard }
+
     /// <summary>Four facings (N, E, S, W in <see cref="Direction"/> order) of one character.</summary>
     [System.Serializable]
     public sealed class SS2DCharacterSet
@@ -19,6 +21,8 @@ namespace ShadowSteps.Art2D
         public SS2DDirectionFrames[] facings = new SS2DDirectionFrames[4];
         public float walkFrameRate = 10f;
         public float idleFrameRate = 2f;
+        [Tooltip("The frames already paint a base disc / contact shadow under the figure (final art); the renderer then hides its own ring and shadow blob.")]
+        public bool includesBase;
 
         public Sprite Frame(Direction d, bool walking, int index)
         {
@@ -47,10 +51,55 @@ namespace ShadowSteps.Art2D
     {
         public const string DefaultAssetPath = "Assets/_ShadowSteps/Art2D/SS2DSpriteLibrary.asset";
 
+        [Header("Background (behind the board; always scaled uniformly, never stretched)")]
+        public Sprite backgroundSprite;
+        public Color backgroundTint = Color.white;
+        [Tooltip("CoverView: scale so the image covers the camera view. FrameBoard: scale so backgroundBoardRect (normalized, origin bottom-left) encloses the tile grid, enlarged only if needed to keep the view covered.")]
+        public SS2DBackgroundFit backgroundFit = SS2DBackgroundFit.CoverView;
+        [Tooltip("Part of the background image that is the playable ground (e.g. the courtyard floor), normalized 0..1 from the bottom-left.")]
+        public Rect backgroundBoardRect = new Rect(0f, 0f, 1f, 1f);
+        [Tooltip("Room around the tile grid inside backgroundBoardRect; 1 = the grid exactly fills the rect.")]
+        public float backgroundBoardPadding = 1f;
+        [Tooltip("Draw the rounded board panel and its shadow under the tiles. Off when the background itself is the board surface.")]
+        public bool showBoardPanel = true;
+        [Tooltip("Draw the per-cell floor tiles. Off when the background paints the ground (nodes, paths, walls, cover and overlays still draw).")]
+        public bool showFloorTiles = true;
+        [Tooltip("Draw the grey wall blocks on the outer ring of the grid. Off when the background paints the boundary walls; wall-mounted cameras then sit on their own wall stub.")]
+        public bool showPerimeterWalls = true;
         [Header("Board")]
         public Sprite boardPanel, boardShadow, tile, tileAlt, node, nodeRing, line, lineGlow;
         [Header("Objects")]
-        public Sprite crate, crateShadow, wall, doorLocked, doorOpen, exit, key, cameraBody, cameraHead, cloud, empBadge, shadowBlob;
+        public Sprite crate, crateShadow, wall, doorLocked, doorOpen, key, cameraBody, cameraHead, cameraLens, sweepMarker, cloud, empBadge, shadowBlob;
+        [Header("Obstacle art (final): bush planter and stone wall pieces for authored X cells; 1000 px = one node spacing")]
+        public Sprite bush, wallSide, wallFront;
+        [Tooltip("Scale of the bush planter (sprite authored with the planter box ≈ 0.93 spacing wide).")] public float bushSize = 0.9f;
+        [Tooltip("Scale of the stone wall pieces (pillar centres one spacing apart at scale 1).")] public float stoneWallSize = 1f;
+        [Tooltip("Per-level decoration choices; looked up by stage code. Levels without an entry use the default obstacle art.")]
+        public SS2DLevelArtLayout[] levelArt = new SS2DLevelArtLayout[0];
+        [Tooltip("Art for X cells on levels without a layout: Crate keeps the placeholder, BushPlanter uses the final bush.")]
+        public SS2DObstacleArt defaultObstacleArt = SS2DObstacleArt.Crate;
+        [Tooltip("Interior '#' wall cells (not on the grid boundary): StoneWall draws runs with the stone pieces (lone cells as planters), Crate keeps the grey block.")]
+        public SS2DObstacleArt interiorWallArt = SS2DObstacleArt.Crate;
+        [Tooltip("A stone run that carries a camera is slid this far (spacings) toward the camera's face so the camera sits on the stone and the wall lines the corridor.")]
+        public float wallRunCameraHug = 0.36f;
+        public SS2DLevelArtLayout FindLevelArt(string code) { if (levelArt != null) foreach (var a in levelArt) if (a != null && a.stageCode == code) return a; return null; }
+        [Header("Character cast shadow (final art): drawn under player and guards, pivot at the shadow's base-disc centre")]
+        public Sprite characterCastShadow;
+        [Tooltip("Scale of the cast shadow in node spacings per sprite unit (the shadow's round lobe ≈ 0.37 units; 1.85 matches the painted base disc).")]
+        public float characterCastShadowSize = 1.85f;
+        [Tooltip("Tint for the cast shadow sprite (the art is already soft black; use white with alpha).")]
+        public Color characterCastShadowTint = new Color(1f, 1f, 1f, 0.85f);
+        [Header("Camera mounts (decorative anchors; the logical wall cell and facing never move)")]
+        [Tooltip("Wall stub / parapet piece drawn against the wall-cell edge behind a wall-mounted camera. Authored with the board side up.")]
+        public Sprite cameraWallPlate;
+        [Tooltip("Slim upright security post (pivot at its base) for cameras on a lone wall cell inside the floor; the head sits on top. Authored upright, stays screen-upright after the portrait rotation.")]
+        public Sprite cameraPole;
+        [Header("Exit door (destination beyond the exit node) and exit highlight (on the node)")]
+        public Sprite exitDoorClosed, exitDoorOpen, exitHighlight;
+        [Tooltip("Legacy exit disc; kept for the preview of older scenes. The door + highlight replace it.")]
+        public Sprite exit;
+        [Header("VFX")]
+        public Sprite vfxGlow, vfxSparkle;
         [Header("Overlays and markers")]
         public Sprite visionCell, visionRing, arrow, nextMarker, rotationMarker, highlightRing, pip;
         [Header("Characters (captured)")]
@@ -68,12 +117,28 @@ namespace ShadowSteps.Art2D
         public float characterShadow = 0.66f;
         public float propSize = 0.52f;
         public float exitSize = 0.70f;
+        [Tooltip("Door sprite size in node spacings and its distance from the exit node along the outward edge direction.")]
+        public float doorSize = 1.30f;
+        public float doorOffset = 1.55f;
+        [Header("Level completion (door transition)")]
+        public bool autoAdvanceAfterDoor = true;
+        [Tooltip("Draw the exit door beyond the exit node. Off: the exit node highlight alone marks the goal (the courtyard's own architecture stays visible).")]
+        public bool showExitDoor = false;
+        [Tooltip("Play the walk-to-door / open / enter sequence on a win. Off: the standard results screen appears straight after the winning action.")]
+        public bool playExitDoorSequence = false;
+        public float successBeat = 0.45f, doorWalkDuration = 0.55f, doorOpenDelay = 0.20f, doorEnterDuration = 0.35f, doorCloseDelay = 0.15f;
+        [Tooltip("Pause after the capturing guard has finished its step or turn (tinted, fan on its new facing) before the shake, the HUD alert and the failure screen.")]
+        public float captureBeat = 0.30f;
         [Range(0f, 0.3f)] public float exitPulse = 0.06f;
         [Range(0f, 0.5f)] public float hazardFade = 0.16f;
         [Header("Portrait bands (HUD safe areas the board is fitted between)")]
         [Range(0f, 0.4f)] public float hudTop = 0.10f;
         [Range(0f, 0.4f)] public float hudBottom = 0.145f;
-        public float cameraSize = 0.62f;
+        public float cameraSize = 0.80f;
+        [Tooltip("Wall-mounted cameras use the final stone wall pieces as their mounting surface when the sprites exist (Auto mount); off = generated wall stub.")]
+        public bool preferStoneCameraMounts = true;
+        [Tooltip("Height of the pole mount in node spacings (screen-up from the cell centre); the camera head sits at the top.")]
+        public float cameraPoleHeight = 0.36f;
         public float markerSize = 0.30f;
         public float cloudSize = 0.92f;
         public float visionCellSize = 0.92f;
@@ -90,8 +155,22 @@ namespace ShadowSteps.Art2D
         public Color guardAccent = new Color(0.22f, 0.48f, 0.92f);
         public Color guardVisionFill = new Color(0.96f, 0.32f, 0.32f, 0.24f);
         public Color guardVisionBorder = new Color(0.90f, 0.24f, 0.24f, 0.80f);
-        public Color cameraVisionFill = new Color(1.00f, 0.74f, 0.22f, 0.24f);
-        public Color cameraVisionBorder = new Color(0.98f, 0.64f, 0.14f, 0.80f);
+        public Color guardVisionGlow = new Color(0.96f, 0.32f, 0.32f, 0.14f);
+        [Tooltip("Half-angle of the drawn guard sight fan (drawing only: a guard sees the two nodes straight ahead). Narrow enough that the neighbouring lanes' node centres stay outside.")]
+        [Range(10f, 30f)] public float guardConeHalfAngleDegrees = 22f;
+        [Tooltip("Drawn reach of the guard fan beyond the last node the guard sees, in node spacings (0 = ends on that node's centre, 0.5 = on the next cell edge). Drawing only; the rule always sees two nodes straight ahead.")]
+        [Range(0f, 1f)] public float guardConeOvershoot = 0.5f;
+        [Tooltip("Curve of the guard fan's far edge: 1 = circular arc centred on the guard, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only.")]
+        [Range(0f, 1f)] public float guardConeCurvature = 1f;
+        [Tooltip("Curve of the camera cone's far edge: 1 = circular arc centred on the lens, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only; detected nodes always stay inside.")]
+        [Range(0f, 1f)] public float cameraConeCurvature = 1f;
+        public Color cameraVisionFill = new Color(1.00f, 0.74f, 0.22f, 0.32f);
+        public Color cameraVisionBorder = new Color(0.98f, 0.64f, 0.14f, 0.92f);
+        public Color cameraVisionGlow = new Color(1.00f, 0.78f, 0.30f, 0.16f);
+        public Color nodeCameraTint = new Color(1.00f, 0.90f, 0.70f);
+        public Color cameraLensActive = new Color(1.00f, 0.70f, 0.20f);
+        public Color cameraLensDisabled = new Color(0.35f, 0.88f, 0.95f);
+        public Color alarmFlash = new Color(1.00f, 0.72f, 0.18f);
         public Color previewFill = new Color(1f, 0.85f, 0.40f, 0.14f);
         public Color previewBorder = new Color(1f, 0.85f, 0.40f, 0.75f);
         public Color previewSafe = new Color(0.30f, 0.90f, 0.55f, 0.9f);
@@ -116,7 +195,8 @@ namespace ShadowSteps.Art2D
         {
             bool ok = true;
             void Need(Sprite s, string n) { if (s == null) { problems?.Add("sprite '" + n + "' is empty (run Shadow Steps ▸ 2D ▸ Generate sprites)"); ok = false; } }
-            Need(boardPanel, "boardPanel"); Need(tile, "tile"); Need(node, "node"); Need(line, "line"); Need(crate, "crate"); Need(wall, "wall"); Need(exit, "exit"); Need(visionCell, "visionCell");
+            Need(boardPanel, "boardPanel"); Need(tile, "tile"); Need(node, "node"); Need(line, "line"); Need(crate, "crate"); Need(wall, "wall"); Need(visionCell, "visionCell");
+            Need(exitDoorClosed, "exitDoorClosed"); Need(exitHighlight, "exitHighlight");
             if (spy == null || !spy.IsComplete) problems?.Add("spy character frames incomplete (run Shadow Steps ▸ 2D ▸ Capture character sprites); a placeholder disc is used");
             if (guard == null || !guard.IsComplete) problems?.Add("guard character frames incomplete; a placeholder disc is used");
             return ok;
@@ -126,6 +206,6 @@ namespace ShadowSteps.Art2D
     /// <summary>Sorting layer names (added to the project's TagManager) and the orders used inside them.</summary>
     public static class SS2DLayers
     {
-        public const string Board = "Board", Floor = "Floor", Paths = "Paths", Nodes = "Nodes", Overlays = "Overlays", Props = "Props", Actors = "Actors", Markers = "Markers", FX = "FX";
+        public const string Background = "Background", Board = "Board", Floor = "Floor", Paths = "Paths", Nodes = "Nodes", Overlays = "Overlays", Props = "Props", Actors = "Actors", Markers = "Markers", FX = "FX";
     }
 }

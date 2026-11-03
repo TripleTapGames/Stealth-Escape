@@ -260,5 +260,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Theme: {fileID: 0}
-  HudPrefab: {fileID: 0}
-  DebugLevelId: 1
+  HudPrefab: {fileID: 4739231278995078041, guid: 3b01fa32782e240f190ffc6d2808eb87, type: 3}
+  UiPrefabs: {fileID: 0}
+  DebugStageId: 0
+  Use3DPresentation: 0
+  Art3DPalette: {fileID: 0}
+  Use2DArtPresentation: 1
+  Art2DLibrary: {fileID: 11400000, guid: d52d1c60414e94f8eb1ef41d224ff060, type: 2}

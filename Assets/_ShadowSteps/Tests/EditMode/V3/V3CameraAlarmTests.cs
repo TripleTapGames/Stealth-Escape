@@ -8,11 +8,11 @@ namespace ShadowSteps.Tests.EditMode.V3
     /// <summary>Handover §5 and §13 "Cameras/alarms": lockdown budget, Ghost, win on the last countdown action.</summary>
     public class V3CameraAlarmTests
     {
-        /// <summary>Room 5 wide, camera on the top wall facing S covers (2..4, 2..3); start (1,3), exit (5,3) along the lit row.</summary>
+        /// <summary>Room 5 wide, camera on the bottom wall at (3,4) looking north: cone lights (3,3) and (2..4, 2); start (1,3), exit (5,3) along row 3, so the second E step enters the cone.</summary>
         private static StageBuilder Room(int budget)
         {
             var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(1, 3); b.Exit = C(5, 3); b.AlarmBudget = budget;
-            b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
+            b.Cameras.Add(Camera(C(3, 4), Direction.North, Direction.North));
             return b;
         }
 
@@ -21,10 +21,13 @@ namespace ShadowSteps.Tests.EditMode.V3
         {
             var b = Room(5); b.Guards.Add(Rotating(C(1, 1), Direction.North));
             var stage = b.Build();
-            var o = StageRules.TryApply(stage, StageState.Initial(stage), E); // into (2,3), lit
+            var first = StageRules.TryApply(stage, StageState.Initial(stage), E); // into (2,3), dark (63° beside the lens node)
+            Assert.IsTrue(first.Valid); Assert.IsFalse(first.AlarmTriggered);
+            Assert.AreEqual(Direction.East, first.GuardsAfter[0].Facing);
+            var o = StageRules.TryApply(stage, first.After, E); // into (3,3), the lens node: lit
             Assert.IsTrue(o.Valid); Assert.IsFalse(o.Caught); Assert.IsTrue(o.AlarmTriggered);
-            Assert.AreEqual(5, o.After.Alarm); Assert.IsTrue(o.After.AlarmEver); Assert.AreEqual(1, o.After.T);
-            Assert.AreEqual(Direction.East, o.GuardsAfter[0].Facing, "guards still updated on the trigger action");
+            Assert.AreEqual(5, o.After.Alarm); Assert.IsTrue(o.After.AlarmEver); Assert.AreEqual(2, o.After.T);
+            Assert.AreEqual(Direction.South, o.GuardsAfter[0].Facing, "guards still updated on the trigger action");
         }
 
         [Test]
@@ -33,25 +36,28 @@ namespace ShadowSteps.Tests.EditMode.V3
             var b = Room(5); b.SmokeCharges = 1;
             var stage = b.Build();
             var s = StageState.Initial(stage);
-            Step(stage, ref s, E); Assert.AreEqual(5, s.Alarm, "the trigger action grants the full budget");
+            Step(stage, ref s, E); Assert.AreEqual(-1, s.Alarm, "(2,3) is dark");
+            Step(stage, ref s, E); Assert.AreEqual(5, s.Alarm, "the trigger action (into the lens node (3,3)) grants the full budget");
             Step(stage, ref s, WAIT); Assert.AreEqual(4, s.Alarm, "WAIT counts");
-            var free = Step(stage, ref s, StageAction.Smoke(C(1, 2)));
+            var free = Step(stage, ref s, StageAction.Smoke(C(2, 2)));
             Assert.IsTrue(free.Free); Assert.AreEqual(4, s.Alarm, "free deployment does not count");
-            Step(stage, ref s, E); Assert.AreEqual(3, s.Alarm, "still in sight: no refill");
-            Step(stage, ref s, N); Step(stage, ref s, N); Assert.AreEqual(1, s.Alarm, "leaving sight does not stop the countdown");
+            Step(stage, ref s, E); Assert.AreEqual(3, s.Alarm, "moving on counts; no refill");
+            Step(stage, ref s, N); Assert.AreEqual(2, s.Alarm, "(4,2) is lit again: still no refill");
+            Step(stage, ref s, N); Assert.AreEqual(1, s.Alarm, "leaving sight does not stop the countdown");
         }
 
         [Test]
         public void LastCountdownAction_OnTheExitWins_ElsewhereLocksDown()
         {
-            var win = Room(3).Build();
+            // Trigger on the second E (lens node (3,3)); budget 2 then covers (4,3) and the exit.
+            var win = Room(2).Build();
             var s = StageState.Initial(win);
             Step(win, ref s, E); Step(win, ref s, E); Step(win, ref s, E);
             Assert.AreEqual(1, s.Alarm);
             var o = Step(win, ref s, E);
             Assert.IsTrue(o.Won); Assert.AreEqual(0, s.Alarm); Assert.AreEqual(StageResult.Won, s.Result);
 
-            var lose = Room(2).Build();
+            var lose = Room(1).Build();
             s = StageState.Initial(lose);
             Step(lose, ref s, E); Step(lose, ref s, E);
             var last = Step(lose, ref s, E); // at (4,3), alarm reaches 0 off the exit
@@ -62,13 +68,13 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void CameraSeeingThePlayerOnTheExitMove_StillWins_ButForfeitsGhost()
         {
-            var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(3, 1); b.Exit = C(3, 3); b.AlarmBudget = 4;
+            var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(3, 3); b.Exit = C(3, 1); b.AlarmBudget = 4;
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
             var s = StageState.Initial(stage);
-            Assert.IsFalse(Sight.AnyCameraSees(stage, s, 0, s.Player), "start is in the blind spot in front of the lens");
-            Step(stage, ref s, S); Assert.IsTrue(s.AlarmEver);
-            var o = Step(stage, ref s, S);
+            Assert.IsFalse(Sight.AnyCameraSees(stage, s, 0, s.Player), "start (3,3) is at forward 2.5, beyond the cone's reach");
+            Step(stage, ref s, N); Assert.IsTrue(s.AlarmEver);
+            var o = Step(stage, ref s, N);
             Assert.IsTrue(o.Won); Assert.IsTrue(s.AlarmEver);
         }
 
@@ -105,14 +111,15 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void ForcedAlarmBudget_RequiresTheIntendedNumberOfSubsequentActions()
         {
-            // Corridor level like LEVEL-23 without EMP: alarm at the first lit node, 2 more actions needed than budget 1 allows.
-            var corridor = Board("#######", "#######", ".....##", "#######"); corridor.Start = C(0, 2); corridor.Exit = C(4, 2); corridor.AlarmBudget = 1;
+            // Corridor like LEVEL-23: the cone from (4,1.5) facing W lights (3,2) and (2,2). Without EMP the alarm fires at (2,2) and the exit (5,2) is 3 actions away: budget 2 fails.
+            // With EMP (fired at (1,2)): (2,2) and (3,2) are crossed while disabled, the camera reactivates on (3,2) and the remaining 2 actions fit the budget.
+            var corridor = Board("#######", "#######", "......#", "#######"); corridor.Start = C(0, 2); corridor.Exit = C(5, 2); corridor.AlarmBudget = 2;
             corridor.Cameras.Add(Camera(C(4, 1), Direction.South, Direction.West));
             var m = StageMetrics.Analyze(corridor.Build());
-            Assert.IsFalse(m.Solvable, "budget 1 cannot be beaten without EMP: " + m);
+            Assert.IsFalse(m.Solvable, "budget 2 cannot be beaten without EMP: " + m);
             var withEmp = corridor; withEmp.EmpCharges = 1;
             var m2 = StageMetrics.Analyze(withEmp.Build());
-            Assert.AreEqual(4, m2.Par); Assert.IsTrue(m2.EmpRequired);
+            Assert.AreEqual(5, m2.Par); Assert.IsTrue(m2.EmpRequired); Assert.IsTrue(m2.ForcedAlarm);
         }
     }
 }

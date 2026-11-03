@@ -66,6 +66,8 @@ compile check, meta generation.
    it to the adjacent floor node, then counts `forward = 1..2` *from that node*. The node directly in front of the
    camera is therefore a blind spot and the 3×2 footprint covers nodes 2 and 3 away. Browser pars and Ghost flags
    depend on this (e.g. Level 16's Ghost route passes through the blind spot). Ported as-is; flagged in KNOWN_ISSUES.
+   **Superseded again 2026-11-03 (D-036):** cameras now use a 70° cone from the wall face, 2 spacings deep (`Sight.InCameraCone`); see `Docs/Reports/CAMERA_CONE_VALIDATION_2026-11-03.md` for the pack impact.
+   **Superseded 2026-11-03 (D-035):** the footprint now starts at the front node (`Sight.CameraFootprintStart = 0`); camera stages were re-scored by the C# solver and browser parity is asserted only for stages without cameras.
 2. **Ping-pong facing at the endpoint** comes from the previous position, so at an endpoint the guard still faces the
    endpoint while its NEXT arrow points back. Ported.
 3. **Rotating guards and cameras** with `ccw` turn the other way; sweep alternates `dir` and `dir ± 1` every 2 actions.

@@ -27,7 +27,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         public void AlarmFreeSearch_FindsTheLongerGhostRoute()
         {
             var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(1, 3); b.Exit = C(5, 3); b.AlarmBudget = 5;
-            b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
+            b.Cameras.Add(Camera(C(3, 4), Direction.North, Direction.North)); // lights rows 3 and 2: the direct route is lit, the Ghost route goes round by row 1
             var stage = b.Build();
             var fast = StageSolver.Solve(stage);
             var ghost = StageSolver.Solve(stage, new SolveOptions { AlarmFreeOnly = true });
@@ -40,11 +40,11 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void Solver_RespectsLockdown_AndReportsUnsolvable()
         {
-            var b = Board("#######", "#######", ".....##", "#######"); b.Start = C(0, 2); b.Exit = C(4, 2); b.AlarmBudget = 1;
+            var b = Board("#######", "#######", "......#", "#######"); b.Start = C(0, 2); b.Exit = C(5, 2); b.AlarmBudget = 2;
             b.Cameras.Add(Camera(C(4, 1), Direction.South, Direction.West));
-            Assert.IsFalse(StageSolver.Solve(b.Build()).Found);
-            b.AlarmBudget = 2;
-            Assert.IsTrue(StageSolver.Solve(b.Build()).Found, "budget 2: alarm at (2,2), then (3,2) and the exit");
+            Assert.IsFalse(StageSolver.Solve(b.Build()).Found, "cone lights (2,2),(3,2): alarm at (2,2), three actions to the exit");
+            b.AlarmBudget = 3;
+            Assert.IsTrue(StageSolver.Solve(b.Build()).Found, "budget 3: alarm at (2,2), then (3,2), (4,2) and the exit");
         }
 
         [Test]

@@ -21,8 +21,12 @@ namespace ShadowSteps.Art2D
         public SS2DCameraFitter fitter;
         public SS2DHudCanvas hud;
         public bool showInitialHazards = true;
+        [Tooltip("Art-review state: actions applied to the initial state through the real rules before drawing (tokens: N/E/S/W, WAIT, SMOKE@x,y, EMP#i). Invalid tokens are logged and skipped.")]
+        public string[] previewActions;
         public bool rebuildOnLoad = true;
         public Stage Stage { get; private set; }
+        /// <summary>Not serialized: a stage built in code (review frames for synthetic layouts) takes precedence over <see cref="stageCode"/>.</summary>
+        public Stage OverrideStage { get; set; }
 
         private void OnEnable()
         {
@@ -43,22 +47,37 @@ namespace ShadowSteps.Art2D
         {
             if (boardRenderer == null || library == null) { Debug.LogError("[SS2D] assign a renderer and a sprite library"); return; }
             boardRenderer.library = library;
-            var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
-            var stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
+            Stage stage = OverrideStage;
+            if (stage == null)
+            {
+                var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+                stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
+            }
             Stage = stage;
             boardRenderer.Build(stage);
             var state = StageState.Initial(stage);
+            if (previewActions != null)
+                foreach (var token in previewActions)
+                {
+                    if (string.IsNullOrWhiteSpace(token)) continue;
+                    if (!StageAction.TryParse(token, out var action)) { Debug.LogWarning("[SS2D] preview action not understood: " + token); continue; }
+                    var outcome = StageRules.TryApply(stage, state, action);
+                    if (!outcome.Valid) { Debug.LogWarning("[SS2D] preview action rejected: " + token + " (" + outcome.Reason + ")"); continue; }
+                    state = outcome.After;
+                }
+            int t = state.T;
             boardRenderer.SetPlayer(state.Player);
-            for (int i = 0; i < stage.Guards.Count; i++) boardRenderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], 0), GuardTrack.NextStep(stage.Guards[i], 0));
-            for (int i = 0; i < stage.Cameras.Count; i++) boardRenderer.SetCamera(i, CameraTrack.FacingAt(stage.Cameras[i], 0), 0, false);
+            for (int i = 0; i < stage.Guards.Count; i++) boardRenderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], t), GuardTrack.NextStep(stage.Guards[i], t));
+            for (int i = 0; i < stage.Cameras.Count; i++) boardRenderer.SetCamera(i, CameraTrack.FacingAt(stage.Cameras[i], t), state.EmpLeftOn(i), false);
             for (int i = 0; i < stage.Doors.Count; i++) boardRenderer.SetDoor(i, state.IsDoorOpen(i));
             boardRenderer.SetKeyCollected(state.HasKey);
+            boardRenderer.SetClouds(state.Clouds);
             if (showInitialHazards)
             {
                 var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
-                for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], 0))) if (seen.Add(c)) guardCells.Add(c);
+                for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], t))) if (seen.Add(c)) guardCells.Add(c);
                 var camCells = new List<GridCoord>(); seen.Clear();
-                for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, state, i, 0)) if (seen.Add(c)) camCells.Add(c);
+                for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, state, i, t)) if (seen.Add(c)) camCells.Add(c);
                 boardRenderer.SetVision(guardCells, camCells);
             }
             var reachNodes = new List<GridCoord>(); var reachEdges = new List<EdgeKey>();
@@ -74,6 +93,7 @@ namespace ShadowSteps.Art2D
             var cam = fitter != null ? fitter.GetComponent<Camera>() : Camera.main;
             if (cam != null) { cam.orthographic = true; cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = library.background; }
             if (fitter != null) { fitter.board = boardRenderer; fitter.Fit(cam != null ? cam.aspect : 9f / 16f); }
+            boardRenderer.FitBackground(cam);
             if (hud != null) hud.Show(stage, state, cam);
             Debug.Log("[SS2D] preview built: " + stage.Code + " " + stage.Title);
         }
