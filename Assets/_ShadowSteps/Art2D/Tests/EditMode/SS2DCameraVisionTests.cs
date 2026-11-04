@@ -88,7 +88,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void WallMount_Level19_PerimeterCamera_SitsOnAWallStubAtTheEdge_ClearOfNodes()
         {
-            var stage = Pack().FindByCode("LEVEL-19"); var r = Build(stage); var cam = stage.Cameras[0];
+            var stage = Unlimited(Pack().FindByCode("LEVEL-19")); var r = Build(stage); var cam = stage.Cameras[0];
             try
             {
                 Assert.IsFalse(ShadowSteps2DRenderer.UsesPoleMount(stage, cam)); Assert.IsFalse(r.IsPoleMounted(0));
@@ -137,7 +137,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void PerimeterWalls_DrawWhenEnabled_AndHideWhenTheBackgroundPaintsThem()
         {
-            var stage = Pack().FindByCode("LEVEL-19");
+            var stage = Unlimited(Pack().FindByCode("LEVEL-19"));
             var lib = Object.Instantiate(Library()); lib.showPerimeterWalls = true;
             var go = new GameObject("test-renderer-walls"); var r = go.AddComponent<ShadowSteps2DRenderer>(); r.library = lib;
             try
@@ -199,7 +199,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void LevelArt_Level19_UsesStoneWallAndBush_ForItsTwoAuthoredCoverCells_AndAStoneCameraMount()
         {
-            var stage = Pack().FindByCode("LEVEL-19"); var lib = Library();
+            var stage = Unlimited(Pack().FindByCode("LEVEL-19")); var lib = Library();
             Assert.IsNotNull(lib.bush, "obstacle bush imported"); Assert.IsNotNull(lib.wallSide); Assert.IsNotNull(lib.wallFront);
             var art = lib.FindLevelArt("LEVEL-19"); Assert.IsNotNull(art, "LEVEL-19 layout registered on the library");
             var r = Build(stage);
@@ -242,7 +242,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void LevelArt_StonePieceOrientation_FollowsTheDrawnAxis_UnrotatedBoardUsesTheSidePiece()
         {
-            var stage = Pack().FindByCode("LEVEL-19");
+            var stage = Unlimited(Pack().FindByCode("LEVEL-19"));
             var go = new GameObject("test-renderer-unrotated"); var r = go.AddComponent<ShadowSteps2DRenderer>(); r.library = Library(); r.autoRotatePortrait = false;
             try
             {
@@ -380,7 +380,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void DirectionalCameraArt_SwapsTheSpritePerDrawnFacing_StaysUpright_AndTintsWhenDisabled()
         {
-            var stage = Pack().FindByCode("LEVEL-18"); var lib = Library();
+            var stage = Unlimited(Pack().FindByCode("LEVEL-18")); var lib = Library();
             if (!lib.HasCameraArt) Assert.Ignore("no final camera art imported");
             var r = Build(stage); var cam = stage.Cameras[0];
             try
@@ -406,6 +406,9 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         private static int CountCovers(ShadowSteps2DRenderer r) { int n = 0; foreach (Transform t in r.transform.Find("Props")) if (t.name.StartsWith("Cover_X_") && !t.name.EndsWith("_Shadow")) n++; return n; }
+
+        /// <summary>Copy of a shipped stage without its WAIT limit: these tests step the camera schedules with many WAITs (the limit itself is covered by the core tests).</summary>
+        private static Stage Unlimited(Stage stage) { var b = stage.ToBuilder(); b.WaitLimit = -1; return b.Build(); }
 
         private static StageState After(Stage stage, StageState state, params string[] tokens)
         {
@@ -438,7 +441,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void RotatingCamera_Level18_TurnsEveryCountedAction()
         {
-            var stage = Pack().FindByCode("LEVEL-18"); var r = Build(stage); var cam = stage.Cameras[0];
+            var stage = Unlimited(Pack().FindByCode("LEVEL-18")); var r = Build(stage); var cam = stage.Cameras[0];
             try
             {
                 Assert.AreEqual(CameraKind.Rotating, cam.Kind);
@@ -463,7 +466,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void SweepingCamera_Level19_HoldsEachFacingForTwoActions()
         {
-            var stage = Pack().FindByCode("LEVEL-19"); var r = Build(stage); var cam = stage.Cameras[0];
+            var stage = Unlimited(Pack().FindByCode("LEVEL-19")); var r = Build(stage); var cam = stage.Cameras[0];
             try
             {
                 Assert.AreEqual(CameraKind.Sweeping, cam.Kind);

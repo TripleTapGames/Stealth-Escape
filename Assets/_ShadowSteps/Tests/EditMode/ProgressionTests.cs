@@ -5,6 +5,74 @@ namespace ShadowSteps.Tests.EditMode
 {
     public class ProgressionTests
     {
+        private static StageCatalog RuntimeCatalog() => new StageCatalog(StageJson.Parse(System.IO.File.ReadAllText(
+            System.IO.Path.Combine(TestPaths.ProjectRoot, "Assets/StreamingAssets/ShadowSteps/levels_v4.json"))).Stages);
+
+        [Test]
+        public void Resume_NewInstall_StartsAtFirstFtue()
+        {
+            var catalog = RuntimeCatalog();
+            Assert.AreEqual("FTUE-1", StageProgression.ResumeStage(catalog, new SaveData()).Code);
+            Assert.AreEqual("FTUE-1", StageProgression.ResumeStage(catalog, null).Code);
+        }
+
+        [Test]
+        public void Resume_RoundTrippedSave_UsesLastUnfinishedUnlockedStage()
+        {
+            var catalog = RuntimeCatalog(); var save = new SaveData();
+            for (int i = 0; i < 7; i++) StageProgression.RecordWin(catalog, save, catalog.ByIndex(i), 10, false);
+            save.LastPlayedLevelId = catalog.ByIndex(7).Id;
+            var loaded = SaveSerializer.FromJson(SaveSerializer.ToJson(save));
+            Assert.AreEqual(catalog.ByIndex(7).Id, StageProgression.ResumeStage(catalog, loaded).Id);
+        }
+
+        [Test]
+        public void Resume_WinSavesNextStageBeforeResultsAreDismissed()
+        {
+            var catalog = RuntimeCatalog(); var save = new SaveData();
+            StageProgression.RecordWin(catalog, save, catalog.ByIndex(0), 10, false);
+            Assert.AreEqual(catalog.ByIndex(1).Id, save.LastPlayedLevelId);
+            Assert.AreEqual(catalog.ByIndex(1).Id, StageProgression.ResumeStage(catalog, save).Id);
+        }
+
+        [Test]
+        public void Resume_StaleLockedOrCompletedCheckpoint_FallsBackToProgress()
+        {
+            var catalog = RuntimeCatalog(); var save = new SaveData();
+            save.LastPlayedLevelId = 9999;
+            Assert.AreEqual("FTUE-1", StageProgression.ResumeStage(catalog, save).Code);
+            save.LastPlayedLevelId = catalog.ByIndex(5).Id;
+            Assert.AreEqual("FTUE-1", StageProgression.ResumeStage(catalog, save).Code);
+            StageProgression.RecordWin(catalog, save, catalog.ByIndex(0), 10, false);
+            save.LastPlayedLevelId = catalog.ByIndex(0).Id;
+            Assert.AreEqual(catalog.ByIndex(1).Id, StageProgression.ResumeStage(catalog, save).Id);
+        }
+
+        [Test]
+        public void Resume_DevelopmentUnlockAll_DoesNotSkipFtueForTestCheckpoint()
+        {
+            var catalog = RuntimeCatalog();
+            var save = new SaveData { LastPlayedLevelId = catalog.ByCode("LEVEL-23").Id, DebugUnlockAll = true };
+            bool previous = StageProgression.DebugUnlockAllowed;
+            try
+            {
+                StageProgression.DebugUnlockAllowed = true;
+                Assert.AreEqual("FTUE-1", StageProgression.ResumeStage(catalog, save).Code);
+                save.RecordWin(catalog.ByCode("LEVEL-22").Id, 10, save.LastPlayedLevelId);
+                Assert.AreEqual("FTUE-1", StageProgression.ResumeStage(catalog, save).Code, "clearing a debug-selected level does not complete skipped tutorials");
+                Assert.IsTrue(StageProgression.IsUnlocked(catalog, save, save.LastPlayedLevelId), "explicit developer level selection stays available");
+            }
+            finally { StageProgression.DebugUnlockAllowed = previous; }
+        }
+
+        [Test]
+        public void Resume_AllStagesComplete_UsesLastStage()
+        {
+            var catalog = RuntimeCatalog(); var save = new SaveData();
+            foreach (var stage in catalog.Stages) StageProgression.RecordWin(catalog, save, stage, 10, false);
+            Assert.AreEqual(catalog.ByIndex(catalog.Count - 1).Id, StageProgression.ResumeStage(catalog, save).Id);
+        }
+
         [Test]
         public void Stars_FollowParRule()
         {

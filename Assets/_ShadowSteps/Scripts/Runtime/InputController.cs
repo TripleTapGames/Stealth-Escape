@@ -7,9 +7,11 @@ using UnityEngine.EventSystems;
 namespace ShadowSteps.Runtime
 {
     /// <summary>
-    /// Single gesture recogniser for the board (handover §8): a tap on an adjacent connected node = one Move; a
-    /// cardinal swipe anywhere on the board = one Move; a long-press on an adjacent node = one-action preview that never
-    /// moves on release; in Smoke/EMP targeting mode taps pick targets and swipes are ignored. Input over UI is ignored.
+    /// Single gesture recogniser for the board (handover §8, long-press changed 2026-11-03): a tap on an adjacent connected
+    /// node = one Move; a cardinal swipe anywhere on the board = one Move; a long-press anywhere on the board = one WAIT
+    /// (fires once when the hold time is reached; the release does nothing); in Smoke/EMP targeting mode taps pick targets
+    /// and swipes/long-presses are ignored. Input over UI is ignored. The one-action preview is still available through
+    /// <see cref="GameSessionController.ShowPreview"/> for UI that wants it; it is no longer bound to a gesture.
     /// Legacy Input Manager (project setting). Keys: arrows/WASD move, Space WAIT, Q smoke mode, E EMP mode, Esc cancel,
     /// R retry, Z debug undo.
     /// </summary>
@@ -119,11 +121,11 @@ namespace ShadowSteps.Runtime
                 return;
             }
 
-            if (held && !_gestureConsumed && !_previewShown && !_pointerStartedOverUi && Session.Mode == InputMode.Move
+            if (held && !_gestureConsumed && !_pointerStartedOverUi && Session.Mode == InputMode.Move
                 && delta.magnitude <= tapPx && Time.unscaledTime - _pointerDownTime >= LongPressSeconds)
             {
-                var adjacent = AdjacentDirectionAt(_pointerStart);
-                if (adjacent.HasValue) { _previewShown = true; Session.ShowPreview(StageAction.Move(adjacent.Value)); }
+                _gestureConsumed = true; // one WAIT per hold; the release is then ignored
+                LongPress(_pointerStart);
             }
 
             if (up)
@@ -151,13 +153,12 @@ namespace ShadowSteps.Runtime
             return Session.Board.CameraIndexNear(WorldAt(screenPos));
         }
 
-        private Direction? AdjacentDirectionAt(Vector2 screenPos)
+
+        /// <summary>Long-press anywhere on the board (not over UI) in Move mode = one WAIT. Public so tests and tutorials can drive it.</summary>
+        public bool LongPress(Vector2 screenPos)
         {
-            if (Session.State == null) return null;
-            var coord = NodeAt(screenPos);
-            if (!coord.HasValue) return null;
-            var player = Session.State.Player;
-            return DirectionUtil.FromDelta(coord.Value.X - player.X, coord.Value.Y - player.Y);
+            if (Session == null || Session.State == null || Session.Stage == null || Session.Mode != InputMode.Move) return false;
+            return Session.TrySubmit(StageAction.Wait);
         }
 
         private void HandleTap(Vector2 screenPos)

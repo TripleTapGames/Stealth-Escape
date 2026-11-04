@@ -10,6 +10,8 @@ namespace ShadowSteps.V3
         public bool AllowEmp = true;
         /// <summary>Prune every state that has ever triggered an alarm (Ghost route search).</summary>
         public bool AlarmFreeOnly = false;
+        /// <summary>Extra cap on WAIT actions for analysis (-1 = only the stage's own WaitLimit applies).</summary>
+        public int MaxWaits = -1;
         /// <summary>Upper bound on counted actions explored.</summary>
         public int MaxActions = 40;
         public int StateLimit = 250000;
@@ -46,6 +48,7 @@ namespace ShadowSteps.V3
             options = options ?? new SolveOptions();
             var result = new SolveResult();
             int period = stage.Period;
+            bool trackWaits = stage.WaitLimit >= 0 || options.MaxWaits >= 0;
             var init = StageState.Initial(stage);
             if (!options.AllowSmoke || !options.AllowEmp)
                 init = new StageState(init.Player, 0, false, 0, null, null, options.AllowSmoke ? init.SmokeCharges : 0, options.AllowEmp ? init.EmpCharges : 0, -1, false, StageResult.Playing, null);
@@ -60,7 +63,7 @@ namespace ShadowSteps.V3
                 while (queue.Count > 0)
                 {
                     var n = queue.Dequeue();
-                    string key = n.State.Key(period);
+                    string key = n.State.Key(period, trackWaits);
                     if (seen.ContainsKey(key)) continue;
                     seen[key] = n;
                     result.StatesExplored++;
@@ -83,9 +86,10 @@ namespace ShadowSteps.V3
                 var next = new List<Node>();
                 foreach (var n in expanded)
                 {
-                    string key = n.State.Key(period);
+                    string key = n.State.Key(period, trackWaits);
                     foreach (var action in StageRules.CountedActions())
                     {
+                        if (action.Kind == StageActionKind.Wait && options.MaxWaits >= 0 && n.State.WaitsUsed >= options.MaxWaits) continue;
                         var o = StageRules.TryApply(stage, n.State, action);
                         if (!o.Valid) continue;
                         if (options.AlarmFreeOnly && o.After.AlarmEver) continue;
@@ -144,6 +148,8 @@ namespace ShadowSteps.V3
         public List<StageAction> Solution = new List<StageAction>();
         public int ShortestWithoutSmoke = -1, ShortestWithoutEmp = -1, ShortestWithoutGadgets = -1;
         public int ShortestAlarmFree = -1;
+        /// <summary>WAITs in the recorded par solution; the smallest WAIT cap that still reaches par; shortest win with no WAIT at all (-1 = impossible).</summary>
+        public int WaitsInPar = -1, MinWaitsForPar = -1, ShortestWithoutWait = -1;
         public bool GhostPossible, ForcedAlarm, GhostOffered;
         public int ThreeStar, TwoStar;
         public int Period;
@@ -158,7 +164,7 @@ namespace ShadowSteps.V3
         {
             string F(int v) => v < 0 ? "none" : v.ToString();
             return Code + ": par=" + F(Par) + " noSmoke=" + F(ShortestWithoutSmoke) + " noEmp=" + F(ShortestWithoutEmp) + " noGadgets=" + F(ShortestWithoutGadgets) +
-                   " alarmFree=" + F(ShortestAlarmFree) + (GhostOffered ? " ghost" : "") + (ForcedAlarm ? " forcedAlarm" : "") + " stars3<=" + ThreeStar + " stars2<=" + TwoStar + " period=" + Period;
+                   " alarmFree=" + F(ShortestAlarmFree) + (GhostOffered ? " ghost" : "") + (ForcedAlarm ? " forcedAlarm" : "") + " waits=" + F(WaitsInPar) + "/min" + F(MinWaitsForPar) + "/noWait=" + F(ShortestWithoutWait) + " stars3<=" + ThreeStar + " stars2<=" + TwoStar + " period=" + Period;
         }
 
         public static StageMetrics Analyze(Stage stage, SolveOptions baseOptions = null)
@@ -181,7 +187,15 @@ namespace ShadowSteps.V3
                 m.GhostOffered = g.Found;
             }
             else m.ShortestAlarmFree = m.Par;
-            if (m.Par >= 0) { m.ThreeStar = StageScoring.ThreeStarThreshold(m.Par); m.TwoStar = StageScoring.TwoStarThreshold(m.Par); }
+            if (m.Par >= 0)
+            {
+                m.ThreeStar = StageScoring.ThreeStarThreshold(m.Par); m.TwoStar = StageScoring.TwoStarThreshold(m.Par);
+                m.WaitsInPar = 0; foreach (var a in m.Solution) if (a.Kind == StageActionKind.Wait) m.WaitsInPar++;
+                // Smallest WAIT cap that still reaches par (the BFS may have picked a wait-heavy shortest path).
+                m.MinWaitsForPar = m.WaitsInPar;
+                for (int cap = 0; cap < m.WaitsInPar; cap++) { var r = StageSolver.Solve(stage, Opt(o => o.MaxWaits = cap)); if (r.Found && r.CountedActions == m.Par) { m.MinWaitsForPar = cap; break; } }
+                var nw = StageSolver.Solve(stage, Opt(o => o.MaxWaits = 0)); m.ShortestWithoutWait = nw.Found ? nw.CountedActions : -1;
+            }
             return m;
         }
 

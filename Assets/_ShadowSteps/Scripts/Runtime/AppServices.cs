@@ -25,7 +25,7 @@ namespace ShadowSteps.Runtime
         public static SaveData Save { get; private set; }
         public static bool IsInitialized => Stages != null && Save != null;
         public static string LastError { get; private set; }
-        /// <summary>Stage id the Game scene should open next (set by menus; 0 = first unfinished stage).</summary>
+        /// <summary>Stage id the Game scene should open next (set by menus; 0 = resume saved progression).</summary>
         public static int PendingStageId { get; set; }
         /// <summary>Which menu screen the Home scene should open (null = Home).</summary>
         public static string PendingMenu { get; set; }
@@ -105,7 +105,9 @@ namespace ShadowSteps.Runtime
             StageProgression.DebugUnlockAllowed = Application.isEditor || Debug.isDebugBuild;
             SaveRepo = new SaveRepository(SavePath);
             Save = SaveRepo.Load();
-            Debug.Log("[ShadowSteps] save: " + SaveRepo.LastLoadStatus + " (" + SaveRepo.LastMessage + ")");
+            Debug.Log("[ShadowSteps] save: " + SaveRepo.LastLoadStatus + " (" + SaveRepo.LastMessage + ")"
+                + "; checkpoint=" + Save.LastPlayedLevelId + "; completed=" + Save.CompletedCount()
+                + "; resume=" + StageProgression.ResumeStage(Stages, Save)?.Code);
         }
 
         public static void PersistSave()

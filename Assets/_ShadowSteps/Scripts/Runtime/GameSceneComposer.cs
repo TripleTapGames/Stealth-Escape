@@ -57,9 +57,13 @@ namespace ShadowSteps.Runtime
                 yield return AppServices.InitializeAsync(r => ok = r);
                 if (!ok) { Hud?.ShowMessage("Could not load stages: " + AppServices.LastError); yield break; }
             }
-            int id = AppServices.PendingStageId > 0 ? AppServices.PendingStageId : DebugStageId;
+            int id = AppServices.PendingStageId;
+#if UNITY_EDITOR
+            // Direct scene previews may pin a stage; installed builds always follow saved progress.
+            if (id <= 0) id = DebugStageId;
+#endif
             AppServices.PendingStageId = 0;
-            var stage = (id > 0 ? AppServices.Stages.ById(id) : null) ?? StageProgression.FirstUnfinished(AppServices.Stages, AppServices.Save);
+            var stage = (id > 0 ? AppServices.Stages.ById(id) : null) ?? StageProgression.ResumeStage(AppServices.Stages, AppServices.Save);
             OpenStage(stage);
         }
 

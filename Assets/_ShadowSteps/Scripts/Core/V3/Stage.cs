@@ -68,7 +68,7 @@ namespace ShadowSteps.V3
         }
     }
 
-    /// <summary>A locked connection between two adjacent nodes. Opened for the attempt by crossing it with the key.</summary>
+    /// <summary>A locked connection between two adjacent nodes. Opened for the attempt when the key holder reaches either endpoint.</summary>
     public readonly struct DoorSpec
     {
         public readonly GridCoord A;
@@ -122,6 +122,8 @@ namespace ShadowSteps.V3
         public int EmpCharges { get; }
         /// <summary>Counted actions granted after the first camera detection.</summary>
         public int AlarmBudget { get; }
+        /// <summary>Maximum WAIT actions per attempt; -1 = unlimited.</summary>
+        public int WaitLimit { get; }
         /// <summary>Solver-recorded scoring (0 when not yet computed).</summary>
         public int Par { get; }
         public int ThreeStarActions { get; }
@@ -141,7 +143,7 @@ namespace ShadowSteps.V3
             Id = b.Id; Code = b.Code ?? string.Empty; Group = b.Group ?? string.Empty; Title = b.Title ?? string.Empty; Intro = b.Intro ?? string.Empty;
             Width = b.Width; Height = b.Height; Start = b.Start; Exit = b.Exit; Key = b.Key;
             Guards = new List<GuardSpec>(b.Guards); Cameras = new List<CameraSpec>(b.Cameras); Doors = new List<DoorSpec>(b.Doors);
-            SmokeCharges = b.SmokeCharges; EmpCharges = b.EmpCharges; AlarmBudget = b.AlarmBudget;
+            SmokeCharges = b.SmokeCharges; EmpCharges = b.EmpCharges; AlarmBudget = b.AlarmBudget; WaitLimit = b.WaitLimit;
             Par = b.Par; ThreeStarActions = b.ThreeStarActions; TwoStarActions = b.TwoStarActions; GhostOffered = b.GhostOffered;
             Notes = new List<string>(b.Notes);
             _walls = new HashSet<GridCoord>(b.Walls);
@@ -203,7 +205,7 @@ namespace ShadowSteps.V3
             var b = new StageBuilder
             {
                 Id = Id, Code = Code, Group = Group, Title = Title, Intro = Intro, Width = Width, Height = Height, Start = Start, Exit = Exit, Key = Key,
-                SmokeCharges = SmokeCharges, EmpCharges = EmpCharges, AlarmBudget = AlarmBudget, Par = Par, ThreeStarActions = ThreeStarActions,
+                SmokeCharges = SmokeCharges, EmpCharges = EmpCharges, AlarmBudget = AlarmBudget, WaitLimit = WaitLimit, Par = Par, ThreeStarActions = ThreeStarActions,
                 TwoStarActions = TwoStarActions, GhostOffered = GhostOffered
             };
             b.Walls.AddRange(_walls); b.Blocked.AddRange(_blocked); b.Cuts.AddRange(_cuts); b.Doors.AddRange(Doors); b.Guards.AddRange(Guards); b.Cameras.AddRange(Cameras); b.Notes.AddRange(Notes);
@@ -230,6 +232,8 @@ namespace ShadowSteps.V3
         public List<CameraSpec> Cameras = new List<CameraSpec>();
         public int SmokeCharges, EmpCharges;
         public int AlarmBudget = 4;
+        /// <summary>Maximum WAIT actions per attempt; -1 = unlimited.</summary>
+        public int WaitLimit = -1;
         public int Par, ThreeStarActions, TwoStarActions;
         public bool GhostOffered;
         public List<string> Notes = new List<string>();

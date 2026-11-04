@@ -132,5 +132,32 @@ namespace ShadowSteps.Tests.EditMode.V3
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             return b;
         }
-    }
+    
+        [Test]
+        public void EmpExpiry_TriggersTheAlarmWithTheFullBudget_AndTheExitOnTheLastPermittedActionWins()
+        {
+            // Corridor ".......#": camera on (4,1) facing W lights (3,2),(2,2) under the cone. Budget 1.
+            // EMP at (1,2); E,E → (3,2) is the action on which the EMP expires and the camera rechecks: the alarm must start at the FULL budget (1),
+            // not already decremented by that same action; then E → (4,2) uses the single permitted action (alarm → 0 off the exit = lockdown),
+            // whereas with the exit one node nearer the last permitted action lands on it and wins.
+            var b = Board("#######", "#######", "......#", "#######"); b.Start = C(0, 2); b.Exit = C(5, 2); b.EmpCharges = 1; b.AlarmBudget = 1;
+            b.Cameras.Add(Camera(C(4, 1), Direction.South, Direction.West));
+            var stage = b.Build();
+            var s = StageState.Initial(stage);
+            Step(stage, ref s, E); Step(stage, ref s, StageAction.Emp(0)); Step(stage, ref s, E); // (2,2) protected, 1 EMP action left
+            var expiry = Step(stage, ref s, E); // (3,2): EMP expires on this action and the camera sees the player
+            Assert.IsTrue(expiry.EmpExpired); Assert.IsTrue(expiry.AlarmTriggered); Assert.AreEqual(1, s.Alarm, "expiry-triggered alarm starts with the full budget; the triggering action does not consume it");
+            Assert.AreEqual(StageResult.Playing, s.Result);
+            var last = Step(stage, ref s, E); // (4,2): the one permitted action, not the exit
+            Assert.IsTrue(last.Lockdown); Assert.AreEqual(0, s.Alarm); Assert.AreEqual(StageResult.Lockdown, s.Result);
+
+            var near = Board("#######", "#######", ".....##", "#######"); near.Start = C(0, 2); near.Exit = C(4, 2); near.EmpCharges = 1; near.AlarmBudget = 1;
+            near.Cameras.Add(Camera(C(4, 1), Direction.South, Direction.West)); // lights (3,2),(2,2)
+            var ns = near.Build(); var t = StageState.Initial(ns);
+            Step(ns, ref t, E); Step(ns, ref t, StageAction.Emp(0)); Step(ns, ref t, E);
+            var ex = Step(ns, ref t, E); Assert.IsTrue(ex.EmpExpired && ex.AlarmTriggered); Assert.AreEqual(1, t.Alarm);
+            var win = Step(ns, ref t, E); // (4,2) is the exit: reached on the last permitted action
+            Assert.IsTrue(win.Won); Assert.AreEqual(0, t.Alarm); Assert.AreEqual(StageResult.Won, t.Result);
+        }
+}
 }

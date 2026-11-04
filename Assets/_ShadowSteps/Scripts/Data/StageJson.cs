@@ -22,7 +22,7 @@ namespace ShadowSteps.Data
     public static class StageJson
     {
         private static readonly HashSet<string> KnownStageKeys = new HashSet<string>
-            { "id", "code", "group", "title", "intro", "rows", "start", "exit", "key", "cuts", "doors", "guards", "cameras", "gadgets", "alarmBudget", "scoring", "notes" };
+            { "id", "code", "group", "title", "intro", "rows", "start", "exit", "key", "cuts", "doors", "guards", "cameras", "gadgets", "alarmBudget", "waitLimit", "scoring", "notes" };
 
         public static StagePack Parse(string json)
         {
@@ -46,7 +46,8 @@ namespace ShadowSteps.Data
                 Group = JsonAccess.OptionalString(o, "group", "Main", path),
                 Title = JsonAccess.RequireString(o, "title", path),
                 Intro = JsonAccess.OptionalString(o, "intro", string.Empty, path),
-                AlarmBudget = JsonAccess.OptionalInt(o, "alarmBudget", 4, path)
+                AlarmBudget = JsonAccess.OptionalInt(o, "alarmBudget", 4, path),
+                WaitLimit = JsonAccess.OptionalInt(o, "waitLimit", -1, path)
             };
             if (b.Code == null) b.Code = "LEVEL-" + b.Id;
             var rows = new List<string>();
@@ -154,6 +155,7 @@ namespace ShadowSteps.Data
             o["cameras"] = cams;
             o["gadgets"] = new JsonObject().Set("smoke", (long)s.SmokeCharges).Set("emp", (long)s.EmpCharges);
             o["alarmBudget"] = (long)s.AlarmBudget;
+            if (s.WaitLimit >= 0) o["waitLimit"] = (long)s.WaitLimit;
             o["scoring"] = new JsonObject().Set("par", (long)s.Par).Set("threeStar", (long)s.ThreeStarActions).Set("twoStar", (long)s.TwoStarActions).Set("ghostOffered", s.GhostOffered);
             if (s.Notes.Count > 0) o["notes"] = new List<object>(s.Notes);
             return o;

@@ -37,7 +37,7 @@ namespace ShadowSteps.UI
             var home = Router.Register(set.Create<HomeScreen>(canvas.transform, set.HomeScreen));
             var levels = Router.Register(set.Create<LevelSelectScreen>(canvas.transform, set.LevelSelectScreen));
             var settings = Router.Register(set.Create<SettingsScreen>(canvas.transform, set.SettingsScreen));
-            home.OnPlay = () => OpenStage(StageProgression.FirstUnfinished(AppServices.Stages, AppServices.Save).Id);
+            home.OnPlay = () => OpenStage(StageProgression.ResumeStage(AppServices.Stages, AppServices.Save).Id);
             home.OnLevelSelect = () => Router.Push<LevelSelectScreen>();
             home.OnSettings = () => Router.Push<SettingsScreen>();
             levels.OnBack = () => Router.Pop();

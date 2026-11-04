@@ -30,6 +30,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 3,
         "threeStar": 4,
@@ -70,6 +71,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 6,
         "threeStar": 7,
@@ -124,6 +126,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 8,
         "threeStar": 9,
@@ -179,6 +182,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 5,
         "threeStar": 6,
@@ -250,6 +254,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 6,
         "threeStar": 7,
@@ -303,6 +308,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 9,
         "threeStar": 10,
@@ -357,6 +363,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 7,
         "threeStar": 8,
@@ -423,6 +430,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 11,
         "threeStar": 12,
@@ -489,6 +497,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 4,
       "scoring": {
         "par": 14,
         "threeStar": 15,
@@ -572,6 +581,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 8,
         "threeStar": 9,
@@ -671,6 +681,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 13,
         "threeStar": 14,
@@ -737,6 +748,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 4,
       "scoring": {
         "par": 14,
         "threeStar": 15,
@@ -820,6 +832,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 10,
         "threeStar": 11,
@@ -915,6 +928,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 10,
         "threeStar": 11,
@@ -1022,6 +1036,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 13,
         "threeStar": 14,
@@ -1099,6 +1114,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 12,
         "threeStar": 13,
@@ -1196,6 +1212,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 14,
         "threeStar": 15,
@@ -1286,6 +1303,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 10,
         "threeStar": 11,
@@ -1376,6 +1394,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 12,
         "threeStar": 13,
@@ -1482,6 +1501,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 8,
         "threeStar": 9,
@@ -1536,6 +1556,7 @@
         "emp": 0
       },
       "alarmBudget": 5,
+      "waitLimit": 3,
       "scoring": {
         "par": 8,
         "threeStar": 9,
@@ -1591,6 +1612,7 @@
         "emp": 0
       },
       "alarmBudget": 3,
+      "waitLimit": 3,
       "scoring": {
         "par": 8,
         "threeStar": 9,
@@ -1645,6 +1667,7 @@
         "emp": 0
       },
       "alarmBudget": 3,
+      "waitLimit": 3,
       "scoring": {
         "par": 9,
         "threeStar": 10,
@@ -1700,6 +1723,7 @@
         "emp": 0
       },
       "alarmBudget": 2,
+      "waitLimit": 3,
       "scoring": {
         "par": 7,
         "threeStar": 8,
@@ -1756,6 +1780,7 @@
         "emp": 0
       },
       "alarmBudget": 2,
+      "waitLimit": 3,
       "scoring": {
         "par": 6,
         "threeStar": 7,
@@ -1809,6 +1834,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 6,
         "threeStar": 7,
@@ -1880,6 +1906,7 @@
         "emp": 0
       },
       "alarmBudget": 4,
+      "waitLimit": 3,
       "scoring": {
         "par": 10,
         "threeStar": 11,
@@ -1932,7 +1959,8 @@
         "smoke": 0,
         "emp": 1
       },
-      "alarmBudget": 1,
+      "alarmBudget": 2,
+      "waitLimit": 3,
       "scoring": {
         "par": 5,
         "threeStar": 6,
@@ -1987,6 +2015,7 @@
         "emp": 1
       },
       "alarmBudget": 1,
+      "waitLimit": 3,
       "scoring": {
         "par": 8,
         "threeStar": 9,
@@ -2066,6 +2095,7 @@
         "emp": 1
       },
       "alarmBudget": 1,
+      "waitLimit": 3,
       "scoring": {
         "par": 6,
         "threeStar": 7,
@@ -2075,6 +2105,498 @@
       "notes": [
         "imported from browser playtest export (Level 25)",
         "corridor extended to 7 nodes (exit (6,2)) on 2026-11-03 so Smoke and EMP both stay mandatory under the front-node camera footprint with alarm budget 1"
+      ]
+    },
+    {
+      "id": 31,
+      "code": "LEVEL-26",
+      "group": "Main",
+      "title": "Courtyard Relay",
+      "intro": "Retrieve the key, then plan your return past the sentry before entering the upper courtyard.",
+      "rows": [
+        "#######",
+        "#.....#",
+        "#.....#",
+        "#.X...#",
+        "#.#####",
+        "#.....#",
+        "#..X..#",
+        "#.....#",
+        "#######"
+      ],
+      "start": [
+        1,
+        7
+      ],
+      "exit": [
+        5,
+        1
+      ],
+      "key": [
+        5,
+        5
+      ],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [
+            1,
+            4
+          ],
+          "b": [
+            1,
+            3
+          ]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [
+              4,
+              6
+            ]
+          ],
+          "facing": "S",
+          "clockwise": true
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [
+              3,
+              2
+            ]
+          ],
+          "facing": "N",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 3,
+      "waitLimit": 4,
+      "scoring": {
+        "par": 20,
+        "threeStar": 22,
+        "twoStar": 26,
+        "ghostOffered": false
+      },
+      "notes": [
+        "imported from browser playtest export (Level 26, 2 blocked cover nodes)",
+        "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 31, \"Level 26\"); reference optimal 20 counted actions",
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+      ]
+    },
+    {
+      "id": 32,
+      "code": "LEVEL-27",
+      "group": "Main",
+      "title": "Borrowed Cover",
+      "intro": "Cross the watched passage under Smoke, then time the upper sentry.",
+      "rows": [
+        "#######",
+        "#.....#",
+        "#.....#",
+        "#...X.#",
+        "###.#.#",
+        "#.....#",
+        "#.#####",
+        "#.....#",
+        "#######"
+      ],
+      "start": [
+        5,
+        7
+      ],
+      "exit": [
+        1,
+        1
+      ],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [
+              3,
+              4
+            ]
+          ],
+          "facing": "S"
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [
+              3,
+              2
+            ]
+          ],
+          "facing": "N",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 1,
+        "emp": 0
+      },
+      "alarmBudget": 3,
+      "waitLimit": 4,
+      "scoring": {
+        "par": 20,
+        "threeStar": 22,
+        "twoStar": 26,
+        "ghostOffered": false
+      },
+      "notes": [
+        "imported from browser playtest export (Level 27, 1 blocked cover nodes)",
+        "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 32, \"Level 27\"); reference optimal 20 counted actions",
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+      ]
+    },
+    {
+      "id": 33,
+      "code": "LEVEL-28",
+      "group": "Main",
+      "title": "Divided Watch",
+      "intro": "Two camera zones, one EMP. Choose where to spend it and where to wait.",
+      "rows": [
+        "#########",
+        "#...#...#",
+        "#...#...#",
+        "#.X.#...#",
+        "#.......#",
+        "#...#.X.#",
+        "#...#...#",
+        "#...#...#",
+        "#########"
+      ],
+      "start": [
+        1,
+        7
+      ],
+      "exit": [
+        7,
+        1
+      ],
+      "key": [
+        1,
+        1
+      ],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [
+            4,
+            4
+          ],
+          "b": [
+            5,
+            4
+          ]
+        }
+      ],
+      "guards": [],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [
+            0,
+            3
+          ],
+          "mountFace": "E",
+          "facing": "E",
+          "kind": "sweeping",
+          "clockwise": true
+        },
+        {
+          "id": "cam2",
+          "wall": [
+            5,
+            0
+          ],
+          "mountFace": "S",
+          "facing": "S",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 1
+      },
+      "alarmBudget": 2,
+      "waitLimit": 5,
+      "scoring": {
+        "par": 21,
+        "threeStar": 23,
+        "twoStar": 28,
+        "ghostOffered": true
+      },
+      "notes": [
+        "imported from browser playtest export (Level 28, 2 blocked cover nodes)",
+        "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 33, \"Level 28\"); reference optimal 21 counted actions, Ghost route supplied",
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+      ]
+    },
+    {
+      "id": 34,
+      "code": "LEVEL-29",
+      "group": "Main",
+      "title": "Two Locks",
+      "intro": "One reusable key opens both doors. Time the patrol before approaching the watched exit.",
+      "rows": [
+        "#######",
+        "#.....#",
+        "#..X..#",
+        "#.....#",
+        "#.#####",
+        "#.....#",
+        "#..X..#",
+        "#.#####",
+        "#.....#",
+        "#.....#",
+        "#######"
+      ],
+      "start": [
+        1,
+        9
+      ],
+      "exit": [
+        5,
+        1
+      ],
+      "key": [
+        5,
+        9
+      ],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [
+            1,
+            7
+          ],
+          "b": [
+            1,
+            6
+          ]
+        },
+        {
+          "a": [
+            1,
+            4
+          ],
+          "b": [
+            1,
+            3
+          ]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [
+              3,
+              8
+            ]
+          ],
+          "facing": "S",
+          "clockwise": true
+        },
+        {
+          "id": "g2",
+          "kind": "pingPong",
+          "route": [
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              5,
+              3
+            ]
+          ],
+          "facing": "N",
+          "offset": 0
+        }
+      ],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [
+            6,
+            1
+          ],
+          "mountFace": "W",
+          "facing": "W",
+          "kind": "fixed",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 1
+      },
+      "alarmBudget": 2,
+      "waitLimit": 6,
+      "scoring": {
+        "par": 24,
+        "threeStar": 26,
+        "twoStar": 32,
+        "ghostOffered": true
+      },
+      "notes": [
+        "imported from browser playtest export (Level 29, 2 blocked cover nodes)",
+        "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 34, \"Level 29\"); reference optimal 24 counted actions, Ghost route supplied",
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+      ]
+    },
+    {
+      "id": 35,
+      "code": "LEVEL-30",
+      "group": "Main",
+      "title": "Inner Citadel",
+      "intro": "Collect access, cross under Smoke, and coordinate the final guard and camera.",
+      "rows": [
+        "#########",
+        "#.......#",
+        "#...X...#",
+        "#.......#",
+        "#####.###",
+        "#.......#",
+        "#.##.####",
+        "#.......#",
+        "#.#######",
+        "#.......#",
+        "#########"
+      ],
+      "start": [
+        1,
+        9
+      ],
+      "exit": [
+        7,
+        1
+      ],
+      "key": [
+        7,
+        9
+      ],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [
+            1,
+            8
+          ],
+          "b": [
+            1,
+            7
+          ]
+        },
+        {
+          "a": [
+            5,
+            4
+          ],
+          "b": [
+            5,
+            3
+          ]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [
+              4,
+              6
+            ]
+          ],
+          "facing": "N"
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [
+              5,
+              2
+            ]
+          ],
+          "facing": "N",
+          "clockwise": true
+        }
+      ],
+      "cameras": [
+        {
+          "id": "cam1",
+          "wall": [
+            0,
+            7
+          ],
+          "mountFace": "E",
+          "facing": "E",
+          "kind": "sweeping",
+          "clockwise": true
+        },
+        {
+          "id": "cam2",
+          "wall": [
+            8,
+            2
+          ],
+          "mountFace": "W",
+          "facing": "W",
+          "kind": "rotating",
+          "clockwise": true
+        }
+      ],
+      "gadgets": {
+        "smoke": 1,
+        "emp": 1
+      },
+      "alarmBudget": 2,
+      "waitLimit": 4,
+      "scoring": {
+        "par": 28,
+        "threeStar": 30,
+        "twoStar": 37,
+        "ghostOffered": true
+      },
+      "notes": [
+        "imported from browser playtest export (Level 30, 1 blocked cover nodes)",
+        "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 35, \"Level 30\"); reference optimal 28 counted actions, Ghost route supplied",
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
       ]
     }
   ]

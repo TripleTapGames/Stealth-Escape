@@ -179,7 +179,9 @@ namespace ShadowSteps.UI
             var state = _session.State;
             var stage = _session.Stage;
             bool playing = enabled && state != null && !state.IsTerminal;
-            WaitButton.Interactable = playing;
+            bool limited = stage != null && stage.WaitLimit >= 0;
+            WaitButton.SetLabel(limited ? "WAIT \u00d7" + state.WaitsLeft(stage) : "WAIT");
+            WaitButton.Interactable = playing && (!limited || state.WaitsLeft(stage) > 0);
             SmokeButton.Interactable = playing && state.SmokeCharges > 0;
             EmpButton.Interactable = playing && state.EmpCharges > 0 && stage.Cameras.Count > 0;
             RetryButton.Interactable = enabled;
@@ -194,6 +196,7 @@ namespace ShadowSteps.UI
                 case RejectReason.NoConnection: ShowMessage("No connection that way"); break;
                 case RejectReason.KeyRequired: ShowMessage("Locked: find the key first"); break;
                 case RejectReason.NoSmokeCharge: ShowMessage("No smoke left"); break;
+                case RejectReason.NoWaitsLeft: ShowMessage("No waits left on this level"); break;
                 case RejectReason.BadSmokeTarget: ShowMessage("Cannot place smoke there"); break;
                 case RejectReason.NoEmpCharge: ShowMessage("No EMP left"); break;
                 case RejectReason.BadCamera: ShowMessage("Pick a camera"); break;

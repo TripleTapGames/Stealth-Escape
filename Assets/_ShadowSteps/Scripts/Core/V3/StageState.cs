@@ -47,11 +47,13 @@ namespace ShadowSteps.V3
         public bool AlarmEver { get; }
         public StageResult Result { get; }
         public string Cause { get; }
+        /// <summary>WAIT actions taken this attempt (compared with <see cref="Stage.WaitLimit"/>).</summary>
+        public int WaitsUsed { get; }
 
         public StageState(GridCoord player, int t, bool hasKey, int openDoors, IReadOnlyList<SmokeCloud> clouds, IReadOnlyList<EmpEffect> emps,
-            int smokeCharges, int empCharges, int alarm, bool alarmEver, StageResult result, string cause)
+            int smokeCharges, int empCharges, int alarm, bool alarmEver, StageResult result, string cause, int waitsUsed = 0)
         {
-            Player = player; T = t; HasKey = hasKey; OpenDoors = openDoors;
+            Player = player; T = t; HasKey = hasKey; OpenDoors = openDoors; WaitsUsed = waitsUsed;
             Clouds = clouds ?? Array.Empty<SmokeCloud>(); Emps = emps ?? Array.Empty<EmpEffect>();
             SmokeCharges = smokeCharges; EmpCharges = empCharges; Alarm = alarm; AlarmEver = alarmEver; Result = result; Cause = cause ?? string.Empty;
         }
@@ -92,9 +94,13 @@ namespace ShadowSteps.V3
         /// Canonical identity for search: everything that influences the future. The schedule index is reduced modulo the
         /// stage period when <paramref name="period"/> is given (schedules depend only on T mod period).
         /// </summary>
-        public string Key(int period = 0)
+        /// <summary>WAITs still allowed on this stage (int.MaxValue when unlimited).</summary>
+        public int WaitsLeft(Stage stage) => stage.WaitLimit < 0 ? int.MaxValue : Math.Max(0, stage.WaitLimit - WaitsUsed);
+
+        public string Key(int period = 0, bool trackWaits = false)
         {
             var sb = new StringBuilder(64);
+            if (trackWaits) sb.Append('w').Append(WaitsUsed).Append('/');
             sb.Append(Player.X).Append(',').Append(Player.Y).Append('/').Append(period > 0 ? T % period : T).Append('/').Append(HasKey ? 1 : 0).Append('/').Append(OpenDoors)
               .Append('/').Append(SmokeCharges).Append('/').Append(EmpCharges).Append('/');
             var clouds = new List<string>();

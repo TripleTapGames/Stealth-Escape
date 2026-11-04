@@ -15,7 +15,7 @@ namespace ShadowSteps.Art2D
     public sealed class SS2DHudCanvas : MonoBehaviour, IGameHud, IGameHudPause
     {
         public Canvas canvas;
-        public Text levelLabel, actionsValue, starsLabel, smokeCount, empCount, messageLabel, lockdownLabel;
+        public Text levelLabel, actionsValue, starsLabel, smokeCount, empCount, messageLabel, lockdownLabel, waitCount;
         public RectTransform lockdownPanel;
         public RectTransform smokeButton, empButton, waitButton, pauseButton, retryButton;
         public Image alertOverlay;
@@ -93,7 +93,7 @@ namespace ShadowSteps.Art2D
             else if (mode == InputMode.EmpTarget) ShowMessage("Tap a highlighted camera to disable it", 0f);
             else if (_messageUntil == float.MaxValue) ShowMessage(string.Empty, 0f);
         }
-        private void OnActionRejected(StageAction a, RejectReason r) { ShowMessage(r.ToString().Replace("_", " "), 1.2f); }
+        private void OnActionRejected(StageAction a, RejectReason r) { ShowMessage(r == RejectReason.NoWaitsLeft ? "No waits left on this level" : r.ToString().Replace("_", " "), 1.2f); }
         private void OnWon(ActionOutcome o) { ShowMessage("Escaped in " + o.After.T + " actions  ·  " + new string('★', StageScoring.Stars(o.After.T, _session.Stage.Par)), 0f); }
         /// <summary>Set by a presentation that owns the capture timing (the 2D bridge): the flash and message then wait for <see cref="PresentCapture"/>.</summary>
         public bool deferCaptureFeedback;
@@ -120,7 +120,9 @@ namespace ShadowSteps.Art2D
             bool lockdown = state.AlarmActive && !state.IsTerminal;
             if (lockdownPanel != null) lockdownPanel.gameObject.SetActive(lockdown);
             if (lockdownLabel != null) lockdownLabel.text = lockdown ? "LOCKDOWN  \u00b7  " + state.Alarm + (state.Alarm == 1 ? " action" : " actions") + " to escape" : string.Empty;
-            SetInteractable(waitButton, !state.IsTerminal); SetInteractable(smokeButton, state.SmokeCharges > 0 && !state.IsTerminal); SetInteractable(empButton, state.EmpCharges > 0 && !state.IsTerminal);
+            bool limited = stage.WaitLimit >= 0; int waitsLeft = limited ? state.WaitsLeft(stage) : 0;
+            if (waitCount != null) { waitCount.transform.parent.gameObject.SetActive(limited); waitCount.text = waitsLeft.ToString(); }
+            SetInteractable(waitButton, !state.IsTerminal && (!limited || waitsLeft > 0)); SetInteractable(smokeButton, state.SmokeCharges > 0 && !state.IsTerminal); SetInteractable(empButton, state.EmpCharges > 0 && !state.IsTerminal);
         }
 
         // ---------------------------------------------------------------- build
@@ -174,6 +176,8 @@ namespace ShadowSteps.Art2D
             // ---- bottom: big round WAIT right, round gadget buttons left with small badges
             waitButton = Circle("WaitButton", canvas.transform, accent, 0.84f, 0.085f, 220f, true);
             var waitLabel = Label("WaitLabel", waitButton, "WAIT", 36, TextAnchor.MiddleCenter, font, true); waitLabel.color = new Color(0.04f, 0.12f, 0.15f);
+            waitCount = Badge(waitButton, font); // remaining WAITs on levels with a wait limit (hidden otherwise)
+            waitCount.transform.parent.GetComponent<Image>().color = pill; waitCount.color = Color.white; // dark badge on the teal button for contrast
             smokeButton = Circle("SmokeButton", canvas.transform, button, 0.14f, 0.085f, 150f, true);
             Label("SmokeLabel", smokeButton, "SMOKE", 22, TextAnchor.MiddleCenter, font, true);
             smokeCount = Badge(smokeButton, font);

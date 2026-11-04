@@ -54,6 +54,11 @@ MonoBehaviour:
   stoneWallSize: 1
   levelArt:
   - {fileID: 11400000, guid: 4f7b16c1cb0c44c57b58898bfc591164, type: 2}
+  - {fileID: 11400000, guid: 646f281a4d8b542c3a250f8295ffc0ce, type: 2}
+  - {fileID: 11400000, guid: 9760567e293c94ac6842e2e67302b05b, type: 2}
+  - {fileID: 11400000, guid: 2425db81c600240a5bc64a7aa597e96c, type: 2}
+  - {fileID: 11400000, guid: 7eaeff318355a4a6883896c4ece78331, type: 2}
+  - {fileID: 11400000, guid: dec2a5e49ab3c4f5c9b567989ea0d98b, type: 2}
   defaultObstacleArt: 1
   interiorWallArt: 2
   wallRunCameraHug: 0.36

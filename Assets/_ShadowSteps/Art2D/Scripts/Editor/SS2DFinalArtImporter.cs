@@ -120,7 +120,9 @@ namespace ShadowSteps.Art2D.Editor
                 lib.defaultObstacleArt = SS2DObstacleArt.BushPlanter; // every X cell without a layout entry is a planter
                 lib.interiorWallArt = SS2DObstacleArt.StoneWall;      // interior '#' runs are stone walls, lone interior walls planters
                 lib.wallRunCameraHug = 0.36f;
-                lib.levelArt = new[] { Level19Layout() };
+                lib.levelArt = new[] { Level19Layout(), Layout("LEVEL-26", new[] { B(2, 3), W(3, 6, SS2DWallAxis.LogicalX) }), Layout("LEVEL-27", new[] { B(4, 3) }),
+                    Layout("LEVEL-28", new[] { B(2, 3), W(6, 5, SS2DWallAxis.LogicalY) }, "cam1", "cam2"), Layout("LEVEL-29", new[] { B(3, 2), W(3, 6, SS2DWallAxis.LogicalX) }, "cam1"),
+                    Layout("LEVEL-30", new[] { B(4, 2) }, "cam1", "cam2") };
             }
             EditorUtility.SetDirty(lib);
             AssetDatabase.SaveAssets();
@@ -143,6 +145,24 @@ namespace ShadowSteps.Art2D.Editor
                 new SS2DObstacleArtEntry { x = 1, y = 3, art = SS2DObstacleArt.BushPlanter },
             };
             layout.cameras = new System.Collections.Generic.List<SS2DCameraArtEntry> { new SS2DCameraArtEntry { cameraId = "cam1", mount = SS2DCameraMountArt.StoneWall } };
+            EditorUtility.SetDirty(layout);
+            return layout;
+        }
+
+        static SS2DObstacleArtEntry B(int x, int y) => new SS2DObstacleArtEntry { x = x, y = y, art = SS2DObstacleArt.BushPlanter };
+        static SS2DObstacleArtEntry W(int x, int y, SS2DWallAxis axis) => new SS2DObstacleArtEntry { x = x, y = y, art = SS2DObstacleArt.StoneWall, wallAxis = axis };
+
+        /// <summary>Creates or updates `Art2D/LevelArt/SS2DArt_&lt;code&gt;.asset` (idempotent): X-cell art entries and stone-wall camera mounts for the given camera ids.</summary>
+        public static SS2DLevelArtLayout Layout(string code, SS2DObstacleArtEntry[] obstacles, params string[] stoneMountCameraIds)
+        {
+            string path = LevelArtDir + "SS2DArt_" + code + ".asset";
+            Directory.CreateDirectory(LevelArtDir);
+            var layout = AssetDatabase.LoadAssetAtPath<SS2DLevelArtLayout>(path);
+            if (layout == null) { layout = ScriptableObject.CreateInstance<SS2DLevelArtLayout>(); AssetDatabase.CreateAsset(layout, path); }
+            layout.stageCode = code; layout.defaultObstacle = SS2DObstacleArt.BushPlanter;
+            layout.obstacles = new System.Collections.Generic.List<SS2DObstacleArtEntry>(obstacles);
+            layout.cameras = new System.Collections.Generic.List<SS2DCameraArtEntry>();
+            foreach (var id in stoneMountCameraIds) layout.cameras.Add(new SS2DCameraArtEntry { cameraId = id, mount = SS2DCameraMountArt.StoneWall });
             EditorUtility.SetDirty(layout);
             return layout;
         }

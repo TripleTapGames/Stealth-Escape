@@ -130,9 +130,11 @@ namespace ShadowSteps.Art2D.Tests
             yield return Open();
             var hud = (SS2DHudCanvas)_composer.Hud; var stage = S.Stage; var g = stage.Guards[0];
             Assert.AreEqual(GuardKind.Rotating, g.Kind);
-            for (int step = 0; step < 4; step++)
+            int limit = stage.WaitLimit; int steps = limit >= 0 ? Mathf.Min(4, limit) : 4;
+            for (int step = 0; step < steps; step++)
             {
                 int tBefore = S.State.T;
+                if (limit >= 0) Assert.AreEqual((limit - step).ToString(), hud.waitCount.text, "WAIT badge shows the remaining waits");
                 hud.waitButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); yield return Settle();
                 Assert.AreEqual(tBefore + 1, S.State.T, "each WAIT is exactly one counted action");
                 Assert.AreEqual(S.State.T.ToString(), hud.actionsValue.text);
@@ -143,6 +145,11 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsTrue(R.Guards[0].transform.localPosition == R.Pos(pose.Position));
             }
             Assert.AreEqual(Direction.East, GuardTrack.PoseAt(g, 4).Facing, "period 4: back to the authored facing");
+            if (limit >= 0 && steps == limit)
+            {
+                Assert.AreEqual("0", hud.waitCount.text); Assert.IsFalse(hud.waitButton.GetComponent<UnityEngine.UI.Button>().interactable, "WAIT disabled at the limit");
+                Assert.IsFalse(S.TrySubmit(StageAction.Wait), "a further WAIT is rejected"); Assert.AreEqual(steps, S.State.T);
+            }
         }
 
         [UnityTest]
@@ -218,6 +225,53 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual("LEVEL-3", S.Stage.Code); Assert.AreEqual(0, S.State.T); Assert.IsTrue(R.IsBuilt);
             Assert.IsTrue(((SS2DHudCanvas)_composer.Hud).levelLabel.text.StartsWith("LEVEL 3"));
             Assert.AreEqual(Color.white, R.Player.body.color); Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(S.State.Player)), 1e-3f);
+        }
+
+        [UnityTest]
+        public IEnumerator LongPress_OnTheBoard_IsOneWait_AndStopsAtTheWaitLimit()
+        {
+            yield return Open();
+            var input = _composer.Input; Assert.IsNotNull(input);
+            var hud = (SS2DHudCanvas)_composer.Hud; var stage = S.Stage; int limit = stage.WaitLimit;
+            var somewhere = ScreenOf(new GridCoord(0, 0)) + new Vector2(5f, 5f); // any board point: the long-press does not need a node under the finger
+            Assert.IsTrue(input.LongPress(somewhere)); yield return Settle();
+            Assert.AreEqual(1, S.State.T); Assert.AreEqual(1, S.State.WaitsUsed); Assert.AreEqual(new GridCoord(0, 2), S.State.Player, "a WAIT never moves");
+            if (limit >= 0)
+            {
+                for (int i = 1; i < limit; i++) { Assert.IsTrue(input.LongPress(somewhere)); yield return Settle(); }
+                Assert.AreEqual(limit, S.State.WaitsUsed); Assert.AreEqual("0", hud.waitCount.text);
+                Assert.IsFalse(input.LongPress(somewhere), "no waits left: the long-press is rejected"); yield return null;
+                Assert.AreEqual(limit, S.State.T); Assert.IsTrue(hud.messageLabel.text.Contains("No waits left"));
+            }
+            S.SetMode(InputMode.SmokeTarget); // targeting modes ignore the gesture (LEVEL-2 has no smoke, so the mode falls back to Move; assert the guard only)
+            Assert.AreEqual(InputMode.Move, S.Mode);
+        }
+
+        /// <summary>Main 25 → Main 26 → … → Main 30 in the real Game scene: each new level composes with the 2D layer (7×9 and 9×11 boards), and nothing follows Main 30.</summary>
+        [UnityTest]
+        public IEnumerator Campaign_Main25ProceedsToMain26_AndTheNewLevelsCompose()
+        {
+            AppServices.ResetForTests();
+            AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
+            AppServices.InstallSaveForTests(new SaveData());
+            AppServices.PendingStageId = 30; // LEVEL-25
+#if UNITY_EDITOR
+            EditorSceneManager.LoadSceneInPlayMode("Assets/_ShadowSteps/Scenes/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
+#endif
+            yield return null; yield return null; yield return null;
+            var composer = Object.FindObjectOfType<GameSceneComposer>(); Assert.IsNotNull(composer);
+            Assert.AreEqual("LEVEL-25", composer.Session.Stage.Code);
+            var next = AppServices.Stages.NextAfter(composer.Session.Stage.Id); Assert.IsNotNull(next); Assert.AreEqual("LEVEL-26", next.Code);
+            foreach (var expected in new[] { "LEVEL-26", "LEVEL-27", "LEVEL-28", "LEVEL-29", "LEVEL-30" })
+            {
+                composer.OpenStage(next); yield return null; yield return null;
+                Assert.AreEqual(expected, composer.Session.Stage.Code);
+                var bridge = Object.FindObjectOfType<SS2DSessionBridge>(); Assert.IsNotNull(bridge); Assert.IsTrue(bridge.Renderer.IsBuilt, expected + " drawn by the 2D layer");
+                Assert.Less(Vector3.Distance(bridge.Renderer.Player.transform.localPosition, bridge.Renderer.Pos(composer.Session.State.Player)), 1e-3f);
+                Assert.AreEqual(composer.Session.Stage.Guards.Count, bridge.Renderer.Guards.Count);
+                next = AppServices.Stages.NextAfter(composer.Session.Stage.Id);
+            }
+            Assert.IsNull(next, "nothing after Main 30: the flow returns to level select");
         }
 
         /// <summary>Levels opened from the menus load Assets/_ShadowSteps/Scenes/Game.unity; it must compose with the 2D layer too, not the placeholder board.</summary>

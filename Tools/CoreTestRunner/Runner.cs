@@ -21,6 +21,8 @@ public static class Runner
         if (args.Length >= 2 && args[0] == "--v3-validate") return V3Tools.Validate(args[1]);
         if (args.Length >= 3 && args[0] == "--v3-export-validation") return V3Tools.ExportValidation(args[1], args[2]);
         if (args.Length >= 3 && args[0] == "--v3-trace") return V3Tools.Trace(args[1], args[2]);
+        if (args.Length >= 4 && args[0] == "--v3-replay") return V3Tools.Replay(args[1], args[2], args.Skip(3).ToArray());
+        if (args.Length >= 3 && args[0] == "--v3-cones") return V3Tools.Cones(args[1], args[2], args.Length > 3 ? int.Parse(args[3]) : 4);
         string filter = args.Length > 0 ? args[0] : null;
         var asm = Assembly.GetExecutingAssembly();
         int passed = 0, failed = 0, skipped = 0;

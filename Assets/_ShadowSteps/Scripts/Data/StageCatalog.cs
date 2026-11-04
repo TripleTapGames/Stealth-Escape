@@ -43,6 +43,18 @@ namespace ShadowSteps.Data
             return catalog.ByIndex(catalog.Count - 1);
         }
 
+        /// <summary>Resume an unfinished saved stage; new or stale saves start at the first unfinished stage.</summary>
+        public static Stage ResumeStage(StageCatalog catalog, SaveData save)
+        {
+            var saved = save != null ? catalog.ById(save.LastPlayedLevelId) : null;
+            // Automatic resume follows earned progress, never the development-only unlock-all switch.
+            int index = saved != null ? catalog.IndexOf(saved.Id) : -1;
+            bool earned = index >= 0;
+            for (int i = 0; i < index && earned; i++) earned = save.IsCompleted(catalog.ByIndex(i).Id);
+            if (saved != null && !save.IsCompleted(saved.Id) && earned) return saved;
+            return FirstUnfinished(catalog, save);
+        }
+
         public static int Stars(Stage stage, int countedActions) => StageScoring.Stars(countedActions, stage.Par);
 
         /// <summary>Records a win (best actions, best stars, Ghost) and unlocks the next stage. Returns true when the action count is a new best.</summary>
@@ -50,7 +62,10 @@ namespace ShadowSteps.Data
         {
             var next = catalog.NextAfter(stage.Id);
             int stars = Stars(stage, countedActions);
-            return save.RecordWin(stage.Id, countedActions, stars, ghostEarned && stage.GhostOffered, next != null ? next.Id : stage.Id);
+            bool newBest = save.RecordWin(stage.Id, countedActions, stars, ghostEarned && stage.GhostOffered, next != null ? next.Id : stage.Id);
+            // Persist the next attempt even if the app closes while the results panel is open.
+            save.LastPlayedLevelId = FirstUnfinished(catalog, save).Id;
+            return newBest;
         }
     }
 }

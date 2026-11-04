@@ -142,6 +142,22 @@ namespace ShadowSteps.Art2D.Editor
             catch (System.Exception e) { Debug.LogError("[SS2D] debug frames failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
+        /// <summary>Batch entry for the Levels 26–30 import: re-apply the art (creates the new layouts), build the LEVEL-26 scene, render LEVEL-26 and LEVEL-30 at 1080×1920 (board/control fit) plus 27–29.</summary>
+        public static void RenderLevels26To30()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) throw new System.IO.FileNotFoundException(SS2DSpriteLibrary.DefaultAssetPath);
+                SS2DFinalArtImporter.Import(lib); AssetDatabase.SaveAssets();
+                string scene = CreateLevelScene("LEVEL-26");
+                RenderSceneTo(scene, "Docs/Reports/Renders/Art2D_Level26_GameView_1080x1920.png", 1080, 1920, false);
+                foreach (var code in new[] { "LEVEL-27", "LEVEL-28", "LEVEL-29", "LEVEL-30" }) RenderReview(scene, code, null, "Art2D_" + code.Replace("-", "") + "_GameView_1080x1920");
+                EditorSceneManager.OpenScene(scene, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] levels 26-30 render failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
         /// <summary>Synthetic review stage: a lone wall cell in the middle of the floor carrying a fixed camera (pole mount). Not shipped.</summary>
         public static Stage PoleMountDemoStage()
         {

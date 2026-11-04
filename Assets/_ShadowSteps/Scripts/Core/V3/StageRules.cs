@@ -82,7 +82,7 @@ namespace ShadowSteps.V3
 
     public enum RejectReason
     {
-        None, GameOver, Blocked, NoConnection, KeyRequired, NoSmokeCharge, BadSmokeTarget, NoEmpCharge, BadCamera, CameraAlreadyDisabled
+        None, GameOver, Blocked, NoConnection, KeyRequired, NoSmokeCharge, BadSmokeTarget, NoEmpCharge, BadCamera, CameraAlreadyDisabled, NoWaitsLeft
     }
 
     /// <summary>When during the counted action the player was caught (drives the failure animation).</summary>
@@ -101,6 +101,7 @@ namespace ShadowSteps.V3
         public StageState After;
         public GridCoord PlayerFrom, PlayerTo;
         public bool KeyCollected;
+        /// <summary>First newly opened door, for unlock feedback. After.OpenDoors contains every opened door.</summary>
         public int DoorOpened = -1;
         public GuardPose3[] GuardsBefore = Array.Empty<GuardPose3>();
         public GuardPose3[] GuardsAfter = Array.Empty<GuardPose3>();
@@ -123,6 +124,14 @@ namespace ShadowSteps.V3
     /// </summary>
     public static class StageRules
     {
+        /// <summary>
+        /// true = the pre-2026-11-03 rule (a key-holder arriving at either endpoint of a locked edge opened it at once, so the
+        /// door stopped blocking sight one step before the crossing). false (default since D-038) = a locked edge opens only
+        /// when the key-holder crosses it; until then the closed door blocks movement and sight. The switch is kept for
+        /// measurement; the shipped 30 levels solve identically under both.
+        /// </summary>
+        public static bool DoorsOpenOnApproach = false;
+
         public static ActionOutcome TryApply(Stage stage, StageState s, StageAction action)
         {
             var o = new ActionOutcome { Action = action, Before = s, After = s, PlayerFrom = s.Player, PlayerTo = s.Player };
@@ -135,7 +144,7 @@ namespace ShadowSteps.V3
                 if (!Sight.CanThrowSmoke(stage, s, s.Player, action.Target)) return Reject(o, RejectReason.BadSmokeTarget);
                 var withCloud = new List<SmokeCloud>(s.Clouds) { new SmokeCloud(action.Target, StageState.GadgetDuration) };
                 o.Valid = true; o.Free = true;
-                o.After = new StageState(s.Player, s.T, s.HasKey, s.OpenDoors, withCloud, s.Emps, s.SmokeCharges - 1, s.EmpCharges, s.Alarm, s.AlarmEver, s.Result, null);
+                o.After = new StageState(s.Player, s.T, s.HasKey, s.OpenDoors, withCloud, s.Emps, s.SmokeCharges - 1, s.EmpCharges, s.Alarm, s.AlarmEver, s.Result, null, s.WaitsUsed);
                 return o;
             }
             if (action.Kind == StageActionKind.Emp)
@@ -145,11 +154,13 @@ namespace ShadowSteps.V3
                 if (s.IsCameraDisabled(action.CameraIndex)) return Reject(o, RejectReason.CameraAlreadyDisabled);
                 var withEmp = new List<EmpEffect>(s.Emps) { new EmpEffect(action.CameraIndex, StageState.GadgetDuration) };
                 o.Valid = true; o.Free = true;
-                o.After = new StageState(s.Player, s.T, s.HasKey, s.OpenDoors, s.Clouds, withEmp, s.SmokeCharges, s.EmpCharges - 1, s.Alarm, s.AlarmEver, s.Result, null);
+                o.After = new StageState(s.Player, s.T, s.HasKey, s.OpenDoors, s.Clouds, withEmp, s.SmokeCharges, s.EmpCharges - 1, s.Alarm, s.AlarmEver, s.Result, null, s.WaitsUsed);
                 return o;
             }
 
             // ---- 1. validate the counted action
+            if (action.Kind == StageActionKind.Wait && stage.WaitLimit >= 0 && s.WaitsUsed >= stage.WaitLimit) return Reject(o, RejectReason.NoWaitsLeft);
+            int waits = s.WaitsUsed + (action.Kind == StageActionKind.Wait ? 1 : 0);
             var from = s.Player;
             var to = from;
             int openDoors = s.OpenDoors;
@@ -170,9 +181,22 @@ namespace ShadowSteps.V3
             o.PlayerTo = to;
             bool hasKey = s.HasKey || (stage.Key.HasValue && stage.Key.Value == to);
             o.KeyCollected = hasKey && !s.HasKey;
+            // A lock belongs to an edge: standing at either endpoint is close enough.
+            // Open immediately on arrival (including key pickup), before visibility is checked.
+            if (hasKey && DoorsOpenOnApproach)
+            {
+                for (int i = 0; i < stage.Doors.Count; i++)
+                {
+                    var door = stage.Doors[i];
+                    if ((openDoors & (1 << i)) != 0 || (to != door.A && to != door.B)) continue;
+                    openDoors |= 1 << i;
+                    if (o.DoorOpened < 0) o.DoorOpened = i;
+                }
+            }
+
 
             // Working state for the checks: moved, key picked up, door open, clock not yet advanced.
-            var work = new StageState(to, s.T, hasKey, openDoors, s.Clouds, s.Emps, s.SmokeCharges, s.EmpCharges, s.Alarm, s.AlarmEver, StageResult.Playing, null);
+            var work = new StageState(to, s.T, hasKey, openDoors, s.Clouds, s.Emps, s.SmokeCharges, s.EmpCharges, s.Alarm, s.AlarmEver, StageResult.Playing, null, waits);
             var guardsBefore = GuardTrack.PosesAt(stage, s.T);
             var guardsAfter = GuardTrack.PosesAt(stage, s.T + 1);
             o.GuardsBefore = guardsBefore; o.GuardsAfter = guardsAfter;
@@ -207,7 +231,7 @@ namespace ShadowSteps.V3
             if (to == stage.Exit)
             {
                 o.Won = true;
-                o.After = new StageState(to, t, hasKey, openDoors, s.Clouds, s.Emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Won, "Escaped");
+                o.After = new StageState(to, t, hasKey, openDoors, s.Clouds, s.Emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Won, "Escaped", waits);
                 return o;
             }
 
@@ -216,17 +240,17 @@ namespace ShadowSteps.V3
             foreach (var c in s.Clouds) { if (c.ActionsLeft - 1 > 0) clouds.Add(new SmokeCloud(c.Node, c.ActionsLeft - 1)); else o.SmokeExpired = true; }
             var emps = new List<EmpEffect>(s.Emps.Count);
             foreach (var e in s.Emps) { if (e.ActionsLeft - 1 > 0) emps.Add(new EmpEffect(e.CameraIndex, e.ActionsLeft - 1)); else o.EmpExpired = true; }
-            var after = new StageState(to, t, hasKey, openDoors, clouds, emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Playing, null);
+            var after = new StageState(to, t, hasKey, openDoors, clouds, emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Playing, null, waits);
             for (int i = 0; i < guardsAfter.Length; i++)
                 if (Sight.GuardSees(stage, after, guardsAfter[i], to)) return Caught(o, after, CapturePhase.AfterGadgetExpiry, CaptureCause.Seen, i, "Smoke expired - guard spotted you");
             if (Sight.AnyCameraSees(stage, after, t, to)) Trigger();
             if (activated && !o.AlarmTriggered) o.AlarmTriggered = true;
             if (alarm != after.Alarm || alarmEver != after.AlarmEver)
-                after = new StageState(to, t, hasKey, openDoors, clouds, emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Playing, null);
+                after = new StageState(to, t, hasKey, openDoors, clouds, emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Playing, null, waits);
             if (alarm == 0)
             {
                 o.Lockdown = true;
-                after = new StageState(to, t, hasKey, openDoors, clouds, emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Lockdown, "Lockdown timer expired");
+                after = new StageState(to, t, hasKey, openDoors, clouds, emps, s.SmokeCharges, s.EmpCharges, alarm, alarmEver, StageResult.Lockdown, "Lockdown timer expired", waits);
             }
             o.After = after;
             return o;
@@ -262,13 +286,13 @@ namespace ShadowSteps.V3
         private static ActionOutcome Reject(ActionOutcome o, RejectReason reason) { o.Valid = false; o.Reason = reason; return o; }
 
         private static StageState Alarmed(StageState w, int alarm, bool alarmEver) =>
-            alarm == w.Alarm && alarmEver == w.AlarmEver ? w : new StageState(w.Player, w.T, w.HasKey, w.OpenDoors, w.Clouds, w.Emps, w.SmokeCharges, w.EmpCharges, alarm, alarmEver, w.Result, null);
+            alarm == w.Alarm && alarmEver == w.AlarmEver ? w : new StageState(w.Player, w.T, w.HasKey, w.OpenDoors, w.Clouds, w.Emps, w.SmokeCharges, w.EmpCharges, alarm, alarmEver, w.Result, null, w.WaitsUsed);
 
         private static ActionOutcome Caught(ActionOutcome o, StageState w, CapturePhase phase, CaptureCause cause, int guard, string message)
         {
             o.CapturePhase = phase; o.CaptureCause = cause; o.CapturingGuard = guard;
             // The clock does not advance on a capture: the failed action is shown at the old schedule index.
-            o.After = new StageState(w.Player, w.T, w.HasKey, w.OpenDoors, w.Clouds, w.Emps, w.SmokeCharges, w.EmpCharges, w.Alarm, w.AlarmEver, StageResult.Caught, message);
+            o.After = new StageState(w.Player, w.T, w.HasKey, w.OpenDoors, w.Clouds, w.Emps, w.SmokeCharges, w.EmpCharges, w.Alarm, w.AlarmEver, StageResult.Caught, message, w.WaitsUsed);
             return o;
         }
     }

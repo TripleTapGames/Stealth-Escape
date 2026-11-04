@@ -55,6 +55,7 @@ public static class V3Tools
 
     public static int ExportValidation(string packPath, string outPath)
     {
+        if (Environment.GetEnvironmentVariable("SS_DOOR_CROSSING_ONLY") == "1") { StageRules.DoorsOpenOnApproach = false; Console.WriteLine("rule switch: doors open only when crossed"); }
         var pack = StageJson.Parse(File.ReadAllText(packPath));
         var list = new List<object>();
         int unsolvable = 0;
@@ -68,6 +69,7 @@ public static class V3Tools
                 .Set("shortest_without_smoke", (long)m.ShortestWithoutSmoke).Set("shortest_without_emp", (long)m.ShortestWithoutEmp).Set("shortest_without_gadgets", (long)m.ShortestWithoutGadgets)
                 .Set("shortest_alarm_free", (long)m.ShortestAlarmFree).Set("ghost_offered", m.GhostOffered).Set("forced_alarm", m.ForcedAlarm)
                 .Set("smoke_required", m.SmokeRequired).Set("emp_required", m.EmpRequired).Set("period", (long)m.Period).Set("states_explored", (long)m.StatesExplored)
+                .Set("wait_limit", (long)s.WaitLimit).Set("waits_in_par", (long)m.WaitsInPar).Set("min_waits_for_par", (long)m.MinWaitsForPar).Set("shortest_without_wait", (long)m.ShortestWithoutWait)
                 .Set("engine", "ShadowSteps C# V3 solver (0-1 BFS), schema 3"));
             Console.WriteLine(m + " | " + Tokens(m.Solution));
         }
@@ -84,6 +86,41 @@ public static class V3Tools
         Console.WriteLine(m);
         if (!m.Solvable) return 1;
         Console.WriteLine(StageReplay.Run(s, m.Solution).Trace());
+        return 0;
+    }
+
+    /// <summary>Replays an explicit token sequence (N E S W WAIT SMOKE@x,y EMP#i) against the real rules and prints the outcome.</summary>
+    public static int Replay(string packPath, string code, string[] tokens)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var s = pack.FindByCode(code) ?? throw new InvalidOperationException("no stage " + code);
+        var actions = StageAction.ParseSequence(new List<string>(tokens));
+        var r = StageReplay.Run(s, actions);
+        Console.WriteLine("REPLAY " + code + ": won=" + r.Won + " counted=" + r.CountedActions + " result=" + r.Final.Result + (r.Final.Cause.Length > 0 ? " cause='" + r.Final.Cause + "'" : "") + " alarmEver=" + r.Final.AlarmEver + " waitsUsed=" + r.Final.WaitsUsed + " alarm=" + r.Final.Alarm);
+        Console.WriteLine(r.Trace());
+        return r.Won ? 0 : 1;
+    }
+
+    /// <summary>Prints, for t = 0..tMax-1 from the initial state, every camera's detected cells and every guard's seen cells (for cross-checking against another engine).</summary>
+    public static int Cones(string packPath, string code, int tMax)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var s = pack.FindByCode(code) ?? throw new InvalidOperationException("no stage " + code);
+        var init = StageState.Initial(s);
+        for (int t = 0; t < tMax; t++)
+        {
+            for (int i = 0; i < s.Cameras.Count; i++)
+            {
+                var cells = Sight.CameraVision(s, init, i, t); var names = new List<string>(); foreach (var c in cells) names.Add(c.X + "," + c.Y); names.Sort(StringComparer.Ordinal);
+                var o = Sight.CameraOrigin(s.Cameras[i]);
+                Console.WriteLine("CAM " + code + " cam" + i + " t=" + t + " facing=" + DirectionUtil.ToToken(CameraTrack.FacingAt(s.Cameras[i], t)) + " origin=(" + o.X + "," + o.Y + ") cells=[" + string.Join(" ", names) + "]");
+            }
+            for (int i = 0; i < s.Guards.Count; i++)
+            {
+                var pose = GuardTrack.PoseAt(s.Guards[i], t); var cells = Sight.GuardVision(s, init, pose); var names = new List<string>(); foreach (var c in cells) names.Add(c.X + "," + c.Y);
+                Console.WriteLine("GUARD " + code + " g" + i + " t=" + t + " at=" + pose.Position.X + "," + pose.Position.Y + " facing=" + DirectionUtil.ToToken(pose.Facing) + " cells=[" + string.Join(" ", names) + "]");
+            }
+        }
         return 0;
     }
 

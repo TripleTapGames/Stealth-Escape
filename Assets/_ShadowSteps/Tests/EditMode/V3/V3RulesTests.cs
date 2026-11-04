@@ -120,7 +120,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         }
 
         [Test]
-        public void LockedConnection_WithoutKeyIsInvalidAndFree_WithKeyOpensAndMovesInOneAction()
+        public void LockedConnection_WithoutKeyIsInvalid_WithKeyOpensWhenCrossed()
         {
             var stage = DoorStage();
             var s = StageState.Initial(stage);
@@ -129,37 +129,76 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.IsFalse(o.Valid); Assert.AreEqual(RejectReason.KeyRequired, o.Reason); Assert.AreEqual(2, s.T);
             // fetch the key: (2,1)->(1,1)->(1,0)->(1,1)->(2,1)
             Step(stage, ref s, W); var pick = Step(stage, ref s, N);
-            Assert.IsTrue(pick.KeyCollected); Assert.IsTrue(s.HasKey); Assert.IsFalse(s.IsDoorOpen(0), "collecting the key opens no door");
-            Step(stage, ref s, S); Step(stage, ref s, E);
+            Assert.IsTrue(pick.KeyCollected); Assert.IsTrue(s.HasKey); Assert.IsFalse(s.IsDoorOpen(0), "a distant key pickup does not open the door");
+            Step(stage, ref s, S); var approach = Step(stage, ref s, E);
+            Assert.AreEqual(-1, approach.DoorOpened); Assert.IsFalse(s.IsDoorOpen(0), "D-038: standing beside a locked edge with the key does not open it");
+            Assert.AreEqual(C(2, 1), s.Player);
             var cross = Step(stage, ref s, E);
-            Assert.IsTrue(cross.Valid); Assert.AreEqual(0, cross.DoorOpened); Assert.IsTrue(s.IsDoorOpen(0)); Assert.AreEqual(C(3, 1), s.Player);
+            Assert.IsTrue(cross.Valid); Assert.AreEqual(0, cross.DoorOpened); Assert.IsTrue(s.IsDoorOpen(0)); Assert.AreEqual(C(3, 1), s.Player, "the door opens as part of the crossing");
             Assert.IsTrue(s.HasKey, "the key is reusable and not consumed");
             Assert.AreEqual(RejectReason.NoConnection, StageRules.TryApply(stage, new StageState(C(2, 0), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null), E).Reason, "cut edge is a missing connection");
         }
 
         [Test]
-        public void CrossingADoor_OpensLineOfSightBeforeTheOldVisionCheck()
+        public void ClosedDoor_KeepsBlockingSight_UntilTheCrossingOpensIt()
         {
-            // Static guard at (5,1) facing W: sees (4,1),(3,1) only once the door is open.
-            var stage = DoorStage(Static(C(5, 1), Direction.West));
-            var withKeyAtDoor = new StageState(C(2, 1), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
-            Assert.IsFalse(StageRules.TryApply(stage, withKeyAtDoor, WAIT).Caught, "closed door hides the player");
-            var o = StageRules.TryApply(stage, withKeyAtDoor, E);
-            Assert.IsTrue(o.Caught);
-            Assert.AreEqual(CapturePhase.BeforeEnemyUpdate, o.CapturePhase, "the door opened as part of the move, so the old-state check already sees through it");
+            // Guard at (4,1) looks W through the locked edge (2,1)-(3,1). With the key, stepping onto (2,1) is safe (door still closed);
+            // the crossing to (3,1) opens it as part of the movement and the guard sees the player on arrival (old-state check, door open).
+            var stage = DoorStage(Static(C(4, 1), Direction.West));
+            var withKey = new StageState(C(1, 1), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
+            var o = StageRules.TryApply(stage, withKey, E);
+            Assert.IsFalse(o.After.IsDoorOpen(0)); Assert.IsFalse(o.Caught, "the closed door still blocks the guard's sight");
+            var cross = StageRules.TryApply(stage, o.After, E);
+            Assert.IsTrue(cross.After.IsDoorOpen(0)); Assert.IsTrue(cross.Caught, "crossing opens the door and exposes the player"); Assert.AreEqual(CapturePhase.BeforeEnemyUpdate, cross.CapturePhase);
+            // Legacy switch (measurement only): approach-opening exposes the player one step earlier.
+            StageRules.DoorsOpenOnApproach = true;
+            try { var legacy = StageRules.TryApply(stage, withKey, E); Assert.IsTrue(legacy.After.IsDoorOpen(0)); Assert.IsTrue(legacy.Caught); }
+            finally { StageRules.DoorsOpenOnApproach = false; }
         }
 
         [Test]
-        public void OneKey_OpensSeveralDoors_EachOnlyByCrossing()
+        public void OneKey_OpensSeveralDoors_WhenCrossed_WithoutBeingConsumed()
         {
             var b = Open(6, 1, C(0, 0), C(5, 0)); b.Key = C(1, 0);
             b.Doors.Add(new DoorSpec(C(2, 0), C(3, 0))); b.Doors.Add(new DoorSpec(C(4, 0), C(5, 0)));
             var stage = b.Build();
             var s = StageState.Initial(stage);
             Step(stage, ref s, E); Assert.IsTrue(s.HasKey); Assert.AreEqual(0, s.OpenDoors);
-            Step(stage, ref s, E); Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors);
-            Step(stage, ref s, E); var win = Step(stage, ref s, E);
+            Step(stage, ref s, E); Assert.AreEqual(0, s.OpenDoors, "beside the first lock: still closed (D-038)");
+            Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors, "crossing (2,0)-(3,0) opens door 0");
+            Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors);
+            Assert.IsTrue(s.HasKey);
+            var win = Step(stage, ref s, E); // crossing (4,0)-(5,0) opens door 1 and lands on the exit
             Assert.IsTrue(win.Won); Assert.AreEqual(3, s.OpenDoors);
+        }
+
+        [Test]
+        public void KeyPickup_AtSharedEndpoint_OpensNothing_EachLockOpensOnItsOwnCrossing()
+        {
+            var b = Open(5, 3, C(1, 0), C(4, 2)); b.Key = C(1, 1);
+            b.Doors.Add(new DoorSpec(C(1, 1), C(2, 1)));
+            b.Doors.Add(new DoorSpec(C(1, 1), C(1, 2)));
+            b.Doors.Add(new DoorSpec(C(3, 1), C(4, 1)));
+            var stage = b.Build(); var initial = StageState.Initial(stage);
+            var o = StageRules.TryApply(stage, initial, S);
+            Assert.IsTrue(o.KeyCollected); Assert.AreEqual(0, o.After.OpenDoors, "D-038: collecting the key on a shared endpoint opens no lock");
+            Assert.AreEqual(1, o.After.T);
+            var east = StageRules.TryApply(stage, o.After, E); Assert.AreEqual(1, east.After.OpenDoors, "crossing (1,1)-(2,1) opens door 0 only"); Assert.AreEqual(0, east.DoorOpened);
+            var south = StageRules.TryApply(stage, o.After, S); Assert.AreEqual(2, south.After.OpenDoors, "crossing (1,1)-(1,2) opens door 1 only"); Assert.AreEqual(1, south.DoorOpened);
+            Assert.AreEqual(0, initial.OpenDoors, "preview/solver inputs remain immutable");
+            Assert.AreEqual(0, StageState.Initial(stage).OpenDoors, "retry closes locks");
+        }
+
+        [Test]
+        public void Lock_OpensOnlyOnTheCrossing_FromEitherSide()
+        {
+            var stage = DoorStage(); // door (2,1)-(3,1)
+            var below = new StageState(C(3, 2), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
+            Assert.IsFalse(StageRules.TryApply(stage, below, WAIT).After.IsDoorOpen(0));
+            var onEndpoint = StageRules.TryApply(stage, below, N).After; Assert.IsFalse(onEndpoint.IsDoorOpen(0), "arriving on (3,1) with the key does not open the lock");
+            var crossedWest = StageRules.TryApply(stage, onEndpoint, W); Assert.IsTrue(crossedWest.Valid); Assert.IsTrue(crossedWest.After.IsDoorOpen(0), "crossing from the east side opens it");
+            var noKey = new StageState(C(3, 1), 0, false, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
+            Assert.AreEqual(RejectReason.KeyRequired, StageRules.TryApply(stage, noKey, W).Reason);
         }
 
         [Test]
@@ -192,5 +231,47 @@ namespace ShadowSteps.Tests.EditMode.V3
             var sr = StageValidator.Validate(shortRoute.Build(), new StageValidationOptions { RunSolver = false });
             Assert.IsTrue(sr.IsValid); StringAssert.Contains("terminal node", sr.ToString());
         }
-    }
+    
+        [Test]
+        public void WaitLimit_RejectsWaitsBeyondTheLimit_CountsOnlyWaits_AndIsUnlimitedByDefault()
+        {
+            var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(1, 1); b.Exit = C(5, 3);
+            var unlimited = b.Build(); Assert.AreEqual(-1, unlimited.WaitLimit);
+            var s = StageState.Initial(unlimited); for (int i = 0; i < 6; i++) { var o = StageRules.TryApply(unlimited, s, StageAction.Wait); Assert.IsTrue(o.Valid); s = o.After; }
+            Assert.AreEqual(6, s.WaitsUsed); Assert.AreEqual(int.MaxValue, s.WaitsLeft(unlimited));
+
+            b.WaitLimit = 2; var limited = b.Build(); Assert.AreEqual(2, limited.WaitLimit);
+            s = StageState.Initial(limited); Assert.AreEqual(2, s.WaitsLeft(limited));
+            s = StageRules.TryApply(limited, s, StageAction.Move(Direction.East)).After; Assert.AreEqual(0, s.WaitsUsed, "moves do not count");
+            s = StageRules.TryApply(limited, s, StageAction.Wait).After; s = StageRules.TryApply(limited, s, StageAction.Wait).After;
+            Assert.AreEqual(2, s.WaitsUsed); Assert.AreEqual(0, s.WaitsLeft(limited)); Assert.AreEqual(3, s.T);
+            var rejected = StageRules.TryApply(limited, s, StageAction.Wait);
+            Assert.IsFalse(rejected.Valid); Assert.AreEqual(RejectReason.NoWaitsLeft, rejected.Reason); Assert.AreSame(s, rejected.After);
+            Assert.IsTrue(StageRules.TryApply(limited, s, StageAction.Move(Direction.East)).Valid, "moves still allowed");
+            b.SmokeCharges = 1; var withSmoke = b.Build(); var s2 = StageState.Initial(withSmoke);
+            s2 = StageRules.TryApply(withSmoke, s2, StageAction.Wait).After;
+            var smoke = StageRules.TryApply(withSmoke, s2, StageAction.Smoke(C(2, 1))); Assert.IsTrue(smoke.Valid); Assert.AreEqual(1, smoke.After.WaitsUsed, "free actions keep the count");
+        }
+
+        [Test]
+        public void WaitLimit_RoundTripsThroughJson_AndTheSolverRespectsIt()
+        {
+            // A guard sweeps the only corridor cell for 2 of 4 actions: the shortest route needs waits. Cap them and the solver must find another way or fail.
+            var b = Board("#######", "#.....#", "#..#..#", "#.....#", "#######"); b.Start = C(1, 2); b.Exit = C(5, 2); b.WaitLimit = 1; b.Id = 77; b.Code = "T-WAIT";
+            b.Guards.Add(Rotating(C(3, 1), Direction.South));
+            var stage = b.Build();
+            var json = ShadowSteps.Data.StageJson.ToJsonObject(stage); var back = ShadowSteps.Data.StageJson.ParseStage(json, "T-WAIT", null);
+            Assert.AreEqual(1, back.WaitLimit, "waitLimit round-trips");
+            var free = StageSolver.Solve(b.Build());
+            var capped = StageSolver.Solve(stage);
+            int waits = 0; foreach (var a in capped.Actions) if (a.Kind == StageActionKind.Wait) waits++;
+            if (capped.Found) Assert.LessOrEqual(waits, 1, "solver never exceeds the stage's wait limit");
+            var zero = StageSolver.Solve(stage, new SolveOptions { MaxWaits = 0 });
+            int w0 = 0; if (zero.Found) foreach (var a in zero.Actions) if (a.Kind == StageActionKind.Wait) w0++;
+            Assert.AreEqual(0, w0, "MaxWaits 0 yields no WAIT");
+            var m = StageMetrics.Analyze(b.Build());
+            Assert.GreaterOrEqual(m.WaitsInPar, m.MinWaitsForPar); Assert.GreaterOrEqual(m.MinWaitsForPar, 0);
+            if (m.ShortestWithoutWait >= 0) Assert.GreaterOrEqual(m.ShortestWithoutWait, m.Par);
+        }
+}
 }
