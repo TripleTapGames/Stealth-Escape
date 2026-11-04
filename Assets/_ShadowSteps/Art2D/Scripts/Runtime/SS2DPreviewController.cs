@@ -48,11 +48,8 @@ namespace ShadowSteps.Art2D
             if (boardRenderer == null || library == null) { Debug.LogError("[SS2D] assign a renderer and a sprite library"); return; }
             boardRenderer.library = library;
             Stage stage = OverrideStage;
-            if (stage == null)
-            {
-                var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
-                stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
-            }
+            var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+            if (stage == null) stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
             Stage = stage;
             boardRenderer.Build(stage);
             var state = StageState.Initial(stage);
@@ -92,7 +89,7 @@ namespace ShadowSteps.Art2D
             boardRenderer.SetReachable(reachNodes, reachEdges);
             var cam = fitter != null ? fitter.GetComponent<Camera>() : Camera.main;
             if (cam != null) { cam.orthographic = true; cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = library.background; }
-            if (fitter != null) { fitter.board = boardRenderer; fitter.Fit(cam != null ? cam.aspect : 9f / 16f); }
+            if (fitter != null) { fitter.board = boardRenderer; fitter.SetReferenceFromPack(pack.Stages); fitter.Fit(cam != null ? cam.aspect : 9f / 16f); }
             boardRenderer.FitBackground(cam);
             if (hud != null) hud.Show(stage, state, cam);
             Debug.Log("[SS2D] preview built: " + stage.Code + " " + stage.Title);

@@ -46,6 +46,7 @@ namespace ShadowSteps.Art2D
             var oldFitter = composer.BoardCamera.GetComponent<CameraFitter>(); if (oldFitter != null) oldFitter.enabled = false;
             _fitter = composer.BoardCamera.GetComponent<SS2DCameraFitter>() ?? composer.BoardCamera.gameObject.AddComponent<SS2DCameraFitter>();
             _fitter.board = Renderer;
+            if (AppServices.Stages != null) _fitter.SetReferenceFromPack(AppServices.Stages.Stages); // one zoom for the whole pack: the largest grid's
             if (composer.Input != null)
             {
                 composer.Input.ScreenToNodeOverride = screen => Renderer.IsBuilt ? Renderer.ToGrid(composer.BoardCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -composer.BoardCamera.transform.position.z))) : (GridCoord?)null;

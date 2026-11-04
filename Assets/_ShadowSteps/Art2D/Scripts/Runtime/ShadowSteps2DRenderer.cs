@@ -49,6 +49,8 @@ namespace ShadowSteps.Art2D
         public Direction DoorOutward { get; private set; }
         /// <summary>Local rectangle (XY) of everything the camera should frame: board panel plus the door.</summary>
         public Rect ViewBounds { get; private set; }
+        /// <summary>Grid the camera is framed at when it is larger than this level's (see <see cref="SS2DCameraFitter.referenceGridNodes"/>); the background is framed at the same grid so the ground keeps one scale across levels. Zero = this level's own grid.</summary>
+        public Vector2Int ReferenceGridNodes { get; set; }
         private SpriteRenderer _background, _door;
 
         /// <summary>Board edge the exit touches (logical direction pointing off the board); nearest edge when it is interior.</summary>
@@ -78,7 +80,9 @@ namespace ShadowSteps.Art2D
                 float s = Layout.NodeSpacing, pad = Mathf.Max(0.1f, library.backgroundBoardPadding);
                 // With an all-wall boundary ring the playable area is the interior; mapping that onto the painted floor puts the hidden ring under the painted walls.
                 int ring = library.backgroundFrameInsideBoundaryWalls && BoundaryIsAllWalls(Stage) ? 1 : 0;
-                float gridW = Mathf.Max(1, ViewLayout.Width - 2 * ring) * s * pad, gridH = Mathf.Max(1, ViewLayout.Height - 2 * ring) * s * pad;
+                // Framed at the larger of this grid and the camera's reference grid, so a small level keeps the ground scale of the largest one.
+                int framedW = Mathf.Max(ViewLayout.Width, ReferenceGridNodes.x), framedH = Mathf.Max(ViewLayout.Height, ReferenceGridNodes.y);
+                float gridW = Mathf.Max(1, framedW - 2 * ring) * s * pad, gridH = Mathf.Max(1, framedH - 2 * ring) * s * pad;
                 float k = Mathf.Max(gridW / (r.width * size.x), gridH / (r.height * size.y));
                 // Ground-rect centre relative to the image centre (sprite units at scale 1); the grid centre is this transform's origin.
                 var off = new Vector2((r.center.x - 0.5f) * size.x, (r.center.y - 0.5f) * size.y);
