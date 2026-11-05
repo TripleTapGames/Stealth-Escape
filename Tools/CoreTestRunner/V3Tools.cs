@@ -61,17 +61,19 @@ public static class V3Tools
         int unsolvable = 0;
         foreach (var s in pack.Stages)
         {
-            var m = StageMetrics.Analyze(s);
+            // Shipped rules (D-043/D-044): Knockout, no WAIT. Legacy Stealth fixtures are validated by their own tests.
+            var m = StageMetrics.Analyze(s, new SolveOptions { Mode = StageModeUtil.Default, MaxWaits = 0 });
             if (!m.Solvable) unsolvable++;
             var actions = new List<object>(); foreach (var a in m.Solution) actions.Add(a.Token);
-            list.Add(new JsonObject().Set("id", (long)s.Id).Set("code", s.Code).Set("title", s.Title).Set("par", (long)m.Par).Set("actions", actions)
+            list.Add(new JsonObject().Set("id", (long)s.Id).Set("code", s.Code).Set("title", s.Title).Set("mode", StageModeUtil.Token(StageModeUtil.Default)).Set("rules", StageModeUtil.RulesVersion)
+                .Set("par", (long)m.Par).Set("actions", actions).Set("knockouts", (long)m.KnockoutsInPar).Set("hit_limit", m.HitLimit)
                 .Set("counted_actions", (long)m.Par).Set("three_star", (long)m.ThreeStar).Set("two_star", (long)m.TwoStar)
                 .Set("shortest_without_smoke", (long)m.ShortestWithoutSmoke).Set("shortest_without_emp", (long)m.ShortestWithoutEmp).Set("shortest_without_gadgets", (long)m.ShortestWithoutGadgets)
                 .Set("shortest_alarm_free", (long)m.ShortestAlarmFree).Set("ghost_offered", m.GhostOffered).Set("forced_alarm", m.ForcedAlarm)
                 .Set("smoke_required", m.SmokeRequired).Set("emp_required", m.EmpRequired).Set("period", (long)m.Period).Set("states_explored", (long)m.StatesExplored)
                 .Set("wait_limit", (long)s.WaitLimit).Set("waits_in_par", (long)m.WaitsInPar).Set("min_waits_for_par", (long)m.MinWaitsForPar).Set("shortest_without_wait", (long)m.ShortestWithoutWait)
                 .Set("engine", "ShadowSteps C# V3 solver (0-1 BFS), schema 3"));
-            Console.WriteLine(m + " | " + Tokens(m.Solution));
+            Console.WriteLine(m + (m.HitLimit ? " HIT-LIMIT" : "") + " | " + Tokens(m.Solution));
         }
         File.WriteAllText(outPath, MiniJson.Serialize(list, true) + "\n");
         Console.WriteLine("wrote " + outPath + (unsolvable > 0 ? " with " + unsolvable + " UNSOLVABLE stage(s)" : ""));
@@ -125,4 +127,172 @@ public static class V3Tools
     }
 
     private static string Tokens(List<StageAction> actions) { var t = new List<string>(); foreach (var a in actions) t.Add(a.Token); return string.Join(" ", t); }
+
+    // ------------------------------------------------------------------ global modes (D-040)
+
+    /// <summary>Replay in a mode: --v3-replay-ko pack code tokens...</summary>
+    public static int ReplayMode(string packPath, string code, StageMode mode, string[] tokens)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var s = pack.FindByCode(code) ?? throw new InvalidOperationException("no stage " + code);
+        var actions = StageAction.ParseSequence(new List<string>(tokens));
+        var r = StageReplay.Run(s, actions, mode);
+        Console.WriteLine("REPLAY " + code + " [" + StageModeUtil.Token(mode) + "]: won=" + r.Won + " counted=" + r.CountedActions + " result=" + r.Final.Result + (r.Final.Cause.Length > 0 ? " cause='" + r.Final.Cause + "'" : "") + " knockouts=" + r.Final.DefeatedCount + " alarmEver=" + r.Final.AlarmEver);
+        Console.WriteLine(r.Trace());
+        return r.Won ? 0 : 1;
+    }
+
+    /// <summary>
+    /// Writes the solver's Knockout par and star thresholds into the pack's scoring block (nothing else changes; the
+    /// output is diffed against the input by the caller). Unsolvable-in-Knockout stages keep -1 (no knockout scoring).
+    /// </summary>
+    public static int KnockoutPars(string packPath, string outPath)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var stages = new List<Stage>(); int unsolvable = 0;
+        foreach (var s in pack.Stages)
+        {
+            var m = StageMetrics.Analyze(s, new SolveOptions { Mode = StageMode.Knockout });
+            var b = s.ToBuilder();
+            b.KnockoutPar = m.Par; b.KnockoutThreeStarActions = m.Solvable ? m.ThreeStar : -1; b.KnockoutTwoStarActions = m.Solvable ? m.TwoStar : -1;
+            if (!m.Solvable) unsolvable++;
+            stages.Add(b.Build());
+            Console.WriteLine(s.Code.PadRight(9) + " stealth par " + s.Par.ToString().PadLeft(3) + "  knockout par " + (m.Par < 0 ? "none" : m.Par.ToString()).PadLeft(4) + "  ko=" + m.KnockoutsInPar + " noKO=" + m.ShortestWithoutKnockout + "  3*<=" + m.ThreeStar + " 2*<=" + m.TwoStar + " | " + Tokens(m.Solution));
+        }
+        File.WriteAllText(outPath, StageJson.ToJson(stages));
+        Console.WriteLine("wrote " + outPath + " (" + stages.Count + " stages)" + (unsolvable > 0 ? ", " + unsolvable + " unsolvable in Knockout" : ""));
+        return 0;
+    }
+
+    /// <summary>
+    /// Global modes audit on the ACTUAL pack: both modes solved on every stage, the Stealth solution replayed under
+    /// Knockout rules (state parity, no knockout), and - where a reference snapshot stage is layout-identical to the
+    /// Unity stage - the handoff's offline paths replayed on the C# engine. Writes a JSON report; never edits levels.
+    /// </summary>
+    public static int Modes(string packPath, string outPath, string referencePath, string referenceValidationPath)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        Dictionary<string, Stage> reference = null; Dictionary<string, JsonObject> refPaths = null;
+        if (referencePath != null && File.Exists(referencePath))
+        {
+            reference = new Dictionary<string, Stage>();
+            foreach (var im in BrowserLevelImporter.Import(File.ReadAllText(referencePath))) reference[im.Stage.Code] = im.Stage;
+        }
+        if (referenceValidationPath != null && File.Exists(referenceValidationPath))
+        {
+            refPaths = new Dictionary<string, JsonObject>();
+            var root = JsonAccess.AsObject(MiniJson.Parse(File.ReadAllText(referenceValidationPath)), "root");
+            foreach (var lv in JsonAccess.AsArray(JsonAccess.Require(root, "levels", "root"), "levels"))
+            {
+                var o = JsonAccess.AsObject(lv, "level");
+                string label = JsonAccess.OptionalString(o, "label", "", "level");
+                refPaths[label.Replace("FTUE ", "FTUE-").Replace("Level ", "LEVEL-")] = o;
+            }
+        }
+        var list = new List<object>(); int problems = 0;
+        foreach (var s in pack.Stages)
+        {
+            var st = StageMetrics.Analyze(s);
+            var ko = StageMetrics.Analyze(s, new SolveOptions { Mode = StageMode.Knockout });
+            var entry = new JsonObject().Set("id", (long)s.Id).Set("code", s.Code).Set("title", s.Title).Set("guards", (long)s.Guards.Count).Set("cameras", (long)s.Cameras.Count)
+                .Set("stealth", ModeEntry(st)).Set("knockout", ModeEntry(ko));
+            string line = s.Code.PadRight(9) + " stealth " + (st.Solvable ? st.Par.ToString() : "NONE").PadLeft(4) + "  knockout " + (ko.Solvable ? ko.Par.ToString() : "NONE").PadLeft(4) + " (ko " + ko.KnockoutsInPar + ")";
+            // Stealth solution replayed under Knockout rules: identical outcome and clock, nobody knocked out.
+            if (st.Solvable)
+            {
+                var r = StageReplay.Run(s, st.Solution, StageMode.Knockout);
+                bool parity = r.Won && r.CountedActions == st.Par && r.Final.DefeatedCount == 0;
+                entry.Set("stealth_path_parity_in_knockout", parity);
+                if (!parity) { problems++; line += "  PARITY-FAIL"; }
+                if (ko.Solvable && ko.Par > st.Par) { problems++; line += "  KNOCKOUT-LONGER-THAN-STEALTH"; }
+            }
+            // Reference snapshot comparison (offline audit data from the handoff; layouts may legitimately differ from the shipped pack).
+            if (reference != null)
+            {
+                string diff = reference.TryGetValue(s.Code, out var rs) ? LayoutDiff(s, rs) : "no reference stage";
+                entry.Set("reference_layout", diff == null ? "identical" : diff);
+                if (diff == null && refPaths != null && refPaths.TryGetValue(s.Code, out var rp))
+                {
+                    foreach (var modeKey in new[] { "stealth", "knockout" })
+                    {
+                        if (!rp.TryGetValue(modeKey, out var mv) || !(mv is JsonObject mo)) continue;
+                        string status = JsonAccess.OptionalString(mo, "status", "", modeKey);
+                        if (status != "win") { entry.Set("reference_" + modeKey, status); continue; }
+                        var tokens = PathTokens(JsonAccess.AsArray(JsonAccess.Require(mo, "path", modeKey), modeKey + ".path"));
+                        var rr = StageReplay.Run(s, StageAction.ParseSequence(tokens), modeKey == "knockout" ? StageMode.Knockout : StageMode.Stealth);
+                        int refActions = JsonAccess.OptionalInt(mo, "actions", -1, modeKey);
+                        string verdict = rr.Won && rr.CountedActions == refActions ? "replays" : rr.Failure.Contains("NoWaitsLeft") ? "exceeds Unity wait limit (" + rr.Failure + ")" : "FAILS: " + rr.Failure;
+                        entry.Set("reference_" + modeKey, verdict + " [" + string.Join(" ", tokens) + "]");
+                        if (verdict.StartsWith("FAILS")) { problems++; line += "  REF-" + modeKey.ToUpperInvariant() + "-FAILS"; }
+                        else if (verdict.StartsWith("exceeds")) line += "  ref-" + modeKey + "-waitlimit";
+                    }
+                }
+                else if (diff != null) line += "  ref-layout-differs";
+            }
+            Console.WriteLine(line + " | " + Tokens(ko.Solution));
+            list.Add(entry);
+        }
+        var report = new JsonObject().Set("engine", "ShadowSteps C# V3 solver, rules " + StageModeUtil.RulesVersion).Set("pack", packPath).Set("problems", (long)problems).Set("levels", list);
+        File.WriteAllText(outPath, MiniJson.Serialize(report, true) + "\n");
+        Console.WriteLine("wrote " + outPath + "; problems=" + problems);
+        return problems == 0 ? 0 : 2;
+    }
+
+    private static JsonObject ModeEntry(StageMetrics m)
+    {
+        var actions = new List<object>(); foreach (var a in m.Solution) actions.Add(a.Token);
+        return new JsonObject().Set("solvable", m.Solvable).Set("par", (long)m.Par).Set("actions", actions).Set("three_star", (long)m.ThreeStar).Set("two_star", (long)m.TwoStar)
+            .Set("knockouts_in_par", (long)m.KnockoutsInPar).Set("shortest_without_knockout", (long)m.ShortestWithoutKnockout).Set("shortest_alarm_free", (long)m.ShortestAlarmFree)
+            .Set("ghost_offered", m.GhostOffered).Set("states_explored", (long)m.StatesExplored).Set("hit_limit", m.HitLimit);
+    }
+
+    /// <summary>Converts a handoff path ({type:move,dir}|wait|attack{id}|smoke{p}|emp{id}; dirs 0=N 1=E 2=S 3=W) to engine tokens.</summary>
+    private static List<string> PathTokens(List<object> path)
+    {
+        var tokens = new List<string>(); string[] dirs = { "N", "E", "S", "W" };
+        foreach (var e in path)
+        {
+            var o = JsonAccess.AsObject(e, "path");
+            switch (JsonAccess.OptionalString(o, "type", "", "path"))
+            {
+                case "move": tokens.Add(dirs[JsonAccess.OptionalInt(o, "dir", 0, "path")]); break;
+                case "wait": tokens.Add("WAIT"); break;
+                case "attack": tokens.Add("KO#" + JsonAccess.OptionalInt(o, "id", 0, "path")); break;
+                case "emp": tokens.Add("EMP#" + JsonAccess.OptionalInt(o, "id", 0, "path")); break;
+                case "smoke": { var p = JsonAccess.AsArray(JsonAccess.Require(o, "p", "path"), "p"); tokens.Add("SMOKE@" + Convert.ToInt32(p[0]) + "," + Convert.ToInt32(p[1])); break; }
+                default: throw new InvalidOperationException("unknown path entry");
+            }
+        }
+        return tokens;
+    }
+
+    /// <summary>null when the two stages share rows, start, exit, key, guards, cameras, doors, cuts, charges and budget; otherwise the first difference.</summary>
+    public static string LayoutDiff(Stage a, Stage b)
+    {
+        if (a.Width != b.Width || a.Height != b.Height) return "size " + a.Width + "x" + a.Height + " vs " + b.Width + "x" + b.Height;
+        var ra = StageBuilder.RowsOf(a); var rb = StageBuilder.RowsOf(b);
+        for (int y = 0; y < ra.Length; y++) if (ra[y] != rb[y]) return "row " + y + " '" + ra[y] + "' vs '" + rb[y] + "'";
+        if (a.Start != b.Start) return "start " + a.Start + " vs " + b.Start;
+        if (a.Exit != b.Exit) return "exit " + a.Exit + " vs " + b.Exit;
+        if (!Nullable.Equals(a.Key, b.Key)) return "key";
+        if (a.Guards.Count != b.Guards.Count) return "guard count " + a.Guards.Count + " vs " + b.Guards.Count;
+        for (int i = 0; i < a.Guards.Count; i++)
+        {
+            var g = a.Guards[i]; var h = b.Guards[i];
+            if (g.Kind != h.Kind || g.Facing != h.Facing || g.Clockwise != h.Clockwise || g.Offset != h.Offset || g.Route.Count != h.Route.Count) return "guard " + i + " spec";
+            for (int k = 0; k < g.Route.Count; k++) if (g.Route[k] != h.Route[k]) return "guard " + i + " route";
+        }
+        if (a.Cameras.Count != b.Cameras.Count) return "camera count";
+        for (int i = 0; i < a.Cameras.Count; i++)
+        {
+            var c = a.Cameras[i]; var d = b.Cameras[i];
+            if (c.WallCell != d.WallCell || c.MountFace != d.MountFace || c.Facing != d.Facing || c.Kind != d.Kind || c.Clockwise != d.Clockwise) return "camera " + i;
+        }
+        if (a.Doors.Count != b.Doors.Count) return "door count";
+        for (int i = 0; i < a.Doors.Count; i++) if (!a.Doors[i].Key.Equals(b.Doors[i].Key)) return "door " + i;
+        var cutsA = new HashSet<EdgeKey>(a.Cuts); var cutsB = new HashSet<EdgeKey>(b.Cuts); if (!cutsA.SetEquals(cutsB)) return "cuts";
+        if (a.SmokeCharges != b.SmokeCharges || a.EmpCharges != b.EmpCharges) return "gadgets";
+        if (a.AlarmBudget != b.AlarmBudget) return "alarm budget " + a.AlarmBudget + " vs " + b.AlarmBudget;
+        return null;
+    }
 }

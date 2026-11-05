@@ -114,7 +114,8 @@ namespace ShadowSteps.Tests.EditMode
         [Test]
         public void NewerSaveVersion_IsRejected()
         {
-            Assert.Throws<LevelDataException>(() => SaveSerializer.FromJson("{\"version\":2}"));
+            Assert.Throws<LevelDataException>(() => SaveSerializer.FromJson("{\"version\":" + (SaveData.CurrentVersion + 1) + "}"));
+            Assert.AreEqual(SaveData.CurrentVersion, SaveSerializer.FromJson("{\"version\":1}").Version, "version-1 files still load");
         }
     }
 }

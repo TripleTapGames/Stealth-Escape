@@ -36,7 +36,7 @@ namespace ShadowSteps.Art2D.Tests
         {
             AppServices.ResetForTests();
             AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
-            AppServices.InstallSaveForTests(new SaveData());
+            var save = new SaveData(); GuardOnboarding.MarkAllSeen(save); AppServices.InstallSaveForTests(save); // guard cards (D-041) are exercised by SS2DGuardIntroTests
 #if UNITY_EDITOR
             EditorSceneManager.LoadSceneInPlayMode(ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
 #else
@@ -57,7 +57,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsTrue(R.IsBuilt);
         }
 
-        private IEnumerator Settle() { while (S.IsBusy) yield return null; yield return null; }
+        private IEnumerator Settle() { while (S.IsBusy || _bridge.TweenRunning) yield return null; yield return null; }
 
         private Vector2 ScreenOf(GridCoord c) => Cam.WorldToScreenPoint(R.transform.TransformPoint(R.Pos(c)));
 
@@ -125,18 +125,22 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [UnityTest]
-        public IEnumerator Wait_CountsOneAction_RotatesGuard_AndDrawsExactlyTheEngineHazards()
+        public IEnumerator Wait_DoesNotExist_MovesRotateTheGuard_AndDrawExactlyTheEngineHazards()
         {
             yield return Open();
             var hud = (SS2DHudCanvas)_composer.Hud; var stage = S.Stage; var g = stage.Guards[0];
-            Assert.AreEqual(GuardKind.Rotating, g.Kind);
-            int limit = stage.WaitLimit; int steps = limit >= 0 ? Mathf.Min(4, limit) : 4;
-            for (int step = 0; step < steps; step++)
+            Assert.AreEqual(GuardKind.Rotating, g.Kind); Assert.AreEqual(0, stage.WaitLimit, "D-044: no WAIT on any shipped stage");
+            Assert.IsNull(hud.transform.Find("Canvas/WaitButton"), "no WAIT button"); Assert.IsFalse(hud.starsLabel.text.Contains("WAIT"), "no WAIT counter or hold hint");
+            // WAIT is refused from every path: direct submission, a hold on the board, a tap on the player's own node.
+            Assert.IsFalse(S.TrySubmit(StageAction.Wait)); Assert.IsFalse(_composer.Input.LongPress(ScreenOf(new GridCoord(0, 0)))); Assert.IsFalse(S.TapNode(S.State.Player));
+            yield return null; Assert.AreEqual(0, S.State.T); Assert.IsTrue(hud.messageLabel.text.Contains("Waiting is not possible"));
+            // Only moves advance time: each move turns the rotating guard by one schedule step, and the drawn fan is the engine's.
+            var path = new[] { Direction.East, Direction.South, Direction.East, Direction.East };
+            foreach (var d in path)
             {
                 int tBefore = S.State.T;
-                if (limit >= 0) Assert.AreEqual((limit - step).ToString(), hud.waitCount.text, "WAIT badge shows the remaining waits");
-                hud.waitButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); yield return Settle();
-                Assert.AreEqual(tBefore + 1, S.State.T, "each WAIT is exactly one counted action");
+                Assert.IsTrue(S.TrySubmit(StageAction.Move(d)), d + " at t=" + tBefore); yield return Settle();
+                Assert.AreEqual(tBefore + 1, S.State.T, "each move is exactly one counted action");
                 Assert.AreEqual(S.State.T.ToString(), hud.actionsValue.text);
                 var pose = GuardTrack.PoseAt(g, S.State.T);
                 Assert.AreEqual(R.View(pose.Facing), R.Guards[0].Facing, "drawn facing = rotated logical facing at t=" + S.State.T);
@@ -145,11 +149,7 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsTrue(R.Guards[0].transform.localPosition == R.Pos(pose.Position));
             }
             Assert.AreEqual(Direction.East, GuardTrack.PoseAt(g, 4).Facing, "period 4: back to the authored facing");
-            if (limit >= 0 && steps == limit)
-            {
-                Assert.AreEqual("0", hud.waitCount.text); Assert.IsFalse(hud.waitButton.GetComponent<UnityEngine.UI.Button>().interactable, "WAIT disabled at the limit");
-                Assert.IsFalse(S.TrySubmit(StageAction.Wait), "a further WAIT is rejected"); Assert.AreEqual(steps, S.State.T);
-            }
+            Assert.AreEqual(0, S.State.WaitsUsed);
         }
 
         [UnityTest]
@@ -187,7 +187,7 @@ namespace ShadowSteps.Art2D.Tests
             var expected = new HashSet<GridCoord>(Sight.GuardVision(S.Stage, S.State, GuardTrack.PoseAt(S.Stage.Guards[0], 0)));
             Assert.IsTrue(expected.SetEquals(DrawnHazardCells()));
             // HUD retry button does the same.
-            Assert.IsTrue(S.TrySubmit(StageAction.Wait)); yield return Settle(); Assert.AreEqual(1, S.State.T);
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T);
             hud.retryButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); yield return Settle();
             Assert.AreEqual(0, S.State.T);
         }
@@ -204,9 +204,9 @@ namespace ShadowSteps.Art2D.Tests
             }
             Assert.AreEqual(StageResult.Won, S.State.Result);
             Assert.AreEqual(7, S.State.T);
-            Assert.AreEqual(3, StageScoring.Stars(S.State.T, S.Stage.Par));
+            Assert.AreEqual(3, StageScoring.Stars(S.State.T, S.Stage.ParFor(S.State.Mode)));
             int wonStageId = S.Stage.Id; var exitPos = R.Pos(S.Stage.Exit); var doorPos = R.DoorPosition;
-            var result = AppServices.Save.GetResult(wonStageId);
+            var result = AppServices.Save.GetResult(wonStageId, S.State.Mode); // the shipped game records Knockout runs (D-043)
             Assert.IsNotNull(result, "win recorded before the door sequence"); Assert.IsTrue(result.Completed); Assert.AreEqual(7, result.BestTurns); Assert.AreEqual(3, result.BestStars);
             Assert.IsFalse(result.Ghost, "Ghost is not offered on LEVEL-2");
             Assert.IsTrue(AppServices.Save.IsUnlocked(wonStageId + 1), "next stage unlocked");
@@ -228,32 +228,25 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [UnityTest]
-        public IEnumerator LongPress_OnTheBoard_IsOneWait_AndStopsAtTheWaitLimit()
+        public IEnumerator LongPress_AndSpace_NeverAdvanceTime()
         {
             yield return Open();
             var input = _composer.Input; Assert.IsNotNull(input);
-            var hud = (SS2DHudCanvas)_composer.Hud; var stage = S.Stage; int limit = stage.WaitLimit;
-            var somewhere = ScreenOf(new GridCoord(0, 0)) + new Vector2(5f, 5f); // any board point: the long-press does not need a node under the finger
-            Assert.IsTrue(input.LongPress(somewhere)); yield return Settle();
-            Assert.AreEqual(1, S.State.T); Assert.AreEqual(1, S.State.WaitsUsed); Assert.AreEqual(new GridCoord(0, 2), S.State.Player, "a WAIT never moves");
-            if (limit >= 0)
-            {
-                for (int i = 1; i < limit; i++) { Assert.IsTrue(input.LongPress(somewhere)); yield return Settle(); }
-                Assert.AreEqual(limit, S.State.WaitsUsed); Assert.AreEqual("0", hud.waitCount.text);
-                Assert.IsFalse(input.LongPress(somewhere), "no waits left: the long-press is rejected"); yield return null;
-                Assert.AreEqual(limit, S.State.T); Assert.IsTrue(hud.messageLabel.text.Contains("No waits left"));
-            }
-            S.SetMode(InputMode.SmokeTarget); // targeting modes ignore the gesture (LEVEL-2 has no smoke, so the mode falls back to Move; assert the guard only)
-            Assert.AreEqual(InputMode.Move, S.Mode);
+            var somewhere = ScreenOf(new GridCoord(0, 0)) + new Vector2(5f, 5f);
+            string before = S.State.Key();
+            for (int i = 0; i < 3; i++) { Assert.IsFalse(input.LongPress(somewhere), "a hold on the board does nothing (D-044)"); yield return null; }
+            Assert.AreEqual(0, S.State.T); Assert.AreEqual(0, S.State.WaitsUsed); Assert.AreEqual(before, S.State.Key(), "state untouched");
+            Assert.IsFalse(S.TrySubmit(StageAction.Wait), "a queued or replayed WAIT is refused by the session gate"); Assert.AreEqual(0, S.State.T);
+            S.SetMode(InputMode.SmokeTarget); Assert.AreEqual(InputMode.Move, S.Mode); // LEVEL-2 has no smoke: targeting mode falls back to Move
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T, "moves still count");
         }
 
-        /// <summary>Main 25 → Main 26 → … → Main 30 in the real Game scene: each new level composes with the 2D layer (7×9 and 9×11 boards), and nothing follows Main 30.</summary>
         [UnityTest]
         public IEnumerator Campaign_Main25ProceedsToMain26_AndTheNewLevelsCompose()
         {
             AppServices.ResetForTests();
             AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
-            AppServices.InstallSaveForTests(new SaveData());
+            var save = new SaveData(); GuardOnboarding.MarkAllSeen(save); AppServices.InstallSaveForTests(save); // guard cards (D-041) are exercised by SS2DGuardIntroTests
             AppServices.PendingStageId = 30; // LEVEL-25
 #if UNITY_EDITOR
             EditorSceneManager.LoadSceneInPlayMode("Assets/_ShadowSteps/Scenes/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
@@ -280,7 +273,7 @@ namespace ShadowSteps.Art2D.Tests
         {
             AppServices.ResetForTests();
             AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
-            AppServices.InstallSaveForTests(new SaveData());
+            var save = new SaveData(); GuardOnboarding.MarkAllSeen(save); AppServices.InstallSaveForTests(save); // guard cards (D-041) are exercised by SS2DGuardIntroTests
             AppServices.PendingStageId = 21; // LEVEL-16, as the level-select would request it
 #if UNITY_EDITOR
             EditorSceneManager.LoadSceneInPlayMode("Assets/_ShadowSteps/Scenes/Game.unity", new LoadSceneParameters(LoadSceneMode.Single));
@@ -307,7 +300,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsFalse(S.TrySubmit(StageAction.Wait)); Assert.AreEqual(0, S.State.T);
             _flow.Router.Pop(); yield return null;
             Assert.IsFalse(S.InputLocked);
-            Assert.IsTrue(S.TrySubmit(StageAction.Wait)); yield return Settle(); Assert.AreEqual(1, S.State.T);
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T);
             Assert.IsFalse(hud.smokeButton.gameObject.activeSelf, "no smoke on LEVEL-2"); Assert.IsFalse(hud.empButton.gameObject.activeSelf, "no EMP on LEVEL-2");
         }
     }

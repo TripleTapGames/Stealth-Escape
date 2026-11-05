@@ -51,9 +51,9 @@ namespace ShadowSteps.Art2D.Tests
             foreach (var c in expected) { Assert.IsTrue(stage.IsFloor(c), label + ": only floor nodes"); Assert.IsFalse(stage.IsBlocked(c)); Assert.IsFalse(stage.IsWall(c)); }
             // Node rings sit on the drawn positions of the detected nodes; mesh bounds cover them.
             var fill = r.transform.Find("Overlays/CameraVision/Region_Fill").GetComponent<MeshFilter>().sharedMesh;
-            // The cone fan is the engine's traced silhouette: it covers every detected node; when nothing is detected no floor node centre lies inside it.
-            if (expected.Count == 0) { for (int y = 0; y < stage.Height; y++) for (int x = 0; x < stage.Width; x++) { var c = new GridCoord(x, y); if (stage.IsFloor(c) && fill.vertexCount > 0) Assert.IsFalse(PolyContains(r.CameraCones, r.Pos(c)), label + ": empty detection but the drawn cone covers " + c); } }
-            else foreach (var c in expected) { Assert.IsTrue(fill.bounds.Contains(r.Pos(c)), label + ": region covers " + c); Assert.IsTrue(PolyContains(r.CameraCones, r.Pos(c)), label + ": cone polygon contains " + c); }
+            // D-042: the drawn cone is the full nominal geometry (it may paint over covered nodes); it always contains every detected node, and only detected nodes get rings.
+            foreach (var c in expected) { Assert.IsTrue(fill.bounds.Contains(r.Pos(c)), label + ": region covers " + c); Assert.IsTrue(PolyContains(r.CameraCones, r.Pos(c)), label + ": cone polygon contains " + c); }
+            if (r.library.fullCameraCone) foreach (var poly in r.CameraCones) Assert.AreEqual(3, poly.Length, label + ": nominal cone = apex + two far corners");
             int activeCams = 0; for (int i = 0; i < stage.Cameras.Count; i++) if (!state.IsCameraDisabled(i)) activeCams++;
             Assert.AreEqual(activeCams, r.CameraCones.Count, label + ": one cone per active camera, none for EMP-disabled ones");
             int rings = 0; var ringT = r.transform.Find("Overlays/CameraVision");
@@ -185,11 +185,12 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.Less(Vector3.Distance(poly[0], r.PosF(origin.X, origin.Y)), 1e-4f, "apex on the rotated wall face");
                 var facing = CameraTrack.FacingAt(cam, 0);
                 var drawnDir = r.RotationFor(facing) * Vector3.up;
-                var centre = poly[1 + Sight.ConeOutlineRays / 2];
+                Assert.AreEqual(3, poly.Length, "nominal cone: apex + two far corners (D-042)");
+                var centre = (poly[1] + poly[2]) * 0.5f;
                 var expectedCentre = poly[0] + drawnDir * (float)Sight.CameraRange * r.Layout.NodeSpacing;
-                var clipped = Sight.RayDistance(stage, 0, null, origin, new Vec2(DirectionUtil.DeltaX(facing), DirectionUtil.DeltaY(facing)), Sight.CameraRange, cam.WallCell);
-                if (clipped >= Sight.CameraRange - 1e-9) Assert.Less(Vector3.Distance(centre, expectedCentre), 1e-3f, "central ray along the drawn facing, two spacings out");
-                else Assert.Less(Vector3.Distance(centre, poly[0] + drawnDir * (float)clipped * r.Layout.NodeSpacing), 1e-3f, "central ray clipped by an occluder");
+                Assert.Less(Vector3.Distance(centre, expectedCentre), 1e-3f, "far edge centred two spacings out along the drawn facing, never clipped");
+                float halfWidth = (float)(Sight.CameraRange * System.Math.Tan(Sight.CameraHalfAngleDegrees * System.Math.PI / 180.0)) * r.Layout.NodeSpacing;
+                Assert.AreEqual(halfWidth * 2f, Vector3.Distance(poly[1], poly[2]), 1e-3f, "70° total: far edge width = 2·D·tan 35°");
                 AssertOverlayMatchesEngine(r, stage, state, "LEVEL-17 rotated cone");
                 Assert.Less(Quaternion.Angle(r.RotationFor(facing), r.CameraHeads[0].localRotation), 0.01f);
             }
@@ -419,7 +420,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void FixedCamera_Level16_MatchesEngine_AndIsBlockedBySolidCover()
         {
-            var stage = Pack().FindByCode("LEVEL-16"); var r = Build(stage);
+            var stage = Unlimited(Pack().FindByCode("LEVEL-16")); var r = Build(stage); // shipped stages have no WAIT (D-044); this art test steps the clock with WAITs on an unlimited copy
             try
             {
                 var state = StageState.Initial(stage); Present(r, stage, state);
@@ -527,7 +528,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void Emp_DisablesForExactlyTwoCountedActions_ThenRestores()
         {
-            var stage = Pack().FindByCode("LEVEL-23"); var r = Build(stage);
+            var stage = Unlimited(Pack().FindByCode("LEVEL-23")); var r = Build(stage); // unlimited copy: the EMP countdown is stepped with WAITs (no WAIT in the shipped game, D-044)
             try
             {
                 var s0 = StageState.Initial(stage); Present(r, stage, s0); AssertOverlayMatchesEngine(r, stage, s0, "active");

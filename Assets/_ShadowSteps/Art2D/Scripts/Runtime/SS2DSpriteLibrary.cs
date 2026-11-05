@@ -172,6 +172,11 @@ namespace ShadowSteps.Art2D
         [Range(0f, 1f)] public float guardConeCurvature = 1f;
         [Tooltip("Curve of the camera cone's far edge: 1 = circular arc centred on the lens, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only; detected nodes always stay inside.")]
         [Range(0f, 1f)] public float cameraConeCurvature = 1f;
+        [Tooltip("D-042: draw the full geometric camera cone (70°, two spacings forward, flat far edge) across obstacles and beyond the board. Off = the old silhouette traced by the detection occluders.")]
+        public bool fullCameraCone = true;
+        [Tooltip("With the full cone: draw its fill/outline on the Props layer above obstacle art (below actors, markers and HUD) so bushes and walls do not cut it.")]
+        public bool cameraConeAboveObstacles = true;
+        public int cameraConePropsOrder = 5000;
         public Color cameraVisionFill = new Color(1.00f, 0.74f, 0.22f, 0.32f);
         public Color cameraVisionBorder = new Color(0.98f, 0.64f, 0.14f, 0.92f);
         public Color cameraVisionGlow = new Color(1.00f, 0.78f, 0.30f, 0.16f);
@@ -189,10 +194,23 @@ namespace ShadowSteps.Art2D
         public Color keyTint = Color.white;
         public Color nextMarkerTint = new Color(0.20f, 0.80f, 1.00f);
         public Color rotationMarkerTint = new Color(1.00f, 0.86f, 0.35f);
+        [Header("Rotating guard arcs (user art; two curved arrows around the guard like the reference mock)")]
+        [Tooltip("Curved arrow PNG (Sprites/Markers/rotation_arrow.png): drawn once on the guard's right (turned 90°) and once on its left (turned 270°), bracketing the figure. Unflipped = counter-clockwise; mirrored for clockwise guards. Empty = the generated rotation badge.")]
+        public Sprite rotationArrowArt;
+        [Tooltip("Length of one arc in node spacings.")] public float rotationArrowSize = 0.7f;
+        [Tooltip("Horizontal distance of each arc from the node centre (node spacings): right at +x, left at -x.")] public float rotationArrowSideOffset = 0.30f;
+        [Tooltip("Height of the arcs' centre above the node (node spacings). 0 = centred on the base disc the guard stands on.")] public float rotationArrowSideHeight = 0f;
+        public Color rotationArrowTint = new Color(0.16f, 0.14f, 0.14f, 0.95f);
         public Color cameraDisabled = new Color(0.45f, 0.88f, 0.95f);
         public Color cameraHighlight = new Color(0.40f, 1.00f, 0.90f);
         public Color shadowTint = new Color(0.10f, 0.08f, 0.06f, 0.20f);
         public Color captured = new Color(1.00f, 0.35f, 0.35f);
+        [Tooltip("Disc under a guard the player can knock out right now (Knockout mode only).")]
+        public Color knockoutTarget = new Color(1.00f, 0.62f, 0.20f, 0.95f);
+        [Tooltip("Tint of a knocked-out guard while it flies off (decorative only).")]
+        public Color knockedOut = new Color(0.55f, 0.58f, 0.64f, 0.85f);
+        [Tooltip("Knocked-out guard fly-off: seconds, distance in node spacings (away from the spy, upward arc), spins.")]
+        public float knockoutFlyDuration = 0.45f, knockoutFlyDistance = 3.2f, knockoutFlyLift = 1.4f, knockoutFlySpins = 1.5f;
         public Color won = new Color(0.55f, 1.00f, 0.70f);
         public Color lockdown = new Color(1.00f, 0.65f, 0.25f);
 

@@ -67,7 +67,6 @@ namespace ShadowSteps.Runtime
             else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) Move(Direction.East);
             else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) Move(Direction.South);
             else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) Move(Direction.West);
-            else if (Input.GetKeyDown(KeyCode.Space)) { if (Session.Mode == InputMode.Move) Session.TrySubmit(StageAction.Wait); }
             else if (Input.GetKeyDown(KeyCode.Q)) Session.ToggleMode(InputMode.SmokeTarget);
             else if (Input.GetKeyDown(KeyCode.E)) Session.ToggleMode(InputMode.EmpTarget);
             else if (Input.GetKeyDown(KeyCode.Escape)) Session.SetMode(InputMode.Move);
@@ -154,12 +153,8 @@ namespace ShadowSteps.Runtime
         }
 
 
-        /// <summary>Long-press anywhere on the board (not over UI) in Move mode = one WAIT. Public so tests and tutorials can drive it.</summary>
-        public bool LongPress(Vector2 screenPos)
-        {
-            if (Session == null || Session.State == null || Session.Stage == null || Session.Mode != InputMode.Move) return false;
-            return Session.TrySubmit(StageAction.Wait);
-        }
+        /// <summary>A hold on the board does nothing (D-044: WAIT removed from the game). Kept public so tests can prove it never advances time.</summary>
+        public bool LongPress(Vector2 screenPos) => false;
 
         private void HandleTap(Vector2 screenPos)
         {

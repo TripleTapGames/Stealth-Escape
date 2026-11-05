@@ -103,13 +103,21 @@ namespace ShadowSteps.Tests.EditMode.V3
                 Assert.IsNotNull(stage, (string)e["code"]);
                 var tokens = new List<string>(); foreach (var t in (List<object>)e["actions"]) tokens.Add((string)t);
                 var actions = StageAction.ParseSequence(tokens);
-                var replay = StageReplay.Run(stage, actions);
+                // The shipped validation is exported under the shipped rules (D-043/D-044: Knockout, no WAIT); the entry says which mode it was solved in.
+                var mode = StageModeUtil.TryParse(JsonAccess.OptionalString(e, "mode", "stealth", "validation_v4"), out var m) ? m : StageMode.Stealth;
+                Assert.AreEqual(StageModeUtil.Default, mode, stage.Code + ": validation exported for the shipped mode");
+                Assert.AreEqual(0, stage.WaitLimit, stage.Code + ": waitLimit 0 (D-044)");
+                foreach (var a in actions) Assert.AreNotEqual(StageActionKind.Wait, a.Kind, stage.Code + ": no WAIT in the shipped solution");
+                var replay = StageReplay.Run(stage, actions, mode);
                 Assert.IsTrue(replay.Won, stage.Code + "\n" + replay.Trace());
                 Assert.AreEqual(JsonAccess.AsInt(e["par"], "par"), replay.CountedActions, stage.Code);
-                Assert.AreEqual(stage.Par, JsonAccess.AsInt(e["par"], "par"), stage.Code);
-                var solved = StageSolver.Solve(stage);
+                Assert.AreEqual(stage.ParFor(mode), JsonAccess.AsInt(e["par"], "par"), stage.Code + ": stored par for the shipped mode");
+                Assert.AreEqual(StageScoring.ThreeStarThreshold(stage.ParFor(mode)), stage.ThreeStarFor(mode), stage.Code); Assert.AreEqual(StageScoring.TwoStarThreshold(stage.ParFor(mode)), stage.TwoStarFor(mode), stage.Code);
+                var solved = StageSolver.Solve(stage, new SolveOptions { Mode = mode, MaxWaits = 0 });
+                Assert.IsTrue(solved.Found && !solved.HitLimit, stage.Code + ": solvable within limits");
                 Assert.AreEqual(string.Join(" ", tokens), solved.Tokens, "solver path drifted for " + stage.Code);
                 Assert.AreEqual(JsonAccess.AsBool(e["ghost_offered"], "ghost_offered"), stage.GhostOffered, stage.Code);
+                if (stage.GhostOffered) { var ghost = StageSolver.Solve(stage, new SolveOptions { Mode = mode, MaxWaits = 0, AlarmFreeOnly = true }); Assert.IsTrue(ghost.Found, stage.Code + ": offered Ghost has an alarm-free route"); var gr = StageReplay.Run(stage, ghost.Actions, mode); Assert.IsTrue(gr.Won && !gr.Final.AlarmEver, stage.Code + ": Ghost route replays alarm-free"); }
             }
         }
 
@@ -134,14 +142,14 @@ namespace ShadowSteps.Tests.EditMode.V3
             var smokeRequired = new HashSet<string>(); var empRequired = new HashSet<string>(); var forcedAlarm = new HashSet<string>();
             foreach (var s in pack.Stages)
             {
-                var m = StageMetrics.Analyze(s);
+                var m = StageMetrics.Analyze(s, new SolveOptions { Mode = StageModeUtil.Default, MaxWaits = 0 }); // shipped rules: Knockout, no WAIT (D-044)
                 if (m.SmokeRequired) smokeRequired.Add(s.Code);
                 if (m.EmpRequired) empRequired.Add(s.Code);
                 if (m.ForcedAlarm) forcedAlarm.Add(s.Code);
             }
-            // 70° cone (D-036) with LEVEL-23's budget raised to 2; LEVEL-24's EMP is optional under the cone (pending redesign, see KNOWN_ISSUES #47); Levels 26-30 per the import kit.
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27", "LEVEL-30" }, smokeRequired);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25" }, empRequired);
+            // Under Knockout / no WAIT (validation_v4.json export, 2026-11-04): LEVEL-30 now needs its EMP as well (no WAIT to time the camera).
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27" }, smokeRequired);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25", "LEVEL-30" }, empRequired);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-20", "LEVEL-23" }, forcedAlarm);
         }
 
@@ -156,7 +164,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55 + 8, shipped, "shipped pack carries every obstacle: the 55 imported plus 8 in Levels 26-30");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-18", "LEVEL-19", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // stored flags; LEVEL-24's stored flag is stale pending the cone decision
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-18", "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-24's flag corrected to true in the no-WAIT pack (D-044) // stored flags; LEVEL-24's stored flag is stale pending the cone decision
         }
     }
 }

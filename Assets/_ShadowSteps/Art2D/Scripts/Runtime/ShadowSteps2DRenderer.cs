@@ -478,13 +478,33 @@ namespace ShadowSteps.Art2D
                 g.SetFacing(View(pose.Facing));
                 _guards.Add(g);
                 var next = Make(_markers, "NextArrow_" + i, lib.nextMarker, Vector3.zero, lib.markerSize * s, lib.nextMarkerTint, SS2DLayers.Markers, 10); next.gameObject.SetActive(false); _guardNext.Add(next);
-                var rot = Make(_markers, "RotationMarker_" + i, lib.rotationMarker, Vector3.zero, lib.markerSize * s, lib.rotationMarkerTint, SS2DLayers.Markers, 10);
-                rot.flipX = !stage.Guards[i].Clockwise; rot.gameObject.SetActive(stage.Guards[i].Kind == GuardKind.Rotating); _guardRotation.Add(rot);
+                SpriteRenderer rot;
+                if (lib.rotationArrowArt != null)
+                {
+                    // Reference look, user-adjusted: the arcs bracket the figure left and right at mid-height (the art turned 90° on the right, 270° on the left).
+                    // The art reads counter-clockwise as drawn; clockwise guards mirror both arcs.
+                    rot = Make(_markers, "RotationMarker_" + i, null, Vector3.zero, 1f, lib.rotationArrowTint, SS2DLayers.Markers, 10); // holder: centred on the node at the arcs' height
+                    float w = lib.rotationArrowArt.bounds.size.x; float k = w > 1e-4f ? lib.rotationArrowSize * s / w : 1f;
+                    rot.transform.localScale = Vector3.one * k;
+                    float d = lib.rotationArrowSideOffset * s / k;
+                    var right = Make(rot.transform, "Right", lib.rotationArrowArt, new Vector3(d, 0f, 0f), 1f, lib.rotationArrowTint, SS2DLayers.Markers, 10);
+                    right.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+                    var left = Make(rot.transform, "Left", lib.rotationArrowArt, new Vector3(-d, 0f, 0f), 1f, lib.rotationArrowTint, SS2DLayers.Markers, 10);
+                    left.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+                    bool cw = IsScreenClockwise(stage.Guards[i]); right.flipX = cw; left.flipX = cw; // bound to the real next facing change as drawn
+                }
+                else
+                {
+                    rot = Make(_markers, "RotationMarker_" + i, lib.rotationMarker, Vector3.zero, lib.markerSize * s, lib.rotationMarkerTint, SS2DLayers.Markers, 10);
+                    rot.flipX = !stage.Guards[i].Clockwise;
+                }
+                rot.gameObject.SetActive(stage.Guards[i].Kind == GuardKind.Rotating); _guardRotation.Add(rot);
             }
 
             var camHost = new GameObject("CameraVisionHost"); camHost.transform.SetParent(_overlays, false);
             CameraOverlay = camHost.AddComponent<CameraVisionOverlayRenderer>();
-            CameraOverlay.Setup(this, lib, _overlays);
+            if (lib.fullCameraCone && lib.cameraConeAboveObstacles) CameraOverlay.Setup(this, lib, _overlays, "CameraVision", lib.cameraVisionFill, lib.cameraVisionBorder, lib.cameraVisionGlow, 2, SS2DLayers.Props, lib.cameraConePropsOrder);
+            else CameraOverlay.Setup(this, lib, _overlays);
             var guardHost = new GameObject("GuardVisionHost"); guardHost.transform.SetParent(_overlays, false);
             GuardOverlay = guardHost.AddComponent<CameraVisionOverlayRenderer>();
             GuardOverlay.Setup(this, lib, _overlays, "GuardVision", lib.guardVisionFill, lib.guardVisionBorder, lib.guardVisionGlow, 6);
@@ -513,16 +533,96 @@ namespace ShadowSteps.Art2D
         public void SetGuard(int i, GuardPose3 pose, Direction? nextStep)
         {
             if (i < 0 || i >= _guards.Count) return;
+            if (_guards[i].Defeated) { _guardNext[i].gameObject.SetActive(false); return; } // a knocked-out guard is frozen: its schedule no longer moves or turns it
             float s = Layout.NodeSpacing; var p = Pos(pose.Position);
             _guardPoses[i] = pose;
             _guards[i].transform.localPosition = p; _guards[i].SetFacing(View(pose.Facing)); _guards[i].SetSortingOrderFromY();
             _guardNext[i].gameObject.SetActive(nextStep.HasValue);
             float my = _guards[i].MarkerY;
             if (nextStep.HasValue) { _guardNext[i].transform.localPosition = p + new Vector3(0.34f * s, my, 0f); _guardNext[i].transform.localRotation = RotationFor(nextStep.Value); }
-            if (_guardRotation[i].gameObject.activeSelf) _guardRotation[i].transform.localPosition = p + new Vector3(-0.34f * s, my, 0f);
+            if (_guardRotation[i].gameObject.activeSelf)
+            {
+                if (library.rotationArrowArt != null)
+                {
+                    // Arcs bracket the base disc: holder centred on the node (disc centre) at rotationArrowSideHeight, one arc each side.
+                    _guardRotation[i].transform.localPosition = p + new Vector3(0f, library.rotationArrowSideHeight * s, 0f);
+                    float k = _guardRotation[i].transform.localScale.x; if (k < 1e-5f) k = 1f;
+                    float d = library.rotationArrowSideOffset * s / k;
+                    var right = _guardRotation[i].transform.Find("Right"); var left = _guardRotation[i].transform.Find("Left");
+                    if (right != null) right.localPosition = new Vector3(d, 0f, 0f);
+                    if (left != null) left.localPosition = new Vector3(-d, 0f, 0f);
+                }
+                else _guardRotation[i].transform.localPosition = p + new Vector3(-0.34f * s, my, 0f);
+            }
         }
         public void SetGuardWalking(int i, bool walking) { if (i >= 0 && i < _guards.Count) _guards[i].SetWalking(walking); }
         public void SetGuardTint(int i, Color? tint) { if (i >= 0 && i < _guards.Count) _guards[i].SetTint(tint); }
+        /// <summary>
+        /// Knocked-out guard: frozen (no schedule updates), flown off the board by the bridge, then hidden; no next-step or
+        /// rotation marker; indices stay stable (the token is never removed). Reviving (retry / mode switch) restores it.
+        /// </summary>
+        public void SetGuardDefeated(int i, bool down)
+        {
+            if (i < 0 || i >= _guards.Count) return;
+            var g = _guards[i];
+            if (down)
+            {
+                if (!g.Defeated) g.SetDefeated(true, library.knockedOut);
+                _guardNext[i].gameObject.SetActive(false); _guardRotation[i].gameObject.SetActive(false);
+                g.gameObject.SetActive(false); // off the board (the fly-off, if any, has already played)
+            }
+            else
+            {
+                g.gameObject.SetActive(true);
+                if (g.Defeated) g.SetDefeated(false, library.knockedOut);
+                g.transform.localRotation = Quaternion.identity; g.transform.localScale = Vector3.one;
+                if (g.body != null) { g.body.transform.localRotation = Quaternion.identity; var c = g.body.color; c.a = 1f; g.body.color = c; }
+                g.SetSortingOrderFromY();
+                if (_guardRotation[i] != null) _guardRotation[i].gameObject.SetActive(Stage != null && i < Stage.Guards.Count && Stage.Guards[i].Kind == GuardKind.Rotating);
+            }
+        }
+
+        /// <summary>
+        /// One frame of the knock-out fly-off (k = 0..1): the guard shoots away from the spy with an upward arc, spins, shrinks and fades;
+        /// at k = 1 it is hidden. Decorative only; the logical state already has the guard defeated.
+        /// </summary>
+        public void ApplyGuardFlyOff(int i, GridCoord from, GridCoord awayFrom, float k)
+        {
+            if (i < 0 || i >= _guards.Count) return;
+            var g = _guards[i]; var lib = library; float s = Layout.NodeSpacing;
+            if (k <= 0f) { g.gameObject.SetActive(true); g.SetDefeated(true, lib.knockedOut); _guardNext[i].gameObject.SetActive(false); _guardRotation[i].gameObject.SetActive(false); }
+            var start = Pos(from); var dir = (Pos(from) - Pos(awayFrom)); dir.z = 0f; if (dir.sqrMagnitude < 1e-6f) dir = Vector3.up; dir.Normalize();
+            float e = Mathf.SmoothStep(0f, 1f, k);
+            var p = start + dir * (lib.knockoutFlyDistance * s * e) + Vector3.up * (lib.knockoutFlyLift * s * Mathf.Sin(k * Mathf.PI));
+            g.transform.localPosition = p;
+            g.transform.localRotation = Quaternion.Euler(0f, 0f, 360f * lib.knockoutFlySpins * k);
+            g.transform.localScale = Vector3.one * Mathf.Lerp(1f, 0.35f, e);
+            if (g.body != null) { var c = g.body.color; c.a = 1f - e; g.body.color = c; }
+            g.SetSortingOrderFromY();
+            if (k >= 1f) SetGuardDefeated(i, true);
+        }
+        public bool IsGuardDefeated(int i) => i >= 0 && i < _guards.Count && _guards[i].Defeated;
+
+        /// <summary>
+        /// True when the guard's authored schedule turns clockwise ON SCREEN: compares the drawn facing now with the drawn facing after
+        /// one counted action (through the portrait rotation). Drawn N/E/S/W = up/right/down/left, so +1 in the direction enum is clockwise.
+        /// </summary>
+        public bool IsScreenClockwise(GuardSpec g)
+        {
+            var now = View(GuardTrack.PoseAt(g, 0).Facing); var next = View(GuardTrack.PoseAt(g, 1).Facing);
+            return next == DirectionUtil.Rotate(now, 1);
+        }
+
+        /// <summary>Tutorial highlight: accent tint on the body and, for a rotating guard, on both turn arcs (null = back to normal).</summary>
+        public void SetGuardHighlight(int i, Color? tint)
+        {
+            if (i < 0 || i >= _guards.Count) return;
+            if (!_guards[i].Defeated) _guards[i].SetTint(tint);
+            if (i < _guardRotation.Count && _guardRotation[i] != null)
+                foreach (var sr in _guardRotation[i].GetComponentsInChildren<SpriteRenderer>(true)) if (sr.sprite != null) sr.color = tint ?? library.rotationArrowTint;
+        }
+        /// <summary>Discs under guards the player can knock out right now (same overlay as smoke targets; Knockout mode only).</summary>
+        public void SetKnockoutTargets(IEnumerable<GridCoord> guardNodes) => _targets.Show(guardNodes, library.knockoutTarget, library.knockoutTarget, library.visionCellSize * 0.62f, 9, 10);
 
         public void SetCamera(int i, Direction facing, int disabledActionsLeft, bool highlight)
         {
@@ -584,6 +684,7 @@ namespace ShadowSteps.Art2D
             _guardCones.Clear();
             foreach (var kv in _guardPoses)
             {
+                if (IsGuardDefeated(kv.Key)) continue; // a knocked-out guard has no sight (D-040)
                 var pts = Sight.GuardConeOutline(Stage, _openDoorMask, _cloudState, kv.Value, library.guardConeHalfAngleDegrees, 24, library.guardConeOvershoot, library.guardConeCurvature);
                 if (pts.Count < 3) continue;
                 var poly = new Vector3[pts.Count];
@@ -596,8 +697,10 @@ namespace ShadowSteps.Art2D
             _cameraCones.Clear();
             for (int i = 0; i < Stage.Cameras.Count && i < _cameraFacings.Count; i++)
             {
-                if (_cameraDisabledNow[i]) continue;
-                var pts = Sight.CameraConeOutline(Stage, _openDoorMask, _cloudState, Stage.Cameras[i], _cameraFacings[i], Sight.ConeOutlineRays, library.cameraConeCurvature);
+                if (_cameraDisabledNow[i]) continue; // EMP: no cone at all (existing disabled treatment)
+                // D-042: the drawn cone is the nominal geometry (apex, two far corners), never trimmed by occluders or the board edge; rings below still mark only the detected nodes.
+                var pts = library.fullCameraCone ? Sight.CameraConeGeometry(Stage.Cameras[i], _cameraFacings[i])
+                    : Sight.CameraConeOutline(Stage, _openDoorMask, _cloudState, Stage.Cameras[i], _cameraFacings[i], Sight.ConeOutlineRays, library.cameraConeCurvature);
                 var poly = new Vector3[pts.Count];
                 for (int k = 0; k < pts.Count; k++) poly[k] = PosF(pts[k].X, pts[k].Y);
                 _cameraCones.Add(poly);

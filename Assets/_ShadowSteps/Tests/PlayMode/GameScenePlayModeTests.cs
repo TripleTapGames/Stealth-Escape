@@ -32,7 +32,7 @@ namespace ShadowSteps.Tests.PlayMode
             foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
             yield return null;
             AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
-            AppServices.InstallSaveForTests(new SaveData());
+            var save = new SaveData(); GuardOnboarding.MarkAllSeen(save); AppServices.InstallSaveForTests(save);
         }
 
         private IEnumerator WaitIdle()

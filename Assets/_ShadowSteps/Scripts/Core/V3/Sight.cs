@@ -315,6 +315,25 @@ namespace ShadowSteps.V3
         }
 
         /// <summary>True when any active camera detects the player's node at t.</summary>
+        /// <summary>
+        /// Nominal camera cone for GRAPHICS (D-042): apex on the logical wall face, flat far edge two spacings forward,
+        /// half-angle <see cref="CameraHalfAngleDegrees"/>; three vertices O, O + D·f + D·tan(35°)·r, O + D·f − D·tan(35°)·r.
+        /// Never trimmed by walls, cover, doors, smoke or the board edge; detection is <see cref="CameraVision"/>, unchanged.
+        /// </summary>
+        public static List<Vec2> CameraConeGeometry(CameraSpec cam, Direction facing)
+        {
+            var o = CameraOrigin(cam);
+            double fx = DirectionUtil.DeltaX(facing), fy = DirectionUtil.DeltaY(facing);
+            double rx = -fy, ry = fx; // perpendicular in the board plane
+            double d = CameraRange, half = d * TanHalfAngle;
+            return new List<Vec2>(3)
+            {
+                o,
+                new Vec2(o.X + d * fx + half * rx, o.Y + d * fy + half * ry),
+                new Vec2(o.X + d * fx - half * rx, o.Y + d * fy - half * ry)
+            };
+        }
+
         public static bool AnyCameraSees(Stage stage, StageState state, int t, GridCoord target)
         {
             for (int i = 0; i < stage.Cameras.Count; i++)

@@ -15,6 +15,9 @@ namespace ShadowSteps.Runtime
         public bool ReducedMotion;
         public bool IsPlaying { get; private set; }
 
+        /// <summary>Called by the session when it stops the running coroutine (mode switch): the board is re-synced by the caller.</summary>
+        public void Cancel() { IsPlaying = false; }
+
         public IEnumerator PlayOutcome(BoardView board, ActionOutcome o)
         {
             IsPlaying = true;

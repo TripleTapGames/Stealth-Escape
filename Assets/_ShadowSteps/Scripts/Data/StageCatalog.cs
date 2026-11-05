@@ -55,14 +55,19 @@ namespace ShadowSteps.Data
             return FirstUnfinished(catalog, save);
         }
 
-        public static int Stars(Stage stage, int countedActions) => StageScoring.Stars(countedActions, stage.Par);
+        public static int Stars(Stage stage, int countedActions) => Stars(stage, countedActions, StageMode.Stealth);
+        /// <summary>Stars against the mode's own par (Knockout falls back to the Stealth par when no knockout par is stored).</summary>
+        public static int Stars(Stage stage, int countedActions, StageMode mode) => StageScoring.Stars(countedActions, stage.ParFor(mode));
 
         /// <summary>Records a win (best actions, best stars, Ghost) and unlocks the next stage. Returns true when the action count is a new best.</summary>
-        public static bool RecordWin(StageCatalog catalog, SaveData save, Stage stage, int countedActions, bool ghostEarned)
+        public static bool RecordWin(StageCatalog catalog, SaveData save, Stage stage, int countedActions, bool ghostEarned) => RecordWin(catalog, save, stage, countedActions, ghostEarned, StageMode.Stealth);
+
+        /// <summary>Records the win in the mode's own table; unlocking and the resume checkpoint are shared by both modes.</summary>
+        public static bool RecordWin(StageCatalog catalog, SaveData save, Stage stage, int countedActions, bool ghostEarned, StageMode mode)
         {
             var next = catalog.NextAfter(stage.Id);
-            int stars = Stars(stage, countedActions);
-            bool newBest = save.RecordWin(stage.Id, countedActions, stars, ghostEarned && stage.GhostOffered, next != null ? next.Id : stage.Id);
+            int stars = Stars(stage, countedActions, mode);
+            bool newBest = save.RecordWin(stage.Id, countedActions, stars, ghostEarned && stage.GhostOffered, next != null ? next.Id : stage.Id, mode);
             // Persist the next attempt even if the app closes while the results panel is open.
             save.LastPlayedLevelId = FirstUnfinished(catalog, save).Id;
             return newBest;

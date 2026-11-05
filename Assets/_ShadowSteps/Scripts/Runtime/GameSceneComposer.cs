@@ -33,6 +33,8 @@ namespace ShadowSteps.Runtime
 
         /// <summary>Optional presentation hook: called after a win is recorded with the outcome and a continuation (the results screen). Return true to take over and call the continuation later (or advance to the next stage yourself).</summary>
         public System.Func<ShadowSteps.V3.ActionOutcome, System.Action, bool> WinTransition;
+        /// <summary>Presentation hook: highlight guard i (stable index) for a tutorial card, -1 = clear. Set by the active presentation layer.</summary>
+        public System.Action<int> GuardHighlight;
         /// <summary>
         /// Optional presentation hook for a capture or lockdown: called before the failure screen; return true to own the
         /// timing (finish the guard's step/turn, play the capture beat) and invoke the continuation when the screen may appear.
@@ -69,6 +71,7 @@ namespace ShadowSteps.Runtime
 
         public void OpenStage(Stage stage)
         {
+            if (!Session.HasStage) Session.PresetRulesMode(StageModeUtil.Default); // Knockout only (D-043): no player-facing mode selection
             Session.LoadStage(stage);
             if (AppServices.Save != null) { AppServices.Save.LastPlayedLevelId = stage.Id; AppServices.PersistSave(); }
             Ready = true;
@@ -103,6 +106,7 @@ namespace ShadowSteps.Runtime
             Session = sessionGo.AddComponent<GameSessionController>();
             Session.Board = Board;
             Session.Animator = Animator;
+            Session.RulesModeChanged += mode => { if (AppServices.Save != null) { AppServices.Save.SelectedMode = mode; AppServices.PersistSave(); } };
 
             Input = sessionGo.AddComponent<InputController>();
             Input.Session = Session;

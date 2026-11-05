@@ -15,6 +15,10 @@ namespace ShadowSteps.V3
         /// <summary>Upper bound on counted actions explored.</summary>
         public int MaxActions = 40;
         public int StateLimit = 250000;
+        /// <summary>Rules mode searched (Knockout enumerates moves onto guards, which the rules normalise to knockouts).</summary>
+        public StageMode Mode = StageMode.Stealth;
+        /// <summary>Knockout mode only: at most this many guards may be knocked out on the path (-1 = any).</summary>
+        public int MaxKnockouts = -1;
     }
 
     public sealed class SolveResult
@@ -27,6 +31,7 @@ namespace ShadowSteps.V3
         public int CountedActions = -1;
         public int StatesExplored;
         public bool AlarmTriggered;
+        public int Knockouts;
 
         public string Tokens
         {
@@ -49,9 +54,9 @@ namespace ShadowSteps.V3
             var result = new SolveResult();
             int period = stage.Period;
             bool trackWaits = stage.WaitLimit >= 0 || options.MaxWaits >= 0;
-            var init = StageState.Initial(stage);
+            var init = StageState.Initial(stage, options.Mode);
             if (!options.AllowSmoke || !options.AllowEmp)
-                init = new StageState(init.Player, 0, false, 0, null, null, options.AllowSmoke ? init.SmokeCharges : 0, options.AllowEmp ? init.EmpCharges : 0, -1, false, StageResult.Playing, null);
+                init = new StageState(init.Player, 0, false, 0, null, null, options.AllowSmoke ? init.SmokeCharges : 0, options.AllowEmp ? init.EmpCharges : 0, -1, false, StageResult.Playing, null, 0, options.Mode, 0UL);
 
             var seen = new Dictionary<string, Node>();
             var frontier = new List<Node> { new Node { State = init } };
@@ -93,12 +98,14 @@ namespace ShadowSteps.V3
                         var o = StageRules.TryApply(stage, n.State, action);
                         if (!o.Valid) continue;
                         if (options.AlarmFreeOnly && o.After.AlarmEver) continue;
-                        var child = new Node { State = o.After, ParentKey = key, Action = action, HasParent = true };
+                        if (options.MaxKnockouts >= 0 && o.After.DefeatedCount > options.MaxKnockouts) continue;
+                        var child = new Node { State = o.After, ParentKey = key, Action = o.Action, HasParent = true }; // o.Action = the normalised action (KO#i for a move onto a guard)
                         if (o.Won)
                         {
                             result.Found = true;
                             result.CountedActions = o.After.T;
                             result.AlarmTriggered = o.After.AlarmEver;
+                            result.Knockouts = o.After.DefeatedCount;
                             result.Actions = Reconstruct(seen, child);
                             return result;
                         }
@@ -151,6 +158,9 @@ namespace ShadowSteps.V3
         /// <summary>WAITs in the recorded par solution; the smallest WAIT cap that still reaches par; shortest win with no WAIT at all (-1 = impossible).</summary>
         public int WaitsInPar = -1, MinWaitsForPar = -1, ShortestWithoutWait = -1;
         public bool GhostPossible, ForcedAlarm, GhostOffered;
+        public StageMode Mode = StageMode.Stealth;
+        /// <summary>Knockout mode: guards knocked out on the par path, and the shortest win without any knockout.</summary>
+        public int KnockoutsInPar = -1, ShortestWithoutKnockout = -1;
         public int ThreeStar, TwoStar;
         public int Period;
         public int StatesExplored;
@@ -163,17 +173,24 @@ namespace ShadowSteps.V3
         public override string ToString()
         {
             string F(int v) => v < 0 ? "none" : v.ToString();
-            return Code + ": par=" + F(Par) + " noSmoke=" + F(ShortestWithoutSmoke) + " noEmp=" + F(ShortestWithoutEmp) + " noGadgets=" + F(ShortestWithoutGadgets) +
+            return Code + (Mode != StageMode.Stealth ? " [" + StageModeUtil.Token(Mode) + " ko=" + F(KnockoutsInPar) + " noKO=" + F(ShortestWithoutKnockout) + "]" : "") + ": par=" + F(Par) + " noSmoke=" + F(ShortestWithoutSmoke) + " noEmp=" + F(ShortestWithoutEmp) + " noGadgets=" + F(ShortestWithoutGadgets) +
                    " alarmFree=" + F(ShortestAlarmFree) + (GhostOffered ? " ghost" : "") + (ForcedAlarm ? " forcedAlarm" : "") + " waits=" + F(WaitsInPar) + "/min" + F(MinWaitsForPar) + "/noWait=" + F(ShortestWithoutWait) + " stars3<=" + ThreeStar + " stars2<=" + TwoStar + " period=" + Period;
         }
 
         public static StageMetrics Analyze(Stage stage, SolveOptions baseOptions = null)
         {
-            var m = new StageMetrics { Code = stage.Code, Period = stage.Period };
-            SolveOptions Opt(Action<SolveOptions> tweak) { var o = baseOptions == null ? new SolveOptions() : new SolveOptions { MaxActions = baseOptions.MaxActions, StateLimit = baseOptions.StateLimit }; tweak(o); return o; }
+            var mode = baseOptions != null ? baseOptions.Mode : StageMode.Stealth;
+            var m = new StageMetrics { Code = stage.Code, Period = stage.Period, Mode = mode };
+            // Every nested analysis inherits the caller's policy (mode, action/state caps and the WAIT cap), then applies its own tweak.
+            SolveOptions Opt(Action<SolveOptions> tweak) { var o = baseOptions == null ? new SolveOptions() : new SolveOptions { MaxActions = baseOptions.MaxActions, StateLimit = baseOptions.StateLimit, MaxWaits = baseOptions.MaxWaits }; o.Mode = mode; tweak(o); return o; }
             var full = StageSolver.Solve(stage, Opt(_ => { }));
             m.Par = full.Found ? full.CountedActions : -1;
             m.Solution = full.Actions;
+            if (mode == StageMode.Knockout)
+            {
+                m.KnockoutsInPar = full.Found ? full.Knockouts : -1;
+                if (stage.Guards.Count > 0) { var r = StageSolver.Solve(stage, Opt(o => o.MaxKnockouts = 0)); m.ShortestWithoutKnockout = r.Found ? r.CountedActions : -1; } else m.ShortestWithoutKnockout = m.Par;
+            }
             m.StatesExplored = full.StatesExplored; m.HitLimit = full.HitLimit;
             if (stage.SmokeCharges > 0) { var r = StageSolver.Solve(stage, Opt(o => o.AllowSmoke = false)); m.ShortestWithoutSmoke = r.Found ? r.CountedActions : -1; } else m.ShortestWithoutSmoke = m.Par;
             if (stage.EmpCharges > 0) { var r = StageSolver.Solve(stage, Opt(o => o.AllowEmp = false)); m.ShortestWithoutEmp = r.Found ? r.CountedActions : -1; } else m.ShortestWithoutEmp = m.Par;
@@ -194,7 +211,7 @@ namespace ShadowSteps.V3
                 // Smallest WAIT cap that still reaches par (the BFS may have picked a wait-heavy shortest path).
                 m.MinWaitsForPar = m.WaitsInPar;
                 for (int cap = 0; cap < m.WaitsInPar; cap++) { var r = StageSolver.Solve(stage, Opt(o => o.MaxWaits = cap)); if (r.Found && r.CountedActions == m.Par) { m.MinWaitsForPar = cap; break; } }
-                var nw = StageSolver.Solve(stage, Opt(o => o.MaxWaits = 0)); m.ShortestWithoutWait = nw.Found ? nw.CountedActions : -1;
+                var nw = StageSolver.Solve(stage, Opt(o => o.MaxWaits = 0)); m.ShortestWithoutWait = nw.Found ? nw.CountedActions : -1; // (unchanged: 0 is the strictest cap either way)
             }
             return m;
         }

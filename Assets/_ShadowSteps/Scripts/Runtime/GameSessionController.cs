@@ -24,6 +24,8 @@ namespace ShadowSteps.Runtime
         public Stage Stage { get; private set; }
         public StageState State { get; private set; }
         public InputMode Mode { get; private set; } = InputMode.Move;
+        /// <summary>Global rules mode (D-040). Set before a stage loads (from the save) and changed only through <see cref="SetRulesMode"/>, which restarts the current level.</summary>
+        public StageMode RulesMode { get; private set; } = StageMode.Stealth;
         public bool IsBusy => Animator != null && Animator.IsPlaying;
         public bool InputLocked { get; set; }
         public bool HasStage => Stage != null;
@@ -38,6 +40,8 @@ namespace ShadowSteps.Runtime
         public event Action<ActionOutcome> ActionCompleted;
         public event Action<StageAction, RejectReason> ActionRejected;
         public event Action<InputMode> ModeChanged;
+        /// <summary>The rules mode was switched (the current level restarted from its authored initial state; <see cref="Retried"/> follows).</summary>
+        public event Action<StageMode> RulesModeChanged;
         public event Action Retried;
         public event Action UndoPerformed;
         public event Action<ActionOutcome> Won;
@@ -57,9 +61,9 @@ namespace ShadowSteps.Runtime
         public void LoadStage(Stage stage)
         {
             if (stage == null) throw new ArgumentNullException(nameof(stage));
-            StopAllCoroutines();
+            CancelRun();
             Stage = stage;
-            State = StageState.Initial(stage);
+            State = StageState.Initial(stage, RulesMode); // the selected mode carries over Next Level, retry and the level picker; never reverts on load
             _history.Clear();
             Mode = InputMode.Move;
             if (Board != null) { Board.Build(stage); Board.SyncToState(State); }
@@ -70,10 +74,55 @@ namespace ShadowSteps.Runtime
 
         public bool CanAcceptInput => HasStage && !IsBusy && !InputLocked && !State.IsTerminal;
 
+        /// <summary>D-044: the shipped game never accepts WAIT, from any path (input, replay, stale callbacks). Tools and legacy tests may enable it explicitly.</summary>
+        public static bool WaitAllowed = false;
+
+        /// <summary>Stops the running action animation and any queued callbacks so a stale one cannot touch the next run.</summary>
+        private void CancelRun()
+        {
+            StopAllCoroutines();
+            if (Animator != null) Animator.Cancel();
+            if (Board != null && Board.IsBuilt) Board.HidePreview();
+            PreviewHidden?.Invoke();
+        }
+
+        /// <summary>
+        /// Selects the rules mode before any stage is loaded (initial selection from the save). Once a stage is loaded,
+        /// use <see cref="SetRulesMode"/> so the board restarts cleanly.
+        /// </summary>
+        public void PresetRulesMode(StageMode mode) { if (!HasStage) RulesMode = mode; else SetRulesMode(mode); }
+
+        /// <summary>
+        /// Switches Stealth/Knockout. Selecting the active mode does nothing (returns false). Otherwise the CURRENT level
+        /// restarts from its authored initial state in the new mode without advancing the level or counting an action:
+        /// player, guards, schedules, defeated flags, key, doors, gadgets, alarm, result, history, targeting mode,
+        /// preview and the running animation are all reset. Works in any state, including after a capture or a win.
+        /// </summary>
+        public bool SetRulesMode(StageMode mode)
+        {
+            if (mode == RulesMode) return false;
+            RulesMode = mode;
+            if (!HasStage) { RulesModeChanged?.Invoke(mode); return true; }
+            CancelRun();
+            State = StageState.Initial(Stage, RulesMode);
+            _history.Clear();
+            Mode = InputMode.Move;
+            if (Board != null && Board.IsBuilt) { Board.ClearTargets(); Board.SyncToState(State); }
+            RulesModeChanged?.Invoke(mode);
+            Retried?.Invoke();
+            ModeChanged?.Invoke(Mode);
+            StateChanged?.Invoke(State);
+            return true;
+        }
+
+        /// <summary>Guards the player could knock out right now (empty in Stealth mode, when busy or when the run has ended).</summary>
+        public List<int> KnockoutTargets() => HasStage && !State.IsTerminal ? StageRules.KnockoutTargets(Stage, State) : new List<int>();
+
         /// <summary>Applies an action if the session accepts it. Returns false when busy, locked, or the action is invalid.</summary>
         public bool TrySubmit(StageAction action)
         {
             if (!HasStage || IsBusy || InputLocked) return false;
+            if (action.Kind == StageActionKind.Wait && !WaitAllowed) { ActionRejected?.Invoke(action, RejectReason.NoWaitsLeft); return false; }
             var outcome = StageRules.TryApply(Stage, State, action);
             if (!outcome.Valid)
             {
@@ -120,7 +169,11 @@ namespace ShadowSteps.Runtime
 
         public InputMode ToggleMode(InputMode mode) => SetMode(Mode == mode ? InputMode.Move : mode);
 
-        /// <summary>A tap on a board node, interpreted by the current mode. Returns true when an action was submitted.</summary>
+        /// <summary>
+        /// A tap on a board node, interpreted by the current mode. Returns true when an action was submitted. A tap on an
+        /// adjacent node is a Move; in Knockout mode the rules turn a move onto a live guard into the knockout of that
+        /// guard, so tapping the guard, tapping its node and pressing the direction are the same action.
+        /// </summary>
         public bool TapNode(GridCoord node)
         {
             if (!CanAcceptInput) return false;
@@ -134,6 +187,13 @@ namespace ShadowSteps.Runtime
                     var d = DirectionUtil.FromDelta(node.X - State.Player.X, node.Y - State.Player.Y);
                     return d.HasValue && TrySubmit(StageAction.Move(d.Value));
             }
+        }
+
+        /// <summary>A tap on guard <paramref name="guardIndex"/> (stable id): the knockout of that guard, normalised to the same action as the move onto it.</summary>
+        public bool TapGuard(int guardIndex)
+        {
+            if (!CanAcceptInput || Mode != InputMode.Move) return false;
+            return TrySubmit(StageAction.Knockout(guardIndex));
         }
 
         public bool TapCamera(int cameraIndex)
@@ -158,8 +218,8 @@ namespace ShadowSteps.Runtime
         public void Retry()
         {
             if (!HasStage || IsBusy) return;
-            StopAllCoroutines();
-            State = StageState.Initial(Stage);
+            CancelRun();
+            State = StageState.Initial(Stage, RulesMode); // retry keeps the chosen mode
             _history.Clear();
             Mode = InputMode.Move;
             Board?.SyncToState(State);

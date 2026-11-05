@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ShadowSteps.V3;
 
 namespace ShadowSteps.Data
 {
@@ -25,15 +26,23 @@ namespace ShadowSteps.Data
                 .Set("version", (long)d.Version)
                 .Set("highest_unlocked_level_id", (long)d.HighestUnlockedLevelId)
                 .Set("last_played_level_id", (long)d.LastPlayedLevelId)
-                .Set("debug_unlock_all", d.DebugUnlockAll);
+                .Set("debug_unlock_all", d.DebugUnlockAll)
+                .Set("selected_mode", StageModeUtil.Token(d.SelectedMode));
             var results = new List<object>();
-            var ids = new List<int>(d.Results.Keys);
-            ids.Sort();
-            foreach (var id in ids)
+            void Write(Dictionary<int, LevelResult> table, StageMode mode, string defaultRules)
             {
-                var r = d.Results[id];
-                results.Add(new JsonObject().Set("level_id", (long)id).Set("completed", r.Completed).Set("best_turns", (long)r.BestTurns).Set("best_stars", (long)r.BestStars).Set("ghost", r.Ghost));
+                var ids = new List<int>(table.Keys);
+                ids.Sort();
+                foreach (var id in ids)
+                {
+                    var r = table[id];
+                    results.Add(new JsonObject().Set("level_id", (long)id).Set("mode", StageModeUtil.Token(mode)).Set("rules_version", r.RulesVersion ?? defaultRules)
+                        .Set("completed", r.Completed).Set("best_turns", (long)r.BestTurns).Set("best_stars", (long)r.BestStars).Set("ghost", r.Ghost));
+                }
             }
+            Write(d.Results, StageMode.Stealth, LevelResult.StealthRulesVersion);
+            Write(d.KnockoutResults, StageMode.Knockout, StageModeUtil.RulesVersion);
+            Write(d.KnockoutLegacyResults, StageMode.Knockout, "knockout-move-v2"); // labelled with their own (older) rules revision
             root["results"] = results;
             root["settings"] = new JsonObject()
                 .Set("music", d.Settings.MusicOn)
@@ -56,6 +65,7 @@ namespace ShadowSteps.Data
             d.HighestUnlockedLevelId = Math.Max(1, JsonAccess.OptionalInt(root, "highest_unlocked_level_id", 1, "save"));
             d.LastPlayedLevelId = Math.Max(1, JsonAccess.OptionalInt(root, "last_played_level_id", 1, "save"));
             d.DebugUnlockAll = JsonAccess.OptionalBool(root, "debug_unlock_all", false, "save");
+            d.SelectedMode = StageModeUtil.TryParse(JsonAccess.OptionalString(root, "selected_mode", StageModeUtil.Token(StageModeUtil.Default), "save"), out var selected) ? selected : StageModeUtil.Default;
             if (root.TryGetValue("results", out var rv) && rv != null)
             {
                 var arr = JsonAccess.AsArray(rv, "save.results");
@@ -64,8 +74,14 @@ namespace ShadowSteps.Data
                     string p = "save.results[" + i + "]";
                     var o = JsonAccess.AsObject(arr[i], p);
                     int id = JsonAccess.RequireInt(o, "level_id", p);
-                    d.Results[id] = new LevelResult(JsonAccess.OptionalBool(o, "completed", false, p), JsonAccess.OptionalInt(o, "best_turns", 0, p),
+                    // Untagged (version-1) records are Stealth results under the original rules and are kept exactly as they were.
+                    var mode = StageModeUtil.TryParse(JsonAccess.OptionalString(o, "mode", "stealth", p), out var m) ? m : StageMode.Stealth;
+                    var r = new LevelResult(JsonAccess.OptionalBool(o, "completed", false, p), JsonAccess.OptionalInt(o, "best_turns", 0, p),
                         JsonAccess.OptionalInt(o, "best_stars", 0, p), JsonAccess.OptionalBool(o, "ghost", false, p));
+                    r.RulesVersion = JsonAccess.OptionalString(o, "rules_version", mode == StageMode.Knockout ? StageModeUtil.RulesVersion : LevelResult.StealthRulesVersion, p);
+                    // An older knockout revision's record (e.g. earned with WAIT) is preserved, labelled, and never compared to current pars (D-044).
+                    if (mode == StageMode.Knockout && r.RulesVersion != StageModeUtil.RulesVersion) { d.KnockoutLegacyResults[id] = r; continue; }
+                    d.Table(mode)[id] = r;
                 }
             }
             if (root.TryGetValue("settings", out var sv) && sv != null)

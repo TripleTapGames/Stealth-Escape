@@ -49,6 +49,7 @@ namespace ShadowSteps.UI
             var failure = Router.Register(set.Create<FailureScreen>(canvas.transform, set.FailureScreen));
             var onboarding = Router.Register(set.Create<OnboardingScreen>(canvas.transform, set.OnboardingScreen));
             var alarm = Router.Register(set.Create<AlarmPopupScreen>(canvas.transform, set.AlarmPopupScreen));
+            _guardIntro = Router.Register(set.Create<GuardIntroScreen>(canvas.transform, null));
 
             pause.OnResume = () => Router.Pop();
             pause.OnRestart = () => { Router.PopAllModals(); Session.Retry(); };
@@ -66,7 +67,7 @@ namespace ShadowSteps.UI
             failure.OnUndo = () => { Router.PopAllModals(); Session.DebugUndo(); };
             failure.OnRetry = () => { Router.PopAllModals(); Session.Retry(); };
             failure.OnLevelSelect = GoToLevelSelect;
-            onboarding.OnDismiss = () => Router.Pop();
+            onboarding.OnDismiss = () => { Router.Pop(); ShowNextGuardCard(); }; // guard cards follow the stage intro
             alarm.OnDismiss = () => { if (Router.Current == alarm) Router.Pop(); };
 
             Router.ModalStateChanged += open => { if (Session != null) Session.InputLocked = open; };
@@ -81,6 +82,8 @@ namespace ShadowSteps.UI
             Session.AlarmTriggered += OnAlarmTriggered;
             Session.UndoPerformed += () => AudioService.Instance?.Play(Sfx.Tap);
             Session.Retried += () => AudioService.Instance?.Play(Sfx.Tap);
+            Session.RulesModeChanged += _ => { CancelGuardQueue(); _messageShownThisVisit = false; Router.PopAllModals(); }; // a mode switch restarts the current level: any results/failure/alarm/guard card is stale; the new mode may show its one card
+            Session.Retried += RebuildGuardQueue; // retry and mode switch: a fresh board context; acknowledged cards never repeat, interrupted ones become eligible again
 
             _hud = Composer.Hud as GameHudController;
             if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
@@ -90,15 +93,97 @@ namespace ShadowSteps.UI
 
         private void OnStageLoaded(Stage stage)
         {
+            CancelGuardQueue();
+            _messageShownThisVisit = false;
             Router.PopAllModals();
             var save = AppServices.Save;
             string key = "stage:" + stage.Id;
-            if (save != null && !save.HasSeenTutorial(key) && !string.IsNullOrEmpty(stage.Intro))
+            BuildGuardQueue();
+            bool introPending = save != null && !save.HasSeenTutorial(key) && !string.IsNullOrEmpty(stage.Intro);
+            // One message per visit, first-encounter guard card first: a level that introduces a new guard behaviour shows that card;
+            // its own intro is dropped when it only explains that guard (FTUE-3/4/5) and otherwise deferred to the next visit. Every other level shows its intro once.
+            if (_guardQueue.Count > 0)
+            {
+                if (introPending && GuardOnboarding.IntroSupersededByGuardCard(stage)) { save.MarkTutorialSeen(key); AppServices.PersistSave(); }
+                ShowNextGuardCard();
+                return;
+            }
+            if (introPending)
             {
                 save.MarkTutorialSeen(key);
                 AppServices.PersistSave();
+                _messageShownThisVisit = true;
                 Router.Push<OnboardingScreen>().Present(stage.Intro);
             }
+        }
+
+        /// <summary>One tutorial message per level visit (user decision 2026-11-04: "don't crowd it"): the stage intro or a single guard card; a mode switch resets it so the other mode can show its one card.</summary>
+        private bool _messageShownThisVisit;
+        public bool MessageShownThisVisit => _messageShownThisVisit;
+
+        // ---------------------------------------------------------------- guard first-encounter cards (D-041)
+
+        private GuardIntroScreen _guardIntro;
+        private readonly System.Collections.Generic.List<GuardOnboarding.Card> _guardQueue = new System.Collections.Generic.List<GuardOnboarding.Card>();
+        /// <summary>Board-session token: bumped whenever the board context changes so a stale "Got it" cannot act on the new board or mode.</summary>
+        public int BoardSession { get; private set; }
+        public int PendingGuardCards => _guardQueue.Count;
+        public GuardOnboarding.Card ActiveGuardCard => _guardIntro != null && _guardIntro.IsVisible ? _guardIntro.Card : null;
+
+        private void BuildGuardQueue()
+        {
+            _guardQueue.Clear();
+            if (!Session.HasStage || Session.State == null) return;
+            _guardQueue.AddRange(GuardOnboarding.BuildQueue(Session.Stage, Session.State, AppServices.Save));
+        }
+
+        private void CancelGuardQueue()
+        {
+            BoardSession++;
+            _guardQueue.Clear();
+            HighlightGuard(-1);
+            if (_guardIntro != null && _guardIntro.IsVisible && Router.Current == _guardIntro) Router.Pop();
+        }
+
+        private void RebuildGuardQueue()
+        {
+            CancelGuardQueue();
+            BuildGuardQueue();
+            ShowNextGuardCard();
+        }
+
+        /// <summary>Shows the next unseen behaviour card, one at a time, only when no other modal owns the screen.</summary>
+        private void ShowNextGuardCard()
+        {
+            if (_guardIntro == null || _guardQueue.Count == 0 || Router.AnyModalOpen || !Session.HasStage || _messageShownThisVisit) return;
+            _messageShownThisVisit = true; // the remaining unseen behaviours stay eligible for a later level
+            var card = _guardQueue[0]; _guardQueue.RemoveAt(0);
+            int token = BoardSession; var mode = card.Mode;
+            _guardIntro.OnDismiss = () => DismissGuardCard(token, card, mode);
+            _guardIntro.Present(card);
+            Router.Push<GuardIntroScreen>();
+            HighlightGuard(card.GuardIndex);
+        }
+
+        private void DismissGuardCard(int token, GuardOnboarding.Card card, StageMode mode)
+        {
+            // Stale callback (board/mode changed under the card): acknowledge nothing, close nothing, unlock nothing.
+            if (token != BoardSession || mode != Session.RulesMode || !Session.HasStage || _guardIntro.Card != card) return;
+            if (Router.Current == _guardIntro) Router.Pop();
+            HighlightGuard(-1);
+            GuardOnboarding.MarkSeen(AppServices.Save, card.Kind, mode); // seen on "Got it", never on display
+            AppServices.PersistSave();
+            AudioService.Instance?.Play(Sfx.Tap);
+            ShowNextGuardCard();
+        }
+
+        private void HighlightGuard(int index)
+        {
+            Composer.GuardHighlight?.Invoke(index);
+            var board = Composer.Board;
+            if (board == null || !board.IsBuilt) return;
+            if (index >= 0 && index < board.Guards.Count) board.Guards[index].SetTint(board.ActiveTheme.NextMarker);
+            else if (Session.HasStage && Session.State != null) board.SyncToState(Session.State);
         }
 
         private void OnActionStarted(ActionOutcome o)
@@ -108,6 +193,7 @@ namespace ShadowSteps.UI
             if (o.Free) audio.Play(Sfx.Gadget);
             else if (o.PlayerFrom != o.PlayerTo) audio.Play(Sfx.Footstep);
             else audio.Play(Sfx.Tick);
+            if (o.Knockout) HapticsService.Pulse();
             if (o.KeyCollected || o.DoorOpened >= 0) audio.Play(Sfx.Unlock);
         }
 
@@ -124,19 +210,19 @@ namespace ShadowSteps.UI
             AudioService.Instance?.Play(Sfx.Clear);
             HapticsService.Pulse();
             var catalog = AppServices.Stages; var save = AppServices.Save;
-            var stage = Session.Stage;
+            var stage = Session.Stage; var mode = o.After.Mode; // the run's own mode: results, stars and bests are recorded per mode (D-040)
             int actions = o.After.T;
             bool ghostEarned = stage.GhostOffered && !o.After.AlarmEver;
             bool newBest = true; int best = actions; bool ghostEver = ghostEarned;
             if (catalog != null && save != null)
             {
-                newBest = StageProgression.RecordWin(catalog, save, stage, actions, ghostEarned);
-                var r = save.GetResult(stage.Id);
+                newBest = StageProgression.RecordWin(catalog, save, stage, actions, ghostEarned, mode);
+                var r = save.GetResult(stage.Id, mode);
                 best = r.BestTurns; ghostEver = r.Ghost;
                 AppServices.PersistSave();
             }
             var next = catalog?.NextAfter(stage.Id);
-            System.Action showResults = () => Router.Push<ResultsScreen>().Present(stage, actions, best, newBest, ghostEarned, ghostEver, next != null);
+            System.Action showResults = () => Router.Push<ResultsScreen>().Present(stage, mode, actions, best, newBest, ghostEarned, ghostEver, next != null);
             if (Composer.WinTransition != null && Composer.WinTransition(o, showResults)) return; // presentation plays its completion sequence first
             showResults();
         }

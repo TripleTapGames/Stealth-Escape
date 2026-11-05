@@ -19,7 +19,6 @@ namespace ShadowSteps.UI
         public UiText TargetsText;
         public UiText StatusText;
         public UiText MessageText;
-        public UiButton WaitButton;
         public UiButton SmokeButton;
         public UiButton EmpButton;
         public UiButton RetryButton;
@@ -84,7 +83,6 @@ namespace ShadowSteps.UI
 
             var row1 = UiBuilder.CreateRect("ActionsRow", BottomBar);
             UiBuilder.HorizontalRow(row1, 14f, 0f);
-            WaitButton = UiBuilder.CreateButton("Wait", row1, "WAIT", UiBuilder.ButtonColor);
             SmokeButton = UiBuilder.CreateButton("Smoke", row1, "SMOKE", UiBuilder.ButtonAccent);
             EmpButton = UiBuilder.CreateButton("Emp", row1, "EMP", UiBuilder.ButtonAccent);
 
@@ -92,7 +90,7 @@ namespace ShadowSteps.UI
             UiBuilder.HorizontalRow(row2, 14f, 0f);
             RetryButton = UiBuilder.CreateButton("Retry", row2, "RETRY", UiBuilder.ButtonDanger);
             UndoButton = UiBuilder.CreateButton("Undo", row2, "UNDO (DEBUG)", UiBuilder.ButtonColor, 28f);
-            WaitButton.SetLabel("WAIT"); SmokeButton.SetLabel("SMOKE"); EmpButton.SetLabel("EMP");
+            SmokeButton.SetLabel("SMOKE"); EmpButton.SetLabel("EMP");
             RetryButton.SetLabel("RETRY"); UndoButton.SetLabel("UNDO (DEBUG)");
         }
 
@@ -112,7 +110,7 @@ namespace ShadowSteps.UI
             _session.Caught += OnCaught;
             _session.LockedDown += OnLockedDown;
             _session.AlarmTriggered += OnAlarm;
-            WaitButton.Button.onClick.AddListener(() => { if (_session.Mode == InputMode.Move) _session.TrySubmit(StageAction.Wait); });
+            _session.RulesModeChanged += OnRulesModeChanged;
             SmokeButton.Button.onClick.AddListener(() => _session.ToggleMode(InputMode.SmokeTarget));
             EmpButton.Button.onClick.AddListener(() => _session.ToggleMode(InputMode.EmpTarget));
             RetryButton.Button.onClick.AddListener(() => _session.Retry());
@@ -133,15 +131,28 @@ namespace ShadowSteps.UI
             _session.Caught -= OnCaught;
             _session.LockedDown -= OnLockedDown;
             _session.AlarmTriggered -= OnAlarm;
-            foreach (var b in new[] { WaitButton, SmokeButton, EmpButton, RetryButton, UndoButton, PauseButton }) b.Button.onClick.RemoveAllListeners();
+            _session.RulesModeChanged -= OnRulesModeChanged;
+            foreach (var b in new[] { SmokeButton, EmpButton, RetryButton, UndoButton, PauseButton }) if (b != null) b.Button.onClick.RemoveAllListeners();
+        }
+
+        /// <summary>Mode hint shown on load and on every switch; mode-correct so Stealth never claims knockouts and Knockout never claims all contact is fatal.</summary>
+        public static string ModeHint(StageMode mode) => mode == StageMode.Knockout
+            ? "Knockout: step onto a guard from behind or the side to take it out (one action). Never from the front."
+            : "Stealth: any contact with a guard is fatal. Knockouts are off.";
+
+        private void OnRulesModeChanged(StageMode mode)
+        {
+            if (_session.HasStage) OnStageLoaded(_session.Stage);
+            ShowMessage(ModeHint(mode), 3.5f);
         }
 
         private void OnDestroy() { if (_session != null) Unbind(); }
 
         private void OnStageLoaded(Stage stage)
         {
+            var mode = _session != null ? _session.RulesMode : StageMode.Stealth;
             TitleText.Text = stage.Code.Replace("LEVEL-", "Level ").Replace("FTUE-", "FTUE ") + " · " + stage.Title;
-            TargetsText.Text = stage.Par > 0 ? "3★ ≤ " + stage.ThreeStarActions + "   2★ ≤ " + stage.TwoStarActions : "";
+            TargetsText.Text = stage.ParFor(mode) > 0 ? "3★ ≤ " + stage.ThreeStarFor(mode) + "   2★ ≤ " + stage.TwoStarFor(mode) : "";
             _hint = stage.Intro;
             ShowMessage(_hint ?? string.Empty, 0f);
         }
@@ -179,9 +190,6 @@ namespace ShadowSteps.UI
             var state = _session.State;
             var stage = _session.Stage;
             bool playing = enabled && state != null && !state.IsTerminal;
-            bool limited = stage != null && stage.WaitLimit >= 0;
-            WaitButton.SetLabel(limited ? "WAIT \u00d7" + state.WaitsLeft(stage) : "WAIT");
-            WaitButton.Interactable = playing && (!limited || state.WaitsLeft(stage) > 0);
             SmokeButton.Interactable = playing && state.SmokeCharges > 0;
             EmpButton.Interactable = playing && state.EmpCharges > 0 && stage.Cameras.Count > 0;
             RetryButton.Interactable = enabled;
@@ -196,12 +204,18 @@ namespace ShadowSteps.UI
                 case RejectReason.NoConnection: ShowMessage("No connection that way"); break;
                 case RejectReason.KeyRequired: ShowMessage("Locked: find the key first"); break;
                 case RejectReason.NoSmokeCharge: ShowMessage("No smoke left"); break;
-                case RejectReason.NoWaitsLeft: ShowMessage("No waits left on this level"); break;
+                case RejectReason.NoWaitsLeft: ShowMessage("Waiting is not possible: every turn is a move"); break;
                 case RejectReason.BadSmokeTarget: ShowMessage("Cannot place smoke there"); break;
                 case RejectReason.NoEmpCharge: ShowMessage("No EMP left"); break;
                 case RejectReason.BadCamera: ShowMessage("Pick a camera"); break;
                 case RejectReason.CameraAlreadyDisabled: ShowMessage("That camera is already disabled"); break;
                 case RejectReason.GameOver: ShowMessage("Retry the stage"); break;
+                case RejectReason.KnockoutUnavailable: ShowMessage("Knockouts are off in Stealth mode"); break;
+                case RejectReason.FrontalApproach: ShowMessage("Frontal knockout impossible: approach from behind or the side"); break;
+                case RejectReason.DoorBlocksKnockout: ShowMessage("A closed door blocks the knockout"); break;
+                case RejectReason.GuardNotAdjacent: ShowMessage("Stand next to the guard first"); break;
+                case RejectReason.GuardAlreadyDown: ShowMessage("That guard is already down"); break;
+                case RejectReason.BadGuard: ShowMessage("Pick a guard"); break;
             }
         }
 

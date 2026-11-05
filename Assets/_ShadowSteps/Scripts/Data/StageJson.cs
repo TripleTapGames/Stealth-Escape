@@ -47,7 +47,7 @@ namespace ShadowSteps.Data
                 Title = JsonAccess.RequireString(o, "title", path),
                 Intro = JsonAccess.OptionalString(o, "intro", string.Empty, path),
                 AlarmBudget = JsonAccess.OptionalInt(o, "alarmBudget", 4, path),
-                WaitLimit = JsonAccess.OptionalInt(o, "waitLimit", -1, path)
+                WaitLimit = JsonAccess.OptionalInt(o, "waitLimit", 0, path) // authoring default (D-044): no WAIT; legacy packs that want it must say so explicitly
             };
             if (b.Code == null) b.Code = "LEVEL-" + b.Id;
             var rows = new List<string>();
@@ -114,6 +114,9 @@ namespace ShadowSteps.Data
                 b.ThreeStarActions = JsonAccess.OptionalInt(s, "threeStar", 0, path + ".scoring");
                 b.TwoStarActions = JsonAccess.OptionalInt(s, "twoStar", 0, path + ".scoring");
                 b.GhostOffered = JsonAccess.OptionalBool(s, "ghostOffered", false, path + ".scoring");
+                b.KnockoutPar = JsonAccess.OptionalInt(s, "knockoutPar", -1, path + ".scoring");
+                b.KnockoutThreeStarActions = JsonAccess.OptionalInt(s, "knockoutThreeStar", -1, path + ".scoring");
+                b.KnockoutTwoStarActions = JsonAccess.OptionalInt(s, "knockoutTwoStar", -1, path + ".scoring");
             }
             if (o.TryGetValue("notes", out var nv) && nv != null) foreach (var n in JsonAccess.AsArray(nv, path + ".notes")) b.Notes.Add((string)n);
             return b.Build();
@@ -155,8 +158,10 @@ namespace ShadowSteps.Data
             o["cameras"] = cams;
             o["gadgets"] = new JsonObject().Set("smoke", (long)s.SmokeCharges).Set("emp", (long)s.EmpCharges);
             o["alarmBudget"] = (long)s.AlarmBudget;
-            if (s.WaitLimit >= 0) o["waitLimit"] = (long)s.WaitLimit;
-            o["scoring"] = new JsonObject().Set("par", (long)s.Par).Set("threeStar", (long)s.ThreeStarActions).Set("twoStar", (long)s.TwoStarActions).Set("ghostOffered", s.GhostOffered);
+            o["waitLimit"] = (long)s.WaitLimit; // always written (−1 = unlimited for legacy fixtures) so round trips are exact
+            var scoring = new JsonObject().Set("par", (long)s.Par).Set("threeStar", (long)s.ThreeStarActions).Set("twoStar", (long)s.TwoStarActions).Set("ghostOffered", s.GhostOffered);
+            if (s.HasKnockoutScoring) scoring.Set("knockoutPar", (long)s.KnockoutPar).Set("knockoutThreeStar", (long)s.KnockoutThreeStarActions).Set("knockoutTwoStar", (long)s.KnockoutTwoStarActions);
+            o["scoring"] = scoring;
             if (s.Notes.Count > 0) o["notes"] = new List<object>(s.Notes);
             return o;
         }

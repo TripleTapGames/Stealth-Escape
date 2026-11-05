@@ -165,6 +165,7 @@ namespace ShadowSteps.Runtime
                 _guards[i].SetFacing(pose.Facing);
                 _guards[i].SetNextStep(GuardTrack.NextStep(Stage.Guards[i], t));
                 _guards[i].SetTint(null);
+                _guards[i].gameObject.SetActive(!state.IsDefeated(i)); // a knocked-out guard has no token, no vision and no next-step marker
             }
             for (int i = 0; i < _cameras.Count; i++)
             {
@@ -189,7 +190,10 @@ namespace ShadowSteps.Runtime
             var theme = ActiveTheme;
             var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
             for (int i = 0; i < Stage.Guards.Count; i++)
+            {
+                if (state.IsDefeated(i)) continue;
                 foreach (var c in Sight.GuardVision(Stage, state, GuardTrack.PoseAt(Stage.Guards[i], state.T))) if (seen.Add(c)) guardCells.Add(c);
+            }
             GuardVision.Show(guardCells, theme.GuardVisionFill, theme.GuardVisionBorder);
             var camCells = new List<GridCoord>(); seen.Clear();
             for (int i = 0; i < Stage.Cameras.Count; i++)
@@ -246,17 +250,20 @@ namespace ShadowSteps.Runtime
         {
             if (!preview.Valid || preview.Free) { HidePreview(); return; }
             var theme = ActiveTheme;
+            var after = preview.After;
             for (int i = 0; i < _ghosts.Count; i++)
             {
                 var pose = preview.GuardsAfter[i];
-                _ghosts[i].gameObject.SetActive(true);
+                _ghosts[i].gameObject.SetActive(!after.IsDefeated(i));
                 _ghosts[i].SetCoord(pose.Position, Layout);
                 _ghosts[i].SetFacing(pose.Facing);
             }
-            var after = preview.After;
             var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
             for (int i = 0; i < Stage.Guards.Count; i++)
+            {
+                if (after.IsDefeated(i)) continue;
                 foreach (var c in Sight.GuardVision(Stage, after, preview.GuardsAfter[i])) if (seen.Add(c)) guardCells.Add(c);
+            }
             PreviewGuardVision.Show(guardCells, theme.PreviewFill, theme.PreviewBorder);
             var camCells = new List<GridCoord>(); seen.Clear();
             int tAfter = preview.Before.T + 1;

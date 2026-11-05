@@ -182,14 +182,16 @@ namespace ShadowSteps.UI
             foreach (var stage in catalog.Stages)
             {
                 bool unlocked = StageProgression.IsUnlocked(catalog, save, stage.Id);
-                var result = save?.GetResult(stage.Id);
+                // Knockout only (D-043): current-rules best, else a labelled legacy record (older knockout rules or Stealth) which still counts as completed.
+                var result = save?.DisplayResult(stage.Id);
                 bool done = result != null && result.Completed;
-                string stars = done ? new string('★', Mathf.Max(1, result.BestStars)) : "";
+                bool legacyRules = done && result.RulesVersion != StageModeUtil.RulesVersion;
                 var btn = UiBuilder.CreateButton("Stage " + stage.Id, Grid, "", unlocked ? (done ? UiBuilder.ButtonAccent : UiBuilder.ButtonColor) : new Color(0.15f, 0.17f, 0.22f), 26f);
                 UiBuilder.RemoveComponent(btn.GetComponent<LayoutElement>());
                 string label = stage.Code.Replace("LEVEL-", "Level ").Replace("FTUE-", "FTUE ");
+                // Per-mode records (D-040): the Stealth line is the legacy result; a Knockout best never replaces it.
                 btn.Label.Text = (unlocked ? "" : "[locked] ") + label + "\n" + stage.Title
-                    + (done ? "\n" + stars + "  best " + result.BestTurns + (result.Ghost ? "  [ghost]" : "") : "");
+                    + (done ? "\n" + new string('★', Mathf.Max(1, result.BestStars)) + "  best " + result.BestTurns + (result.Ghost ? "  [ghost]" : "") + (legacyRules ? "  (old rules)" : "") : "");
                 btn.Interactable = unlocked;
                 int id = stage.Id;
                 btn.Button.onClick.AddListener(() => OnLevelChosen?.Invoke(id));
@@ -347,11 +349,14 @@ namespace ShadowSteps.UI
 
         protected override void Awake() { base.Awake(); Wire(); }
 
-        public void Present(Stage stage, int actions, int best, bool newBest, bool ghostEarned, bool ghostEver, bool hasNext)
+        public void Present(Stage stage, int actions, int best, bool newBest, bool ghostEarned, bool ghostEver, bool hasNext) => Present(stage, StageModeUtil.Default, actions, best, newBest, ghostEarned, ghostEver, hasNext);
+
+        /// <summary>Stars, thresholds and the best are the run's mode's own (D-040); the shipped game runs Knockout only (D-043).</summary>
+        public void Present(Stage stage, StageMode mode, int actions, int best, bool newBest, bool ghostEarned, bool ghostEver, bool hasNext)
         {
-            int stars = StageScoring.Stars(actions, stage.Par);
+            int stars = StageScoring.Stars(actions, stage.ParFor(mode));
             StarsText.Text = new string('★', stars) + new string('☆', 3 - stars);
-            ActionsText.Text = actions + " actions   ·   3★ ≤ " + stage.ThreeStarActions + "   2★ ≤ " + stage.TwoStarActions;
+            ActionsText.Text = actions + " actions   ·   3★ ≤ " + stage.ThreeStarFor(mode) + "   2★ ≤ " + stage.TwoStarFor(mode);
             GhostText.Text = !stage.GhostOffered ? "" : ghostEarned ? "Ghost earned: no alarm!" : ghostEver ? "Ghost already earned" : "Alarm triggered: no Ghost this time";
             BestText.Text = newBest ? "New best!" : "Best " + best;
             NextButton.Interactable = hasNext;
@@ -444,6 +449,55 @@ namespace ShadowSteps.UI
         protected override void Awake() { base.Awake(); Wire(); }
 
         public void Present(string body) => BodyText.Text = body;
+    }
+
+    // ------------------------------------------------------------------ Guard first-encounter card
+
+    /// <summary>
+    /// First-encounter guard card (guard FTUE, D-041): title, behaviour body, the selected mode's label and tip, and a
+    /// "Got it" button. Modal: gameplay input is locked while it is open; mode toggle / retry / menus stay reachable
+    /// through their own cards and cancel the queue. Copy and selection logic live in <see cref="GuardOnboarding"/>.
+    /// </summary>
+    public sealed class GuardIntroScreen : UIScreen
+    {
+        public UiText TitleText, BodyText, ModeLabelText, ModeTipText;
+        public UiButton OkButton;
+        public Action OnDismiss;
+        public GuardOnboarding.Card Card { get; private set; }
+
+        public override void BuildHierarchy()
+        {
+            IsModal = true;
+            var card = ScreenLayout.Card(this, "GUARD", 0.86f, 0.52f);
+            TitleText = card.Find("Title").GetComponent<UiText>();
+            BodyText = ScreenLayout.Line(card, "Body", "", 30f);
+            BodyText.gameObject.GetComponent<LayoutElement>().minHeight = 150f;
+            ModeLabelText = ScreenLayout.Line(card, "ModeLabel", "", 26f);
+            ModeTipText = ScreenLayout.Line(card, "ModeTip", "", 28f);
+            ModeTipText.gameObject.GetComponent<LayoutElement>().minHeight = 130f;
+            OkButton = UiBuilder.CreateButton("Ok", card, GuardOnboarding.DismissLabel.ToUpperInvariant(), UiBuilder.ButtonAccent, 38f);
+            Wire();
+        }
+
+        private bool _wired;
+        private void Wire()
+        {
+            if (_wired || OkButton == null) return;
+            _wired = true;
+            OkButton.Button.onClick.AddListener(() => OnDismiss?.Invoke());
+        }
+
+        protected override void Awake() { base.Awake(); Wire(); }
+
+        public void Present(GuardOnboarding.Card card)
+        {
+            Card = card;
+            TitleText.Text = card.Title.ToUpperInvariant();
+            BodyText.Text = card.Body;
+            ModeLabelText.Text = card.ModeLabel.ToUpperInvariant();
+            ModeTipText.Text = card.ModeTip;
+            OkButton.Label.Text = card.Dismiss.ToUpperInvariant();
+        }
     }
 
     // ------------------------------------------------------------------ Alarm popup

@@ -17,7 +17,8 @@ namespace ShadowSteps.Art2D
         public Canvas canvas;
         public Text levelLabel, actionsValue, starsLabel, smokeCount, empCount, messageLabel, lockdownLabel, waitCount;
         public RectTransform lockdownPanel;
-        public RectTransform smokeButton, empButton, waitButton, pauseButton, retryButton;
+        public RectTransform smokeButton, empButton, pauseButton, retryButton;
+        private StageMode _shownMode = StageModeUtil.Default;
         public Image alertOverlay;
         public Color pill = new Color(0.09f, 0.13f, 0.21f, 0.80f);
         public Color button = new Color(0.13f, 0.18f, 0.28f, 0.96f);
@@ -39,7 +40,7 @@ namespace ShadowSteps.Art2D
         {
             Build(); // generated shapes are not saved with the scene (DontSave), so the hierarchy is rebuilt on every show
             AttachCamera(cam);
-            ApplyStage(stage); ApplyState(stage, state);
+            _shownMode = state.Mode; ApplyStage(stage, state.Mode); ApplyState(stage, state);
         }
 
         // ---------------------------------------------------------------- IGameHud
@@ -51,7 +52,8 @@ namespace ShadowSteps.Art2D
             AttachCamera(Camera.main);
             _session.StateChanged += OnStateChanged; _session.StageLoaded += OnStageLoaded; _session.ModeChanged += OnModeChanged;
             _session.ActionRejected += OnActionRejected; _session.Won += OnWon; _session.Caught += OnCaught; _session.LockedDown += OnLockedDown; _session.AlarmTriggered += OnAlarm;
-            Wire(waitButton, () => { if (_session.Mode == InputMode.Move) _session.TrySubmit(StageAction.Wait); });
+            _session.RulesModeChanged += OnRulesModeChanged;
+            _shownMode = _session.RulesMode; // Knockout only (D-043); no WAIT at all (D-044)
             Wire(smokeButton, () => _session.ToggleMode(InputMode.SmokeTarget));
             Wire(empButton, () => _session.ToggleMode(InputMode.EmpTarget));
             Wire(retryButton, () => _session.Retry());
@@ -64,7 +66,20 @@ namespace ShadowSteps.Art2D
             if (_session == null) return;
             _session.StateChanged -= OnStateChanged; _session.StageLoaded -= OnStageLoaded; _session.ModeChanged -= OnModeChanged;
             _session.ActionRejected -= OnActionRejected; _session.Won -= OnWon; _session.Caught -= OnCaught; _session.LockedDown -= OnLockedDown; _session.AlarmTriggered -= OnAlarm;
+            _session.RulesModeChanged -= OnRulesModeChanged;
         }
+
+        public static string ModeHint(StageMode mode) => mode == StageMode.Knockout
+            ? "Knockout: step onto a guard from behind or the side. Never from the front."
+            : "Stealth: any contact with a guard is fatal.";
+
+        private void OnRulesModeChanged(StageMode mode)
+        {
+            _shownMode = mode;
+            if (_session != null && _session.Stage != null) { ApplyStage(_session.Stage, mode); ApplyState(_session.Stage, _session.State); }
+            ShowMessage(ModeHint(mode), 3f);
+        }
+        public StageMode ShownMode => _shownMode;
 
         public void ShowMessage(string message) => ShowMessage(message, 2.5f);
         public void ShowMessage(string message, float seconds)
@@ -84,7 +99,7 @@ namespace ShadowSteps.Art2D
             }
         }
 
-        private void OnStageLoaded(Stage stage) { ApplyStage(stage); ShowMessage(string.Empty, 0f); }
+        private void OnStageLoaded(Stage stage) { _shownMode = _session.RulesMode; ApplyStage(stage, _session.RulesMode); ShowMessage(string.Empty, 0f); }
         private void OnStateChanged(StageState state) { if (_session != null && _session.Stage != null) ApplyState(_session.Stage, state); }
         private void OnModeChanged(InputMode mode)
         {
@@ -93,8 +108,21 @@ namespace ShadowSteps.Art2D
             else if (mode == InputMode.EmpTarget) ShowMessage("Tap a highlighted camera to disable it", 0f);
             else if (_messageUntil == float.MaxValue) ShowMessage(string.Empty, 0f);
         }
-        private void OnActionRejected(StageAction a, RejectReason r) { ShowMessage(r == RejectReason.NoWaitsLeft ? "No waits left on this level" : r.ToString().Replace("_", " "), 1.2f); }
-        private void OnWon(ActionOutcome o) { ShowMessage("Escaped in " + o.After.T + " actions  ·  " + new string('★', StageScoring.Stars(o.After.T, _session.Stage.Par)), 0f); }
+        private void OnActionRejected(StageAction a, RejectReason r) { ShowMessage(RejectText(r), 1.6f); }
+        public static string RejectText(RejectReason r)
+        {
+            switch (r)
+            {
+                case RejectReason.NoWaitsLeft: return "Waiting is not possible: every turn is a move";
+                case RejectReason.KnockoutUnavailable: return "Knockouts are off in Stealth";
+                case RejectReason.FrontalApproach: return "Not from the front: go behind or beside the guard";
+                case RejectReason.DoorBlocksKnockout: return "A closed door blocks the knockout";
+                case RejectReason.GuardNotAdjacent: return "Stand next to the guard first";
+                case RejectReason.GuardAlreadyDown: return "That guard is already down";
+                default: return r.ToString().Replace("_", " ");
+            }
+        }
+        private void OnWon(ActionOutcome o) { ShowMessage("Escaped in " + o.After.T + " actions  ·  " + new string('★', StageScoring.Stars(o.After.T, _session.Stage.ParFor(o.After.Mode))), 0f); }
         /// <summary>Set by a presentation that owns the capture timing (the 2D bridge): the flash and message then wait for <see cref="PresentCapture"/>.</summary>
         public bool deferCaptureFeedback;
         private void OnCaught(ActionOutcome o) { if (!deferCaptureFeedback) PresentCapture(o); }
@@ -106,10 +134,10 @@ namespace ShadowSteps.Art2D
         }
         private void OnAlarm(ActionOutcome o) { _alertColor = amber; _alertUntil = Time.unscaledTime + 0.6f; ShowMessage("Camera spotted you!", 1.5f); }
 
-        private void ApplyStage(Stage stage)
+        private void ApplyStage(Stage stage, StageMode mode)
         {
             levelLabel.text = (stage.Group == "FTUE" ? "TUTORIAL " + stage.Id : "LEVEL " + stage.Code.Replace("LEVEL-", "")) + "  ·  " + stage.Title;
-            starsLabel.text = "★★★ " + stage.ThreeStarActions + "    ★★ " + stage.TwoStarActions;
+            starsLabel.text = StarsText(stage, mode, null);
             smokeButton.gameObject.SetActive(stage.SmokeCharges > 0); empButton.gameObject.SetActive(stage.EmpCharges > 0);
         }
 
@@ -120,10 +148,12 @@ namespace ShadowSteps.Art2D
             bool lockdown = state.AlarmActive && !state.IsTerminal;
             if (lockdownPanel != null) lockdownPanel.gameObject.SetActive(lockdown);
             if (lockdownLabel != null) lockdownLabel.text = lockdown ? "LOCKDOWN  \u00b7  " + state.Alarm + (state.Alarm == 1 ? " action" : " actions") + " to escape" : string.Empty;
-            bool limited = stage.WaitLimit >= 0; int waitsLeft = limited ? state.WaitsLeft(stage) : 0;
-            if (waitCount != null) { waitCount.transform.parent.gameObject.SetActive(limited); waitCount.text = waitsLeft.ToString(); }
-            SetInteractable(waitButton, !state.IsTerminal && (!limited || waitsLeft > 0)); SetInteractable(smokeButton, state.SmokeCharges > 0 && !state.IsTerminal); SetInteractable(empButton, state.EmpCharges > 0 && !state.IsTerminal);
+            starsLabel.text = StarsText(stage, _shownMode, state);
+            SetInteractable(smokeButton, state.SmokeCharges > 0 && !state.IsTerminal); SetInteractable(empButton, state.EmpCharges > 0 && !state.IsTerminal);
         }
+
+        /// <summary>Star thresholds of the shipped mode. No WAIT counter: WAIT does not exist in the game (D-044).</summary>
+        public static string StarsText(Stage stage, StageMode mode, StageState state) => "★★★ " + stage.ThreeStarFor(mode) + "    ★★ " + stage.TwoStarFor(mode);
 
         // ---------------------------------------------------------------- build
 
@@ -173,17 +203,14 @@ namespace ShadowSteps.Art2D
             lockdownLabel = Label("LockdownLabel", lockdownPanel, "", 26, TextAnchor.MiddleCenter, font, true); lockdownLabel.color = new Color(0.20f, 0.12f, 0.02f);
             lockdownPanel.gameObject.SetActive(false);
 
-            // ---- bottom: big round WAIT right, round gadget buttons left with small badges
-            waitButton = Circle("WaitButton", canvas.transform, accent, 0.84f, 0.085f, 220f, true);
-            var waitLabel = Label("WaitLabel", waitButton, "WAIT", 36, TextAnchor.MiddleCenter, font, true); waitLabel.color = new Color(0.04f, 0.12f, 0.15f);
-            waitCount = Badge(waitButton, font); // remaining WAITs on levels with a wait limit (hidden otherwise)
-            waitCount.transform.parent.GetComponent<Image>().color = pill; waitCount.color = Color.white; // dark badge on the teal button for contrast
+            // ---- bottom: round gadget buttons left with small badges (no WAIT, no mode toggle: Knockout only, every turn is a move)
             smokeButton = Circle("SmokeButton", canvas.transform, button, 0.14f, 0.085f, 150f, true);
             Label("SmokeLabel", smokeButton, "SMOKE", 22, TextAnchor.MiddleCenter, font, true);
             smokeCount = Badge(smokeButton, font);
             empButton = Circle("EmpButton", canvas.transform, button, 0.32f, 0.085f, 150f, true);
             Label("EmpLabel", empButton, "EMP", 22, TextAnchor.MiddleCenter, font, true);
             empCount = Badge(empButton, font);
+
         }
 
         private static void Wire(RectTransform rt, UnityEngine.Events.UnityAction action) { var b = rt.GetComponent<Button>(); if (b != null) { b.onClick.RemoveAllListeners(); b.onClick.AddListener(action); } }

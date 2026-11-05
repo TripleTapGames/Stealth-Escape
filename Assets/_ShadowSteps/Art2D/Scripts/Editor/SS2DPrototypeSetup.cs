@@ -334,12 +334,57 @@ namespace ShadowSteps.Art2D.Editor
         }
 
         /// <summary>Opens the scene, switches the edit-mode preview to another stage/state (not saved) and renders it.</summary>
-        private static void RenderReview(string scenePath, string stageCode, string[] actions, string name)
+        private static void RenderReview(string scenePath, string stageCode, string[] actions, string name) => RenderReview(scenePath, stageCode, actions, name, ShadowSteps.V3.StageMode.Stealth);
+
+        private static void RenderReview(string scenePath, string stageCode, string[] actions, string name, ShadowSteps.V3.StageMode mode)
         {
             EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             var pv = Object.FindObjectOfType<SS2DPreviewController>(); if (pv == null) return;
-            pv.stageCode = stageCode; pv.previewActions = actions; pv.BuildPreview();
+            pv.stageCode = stageCode; pv.previewActions = actions; pv.previewMode = mode; pv.BuildPreview();
             RenderOpenScene("Docs/Reports/Renders/" + name + ".png", 1080, 1920, false);
+        }
+
+        /// <summary>Batch entry: import the user's rotation-arrow art into the library and render LEVEL-2 (rotating guard, clockwise) and FTUE-4 for review.</summary>
+        public static void ImportRotationArrowAndRender()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) throw new System.IO.FileNotFoundException("no sprite library");
+                if (!SS2DFinalArtImporter.Import(lib)) throw new System.IO.FileNotFoundException("final art PNGs missing");
+                EditorUtility.SetDirty(lib); AssetDatabase.SaveAssets();
+                RenderReview(ScenePath, "LEVEL-2", null, "Art2D_RotationArrow_LEVEL-2_1080x1920");
+                RenderReview(ScenePath, "LEVEL-2", new[] { "E" }, "Art2D_RotationArrow_LEVEL-2_t1_1080x1920");
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] rotation arrow failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>
+        /// Batch entry (D-040): Game-view frames of the mode toggle and a completed knockout. LEVEL-1 in Knockout after
+        /// N, E, E (the last E steps onto the static guard from its side), the target disc one step earlier, the same
+        /// board in Stealth for the other toggle state, and LEVEL-26 right after the first knockout of the solver's route.
+        /// </summary>
+        public static void RenderKnockoutReview()
+        {
+            try
+            {
+                RenderReview(ScenePath, "LEVEL-1", new[] { "N", "E", "E" }, "Art2D_Knockout_LEVEL-1_after_KO_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                RenderReview(ScenePath, "LEVEL-1", new[] { "N", "E" }, "Art2D_Knockout_LEVEL-1_target_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                RenderReview(ScenePath, "LEVEL-1", null, "Art2D_Stealth_LEVEL-1_1080x1920", ShadowSteps.V3.StageMode.Stealth);
+                var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+                var l26 = pack.FindByCode("LEVEL-26");
+                if (l26 != null)
+                {
+                    var sol = ShadowSteps.V3.StageSolver.Solve(l26, new ShadowSteps.V3.SolveOptions { Mode = ShadowSteps.V3.StageMode.Knockout });
+                    var upTo = new List<string>();
+                    foreach (var a in sol.Actions) { upTo.Add(a.Token); if (a.Kind == ShadowSteps.V3.StageActionKind.Knockout) break; }
+                    if (sol.Found && upTo.Count > 0 && upTo[upTo.Count - 1].StartsWith("KO#")) RenderReview(ScenePath, "LEVEL-26", upTo.ToArray(), "Art2D_Knockout_LEVEL-26_after_KO_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                    else Debug.LogWarning("[SS2D] LEVEL-26 knockout route has no knockout (" + sol.Tokens + "); frame skipped");
+                }
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] knockout frames failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
         /// <summary>Batch entry: re-render the saved prototype scene without regenerating anything (-ssName optional).</summary>

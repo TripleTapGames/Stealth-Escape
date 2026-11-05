@@ -23,7 +23,7 @@ namespace ShadowSteps.Tests.PlayMode
             foreach (var go in SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
             yield return null;
             AppServices.InstallStages(System.IO.File.ReadAllText(AppServices.StagePackPath));
-            AppServices.InstallSaveForTests(new SaveData());
+            var save = new SaveData(); GuardOnboarding.MarkAllSeen(save); AppServices.InstallSaveForTests(save);
             AppServices.PendingStageId = stageId;
             _composer = new GameObject("Composer").AddComponent<GameSceneComposer>();
             yield return null; yield return null;
@@ -55,8 +55,8 @@ namespace ShadowSteps.Tests.PlayMode
             Assert.IsTrue(_composer.Session.InputLocked);
             Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), results.StarsText.Text);
             Assert.IsTrue(AppServices.Save.IsCompleted(1));
-            Assert.AreEqual(3, AppServices.Save.GetResult(1).BestTurns);
-            Assert.AreEqual(3, AppServices.Save.GetResult(1).BestStars);
+            Assert.AreEqual(3, AppServices.Save.GetResult(1, StageModeUtil.Default).BestTurns); // runs are recorded in the shipped mode's table (D-043)
+            Assert.AreEqual(3, AppServices.Save.GetResult(1, StageModeUtil.Default).BestStars);
             Assert.IsTrue(StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, 2));
             Assert.IsFalse(StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, 3));
         }
@@ -109,8 +109,8 @@ namespace ShadowSteps.Tests.PlayMode
             foreach (var a in ghostRoute.Actions) { Assert.IsTrue(_composer.Session.TrySubmit(a)); while (_composer.Session.IsBusy) yield return null; }
             yield return null;
             Assert.IsTrue(_flow.Router.Get<ResultsScreen>().IsVisible);
-            Assert.IsTrue(AppServices.Save.GetResult(21).Ghost, "alarm-free completion earns Ghost");
-            Assert.AreEqual(StageScoring.Stars(ghostRoute.CountedActions, _composer.Session.Stage.Par), AppServices.Save.GetResult(21).BestStars, "stars follow the solver par");
+            Assert.IsTrue(AppServices.Save.GetResult(21, StageModeUtil.Default).Ghost, "alarm-free completion earns Ghost");
+            Assert.AreEqual(StageScoring.Stars(ghostRoute.CountedActions, _composer.Session.Stage.ParFor(StageModeUtil.Default)), AppServices.Save.GetResult(21, StageModeUtil.Default).BestStars, "stars follow the solver par");
         }
 
         [UnityTest]

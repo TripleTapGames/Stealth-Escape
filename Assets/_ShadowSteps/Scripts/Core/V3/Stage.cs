@@ -130,7 +130,16 @@ namespace ShadowSteps.V3
         public int TwoStarActions { get; }
         /// <summary>True only when the level has a camera and an alarm-free win exists (solver-recorded).</summary>
         public bool GhostOffered { get; }
+        /// <summary>Knockout-mode par and star thresholds from the C# solver on this exact layout (D-040); -1 = not computed (scoring then falls back to the Stealth values, which every Knockout run can also reach).</summary>
+        public int KnockoutPar { get; }
+        public int KnockoutThreeStarActions { get; }
+        public int KnockoutTwoStarActions { get; }
         public IReadOnlyList<string> Notes { get; }
+
+        public bool HasKnockoutScoring => KnockoutPar >= 0;
+        public int ParFor(StageMode mode) => mode == StageMode.Knockout && HasKnockoutScoring ? KnockoutPar : Par;
+        public int ThreeStarFor(StageMode mode) => mode == StageMode.Knockout && HasKnockoutScoring ? KnockoutThreeStarActions : ThreeStarActions;
+        public int TwoStarFor(StageMode mode) => mode == StageMode.Knockout && HasKnockoutScoring ? KnockoutTwoStarActions : TwoStarActions;
 
         private readonly HashSet<GridCoord> _walls;
         private readonly HashSet<GridCoord> _blocked;
@@ -145,6 +154,7 @@ namespace ShadowSteps.V3
             Guards = new List<GuardSpec>(b.Guards); Cameras = new List<CameraSpec>(b.Cameras); Doors = new List<DoorSpec>(b.Doors);
             SmokeCharges = b.SmokeCharges; EmpCharges = b.EmpCharges; AlarmBudget = b.AlarmBudget; WaitLimit = b.WaitLimit;
             Par = b.Par; ThreeStarActions = b.ThreeStarActions; TwoStarActions = b.TwoStarActions; GhostOffered = b.GhostOffered;
+            KnockoutPar = b.KnockoutPar; KnockoutThreeStarActions = b.KnockoutThreeStarActions; KnockoutTwoStarActions = b.KnockoutTwoStarActions;
             Notes = new List<string>(b.Notes);
             _walls = new HashSet<GridCoord>(b.Walls);
             _blocked = new HashSet<GridCoord>(b.Blocked);
@@ -206,7 +216,7 @@ namespace ShadowSteps.V3
             {
                 Id = Id, Code = Code, Group = Group, Title = Title, Intro = Intro, Width = Width, Height = Height, Start = Start, Exit = Exit, Key = Key,
                 SmokeCharges = SmokeCharges, EmpCharges = EmpCharges, AlarmBudget = AlarmBudget, WaitLimit = WaitLimit, Par = Par, ThreeStarActions = ThreeStarActions,
-                TwoStarActions = TwoStarActions, GhostOffered = GhostOffered
+                TwoStarActions = TwoStarActions, GhostOffered = GhostOffered, KnockoutPar = KnockoutPar, KnockoutThreeStarActions = KnockoutThreeStarActions, KnockoutTwoStarActions = KnockoutTwoStarActions
             };
             b.Walls.AddRange(_walls); b.Blocked.AddRange(_blocked); b.Cuts.AddRange(_cuts); b.Doors.AddRange(Doors); b.Guards.AddRange(Guards); b.Cameras.AddRange(Cameras); b.Notes.AddRange(Notes);
             return b;
@@ -236,6 +246,7 @@ namespace ShadowSteps.V3
         public int WaitLimit = -1;
         public int Par, ThreeStarActions, TwoStarActions;
         public bool GhostOffered;
+        public int KnockoutPar = -1, KnockoutThreeStarActions = -1, KnockoutTwoStarActions = -1;
         public List<string> Notes = new List<string>();
 
         /// <summary>

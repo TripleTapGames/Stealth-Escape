@@ -30,12 +30,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 3,
         "threeStar": 4,
         "twoStar": 5,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 3,
+        "knockoutThreeStar": 4,
+        "knockoutTwoStar": 5
       },
       "notes": [
         "imported from browser playtest export (FTUE 1)",
@@ -71,12 +74,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 6,
         "threeStar": 7,
         "twoStar": 8,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (FTUE 2)",
@@ -126,12 +132,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 8,
         "threeStar": 9,
         "twoStar": 11,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (FTUE 3, 1 blocked cover nodes)",
@@ -143,7 +152,7 @@
       "code": "FTUE-4",
       "group": "FTUE",
       "title": "Watch the Rotation",
-      "intro": "Rotating guards turn 90\u00b0 after each action. Use WAIT to change their direction.",
+      "intro": "The curved arrows show its turn direction. This guard turns 90° whenever you move.",
       "rows": [
         ".....",
         ".....",
@@ -182,12 +191,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 5,
         "threeStar": 6,
         "twoStar": 7,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (FTUE 4, 1 blocked cover nodes)",
@@ -254,12 +266,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 6,
         "threeStar": 7,
         "twoStar": 8,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (FTUE 5, 1 blocked cover nodes)",
@@ -308,12 +323,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 9,
         "threeStar": 10,
         "twoStar": 12,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 9,
+        "knockoutThreeStar": 10,
+        "knockoutTwoStar": 12
       },
       "notes": [
         "imported from browser playtest export (Level 1, 2 blocked cover nodes)",
@@ -325,7 +343,7 @@
       "code": "LEVEL-2",
       "group": "Main",
       "title": "Clockwise",
-      "intro": "Wait and watch the rotating guard.",
+      "intro": "Plan your steps around the rotating guard’s facing.",
       "rows": [
         "......",
         "......",
@@ -363,12 +381,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 7,
         "threeStar": 8,
         "twoStar": 10,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
       },
       "notes": [
         "imported from browser playtest export (Level 2, 2 blocked cover nodes)",
@@ -430,12 +451,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 11,
         "threeStar": 12,
         "twoStar": 15,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 11,
+        "knockoutThreeStar": 12,
+        "knockoutTwoStar": 15
       },
       "notes": [
         "imported from browser playtest export (Level 3, 3 blocked cover nodes)",
@@ -497,12 +521,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 4,
+      "waitLimit": 0,
       "scoring": {
         "par": 14,
         "threeStar": 15,
         "twoStar": 19,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 4, 3 blocked cover nodes)",
@@ -581,12 +608,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 8,
         "threeStar": 9,
         "twoStar": 11,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (Level 5, 2 blocked cover nodes)",
@@ -681,12 +711,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 13,
         "threeStar": 14,
         "twoStar": 17,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 6, 3 blocked cover nodes)",
@@ -748,12 +781,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 4,
+      "waitLimit": 0,
       "scoring": {
         "par": 14,
         "threeStar": 15,
         "twoStar": 19,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 7, 3 blocked cover nodes)",
@@ -765,7 +801,7 @@
       "code": "LEVEL-8",
       "group": "Main",
       "title": "Predict the Return",
-      "intro": "The cyan NEXT badge shows a patrol\u2019s next move, including its reversal at the end node.",
+      "intro": "The cyan NEXT badge shows a patrol’s next move, including its reversal at the end node.",
       "rows": [
         ".......",
         ".......",
@@ -832,12 +868,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 10,
         "threeStar": 11,
         "twoStar": 13,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 8, 2 blocked cover nodes)",
@@ -928,12 +967,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 10,
         "threeStar": 11,
         "twoStar": 13,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 9, 3 blocked cover nodes)",
@@ -1036,12 +1078,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 13,
         "threeStar": 14,
         "twoStar": 17,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (Level 10, 3 blocked cover nodes)",
@@ -1114,12 +1159,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 12,
         "threeStar": 13,
         "twoStar": 16,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 12,
+        "knockoutThreeStar": 13,
+        "knockoutTwoStar": 16
       },
       "notes": [
         "imported from browser playtest export (Level 11, 3 blocked cover nodes)",
@@ -1212,12 +1260,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 14,
         "threeStar": 15,
         "twoStar": 19,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 14,
+        "knockoutThreeStar": 15,
+        "knockoutTwoStar": 19
       },
       "notes": [
         "imported from browser playtest export (Level 12, 2 blocked cover nodes)",
@@ -1303,12 +1354,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 10,
         "threeStar": 11,
         "twoStar": 13,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 13, 2 blocked cover nodes)",
@@ -1394,12 +1448,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 12,
         "threeStar": 13,
         "twoStar": 16,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (Level 14, 3 blocked cover nodes)",
@@ -1501,12 +1558,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 8,
         "threeStar": 9,
         "twoStar": 11,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (Level 15, 2 blocked cover nodes)",
@@ -1556,12 +1616,15 @@
         "emp": 0
       },
       "alarmBudget": 5,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 8,
         "threeStar": 9,
         "twoStar": 11,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
@@ -1612,12 +1675,15 @@
         "emp": 0
       },
       "alarmBudget": 3,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 8,
         "threeStar": 9,
         "twoStar": 11,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (Level 17, 2 blocked cover nodes)",
@@ -1667,12 +1733,15 @@
         "emp": 0
       },
       "alarmBudget": 3,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 9,
         "threeStar": 10,
         "twoStar": 12,
-        "ghostOffered": true
+        "ghostOffered": true,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
@@ -1695,7 +1764,7 @@
       ],
       "start": [
         1,
-        1
+        2
       ],
       "exit": [
         5,
@@ -1723,17 +1792,21 @@
         "emp": 0
       },
       "alarmBudget": 2,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 7,
         "threeStar": 8,
         "twoStar": 10,
-        "ghostOffered": true
+        "ghostOffered": true,
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
         "imported from browser playtest export (Level 19, 2 blocked cover nodes)",
-        "redesigned 2026-11-03 for the front-node camera footprint (start (1,1), cover at (4,1),(1,3)); browser par/ghost no longer apply"
+        "redesigned 2026-11-03 for the front-node camera footprint (start (1,1), cover at (4,1),(1,3)); browser par/ghost no longer apply",
+        "No-WAIT review draft: start moved from (1,1) to (1,2) to provide a movement-based sweep timing route; camera, cover and alarm budget unchanged."
       ]
     },
     {
@@ -1780,12 +1853,15 @@
         "emp": 0
       },
       "alarmBudget": 2,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 6,
         "threeStar": 7,
         "twoStar": 8,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (Level 20, 2 blocked cover nodes)",
@@ -1834,12 +1910,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 6,
         "threeStar": 7,
         "twoStar": 8,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (Level 21)",
@@ -1906,12 +1985,15 @@
         "emp": 0
       },
       "alarmBudget": 4,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 10,
         "threeStar": 11,
         "twoStar": 13,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 10,
+        "knockoutThreeStar": 11,
+        "knockoutTwoStar": 13
       },
       "notes": [
         "imported from browser playtest export (Level 22, 2 blocked cover nodes)",
@@ -1960,12 +2042,15 @@
         "emp": 1
       },
       "alarmBudget": 2,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 5,
         "threeStar": 6,
         "twoStar": 7,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 5,
+        "knockoutThreeStar": 6,
+        "knockoutTwoStar": 7
       },
       "notes": [
         "imported from browser playtest export (Level 23)",
@@ -2015,12 +2100,15 @@
         "emp": 1
       },
       "alarmBudget": 1,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 8,
         "threeStar": 9,
         "twoStar": 11,
-        "ghostOffered": false
+        "ghostOffered": true,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
       },
       "notes": [
         "imported from browser playtest export (Level 24, 2 blocked cover nodes)",
@@ -2095,12 +2183,15 @@
         "emp": 1
       },
       "alarmBudget": 1,
-      "waitLimit": 3,
+      "waitLimit": 0,
       "scoring": {
         "par": 6,
         "threeStar": 7,
         "twoStar": 8,
-        "ghostOffered": true
+        "ghostOffered": true,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (Level 25)",
@@ -2181,12 +2272,15 @@
         "emp": 0
       },
       "alarmBudget": 3,
-      "waitLimit": 4,
+      "waitLimit": 0,
       "scoring": {
         "par": 20,
         "threeStar": 22,
         "twoStar": 26,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 18,
+        "knockoutThreeStar": 19,
+        "knockoutTwoStar": 24
       },
       "notes": [
         "imported from browser playtest export (Level 26, 2 blocked cover nodes)",
@@ -2253,12 +2347,15 @@
         "emp": 0
       },
       "alarmBudget": 3,
-      "waitLimit": 4,
+      "waitLimit": 0,
       "scoring": {
         "par": 20,
         "threeStar": 22,
         "twoStar": 26,
-        "ghostOffered": false
+        "ghostOffered": false,
+        "knockoutPar": 20,
+        "knockoutThreeStar": 22,
+        "knockoutTwoStar": 26
       },
       "notes": [
         "imported from browser playtest export (Level 27, 1 blocked cover nodes)",
@@ -2271,7 +2368,7 @@
       "code": "LEVEL-28",
       "group": "Main",
       "title": "Divided Watch",
-      "intro": "Two camera zones, one EMP. Choose where to spend it and where to wait.",
+      "intro": "Two camera zones, one EMP. Plan a route through both and choose where to use it.",
       "rows": [
         "#########",
         "#...#...#",
@@ -2338,12 +2435,15 @@
         "emp": 1
       },
       "alarmBudget": 2,
-      "waitLimit": 5,
+      "waitLimit": 0,
       "scoring": {
         "par": 21,
         "threeStar": 23,
         "twoStar": 28,
-        "ghostOffered": true
+        "ghostOffered": true,
+        "knockoutPar": 22,
+        "knockoutThreeStar": 24,
+        "knockoutTwoStar": 29
       },
       "notes": [
         "imported from browser playtest export (Level 28, 2 blocked cover nodes)",
@@ -2465,12 +2565,15 @@
         "emp": 1
       },
       "alarmBudget": 2,
-      "waitLimit": 6,
+      "waitLimit": 0,
       "scoring": {
         "par": 24,
         "threeStar": 26,
         "twoStar": 32,
-        "ghostOffered": true
+        "ghostOffered": true,
+        "knockoutPar": 24,
+        "knockoutThreeStar": 26,
+        "knockoutTwoStar": 32
       },
       "notes": [
         "imported from browser playtest export (Level 29, 2 blocked cover nodes)",
@@ -2586,12 +2689,15 @@
         "emp": 1
       },
       "alarmBudget": 2,
-      "waitLimit": 4,
+      "waitLimit": 0,
       "scoring": {
         "par": 28,
         "threeStar": 30,
         "twoStar": 37,
-        "ghostOffered": true
+        "ghostOffered": true,
+        "knockoutPar": 28,
+        "knockoutThreeStar": 30,
+        "knockoutTwoStar": 37
       },
       "notes": [
         "imported from browser playtest export (Level 30, 1 blocked cover nodes)",

@@ -51,7 +51,8 @@ namespace ShadowSteps.Art2D
             body.transform.localScale = Vector3.one * lib.characterHeight * spacing;
             // Final art paints its own base disc and shadow: the generated ring and blob would double it.
             bool ownBase = set == null || !set.includesBase;
-            shadow.gameObject.SetActive(ownBase || castShadow); ring.gameObject.SetActive(ownBase);
+            _showShadow = ownBase || castShadow; _showRing = ownBase; _showChevron = showChevron;
+            shadow.gameObject.SetActive(_showShadow); ring.gameObject.SetActive(_showRing);
             chevron.gameObject.SetActive(showChevron);
             chevron.transform.localScale = Vector3.one * 0.24f * spacing;
             _markerY = lib.characterHeight * 0.92f * spacing;
@@ -82,7 +83,22 @@ namespace ShadowSteps.Art2D
 
         public void SetTint(Color? tint) { _tint = tint ?? Color.white; if (body != null) body.color = _tint; }
 
-        public void SetSortingOrderFromY() { if (body != null) { int o = Mathf.RoundToInt(-transform.position.y * 10f) * 4; body.sortingOrder = o + 2; shadow.sortingOrder = o; ring.sortingOrder = o + 1; } }
+        public bool Defeated { get; private set; }
+        /// <summary>Knocked-out pose (decorative only): the body lies on its side, dimmed, facing badge and base ring hidden, drawn under standing characters.</summary>
+        public void SetDefeated(bool down, Color tint)
+        {
+            Defeated = down;
+            if (body == null) return;
+            body.transform.localRotation = Quaternion.identity; // the fly-off (renderer) animates the whole token; nothing lies on the board afterwards
+            if (chevron != null) chevron.gameObject.SetActive(!down && _showChevron);
+            if (ring != null) ring.gameObject.SetActive(!down && _showRing);
+            if (shadow != null) shadow.gameObject.SetActive(!down && _showShadow);
+            SetWalking(false);
+            SetTint(down ? tint : (Color?)null);
+        }
+        private bool _showChevron, _showRing, _showShadow;
+
+        public void SetSortingOrderFromY() { if (body != null) { int o = Mathf.RoundToInt(-transform.position.y * 10f) * 4 - (Defeated ? 40 : 0); body.sortingOrder = o + 2; shadow.sortingOrder = o; ring.sortingOrder = o + 1; } }
 
         /// <summary>Facing badge height follows the drawn sprite (its top edge plus a small gap), so any frame size or pivot works.</summary>
         private void PlaceMarker()

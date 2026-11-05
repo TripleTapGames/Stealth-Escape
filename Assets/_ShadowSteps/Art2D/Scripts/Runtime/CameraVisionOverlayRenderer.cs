@@ -37,17 +37,23 @@ namespace ShadowSteps.Art2D
 
         public void Setup(ShadowSteps2DRenderer b, SS2DSpriteLibrary lib, Transform parent) => Setup(b, lib, parent, "CameraVision", lib.cameraVisionFill, lib.cameraVisionBorder, lib.cameraVisionGlow, 2);
 
-        public void Setup(ShadowSteps2DRenderer b, SS2DSpriteLibrary lib, Transform parent, string root, Color fillColor, Color borderColor, Color glowColor, int order)
+        /// <summary>Sorting layer of the fill/outline meshes (rings and glows stay on the Overlays layer). Props + a high order puts the cone over obstacle art (D-042).</summary>
+        public string meshLayer = SS2DLayers.Overlays;
+        public int meshOrder = -1;
+
+        public void Setup(ShadowSteps2DRenderer b, SS2DSpriteLibrary lib, Transform parent, string root, Color fillColor, Color borderColor, Color glowColor, int order) => Setup(b, lib, parent, root, fillColor, borderColor, glowColor, order, SS2DLayers.Overlays, -1);
+
+        public void Setup(ShadowSteps2DRenderer b, SS2DSpriteLibrary lib, Transform parent, string root, Color fillColor, Color borderColor, Color glowColor, int order, string coneLayer, int coneOrder)
         {
-            board = b; library = lib; rootName = root; fill = fillColor; border = borderColor; glow = glowColor; fillOrder = order;
+            board = b; library = lib; rootName = root; fill = fillColor; border = borderColor; glow = glowColor; fillOrder = order; meshLayer = coneLayer; meshOrder = coneOrder;
             if (_root == null)
             {
                 // The component's own object is the root when it is a dedicated child of the overlays node (so the meshes stay under the component for audits);
                 // a component placed directly on the overlays node gets a child root instead.
                 if (transform != parent) { _root = transform; _root.SetParent(parent, false); gameObject.name = rootName; }
                 else { _root = new GameObject(rootName).transform; _root.SetParent(parent, false); }
-                _fillFilter = MakeMesh("Region_Fill", SS2DLayers.Overlays, fillOrder, out _fillRenderer);
-                _lineFilter = MakeMesh("Region_Outline", SS2DLayers.Overlays, fillOrder + 1, out _lineRenderer);
+                _fillFilter = MakeMesh("Region_Fill", meshLayer, meshOrder >= 0 ? meshOrder : fillOrder, out _fillRenderer);
+                _lineFilter = MakeMesh("Region_Outline", meshLayer, meshOrder >= 0 ? meshOrder + 1 : fillOrder + 1, out _lineRenderer);
             }
             _mpb = new MaterialPropertyBlock();
             Clear();

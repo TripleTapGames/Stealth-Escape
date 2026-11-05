@@ -57,8 +57,10 @@ namespace ShadowSteps.Art2D
             _session.ModeChanged += OnModeChanged; _session.PreviewShown += OnPreviewShown; _session.PreviewHidden += OnPreviewHidden;
             _session.Caught += OnCaught; _session.LockedDown += OnCaught;
             _session.AlarmTriggered += OnAlarm;
+            _session.RulesModeChanged += OnRulesModeChanged;
             composer.WinTransition = Renderer.library.playExitDoorSequence ? OnWinTransition : (System.Func<ActionOutcome, System.Action, bool>)null; // off: the results screen follows the winning action directly
             composer.CaptureTransition = OnCaptureTransition;
+            composer.GuardHighlight = HighlightGuard; // first-encounter guard cards (D-041): accent tint on the representative guard
             if (composer.Hud is SS2DHudCanvas hudCanvas) hudCanvas.deferCaptureFeedback = true;
             if (_session.HasStage) { OnStageLoaded(_session.Stage); OnStateChanged(_session.State); }
         }
@@ -69,9 +71,29 @@ namespace ShadowSteps.Art2D
             _session.StageLoaded -= OnStageLoaded; _session.StateChanged -= OnStateChanged; _session.ActionStarted -= OnActionStarted; _session.ActionCompleted -= OnActionCompleted; _session.Retried -= OnRetried;
             _session.ModeChanged -= OnModeChanged; _session.PreviewShown -= OnPreviewShown; _session.PreviewHidden -= OnPreviewHidden;
             _session.Caught -= OnCaught; _session.LockedDown -= OnCaught; _session.AlarmTriggered -= OnAlarm;
+            _session.RulesModeChanged -= OnRulesModeChanged;
+        }
+
+        /// <summary>Mode switch = clean restart of the current board: every running tween, capture beat and queued state is dropped before the session publishes the fresh state.</summary>
+        private void OnRulesModeChanged(StageMode mode) { CancelPresentation(); }
+
+        private void CancelPresentation()
+        {
+            StopAllCoroutines(); _tween = null; _pendingState = null; _lastOutcome = null; _pendingCapture = null; _pendingCapturePresent = null;
+            CaptureSequenceRunning = false; DoorSequenceRunning = false;
+            if (Renderer != null && Renderer.IsBuilt) { Renderer.ClearPreview(); Renderer.ClearTargets(); }
         }
 
         private void OnAlarm(ActionOutcome o) { Renderer.FlashCameraVision(); }
+
+        private int _highlightedGuard = -1;
+        public int HighlightedGuard => _highlightedGuard;
+        private void HighlightGuard(int index)
+        {
+            if (_highlightedGuard >= 0 && Renderer.IsBuilt) Renderer.SetGuardHighlight(_highlightedGuard, null);
+            _highlightedGuard = index;
+            if (index >= 0 && Renderer.IsBuilt && !Renderer.IsGuardDefeated(index)) Renderer.SetGuardHighlight(index, Renderer.library.nodeReachable);
+        }
 
         /// <summary>
         /// Level completion (called by the flow after the win is recorded): a short success beat, then the spy walks from
@@ -86,6 +108,8 @@ namespace ShadowSteps.Art2D
         }
 
         public bool DoorSequenceRunning { get; private set; }
+        /// <summary>The 2D action tween (spy step, guard phase) is still playing; the published state is applied when it ends.</summary>
+        public bool TweenRunning => _tween != null;
 
         private IEnumerator DoorSequence(ActionOutcome o, System.Action continuation)
         {
@@ -160,7 +184,7 @@ namespace ShadowSteps.Art2D
 
         private void OnStageLoaded(Stage stage)
         {
-            if (_tween != null) { StopCoroutine(_tween); _tween = null; } _pendingState = null; _lastOutcome = null; _pendingCapture = null; _pendingCapturePresent = null; CaptureSequenceRunning = false;
+            CancelPresentation();
             Renderer.Build(stage);
             if (_fitter != null) _fitter.Fit(_composer.BoardCamera.aspect);
             Renderer.FitBackground(_composer.BoardCamera);
@@ -169,7 +193,7 @@ namespace ShadowSteps.Art2D
 
         private ActionOutcome _lastOutcome; private StageState _pendingState;
         private void OnActionCompleted(ActionOutcome o) { _lastOutcome = o; }
-        private void OnRetried() { _lastOutcome = null; }
+        private void OnRetried() { CancelPresentation(); } // retry (any mode) drops stale animation callbacks; the session publishes the initial state right after
 
         /// <summary>
         /// Schedule index to present a state at. The rules keep the clock at the old index on a capture ("the failed action is
@@ -197,13 +221,18 @@ namespace ShadowSteps.Art2D
             var stage = _session.Stage; var lib = Renderer.library; int t = ShownClock(state);
             Renderer.SetPlayer(state.Player); Renderer.SetPlayerWalking(false);
             Renderer.SetPlayerTint(state.Result == StageResult.Caught ? lib.captured : state.Result == StageResult.Won ? lib.won : state.Result == StageResult.Lockdown ? lib.lockdown : (Color?)null);
-            for (int i = 0; i < stage.Guards.Count; i++) { Renderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], t), GuardTrack.NextStep(stage.Guards[i], t)); Renderer.SetGuardWalking(i, false); Renderer.SetGuardTint(i, state.Result == StageResult.Caught && _lastOutcome != null && _lastOutcome.CapturingGuard == i ? lib.captured : (Color?)null); }
+            for (int i = 0; i < stage.Guards.Count; i++)
+            {
+                Renderer.SetGuardDefeated(i, state.IsDefeated(i)); // knocked-out guards are frozen and off the board: no pose updates, marker, vision or tint
+                if (!state.IsDefeated(i)) { Renderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], t), GuardTrack.NextStep(stage.Guards[i], t)); Renderer.SetGuardWalking(i, false); }
+                if (!state.IsDefeated(i)) Renderer.SetGuardTint(i, state.Result == StageResult.Caught && _lastOutcome != null && _lastOutcome.CapturingGuard == i ? lib.captured : i == _highlightedGuard ? lib.nodeReachable : (Color?)null);
+            }
             for (int i = 0; i < stage.Cameras.Count; i++) Renderer.SetCamera(i, CameraTrack.FacingAt(stage.Cameras[i], t), state.EmpLeftOn(i), false);
             for (int i = 0; i < stage.Doors.Count; i++) Renderer.SetDoor(i, state.IsDoorOpen(i));
             Renderer.SetKeyCollected(state.HasKey);
             Renderer.SetClouds(state.Clouds);
             var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
-            for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], t))) if (seen.Add(c)) guardCells.Add(c);
+            for (int i = 0; i < stage.Guards.Count; i++) { if (state.IsDefeated(i)) continue; foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], t))) if (seen.Add(c)) guardCells.Add(c); }
             var camCells = new List<GridCoord>(); seen.Clear();
             for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, state, i, t)) if (seen.Add(c)) camCells.Add(c);
             Renderer.SetVision(guardCells, camCells);
@@ -227,6 +256,13 @@ namespace ShadowSteps.Art2D
             Renderer.ClearTargets();
             var state = _session.State; var stage = _session.Stage; if (state == null) return;
             if (mode == InputMode.SmokeTarget) Renderer.SetTargets(StageRules.SmokeTargets(stage, state));
+            else if (mode == InputMode.Move && state.KnockoutsEnabled && !state.IsTerminal)
+            {
+                // Knockout-only affordance: a disc under every guard that can be taken out from here (hidden entirely in Stealth).
+                var cells = new List<GridCoord>();
+                foreach (int g in StageRules.KnockoutTargets(stage, state)) cells.Add(GuardTrack.PositionAt(stage.Guards[g], state.T));
+                if (cells.Count > 0) Renderer.SetKnockoutTargets(cells);
+            }
             for (int i = 0; i < stage.Cameras.Count; i++) Renderer.SetCamera(i, CameraTrack.FacingAt(stage.Cameras[i], state.T), state.EmpLeftOn(i), mode == InputMode.EmpTarget && !state.IsCameraDisabled(i));
         }
 
@@ -235,7 +271,7 @@ namespace ShadowSteps.Art2D
             if (!o.Valid || o.Free) { Renderer.ClearPreview(); return; }
             var stage = _session.Stage; var after = o.After; var lib = Renderer.library;
             var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
-            for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in Sight.GuardVision(stage, after, o.GuardsAfter[i])) if (seen.Add(c)) guardCells.Add(c);
+            for (int i = 0; i < stage.Guards.Count; i++) { if (after.IsDefeated(i)) continue; foreach (var c in Sight.GuardVision(stage, after, o.GuardsAfter[i])) if (seen.Add(c)) guardCells.Add(c); }
             var camCells = new List<GridCoord>(); seen.Clear();
             for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, after, i, o.Before.T + 1)) if (seen.Add(c)) camCells.Add(c);
             Renderer.SetPreview(guardCells, camCells, o.PlayerTo, o.Caught || o.Lockdown ? lib.previewDanger : o.AlarmTriggered ? lib.previewAlarm : lib.previewSafe);
@@ -270,23 +306,35 @@ namespace ShadowSteps.Art2D
                 if (d.HasValue) Renderer.SetPlayerFacing(d.Value);
                 Renderer.SetPlayerWalking(true);
                 float t = 0f;
-                while (t < dur) { t += Time.deltaTime; Renderer.Player.transform.localPosition = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t / dur)); Renderer.Player.SetSortingOrderFromY(); yield return null; }
+                while (t < dur)
+                {
+                    t += Time.deltaTime; Renderer.Player.transform.localPosition = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t / dur)); Renderer.Player.SetSortingOrderFromY();
+                    yield return null;
+                }
                 Renderer.SetPlayerWalking(false);
             }
+            // Knockout: the spy has stepped onto the guard's node; the guard flies off the board (away from the spy, spinning, fading) while the survivors take their turn.
+            float flyDur = o.Knockout ? Mathf.Max(0.05f, Renderer.library.knockoutFlyDuration) : 0f; float flyT = 0f;
+            if (o.Knockout) Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f);
             if (o.Caught && o.CapturePhase == CapturePhase.BeforeEnemyUpdate) { FinishTween(); yield break; }
             int n = stage.Guards.Count; var gFrom = new Vector3[n]; var gTo = new Vector3[n]; var turned = new bool[n];
+            var down = new bool[n];
             for (int i = 0; i < n; i++)
             {
-                gFrom[i] = Renderer.Pos(o.GuardsBefore[i].Position); gTo[i] = Renderer.Pos(o.GuardsAfter[i].Position);
+                down[i] = o.After.IsDefeated(i); // knocked-out guards (this action or earlier) stay where they fell
+                gFrom[i] = Renderer.Pos(o.GuardsBefore[i].Position); gTo[i] = down[i] ? gFrom[i] : Renderer.Pos(o.GuardsAfter[i].Position);
+                if (down[i]) { turned[i] = true; continue; }
                 // Walking guards face their step from the start; guards turning in place switch facing halfway through the phase so the turn is visible.
                 if (gFrom[i] != gTo[i]) { Renderer.SetGuardWalking(i, true); Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); turned[i] = true; }
             }
             float k = 0f;
-            while (k < dur)
+            while (k < dur || flyT < flyDur)
             {
-                k += Time.deltaTime; float e = Mathf.SmoothStep(0f, 1f, k / dur);
+                k += Time.deltaTime; float e = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(k / dur));
+                if (o.Knockout && flyT < flyDur) { flyT += Time.deltaTime; Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); }
                 for (int i = 0; i < n; i++)
                 {
+                    if (down[i]) continue;
                     Renderer.Guards[i].transform.localPosition = Vector3.Lerp(gFrom[i], gTo[i], e); Renderer.Guards[i].SetSortingOrderFromY();
                     if (!turned[i] && e >= 0.5f) { Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); turned[i] = true; }
                 }
@@ -297,7 +345,8 @@ namespace ShadowSteps.Art2D
                 }
                 yield return null;
             }
-            for (int i = 0; i < n; i++) { Renderer.SetGuardWalking(i, false); if (!turned[i]) Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); }
+            for (int i = 0; i < n; i++) { if (down[i]) continue; Renderer.SetGuardWalking(i, false); if (!turned[i]) Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); }
+            if (o.Knockout) Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 1f); // off the board and hidden
             FinishTween(); // the guard has finished its step/turn: snap to the published state (guards/fans at their new facing), then the capture
         }
     }

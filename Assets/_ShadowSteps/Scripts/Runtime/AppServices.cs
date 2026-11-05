@@ -92,7 +92,7 @@ namespace ShadowSteps.Runtime
         {
             var pack = StageJson.Parse(json);
             foreach (var w in pack.Warnings) Debug.LogWarning("[ShadowSteps] levels_v4.json: " + w);
-            var report = StageValidator.ValidatePack(pack.Stages, new StageValidationOptions { RunSolver = false });
+            var report = StageValidator.ValidatePack(pack.Stages, new StageValidationOptions { RunSolver = false, RequireNoWait = true }); // campaign policy (D-044): no WAIT on any shipped stage
             foreach (var issue in report.Issues)
                 if (issue.Severity == ValidationSeverity.Warning) Debug.LogWarning("[ShadowSteps] " + issue);
             if (!report.IsValid) throw new LevelDataException("levels_v4.json failed validation:\n" + report);

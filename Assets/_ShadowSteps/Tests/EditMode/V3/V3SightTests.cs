@@ -253,5 +253,38 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.IsTrue(Sight.CanThrowSmoke(o, StageState.Initial(o), C(0, 1), C(1, 2)), "no wall: diagonal throw allowed");
             Assert.IsFalse(Sight.CanThrowSmoke(o, StageState.Initial(o), C(0, 1), C(2, 1)), "outside the 3x3");
         }
-    }
+    
+        [Test]
+        public void CameraConeGeometry_IsTheNominalTriangle_UntouchedByOccluders()
+        {
+            // D-042 graphics contract: apex on the wall face, far edge two spacings forward, half-width 2·tan 35°, identical with or without cover in the way.
+            var b = Board("###.###", "#..X..#", "#.....#", "#.....#", "#######"); b.Start = C(1, 3); b.Exit = C(5, 3);
+            b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
+            var stage = b.Build(); var cam = stage.Cameras[0];
+            var pts = Sight.CameraConeGeometry(cam, Direction.South);
+            Assert.AreEqual(3, pts.Count);
+            var o = Sight.CameraOrigin(cam); Assert.AreEqual(o.X, pts[0].X, 1e-9); Assert.AreEqual(o.Y, pts[0].Y, 1e-9);
+            double half = Sight.CameraRange * System.Math.Tan(Sight.CameraHalfAngleDegrees * System.Math.PI / 180.0);
+            Assert.AreEqual(o.Y + Sight.CameraRange, pts[1].Y, 1e-9); Assert.AreEqual(o.Y + Sight.CameraRange, pts[2].Y, 1e-9);
+            Assert.AreEqual(2 * half, System.Math.Abs(pts[1].X - pts[2].X), 1e-9);
+            Assert.AreEqual(o.X, (pts[1].X + pts[2].X) / 2, 1e-9);
+            // Independent of the cover cell (3,1)... the traced silhouette, by contrast, stops at it.
+            var traced = Sight.CameraConeOutline(stage, 0, null, cam, Direction.South);
+            double reach = 0; foreach (var p in traced) reach = System.Math.Max(reach, System.Math.Sqrt((p.X - o.X) * (p.X - o.X) + (p.Y - o.Y) * (p.Y - o.Y)));
+            Assert.Less(reach, Sight.CameraRange - 0.3, "traced silhouette is clipped by the cover");
+            var open = Board("###.###", "#.....#", "#.....#", "#.....#", "#######"); open.Start = C(1, 3); open.Exit = C(5, 3); open.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
+            var pts2 = Sight.CameraConeGeometry(open.Build().Cameras[0], Direction.South);
+            for (int i = 0; i < 3; i++) { Assert.AreEqual(pts[i].X, pts2[i].X, 1e-12); Assert.AreEqual(pts[i].Y, pts2[i].Y, 1e-12); }
+            // Detection is unchanged by the graphic: (3,1) is cover, (3,2) behind it is not seen; (2,1)/(4,1) still are if inside the cone.
+            var seen = new System.Collections.Generic.HashSet<GridCoord>(Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
+            Assert.IsFalse(seen.Contains(C(3, 1))); Assert.IsFalse(seen.Contains(C(3, 2)), "cover blocks the node behind it");
+            // Every facing: far edge perpendicular to forward.
+            foreach (Direction d in System.Enum.GetValues(typeof(Direction)))
+            {
+                var q = Sight.CameraConeGeometry(cam, d); double fx = DirectionUtil.DeltaX(d), fy = DirectionUtil.DeltaY(d);
+                Assert.AreEqual(0.0, (q[1].X - q[2].X) * fx + (q[1].Y - q[2].Y) * fy, 1e-9, d + ": flat far edge");
+                Assert.AreEqual(Sight.CameraRange, (((q[1].X + q[2].X) / 2 - o.X) * fx + ((q[1].Y + q[2].Y) / 2 - o.Y) * fy), 1e-9, d + ": depth 2");
+            }
+        }
+}
 }

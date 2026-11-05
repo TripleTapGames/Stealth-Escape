@@ -38,6 +38,7 @@ namespace ShadowSteps.Art2D.Editor
         static readonly Vector2 BushPivot = new Vector2(0.515f, 0.502f), WallSidePivot = new Vector2(0.50f, 0.60f), WallFrontPivot = new Vector2(0.518f, 0.61f);
         public const string LevelArtDir = "Assets/_ShadowSteps/Art2D/LevelArt/";
         public const string CastShadowPath = SpritesRoot + "Characters/character_shadow.png";
+        public const string RotationArrowPath = SpritesRoot + "Markers/rotation_arrow.png";
         public const string CameraDir = SpritesRoot + "Cameras/";
         /// <summary>Drawn-direction order (North, East, South, West): back view, side right, front (lens), side left.</summary>
         static readonly string[] CameraFiles = { "cam_back.png", "cam_right.png", "cam_front.png", "cam_left.png" };
@@ -98,6 +99,13 @@ namespace ShadowSteps.Art2D.Editor
                 AssetDatabase.Refresh();
                 lib.characterCastShadow = AssetDatabase.LoadAssetAtPath<Sprite>(CastShadowPath);
                 lib.characterCastShadowSize = 1.85f; lib.characterCastShadowTint = new Color(1f, 1f, 1f, 0.85f);
+            }
+            if (File.Exists(RotationArrowPath))
+            {
+                // User art (2026-11-04): the curved arrow drawn twice around a rotating guard, as in the reference mock.
+                Configure(RotationArrowPath, CharacterPpu, new Vector2(0.5f, 0.5f), 1024, SpriteMeshType.Tight);
+                AssetDatabase.Refresh();
+                lib.rotationArrowArt = AssetDatabase.LoadAssetAtPath<Sprite>(RotationArrowPath);
             }
             if (HasCameraArt())
             {

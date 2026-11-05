@@ -10,6 +10,12 @@ namespace ShadowSteps.V3
         public bool RunSolver = true;
         /// <summary>Columns above which a portrait-fit warning is issued.</summary>
         public int MaxComfortableWidth = 7;
+        /// <summary>Rules mode the solver checks (the shipped game's mode by default).</summary>
+        public StageMode SolverMode = StageModeUtil.Default;
+        /// <summary>Extra WAIT cap for the solver checks (0 = the shipped no-WAIT policy; -1 = only the stage's own limit).</summary>
+        public int SolverMaxWaits = 0;
+        /// <summary>Campaign policy (D-044): every stage must have waitLimit 0. On for the shipped pack, off for legacy fixtures.</summary>
+        public bool RequireNoWait = false;
     }
 
     /// <summary>Structural, schedule and gameplay checks for one stage (handover §11). Reuses <see cref="ValidationReport"/>.</summary>
@@ -42,6 +48,7 @@ namespace ShadowSteps.V3
             }
             if (s.Doors.Count > 0 && !s.Key.HasValue) r.Error(p + ".key", "doors exist but there is no key");
             if (s.Doors.Count > 30) r.Error(p + ".doors", "at most 30 doors are supported (open-door bitmask)");
+            if (s.Guards.Count > StageState.MaxGuards) r.Error(p + ".guards", "at most " + StageState.MaxGuards + " guards are supported (knockout bitmask)");
             if (s.AlarmBudget < 1) r.Error(p + ".alarmBudget", "alarmBudget must be >= 1 (the prototype silently used 4 for 0)");
             if (s.SmokeCharges < 0 || s.EmpCharges < 0) r.Error(p + ".gadgets", "charges cannot be negative");
             if (s.EmpCharges > 0 && s.Cameras.Count == 0) r.Warn(p + ".gadgets.emp", "EMP charges without any camera are useless");
@@ -81,13 +88,15 @@ namespace ShadowSteps.V3
                             r.Error(p + ".guards", "guards " + i + " and " + j + " share node " + poses[i].Position + " at t=" + t + " (period " + period + ")", poses[i].Position);
             }
 
+            if (options.RequireNoWait && s.WaitLimit != 0) r.Error(p + ".waitLimit", "waitLimit must be 0: WAIT is not part of the game (D-044)");
             if (r.ErrorCount > 0 || !options.RunSolver) return r;
 
-            // 5-8. gameplay via the solver
-            var m = StageMetrics.Analyze(s);
+            // 5-8. gameplay via the solver, under the shipped rules (mode + no WAIT)
+            var m = StageMetrics.Analyze(s, new SolveOptions { Mode = options.SolverMode, MaxWaits = options.SolverMaxWaits });
             if (metricsOut != null) Copy(m, metricsOut);
             if (!m.Solvable) { r.Error(p, "no winning route with the supplied loadout" + (m.HitLimit ? " (state limit hit)" : "")); return r; }
-            if (s.Par > 0 && s.Par != m.Par) r.Warn(p + ".scoring.par", "stored par " + s.Par + " differs from solver par " + m.Par + "; re-export scoring");
+            int storedPar = s.ParFor(options.SolverMode);
+            if (storedPar > 0 && storedPar != m.Par) r.Warn(p + ".scoring." + (options.SolverMode == StageMode.Knockout ? "knockoutPar" : "par"), "stored par " + storedPar + " differs from solver par " + m.Par + "; re-export scoring");
             if (s.GhostOffered != m.GhostOffered) r.Warn(p + ".scoring.ghostOffered", "stored ghostOffered=" + s.GhostOffered + " but solver says " + m.GhostOffered + "; re-export scoring");
             if (s.GhostOffered && s.Cameras.Count == 0) r.Error(p + ".scoring.ghostOffered", "Ghost may only be offered on camera levels");
             if (m.Par > 20) r.Warn(p, "par " + m.Par + " exceeds the 20-action review threshold");

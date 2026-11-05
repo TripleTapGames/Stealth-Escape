@@ -23,6 +23,8 @@ namespace ShadowSteps.Art2D
         public bool showInitialHazards = true;
         [Tooltip("Art-review state: actions applied to the initial state through the real rules before drawing (tokens: N/E/S/W, WAIT, SMOKE@x,y, EMP#i). Invalid tokens are logged and skipped.")]
         public string[] previewActions;
+        [Tooltip("Rules mode of the art-review state (D-040): Knockout lets previewActions contain KO#i or a move onto a guard.")]
+        public StageMode previewMode = StageMode.Stealth;
         public bool rebuildOnLoad = true;
         public Stage Stage { get; private set; }
         /// <summary>Not serialized: a stage built in code (review frames for synthetic layouts) takes precedence over <see cref="stageCode"/>.</summary>
@@ -52,7 +54,7 @@ namespace ShadowSteps.Art2D
             if (stage == null) stage = pack.FindByCode(stageCode) ?? pack.Stages[0];
             Stage = stage;
             boardRenderer.Build(stage);
-            var state = StageState.Initial(stage);
+            var state = StageState.Initial(stage, previewMode);
             if (previewActions != null)
                 foreach (var token in previewActions)
                 {
@@ -64,7 +66,7 @@ namespace ShadowSteps.Art2D
                 }
             int t = state.T;
             boardRenderer.SetPlayer(state.Player);
-            for (int i = 0; i < stage.Guards.Count; i++) boardRenderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], t), GuardTrack.NextStep(stage.Guards[i], t));
+            for (int i = 0; i < stage.Guards.Count; i++) { boardRenderer.SetGuardDefeated(i, state.IsDefeated(i)); if (!state.IsDefeated(i)) boardRenderer.SetGuard(i, GuardTrack.PoseAt(stage.Guards[i], t), GuardTrack.NextStep(stage.Guards[i], t)); } // revive before posing: a knocked-out guard ignores poses
             for (int i = 0; i < stage.Cameras.Count; i++) boardRenderer.SetCamera(i, CameraTrack.FacingAt(stage.Cameras[i], t), state.EmpLeftOn(i), false);
             for (int i = 0; i < stage.Doors.Count; i++) boardRenderer.SetDoor(i, state.IsDoorOpen(i));
             boardRenderer.SetKeyCollected(state.HasKey);
@@ -72,10 +74,15 @@ namespace ShadowSteps.Art2D
             if (showInitialHazards)
             {
                 var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
-                for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], t))) if (seen.Add(c)) guardCells.Add(c);
+                for (int i = 0; i < stage.Guards.Count; i++) { if (state.IsDefeated(i)) continue; foreach (var c in Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], t))) if (seen.Add(c)) guardCells.Add(c); }
                 var camCells = new List<GridCoord>(); seen.Clear();
                 for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, state, i, t)) if (seen.Add(c)) camCells.Add(c);
                 boardRenderer.SetVision(guardCells, camCells);
+            }
+            if (state.KnockoutsEnabled && !state.IsTerminal)
+            {
+                var cells = new List<GridCoord>(); foreach (int g in StageRules.KnockoutTargets(stage, state)) cells.Add(GuardTrack.PositionAt(stage.Guards[g], t));
+                if (cells.Count > 0) boardRenderer.SetKnockoutTargets(cells);
             }
             var reachNodes = new List<GridCoord>(); var reachEdges = new List<EdgeKey>();
             for (int d = 0; d < 4; d++)
