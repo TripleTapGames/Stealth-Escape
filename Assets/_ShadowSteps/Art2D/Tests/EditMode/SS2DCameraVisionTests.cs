@@ -325,9 +325,9 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
-        public void GuardFan_CoversExactlyTheSeenNodes_StopsAtBlockers_AndVanishesInSmoke()
+        public void GuardFan_IsAlwaysTwoSquaresLong_RingsFollowTheRule()
         {
-            // 7×5 room, static guard at (1,2) facing E: sees (2,2) and (3,2). A wall at (3,2) cuts it to (2,2) and the fan ends on that wall's edge.
+            // 7×5 room, static guard at (1,2) facing E: sees (2,2) and (3,2). D-051: the fan is a fixed two-square sector (plus overshoot) whatever lies ahead; only the rings follow the rule.
             var open = new StageBuilder { Id = 991, Code = "T-GUARDFAN", Title = "fan", Start = new GridCoord(1, 1), Exit = new GridCoord(5, 3), AlarmBudget = 3 }.FromRows(new[] { "#######", "#.....#", "#.....#", "#.....#", "#######" });
             open.Guards.Add(new GuardSpec("g1", GuardKind.Static, new[] { new GridCoord(1, 2) }, Direction.East));
             var stage = open.Build();
@@ -342,7 +342,7 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsTrue(PolyContains(r.GuardCones, r.Pos(new GridCoord(2, 2)))); Assert.IsTrue(PolyContains(r.GuardCones, r.Pos(new GridCoord(3, 2))));
                 Assert.IsFalse(PolyContains(r.GuardCones, r.Pos(new GridCoord(4, 2))), "two nodes only"); Assert.IsFalse(PolyContains(r.GuardCones, r.Pos(new GridCoord(2, 1)))); Assert.IsFalse(PolyContains(r.GuardCones, r.Pos(new GridCoord(3, 3))));
                 float farX = float.MinValue; foreach (var p in fan) farX = Mathf.Max(farX, p.x);
-                Assert.AreEqual(r.Pos(new GridCoord(3, 2)).x + r.library.guardConeOvershoot * r.Layout.NodeSpacing, farX, 1e-3f, "fan ends 'guardConeOvershoot' spacings past the last seen node");
+                Assert.AreEqual(r.Pos(new GridCoord(1, 2)).x + (2f + r.library.guardConeOvershoot) * r.Layout.NodeSpacing, farX, 1e-3f, "fan ends 'guardConeOvershoot' spacings past the second square");
                 // Library controls: narrower angle and zero overshoot shrink the fan without changing the rings (the rule).
                 var lib2 = Object.Instantiate(r.library); lib2.guardConeHalfAngleDegrees = 12f; lib2.guardConeOvershoot = 0f;
                 var go3 = new GameObject("test-renderer-fan3"); var r3 = go3.AddComponent<ShadowSteps2DRenderer>(); r3.library = lib2; r3.autoRotatePortrait = false; r3.Build(stage);
@@ -350,15 +350,15 @@ namespace ShadowSteps.Art2D.Tests
                 {
                     r3.SetGuard(0, pose, null); r3.SetVision(Sight.GuardVision(stage, state, pose), new List<GridCoord>());
                     float far3 = float.MinValue, top3 = float.MinValue; foreach (var p in r3.GuardCones[0]) { far3 = Mathf.Max(far3, p.x); top3 = Mathf.Max(top3, p.y); }
-                    Assert.AreEqual(r3.Pos(new GridCoord(3, 2)).x, far3, 1e-3f, "zero overshoot: fan ends on the last seen node");
+                    Assert.AreEqual(r3.Pos(new GridCoord(3, 2)).x, far3, 1e-3f, "zero overshoot: fan ends on the second square's centre");
                     Assert.Less(top3 - r3.Pos(new GridCoord(1, 2)).y, 2.0f * Mathf.Tan(12f * Mathf.Deg2Rad) * r3.Layout.NodeSpacing + 1e-3f, "12° half-angle: lateral extent follows the library");
                     CollectionAssert.AreEquivalent(Sight.GuardVision(stage, state, pose), r3.GuardOverlay.DrawnCells, "rings are the rule's nodes regardless of the fan settings");
                 }
                 finally { Object.DestroyImmediate(go3); Object.DestroyImmediate(lib2); }
-                // Smoke on the guard: nothing seen, no fan, no rings.
+                // Smoke on the guard: nothing seen (no rings), but the fixed fan still shows where he looks.
                 var smoked = new StageState(new GridCoord(1, 1), 0, false, 0, new[] { new SmokeCloud(new GridCoord(1, 2), 2) }, null, 0, 0, -1, false, StageResult.Playing, null);
                 r.SetClouds(smoked.Clouds); r.SetVision(Sight.GuardVision(stage, smoked, pose), new List<GridCoord>());
-                Assert.AreEqual(0, r.GuardCones.Count); Assert.AreEqual(0, r.GuardOverlay.DrawnCells.Count);
+                Assert.AreEqual(1, r.GuardCones.Count); Assert.AreEqual(0, r.GuardOverlay.DrawnCells.Count);
             }
             finally { Object.DestroyImmediate(r.gameObject); }
             var walled = new StageBuilder { Id = 992, Code = "T-GUARDFAN2", Title = "fan", Start = new GridCoord(1, 1), Exit = new GridCoord(5, 3), AlarmBudget = 3 }.FromRows(new[] { "#######", "#.....#", "#..#..#", "#.....#", "#######" });
@@ -371,9 +371,8 @@ namespace ShadowSteps.Art2D.Tests
                 CollectionAssert.AreEquivalent(new[] { new GridCoord(2, 2) }, seen);
                 r2.SetGuard(0, pose, null); r2.SetVision(seen, new List<GridCoord>());
                 float farX = float.MinValue; foreach (var p in r2.GuardCones[0]) farX = Mathf.Max(farX, p.x);
-                float reach = Mathf.Min(0.5f, Mathf.Clamp01(r2.library.guardConeOvershoot)); // the wall edge is 0.5 past the node: the fan stops there or at the configured overshoot, whichever is nearer
-                Assert.AreEqual(r2.Pos(new GridCoord(2, 2)).x + reach * r2.Layout.NodeSpacing, farX, 1e-3f, "fan clipped on the wall's edge (or the configured overshoot)");
-                Assert.IsFalse(PolyContains(r2.GuardCones, r2.Pos(new GridCoord(3, 2))));
+                Assert.AreEqual(r2.Pos(new GridCoord(1, 2)).x + (2f + r2.library.guardConeOvershoot) * r2.Layout.NodeSpacing, farX, 1e-3f, "D-051: the wall does not shorten the drawn fan; only the rings stop at it");
+                Assert.IsTrue(PolyContains(r2.GuardCones, r2.Pos(new GridCoord(3, 2)))); CollectionAssert.AreEquivalent(new[] { new GridCoord(2, 2) }, r2.GuardOverlay.DrawnCells);
             }
             finally { Object.DestroyImmediate(r2.gameObject); }
         }

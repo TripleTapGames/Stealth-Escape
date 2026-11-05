@@ -62,11 +62,11 @@ namespace ShadowSteps.V3
                     var pos = PositionAt(g, t);
                     if (g.Route.Count <= 1) return new GuardPose3(pos, g.Facing);
                     var prev = g.Route[RouteIndex(g, t + g.Offset - 1)];
-                    var d = DirectionUtil.FromDelta(pos.X - prev.X, pos.Y - prev.Y);
+                    var d = DirectionUtil.Toward(pos.X - prev.X, pos.Y - prev.Y); // a route step may span passage cells (D-047)
                     if (d == null)
                     {
                         var next = g.Route[RouteIndex(g, t + g.Offset + 1)];
-                        d = DirectionUtil.FromDelta(next.X - pos.X, next.Y - pos.Y);
+                        d = DirectionUtil.Toward(next.X - pos.X, next.Y - pos.Y);
                     }
                     return new GuardPose3(pos, d ?? Direction.North);
                 }
@@ -79,7 +79,7 @@ namespace ShadowSteps.V3
             if (!g.Moves) return null;
             var now = PositionAt(g, t);
             var next = PositionAt(g, t + 1);
-            return DirectionUtil.FromDelta(next.X - now.X, next.Y - now.Y);
+            return DirectionUtil.Toward(next.X - now.X, next.Y - now.Y);
         }
 
         /// <summary>Poses of every guard at t, in stage order.</summary>

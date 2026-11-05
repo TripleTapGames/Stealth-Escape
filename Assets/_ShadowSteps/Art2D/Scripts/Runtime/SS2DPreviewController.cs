@@ -87,8 +87,9 @@ namespace ShadowSteps.Art2D
             var reachNodes = new List<GridCoord>(); var reachEdges = new List<EdgeKey>();
             for (int d = 0; d < 4; d++)
             {
-                var n = state.Player.Neighbor((Direction)d);
-                if (!stage.IsConnected(state.Player, n)) continue;
+                var nb = stage.Neighbor(state.Player, (Direction)d); // next connected node, across passage cells (D-047)
+                if (!nb.HasValue) continue;
+                var n = nb.Value;
                 int door = stage.DoorIndex(state.Player, n);
                 if (door >= 0 && !state.IsDoorOpen(door) && !state.HasKey) continue;
                 reachNodes.Add(n); reachEdges.Add(new EdgeKey(state.Player, n));

@@ -173,7 +173,8 @@ namespace ShadowSteps.V3
             // ---- knockout normalisation: in Knockout mode a move onto a live guard IS a knockout on that guard (same action for tap, direction and explicit request)
             if (action.Kind == StageActionKind.Move && s.KnockoutsEnabled)
             {
-                int g = LiveGuardAt(stage, s, s.Player.Neighbor(action.Direction));
+                var ahead = stage.Step(s.Player, action.Direction); // the next node that way, across passage cells (D-047)
+                int g = ahead.HasValue ? LiveGuardAt(stage, s, ahead.Value) : -1;
                 if (g >= 0) { action = StageAction.Knockout(g); o.Action = action; }
             }
             ulong defeated = s.Defeated; var knockoutSide = KnockoutSide.None; int knockedOut = -1;
@@ -214,8 +215,9 @@ namespace ShadowSteps.V3
             int openDoors = s.OpenDoors;
             if (action.Kind == StageActionKind.Move)
             {
-                to = from.Neighbor(action.Direction);
-                if (!stage.IsFloor(to)) return Reject(o, RejectReason.Blocked);
+                var next = stage.Step(from, action.Direction); // one action traverses one edge, however many squares it spans (D-047)
+                if (!next.HasValue) return Reject(o, RejectReason.Blocked);
+                to = next.Value;
                 if (stage.IsCut(from, to)) return Reject(o, RejectReason.NoConnection);
                 int door = stage.DoorIndex(from, to);
                 if (door >= 0 && !s.IsDoorOpen(door))
@@ -330,19 +332,19 @@ namespace ShadowSteps.V3
             if (s.IsDefeated(guardIndex)) return RejectReason.GuardAlreadyDown;
             var pose = GuardTrack.PoseAt(stage.Guards[guardIndex], s.T);
             var from = s.Player; var at = pose.Position;
-            var dir = DirectionUtil.FromDelta(at.X - from.X, at.Y - from.Y);
-            if (!dir.HasValue) return RejectReason.GuardNotAdjacent; // diagonal, distant or same node
             if (!stage.IsFloor(at) || !stage.IsFloor(from)) return RejectReason.Blocked;
+            var dir = stage.DirectionTo(from, at); // the guard must be the player's next node that way (adjacent, or across passage cells: D-047)
+            if (!dir.HasValue) return RejectReason.GuardNotAdjacent; // diagonal, another node between, or same node
             if (stage.IsCut(from, at)) return RejectReason.NoConnection;
             int door = stage.DoorIndex(from, at);
             if (door >= 0 && !s.IsDoorOpen(door)) return RejectReason.DoorBlocksKnockout; // a key does not open a door by attacking through it
             if (Sight.Obstructed(stage, s, from, at)) return RejectReason.Blocked;
             // Frontal = the player stands on the node the guard currently faces. Smoke never changes this.
-            if (at.Neighbor(pose.Facing) == from) return RejectReason.FrontalApproach;
+            if (stage.Step(at, pose.Facing) == from) return RejectReason.FrontalApproach;
             approach = dir.Value;
             var behind = DirectionUtil.Opposite(pose.Facing);
-            if (at.Neighbor(behind) == from) side = KnockoutSide.Back;
-            else side = at.Neighbor(DirectionUtil.Rotate(pose.Facing, 1)) == from ? KnockoutSide.Right : KnockoutSide.Left; // clockwise of the facing = the guard's right hand
+            if (stage.Step(at, behind) == from) side = KnockoutSide.Back;
+            else side = stage.Step(at, DirectionUtil.Rotate(pose.Facing, 1)) == from ? KnockoutSide.Right : KnockoutSide.Left; // clockwise of the facing = the guard's right hand
             return RejectReason.None;
         }
 
@@ -379,6 +381,12 @@ namespace ShadowSteps.V3
                     var p = new GridCoord(s.Player.X + dx, s.Player.Y + dy);
                     if (Sight.CanThrowSmoke(stage, s, s.Player, p)) list.Add(p);
                 }
+            // D-052: the next node across a walkway (two squares away) is in range too.
+            foreach (Direction d in System.Enum.GetValues(typeof(Direction)))
+            {
+                var next = stage.Step(s.Player, d);
+                if (next.HasValue && !list.Contains(next.Value) && Sight.CanThrowSmoke(stage, s, s.Player, next.Value)) list.Add(next.Value);
+            }
             return list;
         }
 

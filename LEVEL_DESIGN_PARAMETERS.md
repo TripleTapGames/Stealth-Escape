@@ -3,7 +3,7 @@ Version 2.0 | Unity 2D orthographic | 2026-10-28
 
 ## 1. Non-negotiable movement model
 - Logical board uses integer coordinates (x,y), origin top-left, x right, y down.
-- Nodes appear at equally spaced world positions: `world(x,y) = boardOrigin + (x*nodeSpacing, -y*nodeSpacing, 0)`; default `nodeSpacing = 1 Unity unit`. **No diagonal or variable-length edges.**
+- Nodes appear at equally spaced world positions: `world(x,y) = boardOrigin + (x*nodeSpacing, -y*nodeSpacing, 0)`; default `nodeSpacing = 1 Unity unit`. **No diagonal edges.** D-047 (2026-11-05) supersedes the old "no variable-length edges" rule for schema-3 packs: row glyphs `-` / `|` / `+` mark *passage cells* (no node) that a horizontal / vertical / either connection runs across, so one edge may span 2 or 3 squares. One action still traverses one edge; cuts and doors key on the end nodes; guards see two *nodes* ahead across passages; a passage must join two nodes along its axis and can never be a start, exit, key or route node.
 - A character can travel **only** across a directed or bidirectional edge between cardinally adjacent existing nodes. One action traverses one edge; all player/enemy move animations are exactly `nodeSpacing` in distance and end centered on nodes.
 - Edges and line of sight are independent: missing edge prevents movement, but does not necessarily obstruct vision. Physical wall/occluder nodes or segments can block vision.
 - An invalid move does not consume a turn. WAIT and gadgets consume turns. Enemy movement and rotations resolve as discrete states; animations are cosmetic.

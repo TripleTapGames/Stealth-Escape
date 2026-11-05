@@ -240,8 +240,9 @@ namespace ShadowSteps.Art2D
             if (!state.IsTerminal)
                 for (int d = 0; d < 4; d++)
                 {
-                    var n = state.Player.Neighbor((Direction)d);
-                    if (!stage.IsConnected(state.Player, n)) continue;
+                    var nb = stage.Neighbor(state.Player, (Direction)d); // next connected node, across passage cells (D-047)
+                    if (!nb.HasValue) continue;
+                    var n = nb.Value;
                     int door = stage.DoorIndex(state.Player, n);
                     if (door >= 0 && !state.IsDoorOpen(door) && !state.HasKey) continue;
                     reachNodes.Add(n); reachEdges.Add(new EdgeKey(state.Player, n));
@@ -302,7 +303,7 @@ namespace ShadowSteps.Art2D
             var from = Renderer.Pos(o.PlayerFrom); var to = Renderer.Pos(o.PlayerTo);
             if (o.PlayerFrom != o.PlayerTo)
             {
-                var d = DirectionUtil.FromDelta(o.PlayerTo.X - o.PlayerFrom.X, o.PlayerTo.Y - o.PlayerFrom.Y);
+                var d = DirectionUtil.Toward(o.PlayerTo.X - o.PlayerFrom.X, o.PlayerTo.Y - o.PlayerFrom.Y); // a move may span passage cells (D-047)
                 if (d.HasValue) Renderer.SetPlayerFacing(d.Value);
                 Renderer.SetPlayerWalking(true);
                 float t = 0f;

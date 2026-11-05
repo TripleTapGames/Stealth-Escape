@@ -249,7 +249,7 @@ namespace ShadowSteps.Art2D.Editor
             r.width = stage.Width; r.height = stage.Height;
             foreach (var c in stage.FloorNodes()) r.floorNodes++;
             for (int y = 0; y < stage.Height; y++) for (int x = 0; x < stage.Width; x++) { var c = new GridCoord(x, y); if (stage.IsWall(c)) r.wallCells++; else if (stage.IsBlocked(c)) r.coverCells++; }
-            foreach (var a in stage.FloorNodes()) foreach (var d in new[] { Direction.East, Direction.South }) if (stage.IsConnected(a, a.Neighbor(d))) r.edges++;
+            foreach (var a in stage.FloorNodes()) foreach (var d in new[] { Direction.East, Direction.South }) if (stage.Neighbor(a, d).HasValue) r.edges++;
             r.doors = stage.Doors.Count; r.guards = stage.Guards.Count; r.cameras = stage.Cameras.Count; r.keyExpected = stage.Key.HasValue ? 1 : 0;
             var state = ShadowSteps.V3.StageState.Initial(stage);
             var gv = new HashSet<GridCoord>(); for (int i = 0; i < stage.Guards.Count; i++) foreach (var c in ShadowSteps.V3.Sight.GuardVision(stage, state, ShadowSteps.V3.GuardTrack.PoseAt(stage.Guards[i], 0))) gv.Add(c);
@@ -342,6 +342,29 @@ namespace ShadowSteps.Art2D.Editor
             var pv = Object.FindObjectOfType<SS2DPreviewController>(); if (pv == null) return;
             pv.stageCode = stageCode; pv.previewActions = actions; pv.previewMode = mode; pv.BuildPreview();
             RenderOpenScene("Docs/Reports/Renders/" + name + ".png", 1080, 1920, false);
+        }
+
+        /// <summary>Batch entry (D-046 level review): each redesigned level at t0 and right after its knockout, from the solver's Knockout route.</summary>
+        public static void RenderRedesignReview()
+        {
+            try
+            {
+                var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+                var codes = new List<string>();
+                string only = System.Environment.GetEnvironmentVariable("SS2D_RENDER_CODES"); // comma-separated codes; default: every stage whose notes mention a redesign
+                if (!string.IsNullOrEmpty(only)) codes.AddRange(only.Split(','));
+                else foreach (var st in pack.Stages) { bool redesigned = false; foreach (var n in st.Notes) if (n.Contains("redesigned")) redesigned = true; if (redesigned) codes.Add(st.Code); }
+                foreach (var code in codes)
+                {
+                    var stage = pack.FindByCode(code.Trim()); if (stage == null) continue;
+                    RenderReview(ScenePath, code, null, "Art2D_Redesign_" + code + "_t0_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                    var sol = ShadowSteps.V3.StageSolver.Solve(stage, new ShadowSteps.V3.SolveOptions { Mode = ShadowSteps.V3.StageMode.Knockout, MaxWaits = 0 });
+                    var upTo = new List<string>(); foreach (var a in sol.Actions) { upTo.Add(a.Token); if (a.Kind == ShadowSteps.V3.StageActionKind.Knockout) break; }
+                    if (sol.Found && upTo.Count > 0) RenderReview(ScenePath, code, upTo.ToArray(), "Art2D_Redesign_" + code + "_afterKO_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                }
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] redesign frames failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
         /// <summary>Batch entry: import the HUD skin (Sprites/_UI) into the library and render LEVEL-2 / LEVEL-19 / LEVEL-25 (gadgets) for review.</summary>

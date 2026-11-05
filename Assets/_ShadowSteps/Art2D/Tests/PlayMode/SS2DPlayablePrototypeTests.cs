@@ -73,7 +73,7 @@ namespace ShadowSteps.Art2D.Tests
         {
             yield return Open();
             Assert.AreEqual("LEVEL-2", S.Stage.Code);
-            Assert.IsTrue(R.Rotated, "6×4 stage drawn rotated for portrait");
+            Assert.IsTrue(R.Rotated, "7×4 stage drawn rotated for portrait");
             Assert.IsInstanceOf<SS2DHudCanvas>(_composer.Hud, "the 2D HUD prefab is the game HUD");
             foreach (var r in _composer.Board.GetComponentsInChildren<Renderer>(true)) Assert.IsFalse(r.enabled, "placeholder board hidden: " + r.name);
             foreach (var mr in Object.FindObjectsOfType<MeshRenderer>()) Assert.IsNotNull(mr.GetComponentInParent<CameraVisionOverlayRenderer>(), "only the flat camera-region meshes may exist: " + mr.name);
@@ -90,17 +90,18 @@ namespace ShadowSteps.Art2D.Tests
             var hud = (SS2DHudCanvas)_composer.Hud;
             // Off-board move from the start column is rejected and costs nothing.
             Assert.IsFalse(S.TrySubmit(StageAction.Move(Direction.West))); Assert.AreEqual(0, S.State.T);
-            // Tap (1,2): picked through the screen → node override the InputController uses, then the session tap.
-            var pick = _composer.Input.ScreenToNodeOverride(ScreenOf(new GridCoord(1, 2)));
-            Assert.AreEqual(new GridCoord(1, 2), pick, "screen point of the drawn node resolves to its logical cell");
+            // Tap (0,3): picked through the screen → node override the InputController uses, then the session tap. ((1,2) would be seen once the guard turns W: D-046 "Clockwise".)
+            var pick = _composer.Input.ScreenToNodeOverride(ScreenOf(new GridCoord(0, 3)));
+            Assert.AreEqual(new GridCoord(0, 3), pick, "screen point of the drawn node resolves to its logical cell");
             Assert.IsTrue(S.TapNode(pick.Value)); yield return Settle();
-            Assert.AreEqual(new GridCoord(1, 2), S.State.Player); Assert.AreEqual(1, S.State.T); Assert.AreEqual("1", hud.actionsValue.text);
+            Assert.AreEqual(new GridCoord(0, 3), S.State.Player); Assert.AreEqual(1, S.State.T); Assert.AreEqual("1", hud.actionsValue.text);
             // Non-adjacent node: nothing happens, no action counted.
             Assert.IsFalse(S.TapNode(_composer.Input.ScreenToNodeOverride(ScreenOf(new GridCoord(4, 0))).Value)); yield return Settle();
             Assert.AreEqual(1, S.State.T);
-            // Blocked cover cell (2,2) next to the player: not connected, rejected, no action counted.
-            Assert.IsFalse(S.TapNode(new GridCoord(2, 2))); yield return Settle();
-            Assert.AreEqual(1, S.State.T); Assert.AreEqual(new GridCoord(1, 2), S.State.Player);
+            Assert.IsTrue(S.TapNode(new GridCoord(1, 3))); yield return Settle(); Assert.AreEqual(2, S.State.T);
+            // Blocked cover cell (2,3) next to the player: not connected, rejected, no action counted.
+            Assert.IsFalse(S.TapNode(new GridCoord(2, 3))); yield return Settle();
+            Assert.AreEqual(2, S.State.T); Assert.AreEqual(new GridCoord(1, 3), S.State.Player);
             // The drawn spy stands on the drawn node of its logical cell.
             Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(S.State.Player)), 1e-3f);
         }
@@ -112,15 +113,16 @@ namespace ShadowSteps.Art2D.Tests
             // Exit is logical East of the start row; on the rotated board it is drawn above, so an upward swipe must move logically East.
             Assert.AreEqual(Direction.East, _composer.Input.ScreenToLogicalDirection(Direction.North));
             Assert.AreEqual(Direction.North, _composer.Input.ScreenToLogicalDirection(Direction.West));
+            // Swipe left → logical North: (0,2) → (0,1), drawn to the left. (Straight up to (1,2) is the D-046 trap: seen once the guard turns W.)
             var before = R.Pos(S.State.Player);
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(_composer.Input.ScreenToLogicalDirection(Direction.North)))); yield return Settle();
-            Assert.AreEqual(new GridCoord(1, 2), S.State.Player, "swipe up → logical East");
-            var after = R.Pos(S.State.Player);
-            Assert.Greater(after.y, before.y, "and the spy moved up on screen"); Assert.AreEqual(before.x, after.x, 1e-4f);
-            // Swipe left → logical North: (1,2) → (1,1), drawn to the left.
             Assert.IsTrue(S.TrySubmit(StageAction.Move(_composer.Input.ScreenToLogicalDirection(Direction.West)))); yield return Settle();
-            Assert.AreEqual(new GridCoord(1, 1), S.State.Player);
-            Assert.Less(R.Pos(S.State.Player).x, after.x);
+            Assert.AreEqual(new GridCoord(0, 1), S.State.Player, "swipe left → logical North");
+            var after = R.Pos(S.State.Player);
+            Assert.Less(after.x, before.x, "and the spy moved left on screen"); Assert.AreEqual(before.y, after.y, 1e-4f);
+            // Swipe up → logical East: (0,1) → (1,1), drawn above.
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(_composer.Input.ScreenToLogicalDirection(Direction.North)))); yield return Settle();
+            Assert.AreEqual(new GridCoord(1, 1), S.State.Player, "swipe up → logical East");
+            Assert.Greater(R.Pos(S.State.Player).y, after.y); Assert.AreEqual(after.x, R.Pos(S.State.Player).x, 1e-4f);
             Assert.AreEqual(Direction.North, R.Logical(R.View(Direction.North)));
         }
 
@@ -135,7 +137,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsFalse(S.TrySubmit(StageAction.Wait)); Assert.IsFalse(_composer.Input.LongPress(ScreenOf(new GridCoord(0, 0)))); Assert.IsFalse(S.TapNode(S.State.Player));
             yield return null; Assert.AreEqual(0, S.State.T); Assert.IsTrue(hud.messageLabel.text.Contains("Waiting is not possible"));
             // Only moves advance time: each move turns the rotating guard by one schedule step, and the drawn fan is the engine's.
-            var path = new[] { Direction.East, Direction.South, Direction.East, Direction.East };
+            var path = new[] { Direction.North, Direction.East, Direction.East, Direction.South }; // the D-046 par route up to the guard's side
             foreach (var d in path)
             {
                 int tBefore = S.State.T;
@@ -148,7 +150,8 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsTrue(expected.SetEquals(DrawnHazardCells()), "hazard overlay == engine cells at t=" + S.State.T + " (" + string.Join(",", expected) + ")");
                 Assert.IsTrue(R.Guards[0].transform.localPosition == R.Pos(pose.Position));
             }
-            Assert.AreEqual(Direction.East, GuardTrack.PoseAt(g, 4).Facing, "period 4: back to the authored facing");
+            Assert.AreEqual(Direction.South, GuardTrack.PoseAt(g, 4).Facing, "period 4: back to the authored facing");
+            Assert.AreEqual(new List<int> { 0 }, S.KnockoutTargets(), "(2,2) beside the guard at (3,2) as it faces S again: a legal knockout");
             Assert.AreEqual(0, S.State.WaitsUsed);
         }
 
@@ -157,10 +160,9 @@ namespace ShadowSteps.Art2D.Tests
         {
             yield return Open();
             var hud = (SS2DHudCanvas)_composer.Hud;
-            // t0: guard (3,1) faces E. Move E to (1,2) → guard turns S. Move N to (1,1) → after the update the guard faces W and sees (2,1),(1,1): caught.
+            // t0: guard (3,2) faces S. Move E to (1,2) → after the update the guard faces W and sees (2,2),(1,2): caught (the D-046 "Clockwise" trap).
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle();
-            Assert.AreEqual(StageResult.Caught, S.State.Result);
+            Assert.AreEqual(StageResult.Caught, S.State.Result); Assert.AreEqual(0, S.State.T);
             // The failure screen waits for the guard to finish its turn and for the capture beat.
             Assert.IsTrue(_bridge.CaptureSequenceRunning || _flow.Router.AnyModalOpen, "capture choreography owns the timing");
             if (_bridge.CaptureSequenceRunning) Assert.IsFalse(_flow.Router.AnyModalOpen, "no failure screen while the guard is still finishing its move/turn and the capture beat plays");
@@ -183,11 +185,11 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual(0, S.State.T); Assert.AreEqual(new GridCoord(0, 2), S.State.Player); Assert.AreEqual(StageResult.Playing, S.State.Result);
             Assert.AreEqual(Color.white, R.Player.body.color); Assert.AreEqual("0", hud.actionsValue.text);
             Assert.IsFalse(S.InputLocked);
-            Assert.AreEqual(R.View(Direction.East), R.Guards[0].Facing, "guard back to its authored facing");
+            Assert.AreEqual(R.View(Direction.South), R.Guards[0].Facing, "guard back to its authored facing");
             var expected = new HashSet<GridCoord>(Sight.GuardVision(S.Stage, S.State, GuardTrack.PoseAt(S.Stage.Guards[0], 0)));
             Assert.IsTrue(expected.SetEquals(DrawnHazardCells()));
-            // HUD retry button does the same.
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T);
+            // Restart from the pause card does the same.
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle(); Assert.AreEqual(1, S.State.T);
             _flow.Router.Get<PauseScreen>().OnRestart(); yield return Settle(); // Restart lives on the pause card (the skinned HUD has no retry button)
             Assert.AreEqual(0, S.State.T);
         }
@@ -196,18 +198,18 @@ namespace ShadowSteps.Art2D.Tests
         public IEnumerator SolverSolution_Wins_WithThreeStars_AndRecordsProgress()
         {
             yield return Open();
-            foreach (var token in new[] { "E", "S", "E", "E", "E", "E", "N" }) // validation_v4.json LEVEL-2, par 7
+            foreach (var token in new[] { "N", "E", "E", "S", "KO#0", "E", "E", "E" }) // validation_v4.json LEVEL-2 (D-046), knockout par 8
             {
                 Assert.IsTrue(StageAction.TryParse(token, out var a), token);
                 Assert.IsTrue(S.TrySubmit(a), "action " + token + " at t=" + S.State.T);
                 yield return Settle();
             }
             Assert.AreEqual(StageResult.Won, S.State.Result);
-            Assert.AreEqual(7, S.State.T);
+            Assert.AreEqual(8, S.State.T); Assert.AreEqual(1, S.State.DefeatedCount);
             Assert.AreEqual(3, StageScoring.Stars(S.State.T, S.Stage.ParFor(S.State.Mode)));
             int wonStageId = S.Stage.Id; var exitPos = R.Pos(S.Stage.Exit); var doorPos = R.DoorPosition;
             var result = AppServices.Save.GetResult(wonStageId, S.State.Mode); // the shipped game records Knockout runs (D-043)
-            Assert.IsNotNull(result, "win recorded before the door sequence"); Assert.IsTrue(result.Completed); Assert.AreEqual(7, result.BestTurns); Assert.AreEqual(3, result.BestStars);
+            Assert.IsNotNull(result, "win recorded before the door sequence"); Assert.IsTrue(result.Completed); Assert.AreEqual(8, result.BestTurns); Assert.AreEqual(3, result.BestStars);
             Assert.IsFalse(result.Ghost, "Ghost is not offered on LEVEL-2");
             Assert.IsTrue(AppServices.Save.IsUnlocked(wonStageId + 1), "next stage unlocked");
             Assert.IsTrue(((SS2DHudCanvas)_composer.Hud).messageLabel.text.Contains("\u2605\u2605\u2605"));
@@ -238,7 +240,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual(0, S.State.T); Assert.AreEqual(0, S.State.WaitsUsed); Assert.AreEqual(before, S.State.Key(), "state untouched");
             Assert.IsFalse(S.TrySubmit(StageAction.Wait), "a queued or replayed WAIT is refused by the session gate"); Assert.AreEqual(0, S.State.T);
             S.SetMode(InputMode.SmokeTarget); Assert.AreEqual(InputMode.Move, S.Mode); // LEVEL-2 has no smoke: targeting mode falls back to Move
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T, "moves still count");
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle(); Assert.AreEqual(1, S.State.T, "moves still count");
         }
 
         [UnityTest]
@@ -300,7 +302,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsFalse(S.TrySubmit(StageAction.Wait)); Assert.AreEqual(0, S.State.T);
             _flow.Router.Pop(); yield return null;
             Assert.IsFalse(S.InputLocked);
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T);
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle(); Assert.AreEqual(1, S.State.T);
             // Skinned HUD (D-045): gadget buttons are always shown; without charges they are dimmed and not interactable.
             Assert.IsTrue(hud.smokeButton.gameObject.activeSelf); Assert.IsFalse(hud.smokeButton.GetComponent<UnityEngine.UI.Button>().interactable, "no smoke on LEVEL-2");
             Assert.IsTrue(hud.empButton.gameObject.activeSelf); Assert.IsFalse(hud.empButton.GetComponent<UnityEngine.UI.Button>().interactable, "no EMP on LEVEL-2");

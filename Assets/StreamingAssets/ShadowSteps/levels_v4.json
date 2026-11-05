@@ -8,16 +8,16 @@
       "code": "FTUE-1",
       "group": "FTUE",
       "title": "First Steps",
-      "intro": "Tap an adjacent node or swipe to move one step. Reach the green exit!",
+      "intro": "Tap the next node or swipe to move. A long line is still one move.",
       "rows": [
-        "...."
+        ".-.-."
       ],
       "start": [
         0,
         0
       ],
       "exit": [
-        3,
+        4,
         0
       ],
       "key": null,
@@ -32,17 +32,18 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 3,
-        "threeStar": 4,
-        "twoStar": 5,
+        "par": 2,
+        "threeStar": 3,
+        "twoStar": 4,
         "ghostOffered": false,
-        "knockoutPar": 3,
-        "knockoutThreeStar": 4,
-        "knockoutTwoStar": 5
+        "knockoutPar": 2,
+        "knockoutThreeStar": 3,
+        "knockoutTwoStar": 4
       },
       "notes": [
         "imported from browser playtest export (FTUE 1)",
-        "browser par 3, browser ghostOffered False"
+        "browser par 3, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT"
       ]
     },
     {
@@ -50,7 +51,7 @@
       "code": "FTUE-2",
       "group": "FTUE",
       "title": "Follow the Lines",
-      "intro": "You can move only along connected nodes. Find the route around the walls.",
+      "intro": "You move only along the lines. Find the way round the walls.",
       "rows": [
         "...",
         "##.",
@@ -94,13 +95,12 @@
       "code": "FTUE-3",
       "group": "FTUE",
       "title": "Stay Out of Sight",
-      "intro": "Red outlines show guard vision. Guards see two nodes straight ahead.",
+      "intro": "Red is what the guard sees. Step onto him from the side, not the front.",
       "rows": [
-        ".....",
-        ".....",
-        ".....",
-        "..X..",
-        "....."
+        ".-.-.",
+        "|_|_|",
+        ".-.-.",
+        "__X__"
       ],
       "start": [
         0,
@@ -134,17 +134,19 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 8,
-        "threeStar": 9,
-        "twoStar": 11,
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
         "ghostOffered": false,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 4,
+        "knockoutThreeStar": 5,
+        "knockoutTwoStar": 6
       },
       "notes": [
         "imported from browser playtest export (FTUE 3, 1 blocked cover nodes)",
-        "browser par 8, browser ghostOffered False"
+        "browser par 8, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -152,21 +154,19 @@
       "code": "FTUE-4",
       "group": "FTUE",
       "title": "Watch the Rotation",
-      "intro": "The curved arrows show its turn direction. This guard turns 90° whenever you move.",
+      "intro": "He turns a quarter after each move. Pass behind him or take his side.",
       "rows": [
-        ".....",
-        ".....",
-        ".....",
-        "..X..",
-        "....."
+        ".-.____",
+        ".-..-..",
+        ".-.-.-."
       ],
       "start": [
         0,
-        2
+        1
       ],
       "exit": [
-        4,
-        2
+        6,
+        1
       ],
       "key": null,
       "cuts": [],
@@ -177,11 +177,11 @@
           "kind": "rotating",
           "route": [
             [
-              2,
+              3,
               1
             ]
           ],
-          "facing": "E",
+          "facing": "N",
           "clockwise": true
         }
       ],
@@ -193,17 +193,19 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 5,
-        "threeStar": 6,
-        "twoStar": 7,
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
         "ghostOffered": false,
-        "knockoutPar": 6,
-        "knockoutThreeStar": 7,
-        "knockoutTwoStar": 8
+        "knockoutPar": 4,
+        "knockoutThreeStar": 5,
+        "knockoutTwoStar": 6
       },
       "notes": [
         "imported from browser playtest export (FTUE 4, 1 blocked cover nodes)",
-        "browser par 5, browser ghostOffered False"
+        "browser par 5, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -211,21 +213,19 @@
       "code": "FTUE-5",
       "group": "FTUE",
       "title": "Moving Patrol",
-      "intro": "Moving guards reach the final corridor node before reversing. The cyan NEXT arrow shows their upcoming step.",
+      "intro": "A patrol walks its line and turns at the end. Come at it sideways.",
       "rows": [
-        ".....",
-        ".....",
-        "...X.",
-        ".....",
-        "....."
+        "____.-.",
+        ".-...-.",
+        ".....-."
       ],
       "start": [
         0,
-        2
+        1
       ],
       "exit": [
-        4,
-        2
+        6,
+        1
       ],
       "key": null,
       "cuts": [],
@@ -237,27 +237,89 @@
           "route": [
             [
               2,
-              0
-            ],
-            [
-              2,
               1
             ],
             [
-              2,
-              2
+              3,
+              1
             ],
             [
-              2,
-              3
-            ],
-            [
-              2,
-              4
+              4,
+              1
             ]
           ],
-          "facing": "N",
-          "offset": 1
+          "facing": "E",
+          "offset": 3
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
+        "ghostOffered": false,
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
+      },
+      "notes": [
+        "imported from browser playtest export (FTUE 5, 1 blocked cover nodes)",
+        "browser par 6, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+      ]
+    },
+    {
+      "id": 6,
+      "code": "LEVEL-1",
+      "group": "Main",
+      "title": "Blind Side",
+      "intro": "The guard watches this corridor. Circle round and step onto him from the side.",
+      "rows": [
+        ".-.-..",
+        "....X.",
+        "......",
+        ".-..X."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        5,
+        2
+      ],
+      "key": null,
+      "cuts": [
+        [
+          [
+            4,
+            0
+          ],
+          [
+            5,
+            0
+          ]
+        ]
+      ],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [
+              3,
+              2
+            ]
+          ],
+          "facing": "W"
         }
       ],
       "cameras": [],
@@ -277,28 +339,249 @@
         "knockoutTwoStar": 8
       },
       "notes": [
-        "imported from browser playtest export (FTUE 5, 1 blocked cover nodes)",
-        "browser par 6, browser ghostOffered False"
+        "redesigned 2026-11-05 (D-046): original board for Knockout / no-WAIT; solver-scored",
+        "passage cells added 2026-11-05 (D-047): not every square holds a node"
       ]
     },
     {
-      "id": 6,
-      "code": "LEVEL-1",
+      "id": 7,
+      "code": "LEVEL-2",
       "group": "Main",
-      "title": "Safe Side",
-      "intro": "Plan your route around a stationary guard.",
+      "title": "Clockwise",
+      "intro": "He turns after every move you make. Reach his side on the right turn.",
       "rows": [
-        "......",
-        "....X.",
-        "...X..",
-        "......"
+        ".-.-...",
+        "...X...",
+        ".......",
+        "..X.X.."
       ],
       "start": [
         0,
         2
       ],
       "exit": [
-        5,
+        6,
+        2
+      ],
+      "key": null,
+      "cuts": [
+        [
+          [
+            5,
+            0
+          ],
+          [
+            6,
+            0
+          ]
+        ],
+        [
+          [
+            5,
+            3
+          ],
+          [
+            6,
+            3
+          ]
+        ],
+        [
+          [
+            5,
+            1
+          ],
+          [
+            6,
+            1
+          ]
+        ]
+      ],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [
+              3,
+              2
+            ]
+          ],
+          "facing": "S",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
+      },
+      "notes": [
+        "redesigned 2026-11-05 (D-046): original board for Knockout / no-WAIT; solver-scored",
+        "passage cells added 2026-11-05 (D-047): not every square holds a node"
+      ]
+    },
+    {
+      "id": 8,
+      "code": "LEVEL-3",
+      "group": "Main",
+      "title": "One Step Ahead",
+      "intro": "A patrol crosses the only corridor. Be beside it the turn it steps in.",
+      "rows": [
+        "...-...",
+        ".X.X...",
+        ".......",
+        ".X.X..."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "cuts": [
+        [
+          [
+            5,
+            0
+          ],
+          [
+            6,
+            0
+          ]
+        ],
+        [
+          [
+            5,
+            3
+          ],
+          [
+            6,
+            3
+          ]
+        ],
+        [
+          [
+            5,
+            1
+          ],
+          [
+            6,
+            1
+          ]
+        ],
+        [
+          [
+            4,
+            1
+          ],
+          [
+            5,
+            1
+          ]
+        ],
+        [
+          [
+            4,
+            3
+          ],
+          [
+            5,
+            3
+          ]
+        ],
+        [
+          [
+            2,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ]
+      ],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ]
+          ],
+          "facing": "N",
+          "offset": 3
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
+      },
+      "notes": [
+        "redesigned 2026-11-05 (D-046): original board for Knockout / no-WAIT; solver-scored",
+        "passage cells added 2026-11-05 (D-047): not every square holds a node"
+      ]
+    },
+    {
+      "id": 9,
+      "code": "LEVEL-4",
+      "group": "Main",
+      "title": "Double Trouble",
+      "intro": "One guard holds the middle, one turns below. Drop one, time the other.",
+      "rows": [
+        "_______",
+        "_X.._X_",
+        ".-..-..",
+        "|X|._X|",
+        ".-..-.."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
         2
       ],
       "key": null,
@@ -310,11 +593,23 @@
           "kind": "static",
           "route": [
             [
-              2,
+              3,
               1
             ]
           ],
           "facing": "S"
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [
+              3,
+              3
+            ]
+          ],
+          "facing": "W",
+          "clockwise": true
         }
       ],
       "cameras": [],
@@ -325,37 +620,40 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 9,
-        "threeStar": 10,
-        "twoStar": 12,
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
         "ghostOffered": false,
-        "knockoutPar": 9,
-        "knockoutThreeStar": 10,
-        "knockoutTwoStar": 12
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
-        "imported from browser playtest export (Level 1, 2 blocked cover nodes)",
-        "browser par 9, browser ghostOffered False"
+        "imported from browser playtest export (Level 4, 3 blocked cover nodes)",
+        "browser par 14, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
-      "id": 7,
-      "code": "LEVEL-2",
+      "id": 10,
+      "code": "LEVEL-5",
       "group": "Main",
-      "title": "Clockwise",
-      "intro": "Plan your steps around the rotating guard’s facing.",
+      "title": "Corner Patrol",
+      "intro": "He circles the planter and looks where he walks. Slip in behind him.",
       "rows": [
-        "......",
-        "......",
-        "..X.X.",
-        "......"
+        ".-.___.",
+        "|_..._|",
+        "...X.-.",
+        "||..._|",
+        "..____."
       ],
       "start": [
         0,
         2
       ],
       "exit": [
-        5,
+        6,
         2
       ],
       "key": null,
@@ -364,14 +662,203 @@
       "guards": [
         {
           "id": "g1",
+          "kind": "loop",
+          "route": [
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "facing": "E",
+          "offset": 6
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
+        "ghostOffered": false,
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
+      },
+      "notes": [
+        "imported from browser playtest export (Level 5, 2 blocked cover nodes)",
+        "browser par 8, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+      ]
+    },
+    {
+      "id": 11,
+      "code": "LEVEL-6",
+      "group": "Main",
+      "title": "Narrow Crossing",
+      "intro": "Two patrols step together. Drop one and the other's timing opens up.",
+      "rows": [
+        "_______",
+        ".-._.-.",
+        "...X.-.",
+        ".-...-.",
+        "___..-."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "facing": "N",
+          "offset": 0
+        },
+        {
+          "id": "g2",
+          "kind": "pingPong",
+          "route": [
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ]
+          ],
+          "facing": "N",
+          "offset": 3
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
+        "ghostOffered": false,
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
+      },
+      "notes": [
+        "imported from browser playtest export (Level 6, 3 blocked cover nodes)",
+        "browser par 13, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+      ]
+    },
+    {
+      "id": 12,
+      "code": "LEVEL-7",
+      "group": "Main",
+      "title": "Crossroads",
+      "intro": "The corridor is watched. The walkway above reaches the turner's side.",
+      "rows": [
+        "..-.-._",
+        "|X___X_",
+        ".-...-.",
+        "|X||_X|",
+        "......."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": null,
+      "cuts": [],
+      "doors": [],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [
+              3,
+              2
+            ]
+          ],
+          "facing": "W"
+        },
+        {
+          "id": "g2",
           "kind": "rotating",
           "route": [
             [
               3,
-              1
+              0
             ]
           ],
-          "facing": "E",
+          "facing": "W",
           "clockwise": true
         }
       ],
@@ -392,28 +879,31 @@
         "knockoutTwoStar": 10
       },
       "notes": [
-        "imported from browser playtest export (Level 2, 2 blocked cover nodes)",
-        "browser par 7, browser ghostOffered False"
+        "imported from browser playtest export (Level 7, 3 blocked cover nodes)",
+        "browser par 14, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
-      "id": 8,
-      "code": "LEVEL-3",
+      "id": 13,
+      "code": "LEVEL-8",
       "group": "Main",
-      "title": "One Step Ahead",
-      "intro": "A patrol can cross your route. Watch both detection phases.",
+      "title": "Predict the Return",
+      "intro": "Cyan NEXT shows a patrol's next step, even its turn. Meet it sideways.",
       "rows": [
-        "......",
-        "......",
-        ".XX...",
-        "..X..."
+        "__..-..",
+        ".-...-.",
+        ".-..-..",
+        ".-.|_||",
+        "....-.."
       ],
       "start": [
         0,
         2
       ],
       "exit": [
-        5,
+        6,
         2
       ],
       "key": null,
@@ -435,84 +925,22 @@
             [
               3,
               2
-            ],
-            [
-              3,
-              3
             ]
           ],
           "facing": "N",
-          "offset": 1
-        }
-      ],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 11,
-        "threeStar": 12,
-        "twoStar": 15,
-        "ghostOffered": false,
-        "knockoutPar": 11,
-        "knockoutThreeStar": 12,
-        "knockoutTwoStar": 15
-      },
-      "notes": [
-        "imported from browser playtest export (Level 3, 3 blocked cover nodes)",
-        "browser par 11, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 9,
-      "code": "LEVEL-4",
-      "group": "Main",
-      "title": "Double Trouble",
-      "intro": "Two guards watch different lanes.",
-      "rows": [
-        "....X..",
-        ".......",
-        "..XX...",
-        ".......",
-        "......."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        2
-      ],
-      "key": null,
-      "cuts": [],
-      "doors": [],
-      "guards": [
-        {
-          "id": "g1",
-          "kind": "rotating",
-          "route": [
-            [
-              2,
-              1
-            ]
-          ],
-          "facing": "E",
-          "clockwise": true
+          "offset": 3
         },
         {
           "id": "g2",
-          "kind": "static",
+          "kind": "rotating",
           "route": [
             [
-              4,
+              3,
               4
             ]
           ],
-          "facing": "N"
+          "facing": "N",
+          "clockwise": true
         }
       ],
       "cameras": [],
@@ -523,31 +951,33 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 14,
-        "threeStar": 15,
-        "twoStar": 19,
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
         "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
-        "imported from browser playtest export (Level 4, 3 blocked cover nodes)",
-        "browser par 14, browser ghostOffered False"
+        "imported from browser playtest export (Level 8, 2 blocked cover nodes)",
+        "browser par 10, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
-      "id": 10,
-      "code": "LEVEL-5",
+      "id": 14,
+      "code": "LEVEL-9",
       "group": "Main",
-      "title": "Corner Patrol",
-      "intro": "Route patrols turn naturally at corners.",
+      "title": "Around the Loop",
+      "intro": "A circling patrol and a turning guard. Two knockouts, or wait them out.",
       "rows": [
-        ".......",
-        ".....X.",
+        ".-.___.",
+        "|_..._|",
         "...X...",
-        ".......",
-        "......."
+        "||...||",
+        "..__..."
       ],
       "start": [
         0,
@@ -566,6 +996,10 @@
           "kind": "loop",
           "route": [
             [
+              2,
+              1
+            ],
+            [
               3,
               1
             ],
@@ -592,14 +1026,22 @@
             [
               2,
               2
-            ],
+            ]
+          ],
+          "facing": "E",
+          "offset": 4
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
             [
-              2,
-              1
+              5,
+              2
             ]
           ],
           "facing": "N",
-          "offset": 0
+          "clockwise": true
         }
       ],
       "cameras": [],
@@ -619,367 +1061,10 @@
         "knockoutTwoStar": 11
       },
       "notes": [
-        "imported from browser playtest export (Level 5, 2 blocked cover nodes)",
-        "browser par 8, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 11,
-      "code": "LEVEL-6",
-      "group": "Main",
-      "title": "Narrow Crossing",
-      "intro": "Multiple patrols move together each action.",
-      "rows": [
-        ".......",
-        "......X",
-        "...X.X.",
-        ".......",
-        "......."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        2
-      ],
-      "key": null,
-      "cuts": [],
-      "doors": [],
-      "guards": [
-        {
-          "id": "g1",
-          "kind": "pingPong",
-          "route": [
-            [
-              2,
-              0
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              2,
-              2
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              2,
-              4
-            ]
-          ],
-          "facing": "N",
-          "offset": 1
-        },
-        {
-          "id": "g2",
-          "kind": "pingPong",
-          "route": [
-            [
-              4,
-              4
-            ],
-            [
-              4,
-              3
-            ],
-            [
-              4,
-              2
-            ],
-            [
-              4,
-              1
-            ],
-            [
-              4,
-              0
-            ]
-          ],
-          "facing": "N",
-          "offset": 1
-        }
-      ],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 13,
-        "threeStar": 14,
-        "twoStar": 17,
-        "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
-      },
-      "notes": [
-        "imported from browser playtest export (Level 6, 3 blocked cover nodes)",
-        "browser par 13, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 12,
-      "code": "LEVEL-7",
-      "group": "Main",
-      "title": "Crossroads",
-      "intro": "The safest route is not always the shortest.",
-      "rows": [
-        ".X.....",
-        ".......",
-        "..XX...",
-        ".......",
-        "......."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        2
-      ],
-      "key": null,
-      "cuts": [],
-      "doors": [],
-      "guards": [
-        {
-          "id": "g1",
-          "kind": "rotating",
-          "route": [
-            [
-              3,
-              1
-            ]
-          ],
-          "facing": "E",
-          "clockwise": true
-        },
-        {
-          "id": "g2",
-          "kind": "static",
-          "route": [
-            [
-              3,
-              4
-            ]
-          ],
-          "facing": "N"
-        }
-      ],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 14,
-        "threeStar": 15,
-        "twoStar": 19,
-        "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
-      },
-      "notes": [
-        "imported from browser playtest export (Level 7, 3 blocked cover nodes)",
-        "browser par 14, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 13,
-      "code": "LEVEL-8",
-      "group": "Main",
-      "title": "Predict the Return",
-      "intro": "The cyan NEXT badge shows a patrol’s next move, including its reversal at the end node.",
-      "rows": [
-        ".......",
-        ".......",
-        "...X.X.",
-        ".......",
-        "......."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        2
-      ],
-      "key": null,
-      "cuts": [],
-      "doors": [],
-      "guards": [
-        {
-          "id": "g1",
-          "kind": "pingPong",
-          "route": [
-            [
-              2,
-              0
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              2,
-              2
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              2,
-              4
-            ]
-          ],
-          "facing": "N",
-          "offset": 2
-        },
-        {
-          "id": "g2",
-          "kind": "rotating",
-          "route": [
-            [
-              4,
-              1
-            ]
-          ],
-          "facing": "W",
-          "clockwise": true
-        }
-      ],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 10,
-        "threeStar": 11,
-        "twoStar": 13,
-        "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
-      },
-      "notes": [
-        "imported from browser playtest export (Level 8, 2 blocked cover nodes)",
-        "browser par 10, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 14,
-      "code": "LEVEL-9",
-      "group": "Main",
-      "title": "Around the Loop",
-      "intro": "Time your crossing with a looping patrol.",
-      "rows": [
-        ".......",
-        "...X...",
-        ".X...X.",
-        ".......",
-        "......."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        2
-      ],
-      "key": null,
-      "cuts": [],
-      "doors": [],
-      "guards": [
-        {
-          "id": "g1",
-          "kind": "loop",
-          "route": [
-            [
-              3,
-              0
-            ],
-            [
-              4,
-              0
-            ],
-            [
-              4,
-              1
-            ],
-            [
-              4,
-              2
-            ],
-            [
-              3,
-              2
-            ],
-            [
-              2,
-              2
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              2,
-              0
-            ]
-          ],
-          "facing": "N",
-          "offset": 0
-        },
-        {
-          "id": "g2",
-          "kind": "rotating",
-          "route": [
-            [
-              5,
-              3
-            ]
-          ],
-          "facing": "N",
-          "clockwise": true
-        }
-      ],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 10,
-        "threeStar": 11,
-        "twoStar": 13,
-        "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
-      },
-      "notes": [
         "imported from browser playtest export (Level 9, 3 blocked cover nodes)",
-        "browser par 10, browser ghostOffered False"
+        "browser par 10, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -987,21 +1072,21 @@
       "code": "LEVEL-10",
       "group": "Main",
       "title": "Patrol Junction",
-      "intro": "Guards never occupy the same node at a turn boundary.",
+      "intro": "Two patrols cross at one node and never share it. Count the beats.",
       "rows": [
-        "...X...",
-        ".......",
-        "..XX...",
-        ".......",
-        "......."
+        ".-..-._",
+        ".-...-.",
+        "|.....|",
+        ".-...-.",
+        "___.-.."
       ],
       "start": [
         0,
-        2
+        0
       ],
       "exit": [
         6,
-        2
+        4
       ],
       "key": null,
       "cuts": [],
@@ -1012,64 +1097,56 @@
           "kind": "pingPong",
           "route": [
             [
-              0,
-              1
-            ],
-            [
               1,
-              1
+              2
             ],
             [
               2,
-              1
+              2
             ],
             [
               3,
-              1
-            ],
-            [
-              4,
-              1
-            ],
-            [
-              5,
-              1
-            ],
-            [
-              6,
-              1
-            ]
-          ],
-          "facing": "N",
-          "offset": 1
-        },
-        {
-          "id": "g2",
-          "kind": "pingPong",
-          "route": [
-            [
-              4,
-              4
-            ],
-            [
-              4,
-              3
+              2
             ],
             [
               4,
               2
             ],
             [
-              4,
+              5,
+              2
+            ]
+          ],
+          "facing": "E",
+          "offset": 0
+        },
+        {
+          "id": "g2",
+          "kind": "pingPong",
+          "route": [
+            [
+              3,
+              0
+            ],
+            [
+              3,
               1
             ],
             [
-              4,
-              0
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
             ]
           ],
-          "facing": "N",
-          "offset": 1
+          "facing": "S",
+          "offset": 5
         }
       ],
       "cameras": [],
@@ -1080,17 +1157,19 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 13,
-        "threeStar": 14,
-        "twoStar": 17,
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
         "ghostOffered": false,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
       },
       "notes": [
         "imported from browser playtest export (Level 10, 3 blocked cover nodes)",
-        "browser par 13, browser ghostOffered False"
+        "browser par 13, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1098,13 +1177,13 @@
       "code": "LEVEL-11",
       "group": "Main",
       "title": "Find the Key",
-      "intro": "Walk onto the key, then physically cross the locked connection.",
+      "intro": "Walk onto the key, then cross the locked line between the planters.",
       "rows": [
-        ".......",
-        ".X.#...",
-        ".X.....",
-        ".X.#...",
-        "......."
+        ".-...-.",
+        "|_|#|_|",
+        ".-...-.",
+        "|_|#|_|",
+        ".-...-."
       ],
       "start": [
         0,
@@ -1112,11 +1191,11 @@
       ],
       "exit": [
         6,
-        4
+        2
       ],
       "key": [
         2,
-        2
+        0
       ],
       "cuts": [
         [
@@ -1136,6 +1215,79 @@
           ],
           [
             4,
+            4
+          ]
+        ]
+      ],
+      "doors": [
+        {
+          "a": [
+            3,
+            2
+          ],
+          "b": [
+            4,
+            2
+          ]
+        }
+      ],
+      "guards": [],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
+        "ghostOffered": false,
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
+      },
+      "notes": [
+        "imported from browser playtest export (Level 11, 3 blocked cover nodes)",
+        "browser par 12, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+      ]
+    },
+    {
+      "id": 17,
+      "code": "LEVEL-12",
+      "group": "Main",
+      "title": "Key Detour",
+      "intro": "The key sits in a dead end. Fetch it, come back and cross the lock.",
+      "rows": [
+        "___#.-.",
+        "_X_#|X|",
+        ".-...-.",
+        ".X.#|X|",
+        "...#.-."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": [
+        2,
+        4
+      ],
+      "cuts": [
+        [
+          [
+            2,
+            3
+          ],
+          [
+            2,
             4
           ]
         ]
@@ -1170,109 +1322,10 @@
         "knockoutTwoStar": 16
       },
       "notes": [
-        "imported from browser playtest export (Level 11, 3 blocked cover nodes)",
-        "browser par 12, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 17,
-      "code": "LEVEL-12",
-      "group": "Main",
-      "title": "Key Detour",
-      "intro": "The key is reusable; collecting it does not open the lock remotely.",
-      "rows": [
-        ".......",
-        ".......",
-        ".......",
-        "..X....",
-        "...X..."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        4
-      ],
-      "key": [
-        2,
-        4
-      ],
-      "cuts": [
-        [
-          [
-            4,
-            0
-          ],
-          [
-            5,
-            0
-          ]
-        ],
-        [
-          [
-            4,
-            1
-          ],
-          [
-            5,
-            1
-          ]
-        ],
-        [
-          [
-            4,
-            2
-          ],
-          [
-            5,
-            2
-          ]
-        ],
-        [
-          [
-            4,
-            3
-          ],
-          [
-            5,
-            3
-          ]
-        ]
-      ],
-      "doors": [
-        {
-          "a": [
-            4,
-            4
-          ],
-          "b": [
-            5,
-            4
-          ]
-        }
-      ],
-      "guards": [],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 14,
-        "threeStar": 15,
-        "twoStar": 19,
-        "ghostOffered": false,
-        "knockoutPar": 14,
-        "knockoutThreeStar": 15,
-        "knockoutTwoStar": 19
-      },
-      "notes": [
         "imported from browser playtest export (Level 12, 2 blocked cover nodes)",
-        "browser par 14, browser ghostOffered False"
+        "browser par 14, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1280,13 +1333,12 @@
       "code": "LEVEL-13",
       "group": "Main",
       "title": "Door as Cover",
-      "intro": "A closed door blocks sight. Opening it can expose you.",
+      "intro": "A closed door hides you. Opening it shows you to whoever is looking.",
       "rows": [
-        ".......",
-        "...#...",
-        ".X.....",
-        "...#X..",
-        "......."
+        ".-.#.-.",
+        ".-.#|_.",
+        ".-.....",
+        "___#___"
       ],
       "start": [
         0,
@@ -1298,124 +1350,9 @@
       ],
       "key": [
         2,
-        2
+        0
       ],
-      "cuts": [
-        [
-          [
-            3,
-            0
-          ],
-          [
-            4,
-            0
-          ]
-        ],
-        [
-          [
-            3,
-            4
-          ],
-          [
-            4,
-            4
-          ]
-        ]
-      ],
-      "doors": [
-        {
-          "a": [
-            3,
-            2
-          ],
-          "b": [
-            4,
-            2
-          ]
-        }
-      ],
-      "guards": [
-        {
-          "id": "g1",
-          "kind": "rotating",
-          "route": [
-            [
-              5,
-              1
-            ]
-          ],
-          "facing": "W",
-          "clockwise": true
-        }
-      ],
-      "cameras": [],
-      "gadgets": {
-        "smoke": 0,
-        "emp": 0
-      },
-      "alarmBudget": 4,
-      "waitLimit": 0,
-      "scoring": {
-        "par": 10,
-        "threeStar": 11,
-        "twoStar": 13,
-        "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
-      },
-      "notes": [
-        "imported from browser playtest export (Level 13, 2 blocked cover nodes)",
-        "browser par 10, browser ghostOffered False"
-      ]
-    },
-    {
-      "id": 19,
-      "code": "LEVEL-14",
-      "group": "Main",
-      "title": "Unlock at the Right Time",
-      "intro": "Plan the guard phase before crossing the locked door.",
-      "rows": [
-        ".......",
-        ".X.#...",
-        ".X.....",
-        "...#X..",
-        "......."
-      ],
-      "start": [
-        0,
-        2
-      ],
-      "exit": [
-        6,
-        2
-      ],
-      "key": [
-        2,
-        2
-      ],
-      "cuts": [
-        [
-          [
-            3,
-            0
-          ],
-          [
-            4,
-            0
-          ]
-        ],
-        [
-          [
-            3,
-            4
-          ],
-          [
-            4,
-            4
-          ]
-        ]
-      ],
+      "cuts": [],
       "doors": [
         {
           "a": [
@@ -1438,7 +1375,7 @@
               2
             ]
           ],
-          "facing": "N",
+          "facing": "S",
           "clockwise": true
         }
       ],
@@ -1450,31 +1387,32 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 12,
-        "threeStar": 13,
-        "twoStar": 16,
+        "par": 9,
+        "threeStar": 10,
+        "twoStar": 12,
         "ghostOffered": false,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 9,
+        "knockoutThreeStar": 10,
+        "knockoutTwoStar": 12
       },
       "notes": [
-        "imported from browser playtest export (Level 14, 3 blocked cover nodes)",
-        "browser par 12, browser ghostOffered False"
+        "imported from browser playtest export (Level 13, 2 blocked cover nodes)",
+        "browser par 10, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
-      "id": 20,
-      "code": "LEVEL-15",
+      "id": 19,
+      "code": "LEVEL-14",
       "group": "Main",
-      "title": "Protected Corridor",
-      "intro": "Enemy patrols never cross locked-door connections.",
+      "title": "Unlock at the Right Time",
+      "intro": "The patrol cannot see through the door. Open it once he turns away.",
       "rows": [
+        "___#___",
+        "___#_._",
         ".......",
-        "...#...",
-        ".X.....",
-        ".X.#...",
-        "......."
+        ".-.#..."
       ],
       "start": [
         0,
@@ -1486,30 +1424,9 @@
       ],
       "key": [
         2,
-        2
+        3
       ],
-      "cuts": [
-        [
-          [
-            3,
-            0
-          ],
-          [
-            4,
-            0
-          ]
-        ],
-        [
-          [
-            3,
-            4
-          ],
-          [
-            4,
-            4
-          ]
-        ]
-      ],
+      "cuts": [],
       "doors": [
         {
           "a": [
@@ -1529,10 +1446,6 @@
           "route": [
             [
               5,
-              0
-            ],
-            [
-              5,
               1
             ],
             [
@@ -1542,14 +1455,96 @@
             [
               5,
               3
-            ],
-            [
-              5,
-              4
             ]
           ],
           "facing": "N",
-          "offset": 1
+          "offset": 0
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
+        "ghostOffered": false,
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
+      },
+      "notes": [
+        "imported from browser playtest export (Level 14, 3 blocked cover nodes)",
+        "browser par 12, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+      ]
+    },
+    {
+      "id": 20,
+      "code": "LEVEL-15",
+      "group": "Main",
+      "title": "Protected Corridor",
+      "intro": "Patrols never cross a locked line. The door is a wall until you say.",
+      "rows": [
+        "___#.-.",
+        "___#.-.",
+        ".-...-.",
+        ".-.#.-."
+      ],
+      "start": [
+        0,
+        2
+      ],
+      "exit": [
+        6,
+        2
+      ],
+      "key": [
+        2,
+        3
+      ],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [
+            3,
+            2
+          ],
+          "b": [
+            4,
+            2
+          ]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "pingPong",
+          "route": [
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ]
+          ],
+          "facing": "N",
+          "offset": 5
         }
       ],
       "cameras": [],
@@ -1570,7 +1565,9 @@
       },
       "notes": [
         "imported from browser playtest export (Level 15, 2 blocked cover nodes)",
-        "browser par 8, browser ghostOffered False"
+        "browser par 8, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1578,12 +1575,12 @@
       "code": "LEVEL-16",
       "group": "Main",
       "title": "Camera Basics",
-      "intro": "Amber vision starts a lockdown, not immediate capture.",
+      "intro": "Amber starts a countdown, not a capture. Cross it and reach the exit.",
       "rows": [
         "#######",
-        "#.....#",
-        "#..X..#",
-        "#..X..#",
+        "#.-.-.#",
+        "#|_X_|#",
+        "#._X_.#",
         "#######"
       ],
       "start": [
@@ -1618,18 +1615,20 @@
       "alarmBudget": 5,
       "waitLimit": 0,
       "scoring": {
-        "par": 8,
-        "threeStar": 9,
-        "twoStar": 11,
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
         "ghostOffered": false,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 4,
+        "knockoutThreeStar": 5,
+        "knockoutTwoStar": 6
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
         "imported from browser playtest export (Level 16, 2 blocked cover nodes)",
-        "historical browser par 8, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)"
+        "historical browser par 8, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1637,12 +1636,12 @@
       "code": "LEVEL-17",
       "group": "Main",
       "title": "Race the Alarm",
-      "intro": "Escape before the lockdown action counter reaches zero.",
+      "intro": "The exit sits in the camera's eye. Trigger it late and run.",
       "rows": [
         "#######",
-        "#.....#",
-        "#...X.#",
-        "#..X..#",
+        "#.-.-.#",
+        "#|__X.#",
+        "#._X_.#",
         "#######"
       ],
       "start": [
@@ -1677,17 +1676,19 @@
       "alarmBudget": 3,
       "waitLimit": 0,
       "scoring": {
-        "par": 8,
-        "threeStar": 9,
-        "twoStar": 11,
+        "par": 5,
+        "threeStar": 6,
+        "twoStar": 7,
         "ghostOffered": false,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 5,
+        "knockoutThreeStar": 6,
+        "knockoutTwoStar": 7
       },
       "notes": [
         "imported from browser playtest export (Level 17, 2 blocked cover nodes)",
-        "historical browser par 8, browser ghostOffered False (re-scored 2026-11-03 under the front-node camera footprint, D-035)"
+        "historical browser par 8, browser ghostOffered False (re-scored 2026-11-03 under the front-node camera footprint, D-035)",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1695,12 +1696,12 @@
       "code": "LEVEL-18",
       "group": "Main",
       "title": "Rotating Security",
-      "intro": "Wall cameras rotate every action, even when facing a wall.",
+      "intro": "The camera turns every move. A clean route earns a Ghost.",
       "rows": [
         "#######",
-        "#.....#",
-        "#...X.#",
-        "#..X..#",
+        "#.-.-.#",
+        "#|__X.#",
+        "#..X_.#",
         "#######"
       ],
       "start": [
@@ -1735,18 +1736,19 @@
       "alarmBudget": 3,
       "waitLimit": 0,
       "scoring": {
-        "par": 9,
-        "threeStar": 10,
-        "twoStar": 12,
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
         "ghostOffered": true,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
         "imported from browser playtest export (Level 18, 2 blocked cover nodes)",
-        "redesigned 2026-11-03 for the front-node camera footprint (camera at (1,0) counter-clockwise, cover at (4,2),(3,3)); browser par/ghost no longer apply"
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1814,13 +1816,13 @@
       "code": "LEVEL-20",
       "group": "Main",
       "title": "Risky Shortcut",
-      "intro": "Try a faster alarm route or a slower Ghost escape.",
+      "intro": "Every way out crosses the camera. Pick the crossing with the short run.",
       "rows": [
         "#######",
-        "#.....#",
-        "#.###.#",
-        "#.....#",
-        "#..XX.#",
+        "#.-.-.#",
+        "#|###|#",
+        "#.-.-.#",
+        "#._XX.#",
         "#######"
       ],
       "start": [
@@ -1855,17 +1857,19 @@
       "alarmBudget": 2,
       "waitLimit": 0,
       "scoring": {
-        "par": 6,
-        "threeStar": 7,
-        "twoStar": 8,
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
         "ghostOffered": false,
-        "knockoutPar": 6,
-        "knockoutThreeStar": 7,
-        "knockoutTwoStar": 8
+        "knockoutPar": 4,
+        "knockoutThreeStar": 5,
+        "knockoutTwoStar": 6
       },
       "notes": [
         "imported from browser playtest export (Level 20, 2 blocked cover nodes)",
-        "historical browser par 10, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)"
+        "historical browser par 10, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1873,11 +1877,11 @@
       "code": "LEVEL-21",
       "group": "Main",
       "title": "Smoke Screen",
-      "intro": "Tap Smoke, then tap a nearby node. Smoke blocks vision for two actions.",
+      "intro": "Tap Smoke, then a nearby node. The cloud hides that node for two moves.",
       "rows": [
         "#######",
         "###.###",
-        ".......",
+        ".-..-..",
         "#######"
       ],
       "start": [
@@ -1912,17 +1916,19 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 6,
-        "threeStar": 7,
-        "twoStar": 8,
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
         "ghostOffered": false,
-        "knockoutPar": 6,
-        "knockoutThreeStar": 7,
-        "knockoutTwoStar": 8
+        "knockoutPar": 4,
+        "knockoutThreeStar": 5,
+        "knockoutTwoStar": 6
       },
       "notes": [
         "imported from browser playtest export (Level 21)",
-        "browser par 6, browser ghostOffered False"
+        "browser par 6, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -1930,21 +1936,21 @@
       "code": "LEVEL-22",
       "group": "Main",
       "title": "Cloud Timing",
-      "intro": "Smoke stays on its node while guards keep moving.",
+      "intro": "Smoke stays put while the patrol walks on. Or step round and drop him.",
       "rows": [
-        ".......",
-        "..X....",
-        "..X....",
-        ".......",
-        "......."
+        ".______",
+        ".-.X.-.",
+        "_.....|",
+        ".-.X.-.",
+        "__.-.-."
       ],
       "start": [
         0,
-        2
+        0
       ],
       "exit": [
         6,
-        2
+        4
       ],
       "key": null,
       "cuts": [],
@@ -1955,28 +1961,28 @@
           "kind": "pingPong",
           "route": [
             [
-              3,
-              0
+              1,
+              2
             ],
             [
-              3,
-              1
+              2,
+              2
             ],
             [
               3,
               2
             ],
             [
-              3,
-              3
+              4,
+              2
             ],
             [
-              3,
-              4
+              5,
+              2
             ]
           ],
-          "facing": "N",
-          "offset": 1
+          "facing": "E",
+          "offset": 5
         }
       ],
       "cameras": [],
@@ -1987,17 +1993,19 @@
       "alarmBudget": 4,
       "waitLimit": 0,
       "scoring": {
-        "par": 10,
-        "threeStar": 11,
-        "twoStar": 13,
+        "par": 7,
+        "threeStar": 8,
+        "twoStar": 10,
         "ghostOffered": false,
-        "knockoutPar": 10,
-        "knockoutThreeStar": 11,
-        "knockoutTwoStar": 13
+        "knockoutPar": 7,
+        "knockoutThreeStar": 8,
+        "knockoutTwoStar": 10
       },
       "notes": [
         "imported from browser playtest export (Level 22, 2 blocked cover nodes)",
-        "browser par 10, browser ghostOffered False"
+        "browser par 10, browser ghostOffered False",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -2009,7 +2017,7 @@
       "rows": [
         "#######",
         "#######",
-        "......#",
+        ".-....#",
         "#######"
       ],
       "start": [
@@ -2044,17 +2052,18 @@
       "alarmBudget": 2,
       "waitLimit": 0,
       "scoring": {
-        "par": 5,
-        "threeStar": 6,
-        "twoStar": 7,
+        "par": 4,
+        "threeStar": 5,
+        "twoStar": 6,
         "ghostOffered": false,
-        "knockoutPar": 5,
-        "knockoutThreeStar": 6,
-        "knockoutTwoStar": 7
+        "knockoutPar": 4,
+        "knockoutThreeStar": 5,
+        "knockoutTwoStar": 6
       },
       "notes": [
         "imported from browser playtest export (Level 23)",
-        "corridor extended by one node (exit (5,2)) on 2026-11-03 so EMP stays mandatory under the front-node camera footprint"
+        "corridor extended by one node (exit (5,2)) on 2026-11-03 so EMP stays mandatory under the front-node camera footprint",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -2062,12 +2071,12 @@
       "code": "LEVEL-24",
       "group": "Main",
       "title": "Security Gap",
-      "intro": "The EMP expires after two counted actions, then the camera rechecks vision.",
+      "intro": "EMP shuts the camera for two moves. The sweep is back when it ends.",
       "rows": [
         "#######",
-        "#.....#",
-        "#..X..#",
-        "#..X..#",
+        "#.-.-.#",
+        "#|_X_.#",
+        "#._X_.#",
         "#######"
       ],
       "start": [
@@ -2102,17 +2111,19 @@
       "alarmBudget": 1,
       "waitLimit": 0,
       "scoring": {
-        "par": 8,
-        "threeStar": 9,
-        "twoStar": 11,
+        "par": 5,
+        "threeStar": 6,
+        "twoStar": 7,
         "ghostOffered": true,
-        "knockoutPar": 8,
-        "knockoutThreeStar": 9,
-        "knockoutTwoStar": 11
+        "knockoutPar": 5,
+        "knockoutThreeStar": 6,
+        "knockoutTwoStar": 7
       },
       "notes": [
         "imported from browser playtest export (Level 24, 2 blocked cover nodes)",
-        "historical browser par 9, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)"
+        "historical browser par 9, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -2203,16 +2214,16 @@
       "code": "LEVEL-26",
       "group": "Main",
       "title": "Courtyard Relay",
-      "intro": "Retrieve the key, then plan your return past the sentry before entering the upper courtyard.",
+      "intro": "Fetch the key, then plan the way back past the sentry to the upper yard.",
       "rows": [
         "#######",
-        "#.....#",
-        "#.....#",
-        "#.X...#",
+        "#____.#",
+        "#.-.-.#",
+        "#.X___#",
         "#.#####",
-        "#.....#",
-        "#..X..#",
-        "#.....#",
+        "#|___.#",
+        "#._X..#",
+        "#.-.-.#",
         "#######"
       ],
       "start": [
@@ -2242,18 +2253,6 @@
       ],
       "guards": [
         {
-          "id": "g1",
-          "kind": "rotating",
-          "route": [
-            [
-              4,
-              6
-            ]
-          ],
-          "facing": "S",
-          "clockwise": true
-        },
-        {
           "id": "g2",
           "kind": "rotating",
           "route": [
@@ -2274,18 +2273,21 @@
       "alarmBudget": 3,
       "waitLimit": 0,
       "scoring": {
-        "par": 20,
-        "threeStar": 22,
-        "twoStar": 26,
+        "par": 17,
+        "threeStar": 18,
+        "twoStar": 23,
         "ghostOffered": false,
-        "knockoutPar": 18,
-        "knockoutThreeStar": 19,
-        "knockoutTwoStar": 24
+        "knockoutPar": 17,
+        "knockoutThreeStar": 18,
+        "knockoutTwoStar": 23
       },
       "notes": [
         "imported from browser playtest export (Level 26, 2 blocked cover nodes)",
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 31, \"Level 26\"); reference optimal 20 counted actions",
-        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved",
+        "lower-yard guard at (4,6) removed 2026-11-05 at the user's request (dead-end post, no puzzle); the upper sentry still forces the knockout"
       ]
     },
     {
@@ -2296,13 +2298,13 @@
       "intro": "Cross the watched passage under Smoke, then time the upper sentry.",
       "rows": [
         "#######",
-        "#.....#",
-        "#.....#",
-        "#...X.#",
+        "#.-.-.#",
+        "#|_.-.#",
+        "#.-.X.#",
         "###.#.#",
         "#.....#",
         "#.#####",
-        "#.....#",
+        "#.-.-.#",
         "#######"
       ],
       "start": [
@@ -2349,18 +2351,20 @@
       "alarmBudget": 3,
       "waitLimit": 0,
       "scoring": {
-        "par": 20,
-        "threeStar": 22,
-        "twoStar": 26,
+        "par": 14,
+        "threeStar": 15,
+        "twoStar": 19,
         "ghostOffered": false,
-        "knockoutPar": 20,
-        "knockoutThreeStar": 22,
-        "knockoutTwoStar": 26
+        "knockoutPar": 14,
+        "knockoutThreeStar": 15,
+        "knockoutTwoStar": 19
       },
       "notes": [
         "imported from browser playtest export (Level 27, 1 blocked cover nodes)",
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 32, \"Level 27\"); reference optimal 20 counted actions",
-        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -2368,16 +2372,16 @@
       "code": "LEVEL-28",
       "group": "Main",
       "title": "Divided Watch",
-      "intro": "Two camera zones, one EMP. Plan a route through both and choose where to use it.",
+      "intro": "Two camera zones, one EMP. Choose where to spend it.",
       "rows": [
         "#########",
-        "#...#...#",
-        "#...#...#",
-        "#.X.#...#",
-        "#.......#",
-        "#...#.X.#",
-        "#...#...#",
-        "#...#...#",
+        "#.-.#.-.#",
+        "#|_|#|_|#",
+        "#.X.#.-.#",
+        "#|_...-.#",
+        "#.-.#.X.#",
+        "#|_|#|_|#",
+        "#.-.#.-.#",
         "#########"
       ],
       "start": [
@@ -2437,18 +2441,20 @@
       "alarmBudget": 2,
       "waitLimit": 0,
       "scoring": {
-        "par": 21,
-        "threeStar": 23,
-        "twoStar": 28,
+        "par": 11,
+        "threeStar": 12,
+        "twoStar": 15,
         "ghostOffered": true,
-        "knockoutPar": 22,
-        "knockoutThreeStar": 24,
-        "knockoutTwoStar": 29
+        "knockoutPar": 11,
+        "knockoutThreeStar": 12,
+        "knockoutTwoStar": 15
       },
       "notes": [
         "imported from browser playtest export (Level 28, 2 blocked cover nodes)",
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 33, \"Level 28\"); reference optimal 21 counted actions, Ghost route supplied",
-        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -2456,17 +2462,17 @@
       "code": "LEVEL-29",
       "group": "Main",
       "title": "Two Locks",
-      "intro": "One reusable key opens both doors. Time the patrol before approaching the watched exit.",
+      "intro": "One key opens both doors. Time the patrol before the watched exit.",
       "rows": [
         "#######",
-        "#.....#",
-        "#..X..#",
+        "#.-.-.#",
+        "#|_X_|#",
         "#.....#",
         "#.#####",
-        "#.....#",
-        "#..X..#",
+        "#|____#",
+        "#._X__#",
         "#.#####",
-        "#.....#",
+        "#.-.-.#",
         "#.....#",
         "#######"
       ],
@@ -2567,18 +2573,20 @@
       "alarmBudget": 2,
       "waitLimit": 0,
       "scoring": {
-        "par": 24,
-        "threeStar": 26,
-        "twoStar": 32,
+        "par": 14,
+        "threeStar": 15,
+        "twoStar": 19,
         "ghostOffered": true,
-        "knockoutPar": 24,
-        "knockoutThreeStar": 26,
-        "knockoutTwoStar": 32
+        "knockoutPar": 14,
+        "knockoutThreeStar": 15,
+        "knockoutTwoStar": 19
       },
       "notes": [
         "imported from browser playtest export (Level 29, 2 blocked cover nodes)",
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 34, \"Level 29\"); reference optimal 24 counted actions, Ghost route supplied",
-        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
     {
@@ -2586,18 +2594,18 @@
       "code": "LEVEL-30",
       "group": "Main",
       "title": "Inner Citadel",
-      "intro": "Collect access, cross under Smoke, and coordinate the final guard and camera.",
+      "intro": "Collect access, cross under Smoke, then beat the last guard and camera.",
       "rows": [
         "#########",
-        "#.......#",
-        "#...X...#",
-        "#.......#",
+        "#.-.-.-.#",
+        "#|_|X.-.#",
+        "#.-.-.__#",
         "#####.###",
-        "#.......#",
+        "#.-.-.-.#",
         "#.##.####",
-        "#.......#",
+        "#.-.-.-.#",
         "#.#######",
-        "#.......#",
+        "#.-.-.-.#",
         "#########"
       ],
       "start": [
@@ -2691,18 +2699,20 @@
       "alarmBudget": 2,
       "waitLimit": 0,
       "scoring": {
-        "par": 28,
-        "threeStar": 30,
-        "twoStar": 37,
+        "par": 19,
+        "threeStar": 20,
+        "twoStar": 25,
         "ghostOffered": true,
-        "knockoutPar": 28,
-        "knockoutThreeStar": 30,
-        "knockoutTwoStar": 37
+        "knockoutPar": 19,
+        "knockoutThreeStar": 20,
+        "knockoutTwoStar": 25
       },
       "notes": [
         "imported from browser playtest export (Level 30, 1 blocked cover nodes)",
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 35, \"Level 30\"); reference optimal 28 counted actions, Ghost route supplied",
-        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md"
+        "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
+        "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     }
   ]

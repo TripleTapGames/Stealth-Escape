@@ -48,14 +48,14 @@ namespace ShadowSteps.Tests.PlayMode
         public IEnumerator Win_ShowsResults_RecordsStars_AndUnlocksNext()
         {
             yield return Open(1);
-            yield return Play("E", "E", "E");
+            yield return Play("E", "E"); // FTUE-1 (D-048): two long edges, par 2
             yield return null;
             var results = _flow.Router.Get<ResultsScreen>();
             Assert.IsTrue(results.IsVisible);
             Assert.IsTrue(_composer.Session.InputLocked);
             Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), results.StarsText.Text);
             Assert.IsTrue(AppServices.Save.IsCompleted(1));
-            Assert.AreEqual(3, AppServices.Save.GetResult(1, StageModeUtil.Default).BestTurns); // runs are recorded in the shipped mode's table (D-043)
+            Assert.AreEqual(2, AppServices.Save.GetResult(1, StageModeUtil.Default).BestTurns); // runs are recorded in the shipped mode's table (D-043)
             Assert.AreEqual(3, AppServices.Save.GetResult(1, StageModeUtil.Default).BestStars);
             Assert.IsTrue(StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, 2));
             Assert.IsFalse(StageProgression.IsUnlocked(AppServices.Stages, AppServices.Save, 3));
@@ -64,9 +64,7 @@ namespace ShadowSteps.Tests.PlayMode
         [UnityTest]
         public IEnumerator Capture_ShowsFailureWithCause_RetryRestores()
         {
-            yield return Open(3); // FTUE-3: guard at (2,0) facing S sees (2,1),(2,2); start (0,2)
-            yield return Play("E");
-            Assert.IsFalse(_composer.Session.State.IsTerminal);
+            yield return Open(3); // FTUE-3 (D-049): guard at (2,0) facing S sees (2,2) across the dissolved (2,1); start (0,2), one long edge east
             yield return Play("E"); // into (2,2): seen before the guard update
             yield return null;
             var failure = _flow.Router.Get<FailureScreen>();

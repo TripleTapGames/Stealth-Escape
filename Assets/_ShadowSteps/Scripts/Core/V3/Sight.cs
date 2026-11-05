@@ -94,8 +94,10 @@ namespace ShadowSteps.V3
         public static bool Obstructed(Stage stage, StageState state, GridCoord a, GridCoord b) => Obstructed(stage, state.OpenDoors, Vec2.Of(a), Vec2.Of(b));
 
         /// <summary>
-        /// Nodes a guard sees: up to two nodes straight ahead; stops at the first wall, closed door, board edge or
-        /// smoke node (that node is not seen). A guard standing in smoke sees nothing.
+        /// Nodes a guard sees: the nodes within <see cref="GuardRange"/> squares straight ahead; stops at the first wall, blocked
+        /// cover, closed door, board edge or smoke node (that node is not seen). Passage and empty cells (D-047/D-049) are open
+        /// ground: looked across, never seen, but they use up distance (D-050: a walkway never lengthens a guard's sight), so
+        /// across a 2-square edge the far node is seen and nothing beyond it. A guard standing in smoke sees nothing.
         /// </summary>
         public static List<GridCoord> GuardVision(Stage stage, StageState state, GuardPose3 pose) => GuardVision(stage, state.OpenDoors, state.Clouds, pose);
 
@@ -105,10 +107,13 @@ namespace ShadowSteps.V3
             var seen = new List<GridCoord>(GuardRange);
             if (InCloud(clouds, pose.Position)) return seen;
             var origin = Vec2.Of(pose.Position);
+            int dx = DirectionUtil.DeltaX(pose.Facing), dy = DirectionUtil.DeltaY(pose.Facing);
             for (int k = 1; k <= GuardRange; k++)
             {
-                var q = new GridCoord(pose.Position.X + DirectionUtil.DeltaX(pose.Facing) * k, pose.Position.Y + DirectionUtil.DeltaY(pose.Facing) * k);
-                if (!stage.IsFloor(q) || Obstructed(stage, openDoorMask, origin, Vec2.Of(q)) || InCloud(clouds, q)) break;
+                var q = new GridCoord(pose.Position.X + dx * k, pose.Position.Y + dy * k);
+                if (!stage.Inside(q) || stage.IsWall(q) || stage.IsBlocked(q)) break;
+                if (stage.IsOpenNonNode(q)) continue; // passage or empty ground (D-047/D-049): looked across, never seen, distance still spent (D-050)
+                if (Obstructed(stage, openDoorMask, origin, Vec2.Of(q)) || InCloud(clouds, q)) break;
                 seen.Add(q);
             }
             return seen;
@@ -122,27 +127,25 @@ namespace ShadowSteps.V3
         }
 
         /// <summary>
-        /// Drawing-only silhouette of a guard's sight: a narrow circular sector from the guard's node along its facing, reaching
-        /// 'overshoot' spacings past the last node it sees (so it ends on the edge of the wall, door, smoke or board limit that stops it),
-        /// each ray clipped by the same occluders as the detection. Empty when the guard sees nothing. The rule itself is
-        /// still <see cref="GuardVision"/> (two nodes straight ahead); the fan only visualises it.
+        /// Drawing-only silhouette of a guard's sight (D-051): a narrow circular sector from the guard's node along its facing with a
+        /// FIXED reach of <see cref="GuardRange"/> squares plus 'overshoot' spacings (0.5 = up to the far cell edge), whatever lies
+        /// ahead: nodes, walkways, empty ground, a wall or the board edge. Never trimmed and never empty for a standing guard, like the
+        /// nominal camera cone (D-042). The rule itself is <see cref="GuardVision"/> (nodes within two squares); the rings mark the
+        /// nodes actually seen. The stage/door/cloud parameters are kept for callers and ignored.
         /// </summary>
         public static List<Vec2> GuardConeOutline(Stage stage, int openDoorMask, IReadOnlyList<SmokeCloud> clouds, GuardPose3 pose, double halfAngleDegrees, int rays = 24, double overshoot = 0.5, double curvature = 1.0)
         {
             var pts = new List<Vec2>(rays + 2);
-            var seen = GuardVision(stage, openDoorMask, clouds, pose);
-            if (seen.Count == 0) return pts;
             var origin = Vec2.Of(pose.Position);
             pts.Add(origin);
             double fx = DirectionUtil.DeltaX(pose.Facing), fy = DirectionUtil.DeltaY(pose.Facing);
-            // Drawn reach: the last seen node plus 'overshoot' spacings (0.5 = up to the next cell edge); never past a blocker thanks to the ray clipping.
-            double reach = seen.Count + Math.Max(0.0, Math.Min(1.0, overshoot)), half = halfAngleDegrees * Math.PI / 180.0;
+            double reach = GuardRange + Math.Max(0.0, Math.Min(1.0, overshoot)), half = halfAngleDegrees * Math.PI / 180.0;
             for (int i = 0; i <= rays; i++)
             {
                 double a = -half + (2.0 * half) * i / rays;
                 double ca = Math.Cos(a), sa = Math.Sin(a);
                 var dir = new Vec2(fx * ca - fy * sa, fx * sa + fy * ca);
-                double dist = RayDistance(stage, openDoorMask, clouds, origin, dir, FarEdgeRayLength(reach, a, curvature), null);
+                double dist = FarEdgeRayLength(reach, a, curvature);
                 pts.Add(new Vec2(origin.X + dir.X * dist, origin.Y + dir.Y * dist));
             }
             return pts;
@@ -344,13 +347,25 @@ namespace ShadowSteps.V3
             return false;
         }
 
-        /// <summary>A smoke throw from <paramref name="from"/> to <paramref name="to"/> is legal: floor, within the 3×3, not already smoked, not obstructed.</summary>
+        /// <summary>
+        /// A smoke throw from <paramref name="from"/> to <paramref name="to"/> is legal: a floor node that is within the 3×3 around the
+        /// thrower OR the next node in one of the four directions across a walkway (D-052: a 2-square edge never puts a neighbour out of
+        /// smoke range), not already smoked, not obstructed.
+        /// </summary>
         public static bool CanThrowSmoke(Stage stage, StageState state, GridCoord from, GridCoord to)
         {
             if (!stage.IsFloor(to)) return false;
-            if (Math.Max(Math.Abs(to.X - from.X), Math.Abs(to.Y - from.Y)) > 1) return false;
+            if (!SmokeInRange(stage, from, to)) return false;
             if (state.IsSmoked(to)) return false;
             return !Obstructed(stage, state.OpenDoors, Vec2.Of(from), Vec2.Of(to));
+        }
+
+        /// <summary>Range only: the 3×3 around <paramref name="from"/>, plus the next node straight ahead in each direction when it lies beyond a walkway (D-052).</summary>
+        public static bool SmokeInRange(Stage stage, GridCoord from, GridCoord to)
+        {
+            if (Math.Max(Math.Abs(to.X - from.X), Math.Abs(to.Y - from.Y)) <= 1) return true;
+            var d = DirectionUtil.Toward(to.X - from.X, to.Y - from.Y);
+            return d.HasValue && stage.Step(from, d.Value) == to;
         }
     }
 }

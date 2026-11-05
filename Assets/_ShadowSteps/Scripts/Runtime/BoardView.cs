@@ -66,6 +66,7 @@ namespace ShadowSteps.Runtime
                 for (int x = 0; x < stage.Width; x++)
                 {
                     var c = new GridCoord(x, y);
+                    if (stage.IsOpenNonNode(c)) continue; // D-047/D-049: no node on passages or empty ground (placeholder board)
                     var kind = stage.IsWall(c) ? CellKind.Wall : stage.IsBlocked(c) ? CellKind.Cover : CellKind.Floor;
                     var go = new GameObject(kind + " " + c);
                     go.transform.SetParent(_nodesRoot, false);
@@ -78,8 +79,9 @@ namespace ShadowSteps.Runtime
             foreach (var a in stage.FloorNodes())
                 foreach (var d in new[] { Direction.East, Direction.South })
                 {
-                    var b = a.Neighbor(d);
-                    if (!stage.IsConnected(a, b)) continue;
+                    var nb = stage.Neighbor(a, d); // adjacent, or across passage cells (D-047)
+                    if (!nb.HasValue) continue;
+                    var b = nb.Value;
                     int door = stage.DoorIndex(a, b);
                     var go = new GameObject((door >= 0 ? "Door " : "Connection ") + a + "-" + b);
                     go.transform.SetParent(_connectionsRoot, false);

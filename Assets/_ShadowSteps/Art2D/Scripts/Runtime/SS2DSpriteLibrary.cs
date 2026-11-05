@@ -172,7 +172,7 @@ namespace ShadowSteps.Art2D
         public Color guardVisionGlow = new Color(0.96f, 0.32f, 0.32f, 0.14f);
         [Tooltip("Half-angle of the drawn guard sight fan (drawing only: a guard sees the two nodes straight ahead). Narrow enough that the neighbouring lanes' node centres stay outside.")]
         [Range(10f, 30f)] public float guardConeHalfAngleDegrees = 22f;
-        [Tooltip("Drawn reach of the guard fan beyond the last node the guard sees, in node spacings (0 = ends on that node's centre, 0.5 = on the next cell edge). Drawing only; the rule always sees two nodes straight ahead.")]
+        [Tooltip("Drawn reach of the guard fan beyond its fixed two-square length, in node spacings (0 = ends on the second square's centre, 0.5 = on its far edge). Drawing only (D-051: the fan is always two squares long, whatever lies ahead); the rule sees the nodes within two squares.")]
         [Range(0f, 1f)] public float guardConeOvershoot = 0.5f;
         [Tooltip("Curve of the guard fan's far edge: 1 = circular arc centred on the guard, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only.")]
         [Range(0f, 1f)] public float guardConeCurvature = 1f;

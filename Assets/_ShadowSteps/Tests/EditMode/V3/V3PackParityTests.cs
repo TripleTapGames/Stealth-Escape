@@ -59,6 +59,8 @@ namespace ShadowSteps.Tests.EditMode.V3
             TestContext.WriteLine(string.Join("\n", lines));
         }
 
+        private static bool IsRedesigned(Stage s) { foreach (var n in s.Notes) if (n.Contains("redesigned")) return true; return false; }
+
         [Test]
         public void BrowserReport_OptimalLengths_MatchTheCSharpSolver()
         {
@@ -70,6 +72,7 @@ namespace ShadowSteps.Tests.EditMode.V3
                 if (s.Cameras.Count > 0) continue; // camera stages: C# solver authority (new footprint), see validation_v4.json
                 string label = s.Code.Replace("FTUE-", "FTUE ").Replace("LEVEL-", "Level ");
                 if (!byLabel.ContainsKey(label)) continue; // Levels 26-30 are not in the browser report (ChatGPT kit, C# solver authority)
+                if (IsRedesigned(s)) continue; // D-046/D-048: redesigned boards no longer share the imported layout; the C# solver is the authority
                 Assert.AreEqual(byLabel[label], s.Par, s.Code);
             }
         }
@@ -129,8 +132,8 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.IsTrue(metrics.Solvable, "EMP training must have a winning route");
             Assert.IsTrue(metrics.EmpRequired, "Increasing alarm time must not allow skipping EMP");
             Assert.IsTrue(metrics.ForcedAlarm, "The player must still race the alarm after EMP expires");
-            Assert.AreEqual(5, metrics.Par);
-            var replay = StageReplay.Run(stage, StageAction.ParseSequence(new[] { "E", "EMP#0", "E", "E", "E", "E" }));
+            Assert.AreEqual(4, metrics.Par); // D-049: a walkway in the corridor (EMP still required)
+            var replay = StageReplay.Run(stage, metrics.Solution); // the solver's own par route (D-049: "EMP#0 E E E E" across the corridor walkway) replays to a win
             Assert.IsTrue(replay.Won, replay.Trace());
             Assert.AreEqual(stage.Par, replay.CountedActions);
         }
@@ -161,7 +164,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55, blocked); Assert.AreEqual(25, stagesWithCover);
             int shipped = 0;
             foreach (var s in Pack().Stages) shipped += s.BlockedCount;
-            Assert.AreEqual(55 + 8, shipped, "shipped pack carries every obstacle: the 55 imported plus 8 in Levels 26-30");
+            Assert.AreEqual(47, shipped, "shipped pack after the D-048 campaign redesign: 47 cover cells (the imported 55 no longer apply; the browser export is only compared through Imported())");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-18", "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-24's flag corrected to true in the no-WAIT pack (D-044) // stored flags; LEVEL-24's stored flag is stale pending the cone decision

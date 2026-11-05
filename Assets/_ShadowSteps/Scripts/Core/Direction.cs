@@ -46,6 +46,15 @@ namespace ShadowSteps.Core
             return r < 0 ? r + m : r;
         }
 
+        /// <summary>Cardinal direction of a straight (axis-aligned, non-zero) delta of any length; null for zero or diagonal deltas. Connections may span several squares (D-047), so V3 callers use this rather than <see cref="FromDelta"/>.</summary>
+        public static Direction? Toward(int dx, int dy)
+        {
+            if (dx != 0 && dy != 0) return null;
+            if (dx != 0) return dx > 0 ? Direction.East : Direction.West;
+            if (dy != 0) return dy > 0 ? Direction.South : Direction.North;
+            return null;
+        }
+
         /// <summary>Returns the cardinal direction for a unit delta, or null when the delta is not a unit cardinal step.</summary>
         public static Direction? FromDelta(int dx, int dy)
         {

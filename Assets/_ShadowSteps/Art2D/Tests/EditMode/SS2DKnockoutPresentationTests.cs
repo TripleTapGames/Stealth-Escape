@@ -48,20 +48,21 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void Level1_Knockout_TargetDiscThenGuardDownWithNoFanOrRings()
         {
-            var stage = Pack().FindByCode("LEVEL-1"); Assert.IsNotNull(stage);
+            var stage = Pack().FindByCode("LEVEL-1"); Assert.IsNotNull(stage); // D-046 "Blind Side": static guard at (3,2) facing W; start (0,2)
+            Assert.AreEqual(new GridCoord(3, 2), stage.Guards[0].Anchor); Assert.AreEqual(Direction.West, stage.Guards[0].Facing);
             var go = new GameObject("test-renderer"); var r = go.AddComponent<ShadowSteps2DRenderer>(); r.library = Library(); r.Build(stage);
             try
             {
                 var s = StageState.Initial(stage, StageMode.Knockout);
-                foreach (var a in new[] { StageAction.Move(Direction.North), StageAction.Move(Direction.East) }) { var o = StageRules.TryApply(stage, s, a); Assert.IsTrue(o.Valid); s = o.After; }
+                foreach (var a in new[] { StageAction.Move(Direction.North), StageAction.Move(Direction.East), StageAction.Move(Direction.East), StageAction.Move(Direction.East) }) { var o = StageRules.TryApply(stage, s, a); Assert.IsTrue(o.Valid); s = o.After; } // (3,1): above the guard
                 Present(r, stage, s);
                 Assert.AreEqual(1, StageRules.KnockoutTargets(stage, s).Count, "beside the guard: legal");
                 Assert.Greater(ActiveTargets(r), 0, "a knockout target disc is drawn under the guard");
                 Assert.AreEqual(1, r.GuardCones.Count, "standing guard draws its fan");
-                Assert.AreEqual(2, r.GuardOverlay.DrawnCells.Count);
+                Assert.AreEqual(2, r.GuardOverlay.DrawnCells.Count, "(2,2) and (1,2)");
                 Assert.IsFalse(r.IsGuardDefeated(0));
 
-                var ko = StageRules.TryApply(stage, s, StageAction.Move(Direction.East)); // onto the guard = knockout
+                var ko = StageRules.TryApply(stage, s, StageAction.Move(Direction.South)); // onto the guard = knockout
                 Assert.IsTrue(ko.Valid && ko.Knockout); s = ko.After;
                 Present(r, stage, s);
                 Assert.IsTrue(r.IsGuardDefeated(0)); Assert.IsTrue(r.Guards[0].Defeated);
@@ -76,14 +77,14 @@ namespace ShadowSteps.Art2D.Tests
                 r.SetGuard(0, new GuardPose3(new GridCoord(0, 0), Direction.West), Direction.North);
                 Assert.AreEqual(frozen, r.Guards[0].transform.localPosition, "schedule updates are ignored while knocked out");
                 // Fly-off frames: starts on the node, ends hidden, never alters the logical state.
-                r.ApplyGuardFlyOff(0, new GridCoord(2, 1), new GridCoord(1, 1), 0f); Assert.IsTrue(r.Guards[0].gameObject.activeSelf); Assert.Less(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(2, 1))), 1e-3f);
-                r.ApplyGuardFlyOff(0, new GridCoord(2, 1), new GridCoord(1, 1), 0.5f); Assert.Greater(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(2, 1))), 0.5f * r.Layout.NodeSpacing, "flying away");
-                r.ApplyGuardFlyOff(0, new GridCoord(2, 1), new GridCoord(1, 1), 1f); Assert.IsFalse(r.Guards[0].gameObject.activeSelf, "gone");
-                Assert.Less(Vector3.Distance(r.Player.transform.localPosition, r.Pos(new GridCoord(2, 1))), 1e-3f, "spy drawn on the guard's node");
+                r.ApplyGuardFlyOff(0, new GridCoord(3, 2), new GridCoord(3, 1), 0f); Assert.IsTrue(r.Guards[0].gameObject.activeSelf); Assert.Less(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f);
+                r.ApplyGuardFlyOff(0, new GridCoord(3, 2), new GridCoord(3, 1), 0.5f); Assert.Greater(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 0.5f * r.Layout.NodeSpacing, "flying away");
+                r.ApplyGuardFlyOff(0, new GridCoord(3, 2), new GridCoord(3, 1), 1f); Assert.IsFalse(r.Guards[0].gameObject.activeSelf, "gone");
+                Assert.Less(Vector3.Distance(r.Player.transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f, "spy drawn on the guard's node");
 
                 // Stealth on the same board: no discs, guard standing, fan present.
                 var st = StageState.Initial(stage);
-                foreach (var a in new[] { StageAction.Move(Direction.North), StageAction.Move(Direction.East) }) st = StageRules.TryApply(stage, st, a).After;
+                foreach (var a in new[] { StageAction.Move(Direction.North), StageAction.Move(Direction.East), StageAction.Move(Direction.East), StageAction.Move(Direction.East) }) st = StageRules.TryApply(stage, st, a).After;
                 Present(r, stage, st);
                 Assert.AreEqual(0, ActiveTargets(r), "Stealth never shows knockout targets"); Assert.IsFalse(r.IsGuardDefeated(0)); Assert.AreEqual(1, r.GuardCones.Count);
                 Assert.IsTrue(r.Guards[0].gameObject.activeSelf, "revived guard is back on the board"); Assert.AreEqual(Vector3.one, r.Guards[0].transform.localScale); Assert.AreEqual(Quaternion.identity, r.Guards[0].transform.localRotation);
@@ -139,7 +140,7 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsTrue(r.IsGuardDefeated(down)); Assert.IsFalse(r.IsGuardDefeated(up));
                 var expected = new HashSet<GridCoord>(Sight.GuardVision(stage, s, GuardTrack.PoseAt(stage.Guards[up], s.T)));
                 Assert.IsTrue(expected.SetEquals(r.GuardOverlay.DrawnCells), "surviving guard's cells exactly");
-                Assert.AreEqual(expected.Count > 0 ? 1 : 0, r.GuardCones.Count);
+                Assert.AreEqual(1, r.GuardCones.Count, "the surviving guard always draws its fixed fan (D-051)");
             }
             finally { Object.DestroyImmediate(go); }
         }

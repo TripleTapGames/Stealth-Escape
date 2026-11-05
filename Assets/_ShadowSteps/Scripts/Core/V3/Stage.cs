@@ -78,6 +78,24 @@ namespace ShadowSteps.V3
         public override string ToString() => A + "<->" + B;
     }
 
+    /// <summary>Axes along which a connection may run through a passage cell (D-047 long edges).</summary>
+    [Flags]
+    public enum PassageAxis { None = 0, Horizontal = 1, Vertical = 2, Both = 3 }
+
+    /// <summary>
+    /// A passage cell (D-047): open ground with no node. Nothing stands on it, it never blocks sight, and a connection running
+    /// along one of its <see cref="Axis"/> directions passes over it, so one edge can span two or three squares. Rows glyphs:
+    /// '-' horizontal, '|' vertical, '+' both.
+    /// </summary>
+    public readonly struct Passage
+    {
+        public readonly GridCoord Cell;
+        public readonly PassageAxis Axis;
+        public Passage(GridCoord cell, PassageAxis axis) { Cell = cell; Axis = axis; }
+        public char Glyph => Axis == PassageAxis.Both ? '+' : Axis == PassageAxis.Vertical ? '|' : '-';
+        public override string ToString() => Cell + " '" + Glyph + "'";
+    }
+
     /// <summary>Canonical undirected edge identity (order-independent).</summary>
     public readonly struct EdgeKey : IEquatable<EdgeKey>
     {
@@ -99,6 +117,9 @@ namespace ShadowSteps.V3
     /// Movement graph: every pair of cardinally adjacent floor nodes is connected unless the pair is listed in
     /// <see cref="Cuts"/>; door pairs are connected but locked. Physical occluders are walls ('#'), blocked cover nodes ('X',
     /// V4) and closed doors. Walls and blocked nodes are both non-walkable and opaque; a blocked node is drawn as a crate.
+    /// D-047: passage cells ('-', '|', '+') hold no node; a connection runs across them along their axis, so two nodes two
+    /// or three squares apart can be joined by one edge (<see cref="Step"/>). One action still traverses one edge; cuts and
+    /// doors are keyed by the edge's two end nodes; sight looks across passages and counts nodes, not squares.
     /// </summary>
     public sealed class Stage
     {
@@ -144,6 +165,8 @@ namespace ShadowSteps.V3
         private readonly HashSet<GridCoord> _walls;
         private readonly HashSet<GridCoord> _blocked;
         private readonly HashSet<EdgeKey> _cuts;
+        private readonly Dictionary<GridCoord, PassageAxis> _passages;
+        private readonly HashSet<GridCoord> _empties;
         private readonly Dictionary<EdgeKey, int> _doorIndex;
         private int _period = -1;
 
@@ -159,6 +182,9 @@ namespace ShadowSteps.V3
             _walls = new HashSet<GridCoord>(b.Walls);
             _blocked = new HashSet<GridCoord>(b.Blocked);
             _cuts = new HashSet<EdgeKey>(b.Cuts);
+            _passages = new Dictionary<GridCoord, PassageAxis>();
+            foreach (var p in b.Passages) if (p.Axis != PassageAxis.None) _passages[p.Cell] = p.Axis;
+            _empties = new HashSet<GridCoord>(b.Empties);
             _doorIndex = new Dictionary<EdgeKey, int>();
             for (int i = 0; i < Doors.Count; i++) _doorIndex[Doors[i].Key] = i;
         }
@@ -170,18 +196,73 @@ namespace ShadowSteps.V3
         /// <summary>Every physical occluder cell: walls and blocked cover. Used by the shared line-of-sight routine.</summary>
         public IEnumerable<GridCoord> Occluders { get { foreach (var w in _walls) yield return w; foreach (var b in _blocked) yield return b; } }
         public IEnumerable<EdgeKey> Cuts => _cuts;
+        /// <summary>D-047 passage cells in row-major order.</summary>
+        public IEnumerable<Passage> Passages
+        {
+            get
+            {
+                for (int y = 0; y < Height; y++)
+                    for (int x = 0; x < Width; x++) { var c = new GridCoord(x, y); if (_passages.TryGetValue(c, out var a)) yield return new Passage(c, a); }
+            }
+        }
+        public int PassageCount => _passages.Count;
+        public bool HasPassages => _passages.Count > 0;
+        /// <summary>D-049 empty ground ('_'): no node, no connection through it, transparent to sight. Lets a board keep its grid while holding only the nodes that matter.</summary>
+        public IEnumerable<GridCoord> Empties => _empties;
+        public bool IsEmpty(GridCoord c) => _empties.Contains(c);
         public int DoorCount => Doors.Count;
 
         public bool Inside(GridCoord c) => c.X >= 0 && c.X < Width && c.Y >= 0 && c.Y < Height;
         public bool IsWall(GridCoord c) => _walls.Contains(c);
         public bool IsBlocked(GridCoord c) => _blocked.Contains(c);
-        /// <summary>A standable node: inside the board, not a wall, not blocked cover.</summary>
-        public bool IsFloor(GridCoord c) => Inside(c) && !_walls.Contains(c) && !_blocked.Contains(c);
+        /// <summary>D-047: an open cell with no node that a connection may run across.</summary>
+        public bool IsPassage(GridCoord c) => _passages.ContainsKey(c);
+        public PassageAxis PassageAxisAt(GridCoord c) => _passages.TryGetValue(c, out var a) ? a : PassageAxis.None;
+        /// <summary>The axis a step in <paramref name="d"/> travels along.</summary>
+        public static PassageAxis AxisOf(Direction d) => DirectionUtil.DeltaX(d) != 0 ? PassageAxis.Horizontal : PassageAxis.Vertical;
+        /// <summary>A standable node: inside the board, not a wall, not blocked cover, not a passage, not empty ground.</summary>
+        public bool IsFloor(GridCoord c) => Inside(c) && !_walls.Contains(c) && !_blocked.Contains(c) && !_passages.ContainsKey(c) && !_empties.Contains(c);
+        /// <summary>Open ground with no node (passage or empty): looked across by sight, never stood on.</summary>
+        public bool IsOpenNonNode(GridCoord c) => _passages.ContainsKey(c) || _empties.Contains(c);
         public bool IsCut(GridCoord a, GridCoord b) => _cuts.Contains(new EdgeKey(a, b));
         /// <summary>Index of the door on this edge, or -1.</summary>
         public int DoorIndex(GridCoord a, GridCoord b) => _doorIndex.TryGetValue(new EdgeKey(a, b), out int i) ? i : -1;
-        /// <summary>Adjacent floor nodes joined by a connection (open or locked).</summary>
-        public bool IsConnected(GridCoord a, GridCoord b) => IsFloor(a) && IsFloor(b) && a.ManhattanDistance(b) == 1 && !IsCut(a, b);
+
+        /// <summary>
+        /// The node reached by travelling from <paramref name="from"/> in <paramref name="d"/>: the adjacent cell, or the first node
+        /// beyond any run of passage cells that allow that axis (D-047). Pure geometry: ignores cuts and doors. Null when a wall,
+        /// blocked cover, the board edge or a passage of the other axis comes first. On a plain lattice this is the unit neighbour.
+        /// </summary>
+        public GridCoord? Step(GridCoord from, Direction d)
+        {
+            var q = from.Neighbor(d);
+            while (Inside(q) && _passages.TryGetValue(q, out var axis))
+            {
+                if ((axis & AxisOf(d)) == 0) return null;
+                q = q.Neighbor(d);
+            }
+            return IsFloor(q) ? q : (GridCoord?)null;
+        }
+
+        /// <summary>Direction of the straight run from node <paramref name="a"/> to node <paramref name="b"/> when b is the next node that way (across passages); null otherwise.</summary>
+        public Direction? DirectionTo(GridCoord a, GridCoord b)
+        {
+            var d = DirectionUtil.Toward(b.X - a.X, b.Y - a.Y);
+            return d.HasValue && IsFloor(a) && Step(a, d.Value) == b ? d : null;
+        }
+
+        /// <summary>Two nodes joined by one straight run (the geometry of an edge), whether or not that edge is cut.</summary>
+        public bool Spans(GridCoord a, GridCoord b) => DirectionTo(a, b).HasValue;
+        /// <summary>Squares an edge covers: 1 on the plain lattice, 2 or 3 across passages.</summary>
+        public int EdgeLength(GridCoord a, GridCoord b) => a.ManhattanDistance(b);
+        /// <summary>Floor nodes joined by a connection (open or locked): adjacent, or next to each other across passage cells.</summary>
+        public bool IsConnected(GridCoord a, GridCoord b) => Spans(a, b) && !IsCut(a, b);
+        /// <summary>Connected node from <paramref name="from"/> in <paramref name="d"/>, or null (no node that way, or the connection is cut).</summary>
+        public GridCoord? Neighbor(GridCoord from, Direction d)
+        {
+            var n = Step(from, d);
+            return n.HasValue && !IsCut(from, n.Value) ? n : null;
+        }
         /// <summary>Connection a guard may patrol over: connected and not a door.</summary>
         public bool IsGuardPassable(GridCoord a, GridCoord b) => IsConnected(a, b) && DoorIndex(a, b) < 0;
 
@@ -205,7 +286,7 @@ namespace ShadowSteps.V3
                 for (int x = 0; x < Width; x++)
                 {
                     var c = new GridCoord(x, y);
-                    if (!_walls.Contains(c) && !_blocked.Contains(c)) yield return c;
+                    if (!_walls.Contains(c) && !_blocked.Contains(c) && !_passages.ContainsKey(c) && !_empties.Contains(c)) yield return c;
                 }
         }
 
@@ -218,7 +299,7 @@ namespace ShadowSteps.V3
                 SmokeCharges = SmokeCharges, EmpCharges = EmpCharges, AlarmBudget = AlarmBudget, WaitLimit = WaitLimit, Par = Par, ThreeStarActions = ThreeStarActions,
                 TwoStarActions = TwoStarActions, GhostOffered = GhostOffered, KnockoutPar = KnockoutPar, KnockoutThreeStarActions = KnockoutThreeStarActions, KnockoutTwoStarActions = KnockoutTwoStarActions
             };
-            b.Walls.AddRange(_walls); b.Blocked.AddRange(_blocked); b.Cuts.AddRange(_cuts); b.Doors.AddRange(Doors); b.Guards.AddRange(Guards); b.Cameras.AddRange(Cameras); b.Notes.AddRange(Notes);
+            b.Walls.AddRange(_walls); b.Blocked.AddRange(_blocked); b.Cuts.AddRange(_cuts); b.Passages.AddRange(Passages); b.Empties.AddRange(_empties); b.Doors.AddRange(Doors); b.Guards.AddRange(Guards); b.Cameras.AddRange(Cameras); b.Notes.AddRange(Notes);
             return b;
         }
 
@@ -237,6 +318,10 @@ namespace ShadowSteps.V3
         public List<GridCoord> Walls = new List<GridCoord>();
         public List<GridCoord> Blocked = new List<GridCoord>();
         public List<EdgeKey> Cuts = new List<EdgeKey>();
+        /// <summary>D-047 passage cells (no node; a connection runs across them along the axis).</summary>
+        public List<Passage> Passages = new List<Passage>();
+        /// <summary>D-049 empty ground cells ('_').</summary>
+        public List<GridCoord> Empties = new List<GridCoord>();
         public List<DoorSpec> Doors = new List<DoorSpec>();
         public List<GuardSpec> Guards = new List<GuardSpec>();
         public List<CameraSpec> Cameras = new List<CameraSpec>();
@@ -250,13 +335,15 @@ namespace ShadowSteps.V3
         public List<string> Notes = new List<string>();
 
         /// <summary>
-        /// Parses ASCII rows: '#' = wall, 'X' = blocked cover (V4), '.' = floor. Any other character fails with the exact
-        /// cell (handover §2.1.7: never repair silently). Sets Width/Height, Walls and Blocked.
+        /// Parses ASCII rows: '#' = wall, 'X' = blocked cover (V4), '.' = floor node, '-' / '|' / '+' = passage cell a horizontal /
+        /// vertical / either connection runs across (D-047, no node), '_' = empty ground (D-049: no node, no connection, transparent).
+        /// Any other character fails with the exact cell (handover §2.1.7: never repair silently). Sets Width/Height, Walls, Blocked,
+        /// Passages and Empties.
         /// </summary>
         public StageBuilder FromRows(IReadOnlyList<string> rows)
         {
             Height = rows.Count; Width = rows.Count > 0 ? rows[0].Length : 0;
-            Walls.Clear(); Blocked.Clear();
+            Walls.Clear(); Blocked.Clear(); Passages.Clear(); Empties.Clear();
             for (int y = 0; y < Height; y++)
             {
                 if (rows[y].Length != Width) throw new ArgumentException("row " + y + " has length " + rows[y].Length + ", expected " + Width);
@@ -265,7 +352,11 @@ namespace ShadowSteps.V3
                     char ch = rows[y][x];
                     if (ch == '#') Walls.Add(new GridCoord(x, y));
                     else if (ch == 'X') Blocked.Add(new GridCoord(x, y));
-                    else if (ch != '.') throw new ArgumentException("unknown cell character '" + ch + "' at (" + x + ", " + y + ") in stage " + (Code ?? Id.ToString()) + "; expected '.', '#' or 'X'");
+                    else if (ch == '-') Passages.Add(new Passage(new GridCoord(x, y), PassageAxis.Horizontal));
+                    else if (ch == '|') Passages.Add(new Passage(new GridCoord(x, y), PassageAxis.Vertical));
+                    else if (ch == '+') Passages.Add(new Passage(new GridCoord(x, y), PassageAxis.Both));
+                    else if (ch == '_') Empties.Add(new GridCoord(x, y));
+                    else if (ch != '.') throw new ArgumentException("unknown cell character '" + ch + "' at (" + x + ", " + y + ") in stage " + (Code ?? Id.ToString()) + "; expected '.', '#', 'X', '-', '|', '+' or '_'");
                 }
             }
             return this;
@@ -278,7 +369,7 @@ namespace ShadowSteps.V3
             for (int y = 0; y < s.Height; y++)
             {
                 var sb = new System.Text.StringBuilder(s.Width);
-                for (int x = 0; x < s.Width; x++) { var c = new GridCoord(x, y); sb.Append(s.IsWall(c) ? '#' : s.IsBlocked(c) ? 'X' : '.'); }
+                for (int x = 0; x < s.Width; x++) { var c = new GridCoord(x, y); sb.Append(s.IsWall(c) ? '#' : s.IsBlocked(c) ? 'X' : s.IsPassage(c) ? new Passage(c, s.PassageAxisAt(c)).Glyph : s.IsEmpty(c) ? '_' : '.'); }
                 rows[y] = sb.ToString();
             }
             return rows;

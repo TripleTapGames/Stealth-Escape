@@ -184,7 +184,7 @@ namespace ShadowSteps.Runtime
                 case InputMode.EmpTarget:
                     return false; // cameras are not nodes; see TapCamera
                 default:
-                    var d = DirectionUtil.FromDelta(node.X - State.Player.X, node.Y - State.Player.Y);
+                    var d = Stage.DirectionTo(State.Player, node); // the tapped node must be the next node that way (adjacent, or across passage cells: D-047)
                     return d.HasValue && TrySubmit(StageAction.Move(d.Value));
             }
         }

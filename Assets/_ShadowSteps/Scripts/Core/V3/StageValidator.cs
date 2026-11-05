@@ -16,6 +16,8 @@ namespace ShadowSteps.V3
         public int SolverMaxWaits = 0;
         /// <summary>Campaign policy (D-044): every stage must have waitLimit 0. On for the shipped pack, off for legacy fixtures.</summary>
         public bool RequireNoWait = false;
+        /// <summary>D-050: longest connection allowed, in squares (a walkway may skip at most one square); 0 = unlimited.</summary>
+        public int MaxEdgeSquares = 2;
     }
 
     /// <summary>Structural, schedule and gameplay checks for one stage (handover §11). Reuses <see cref="ValidationReport"/>.</summary>
@@ -37,12 +39,25 @@ namespace ShadowSteps.V3
             if (s.Start == s.Exit) r.Error(p + ".exit", "exit must differ from start", s.Exit);
             if (s.Key.HasValue && !s.IsFloor(s.Key.Value)) r.Error(p + ".key", "key " + s.Key.Value + " is not a floor node (" + Kind(s, s.Key.Value) + ")", s.Key.Value);
             foreach (var c in s.Cuts)
-                if (c.Lo.ManhattanDistance(c.Hi) != 1) r.Error(p + ".cuts", "cut " + c + " is not between adjacent nodes", c.Lo);
+            {
+                if (!s.IsFloor(c.Lo) || !s.IsFloor(c.Hi)) r.Warn(p + ".cuts", "cut " + c + " touches a cell that is not a node (" + Kind(s, s.IsFloor(c.Lo) ? c.Hi : c.Lo) + "); it has no effect", c.Lo);
+                else if (!s.Spans(c.Lo, c.Hi)) r.Error(p + ".cuts", "cut " + c + " is not between two nodes joined by one straight connection (adjacent, or across passage cells)", c.Lo);
+            }
+            foreach (var pass in s.Passages)
+                foreach (var d in new[] { Direction.North, Direction.East, Direction.South, Direction.West })
+                    if ((pass.Axis & Stage.AxisOf(d)) != 0 && !RunEndsAtNode(s, pass.Cell, d))
+                        r.Error(p + ".rows", "passage " + pass + " leads nowhere toward " + DirectionUtil.ToToken(d) + ": a passage must join two nodes along its axis", pass.Cell);
+            if (options.MaxEdgeSquares > 0)
+                foreach (var a in s.FloorNodes())
+                    foreach (var d in new[] { Direction.East, Direction.South })
+                    {
+                        var b = s.Step(a, d);
+                        if (b.HasValue && s.EdgeLength(a, b.Value) > options.MaxEdgeSquares) r.Error(p + ".rows", "connection " + a + " -> " + b.Value + " spans " + s.EdgeLength(a, b.Value) + " squares; at most " + options.MaxEdgeSquares + " allowed (D-050)", a);
+                    }
             for (int i = 0; i < s.Doors.Count; i++)
             {
                 var d = s.Doors[i];
-                if (d.A.ManhattanDistance(d.B) != 1) r.Error(p + ".doors[" + i + "]", "door " + d + " must join two adjacent nodes", d.A);
-                else if (!s.IsFloor(d.A) || !s.IsFloor(d.B)) r.Error(p + ".doors[" + i + "]", "door " + d + " must join two floor nodes", d.A);
+                if (!s.Spans(d.A, d.B)) r.Error(p + ".doors[" + i + "]", "door " + d + " must join two floor nodes along one straight connection (adjacent, or across passage cells)", d.A);
                 else if (s.IsCut(d.A, d.B)) r.Error(p + ".doors[" + i + "]", "door " + d + " sits on a missing connection", d.A);
                 for (int j = 0; j < i; j++) if (s.Doors[j].Key.Equals(d.Key)) r.Error(p + ".doors[" + i + "]", "duplicate door " + d, d.A);
             }
@@ -141,7 +156,7 @@ namespace ShadowSteps.V3
                 if (g.Route.Count < 2) r.Error(gp + ".route", "a moving guard needs at least 2 route nodes");
                 for (int i = 1; i < g.Route.Count; i++)
                     if (!s.IsGuardPassable(g.Route[i - 1], g.Route[i]))
-                        r.Error(gp + ".route[" + i + "]", "route step " + g.Route[i - 1] + " -> " + g.Route[i] + " is not a guard-passable connection (adjacent floor, no cut, no door)", g.Route[i]);
+                        r.Error(gp + ".route[" + i + "]", "route step " + g.Route[i - 1] + " -> " + g.Route[i] + " is not a guard-passable connection (next node along a straight run, no cut, no door)", g.Route[i]);
                 if (g.Kind == GuardKind.Loop && g.Route.Count >= 2 && !s.IsGuardPassable(g.Route[g.Route.Count - 1], g.Route[0]))
                     r.Error(gp + ".route", "loop route does not close: " + g.Route[g.Route.Count - 1] + " -> " + g.Route[0] + " is not passable", g.Route[0]);
                 var seen = new HashSet<GridCoord>();
@@ -155,7 +170,15 @@ namespace ShadowSteps.V3
             else starts[anchor] = index;
         }
 
-        private static string Kind(Stage s, GridCoord c) => !s.Inside(c) ? "outside the board" : s.IsWall(c) ? "wall" : s.IsBlocked(c) ? "blocked cover 'X'" : "floor";
+        private static string Kind(Stage s, GridCoord c) => !s.Inside(c) ? "outside the board" : s.IsWall(c) ? "wall" : s.IsBlocked(c) ? "blocked cover 'X'" : s.IsPassage(c) ? "passage (no node)" : s.IsEmpty(c) ? "empty ground (no node)" : "floor";
+
+        /// <summary>Walking from a passage cell in <paramref name="d"/> reaches a node, crossing only passages that allow that axis.</summary>
+        private static bool RunEndsAtNode(Stage s, GridCoord cell, Direction d)
+        {
+            var q = cell.Neighbor(d);
+            while (s.Inside(q) && s.IsPassage(q)) { if ((s.PassageAxisAt(q) & Stage.AxisOf(d)) == 0) return false; q = q.Neighbor(d); }
+            return s.IsFloor(q); // empty ground ends the run without a node: invalid
+        }
 
         private static void Copy(StageMetrics from, StageMetrics to)
         {

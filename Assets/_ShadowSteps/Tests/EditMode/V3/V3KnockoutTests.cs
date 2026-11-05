@@ -343,8 +343,10 @@ namespace ShadowSteps.Tests.EditMode.V3
                 if (st.Found && !ko.Found) failures.Add(stage.Code + " solvable in Stealth but not in Knockout");
                 if (st.Found && ko.Found && ko.CountedActions > st.CountedActions) failures.Add(stage.Code + " knockout par " + ko.CountedActions + " > stealth par " + st.CountedActions);
                 if (!ko.Found || ko.HitLimit) failures.Add(stage.Code + " unsolvable in Knockout (the shipped mode) on the shipped layout");
-                // Stealth is legacy (D-043) and WAIT is gone (D-044): a few levels have no no-WAIT Stealth route by design (expected: LEVEL-4, LEVEL-7, LEVEL-26).
-                if (!st.Found && stage.Code != "LEVEL-4" && stage.Code != "LEVEL-7" && stage.Code != "LEVEL-26") failures.Add(stage.Code + " unexpectedly unsolvable in legacy Stealth");
+                // Stealth is legacy (D-043) and WAIT is gone (D-044): boards designed for Knockout (D-046/D-048 redesign notes) may require a knockout
+                // outright, so a missing Stealth route is only a failure on a board that was never redesigned.
+                bool redesigned = false; foreach (var n in stage.Notes) if (n.Contains("redesigned")) redesigned = true;
+                if (!st.Found && !redesigned) failures.Add(stage.Code + " unexpectedly unsolvable in legacy Stealth");
                 if (ko.Found)
                 {
                     var replay = StageReplay.Run(stage, ko.Actions, KO);

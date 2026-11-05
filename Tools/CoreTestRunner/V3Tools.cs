@@ -165,6 +165,113 @@ public static class V3Tools
     }
 
     /// <summary>
+    /// D-049 sparsifier: strips nodes that carry no puzzle. A node with exactly two collinear connections (and no cut or door
+    /// touching it) becomes a passage when the merged edge stays within <paramref name="maxRun"/> squares; a dead-end or isolated
+    /// node becomes empty ground. Start, exit, key, door ends, guard route nodes and camera fronts are never touched. Every
+    /// removal is accepted only if the board stays valid and the Knockout/no-WAIT solve keeps its character: solvable, same
+    /// knockouts on the par path, same knockout-free status with at least the same knockout advantage, same Smoke/EMP/alarm/Ghost
+    /// requirements, and a par no lower than half the original (minimum 3). Greedy, restarted after each accepted removal.
+    /// </summary>
+    public static int Sparsify(string packPath, string outPath, string skipCsv, int maxRun)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var skip = new HashSet<string>((skipCsv ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
+        var outStages = new List<Stage>();
+        foreach (var s0 in pack.Stages)
+        {
+            if (skip.Contains(s0.Code)) { outStages.Add(s0); Console.WriteLine(s0.Code.PadRight(9) + " skipped"); continue; }
+            var baseline = Analyze(s0);
+            if (!baseline.Solvable) { outStages.Add(s0); Console.WriteLine(s0.Code.PadRight(9) + " unsolvable: untouched"); continue; }
+            var keep = ProtectedNodes(s0);
+            var cur = s0; int passages = 0, empties = 0; bool changed = true; int nodesBefore = Count(s0.FloorNodes());
+            while (changed)
+            {
+                changed = false;
+                foreach (var n in new List<GridCoord>(cur.FloorNodes()))
+                {
+                    if (keep.Contains(n)) continue;
+                    foreach (var attempt in Removals(cur, n, maxRun))
+                    {
+                        if (StageValidator.Validate(attempt.Stage, new StageValidationOptions { RunSolver = false }).ErrorCount > 0) continue;
+                        var m = Analyze(attempt.Stage);
+                        if (!Acceptable(baseline, m, s0.Par)) continue;
+                        cur = attempt.Stage; changed = true; if (attempt.Glyph == '_') empties++; else passages++;
+                        break;
+                    }
+                    if (changed) break;
+                }
+            }
+            var final = Analyze(cur);
+            var b = cur.ToBuilder(); b.KnockoutPar = final.Par; b.KnockoutThreeStarActions = final.ThreeStar; b.KnockoutTwoStarActions = final.TwoStar;
+            outStages.Add(b.Build());
+            Console.WriteLine(s0.Code.PadRight(9) + " nodes " + nodesBefore.ToString().PadLeft(2) + " -> " + Count(cur.FloorNodes()).ToString().PadLeft(2) + "  (+" + passages + " passages, +" + empties + " empty)  par " + baseline.Par + " -> " + final.Par + "  ko=" + final.KnockoutsInPar + " noKO=" + final.ShortestWithoutKnockout + " | " + Tokens(final.Solution));
+            foreach (var row in StageBuilder.RowsOf(cur)) Console.WriteLine("           " + row);
+        }
+        File.WriteAllText(outPath, StageJson.ToJson(outStages));
+        Console.WriteLine("wrote " + outPath);
+        return 0;
+    }
+
+    private static int Count(IEnumerable<GridCoord> xs) { int n = 0; foreach (var _ in xs) n++; return n; }
+    private static Sparse Analyze(Stage s) => new Sparse(StageMetrics.Analyze(s, new SolveOptions { Mode = StageMode.Knockout, MaxWaits = 0 }), StageRules.KnockoutTargets(s, StageState.Initial(s, StageMode.Knockout)).Count);
+
+    private sealed class Sparse
+    {
+        public readonly StageMetrics M; public readonly int OpeningKnockouts;
+        public Sparse(StageMetrics m, int opening) { M = m; OpeningKnockouts = opening; }
+        public bool Solvable => M.Solvable; public bool HitLimit => M.HitLimit; public int Par => M.Par; public int KnockoutsInPar => M.KnockoutsInPar; public int ShortestWithoutKnockout => M.ShortestWithoutKnockout;
+        public bool SmokeRequired => M.SmokeRequired; public bool EmpRequired => M.EmpRequired; public bool ForcedAlarm => M.ForcedAlarm; public bool GhostOffered => M.GhostOffered;
+        public int ThreeStar => M.ThreeStar; public int TwoStar => M.TwoStar; public List<StageAction> Solution => M.Solution;
+    }
+
+    private static HashSet<GridCoord> ProtectedNodes(Stage s)
+    {
+        var keep = new HashSet<GridCoord> { s.Start, s.Exit };
+        if (s.Key.HasValue) keep.Add(s.Key.Value);
+        foreach (var d in s.Doors) { keep.Add(d.A); keep.Add(d.B); }
+        foreach (var g in s.Guards) foreach (var n in g.Route) keep.Add(n);
+        foreach (var c in s.Cameras) keep.Add(c.WallCell.Neighbor(c.MountFace));
+        return keep;
+    }
+
+    private static bool Acceptable(Sparse b, Sparse m, int originalPar)
+    {
+        if (!m.Solvable || m.HitLimit) return false;
+        if (m.KnockoutsInPar != b.KnockoutsInPar) return false;
+        if ((m.ShortestWithoutKnockout < 0) != (b.ShortestWithoutKnockout < 0)) return false;
+        if (b.ShortestWithoutKnockout >= 0 && m.ShortestWithoutKnockout - m.Par < b.ShortestWithoutKnockout - b.Par) return false;
+        if (m.SmokeRequired != b.SmokeRequired || m.EmpRequired != b.EmpRequired || m.ForcedAlarm != b.ForcedAlarm || m.GhostOffered != b.GhostOffered) return false;
+        if (b.OpeningKnockouts == 0 && m.OpeningKnockouts > 0) return false; // a guard must not end up adjacent to the start
+        return m.Par >= Math.Max(Math.Min(originalPar, 4), originalPar - 2); // the puzzle may lose at most two moves and never shrinks below four
+    }
+
+    private struct Removal { public Stage Stage; public char Glyph; }
+
+    /// <summary>
+    /// Ways to take node <paramref name="n"/> off the board, most walkway-like first: a passage along an axis on which it has
+    /// connections both ways (any links on the other axis are dropped) when the merged edge stays within <paramref name="maxRun"/>
+    /// squares, then empty ground (every link dropped). Nodes touching a cut or a door are left alone.
+    /// </summary>
+    private static IEnumerable<Removal> Removals(Stage s, GridCoord n, int maxRun)
+    {
+        foreach (var c in s.Cuts) if (c.Lo == n || c.Hi == n) yield break;
+        foreach (var d in s.Doors) if (d.A == n || d.B == n) yield break;
+        var conn = new Dictionary<Direction, GridCoord>();
+        foreach (Direction d in Enum.GetValues(typeof(Direction))) { var nb = s.Neighbor(n, d); if (nb.HasValue) conn[d] = nb.Value; }
+        var glyphs = new List<char>();
+        if (conn.ContainsKey(Direction.West) && conn.ContainsKey(Direction.East) && conn[Direction.West].ManhattanDistance(conn[Direction.East]) <= maxRun) glyphs.Add('-');
+        if (conn.ContainsKey(Direction.North) && conn.ContainsKey(Direction.South) && conn[Direction.North].ManhattanDistance(conn[Direction.South]) <= maxRun) glyphs.Add('|');
+        glyphs.Add('_');
+        foreach (var glyph in glyphs)
+        {
+            var rows = StageBuilder.RowsOf(s);
+            var chars = rows[n.Y].ToCharArray(); chars[n.X] = glyph; rows[n.Y] = new string(chars);
+            var b = s.ToBuilder(); b.FromRows(rows);
+            yield return new Removal { Stage = b.Build(), Glyph = glyph };
+        }
+    }
+
+    /// <summary>
     /// Global modes audit on the ACTUAL pack: both modes solved on every stage, the Stealth solution replayed under
     /// Knockout rules (state parity, no knockout), and - where a reference snapshot stage is layout-identical to the
     /// Unity stage - the handoff's offline paths replayed on the C# engine. Writes a JSON report; never edits levels.

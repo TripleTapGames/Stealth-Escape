@@ -347,6 +347,10 @@ namespace ShadowSteps.Art2D
                         // V4 'X': blocked cover. The rule treats the whole cell as solid whatever art is chosen for it.
                         DrawCover(c, p, s);
                     }
+                    else if (stage.IsPassage(c) || stage.IsEmpty(c))
+                    {
+                        // D-047 passage / D-049 empty ground: open ground with no node. No disc, no ring; a long edge's line (if any) is drawn from its end nodes.
+                    }
                     else
                     {
                         var ring = Make(_nodes, "NodeRing_" + x + "_" + y, lib.nodeRing, p, lib.nodeSize * 1.9f * s, lib.nodeReachable, SS2DLayers.Nodes, 0);
@@ -359,8 +363,9 @@ namespace ShadowSteps.Art2D
             foreach (var a in stage.FloorNodes())
                 foreach (var d in new[] { Direction.East, Direction.South })
                 {
-                    var b = a.Neighbor(d);
-                    if (!stage.IsConnected(a, b)) continue;
+                    var nb = stage.Neighbor(a, d); // adjacent, or across passage cells (D-047): one line spanning the whole edge
+                    if (!nb.HasValue) continue;
+                    var b = nb.Value;
                     var pa = Pos(a); var pb = Pos(b);
                     var mid = (pa + pb) * 0.5f; float len = Vector3.Distance(pa, pb) - lib.nodeSize * 1.1f * s;
                     var line = Sliced(_paths, "Path_" + a + "_" + b, lib.line, new Vector2(len, lib.lineWidth * s), mid, lib.lineTint, SS2DLayers.Paths, 0);
@@ -679,7 +684,7 @@ namespace ShadowSteps.Art2D
         /// <summary>Exactly the cells the engine reports: red guard cells (border drawn above everything, order 6) and the merged amber camera region (orders 1–4), so an overlapped node shows a red outer border around the amber inner region.</summary>
         public void SetVision(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells)
         {
-            // Guard sight as narrow red fans from each guard's node along its facing (traced by the engine, clipped like the detection), plus rings on the seen nodes.
+            // Guard sight as narrow red fans of a fixed two-square reach from each standing guard's node along its facing (D-051: never trimmed, never missing), plus rings on the nodes actually seen.
             var guardList = new List<GridCoord>(guardCells ?? System.Array.Empty<GridCoord>());
             _guardCones.Clear();
             foreach (var kv in _guardPoses)

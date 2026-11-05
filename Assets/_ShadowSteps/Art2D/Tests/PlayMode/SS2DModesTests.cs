@@ -83,52 +83,56 @@ namespace ShadowSteps.Art2D.Tests
         [UnityTest]
         public IEnumerator Knockout_MovesOntoTheGuardInOneAction_GuardStaysDown_SwitchRestartsClean_SameModeClickIsNoOp()
         {
-            yield return OpenGame("LEVEL-1"); // static guard at (2,1) facing S; start (0,2)
-            var stage = S.Stage; Assert.AreEqual(1, stage.Guards.Count); Assert.AreEqual(new GridCoord(2, 1), stage.Guards[0].Anchor); Assert.AreEqual(Direction.South, stage.Guards[0].Facing);
+            yield return OpenGame("LEVEL-1"); // D-046 "Blind Side": static guard at (3,2) facing W; start (0,2)
+            var stage = S.Stage; Assert.AreEqual(1, stage.Guards.Count); Assert.AreEqual(new GridCoord(3, 2), stage.Guards[0].Anchor); Assert.AreEqual(Direction.West, stage.Guards[0].Facing);
             Assert.AreEqual(StageMode.Knockout, S.RulesMode, "default mode");
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle(); // (0,1)
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();  // (1,1): beside the guard (it faces S)
-            Assert.AreEqual(new GridCoord(1, 1), S.State.Player); Assert.AreEqual(2, S.State.T);
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();  // (1,1)
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();  // (2,1)
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();  // (3,1): beside the guard (it faces W)
+            Assert.AreEqual(new GridCoord(3, 1), S.State.Player); Assert.AreEqual(4, S.State.T);
             Assert.AreEqual(new List<int> { 0 }, S.KnockoutTargets(), "the guard is a legal target from its side");
             Assert.IsFalse(R.IsGuardDefeated(0));
             // Tap the guard's node (what a tap on the guard resolves to through the node picker) = the knockout.
-            var pick = _composer.Input.ScreenToNodeOverride(_composer.BoardCamera.WorldToScreenPoint(R.transform.TransformPoint(R.Pos(new GridCoord(2, 1)))));
-            Assert.AreEqual(new GridCoord(2, 1), pick);
+            var pick = _composer.Input.ScreenToNodeOverride(_composer.BoardCamera.WorldToScreenPoint(R.transform.TransformPoint(R.Pos(new GridCoord(3, 2)))));
+            Assert.AreEqual(new GridCoord(3, 2), pick);
             Assert.IsTrue(S.TapNode(pick.Value));
             yield return Settle();
-            Assert.AreEqual(3, S.State.T, "move + knockout cost exactly one action");
-            Assert.AreEqual(new GridCoord(2, 1), S.State.Player, "the spy stands on the guard's node");
+            Assert.AreEqual(5, S.State.T, "move + knockout cost exactly one action");
+            Assert.AreEqual(new GridCoord(3, 2), S.State.Player, "the spy stands on the guard's node");
             Assert.IsTrue(S.State.IsDefeated(0)); Assert.AreEqual(StageResult.Playing, S.State.Result);
             Assert.IsTrue(R.IsGuardDefeated(0), "drawn as knocked out"); Assert.AreEqual(0, DrawnGuardCells().Count, "no vision from a knocked-out guard");
             Assert.IsFalse(R.Guards[0].gameObject.activeSelf, "the knocked-out guard flew off the board");
             // Frozen: further turns never move or turn it, and it never comes back.
             var gone = R.Guards[0].transform.localPosition; var goneRot = R.Guards[0].Facing;
-            Assert.IsFalse(S.TrySubmit(StageAction.Wait), "WAIT does not exist in the game (D-044)"); yield return null; Assert.AreEqual(3, S.State.T);
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.West))); yield return Settle();
-            Assert.AreEqual(4, S.State.T); Assert.IsFalse(R.Guards[0].gameObject.activeSelf); Assert.AreEqual(gone, R.Guards[0].transform.localPosition); Assert.AreEqual(goneRot, R.Guards[0].Facing);
+            Assert.IsFalse(S.TrySubmit(StageAction.Wait), "WAIT does not exist in the game (D-044)"); yield return null; Assert.AreEqual(5, S.State.T);
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.West))); yield return Settle(); // (2,2): the node it used to watch
+            Assert.AreEqual(6, S.State.T); Assert.IsFalse(R.Guards[0].gameObject.activeSelf); Assert.AreEqual(gone, R.Guards[0].transform.localPosition); Assert.AreEqual(goneRot, R.Guards[0].Facing);
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // back onto the node: still gone
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.West))); yield return Settle();
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
-            Assert.AreEqual(7, S.State.T); Assert.IsFalse(R.Guards[0].gameObject.activeSelf); Assert.AreEqual(0, DrawnGuardCells().Count);
-            Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(new GridCoord(2, 1))), 1e-3f);
-            Assert.AreEqual("7", Hud.actionsValue.text);
-            Assert.IsFalse(S.TrySubmit(StageAction.Knockout(0)), "already down"); Assert.AreEqual(7, S.State.T);
+            Assert.AreEqual(9, S.State.T); Assert.IsFalse(R.Guards[0].gameObject.activeSelf); Assert.AreEqual(0, DrawnGuardCells().Count);
+            Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(new GridCoord(3, 2))), 1e-3f);
+            Assert.AreEqual("9", Hud.actionsValue.text);
+            Assert.IsFalse(S.TrySubmit(StageAction.Knockout(0)), "already down"); Assert.AreEqual(9, S.State.T);
             // Selecting the active mode: nothing happens.
             S.SetRulesMode(StageMode.Knockout); yield return null;
-            Assert.AreEqual(7, S.State.T); Assert.IsTrue(S.State.IsDefeated(0));
+            Assert.AreEqual(9, S.State.T); Assert.IsTrue(S.State.IsDefeated(0));
             // Switching to Stealth restarts the current level from its authored state: everything back, guard standing, same level, no action counted.
             S.SetRulesMode(StageMode.Stealth); yield return null;
             Assert.AreEqual(StageMode.Stealth, S.RulesMode); Assert.AreEqual("LEVEL-1", S.Stage.Code);
             Assert.AreEqual(0, S.State.T); Assert.AreEqual(stage.Start, S.State.Player); Assert.AreEqual(0, S.State.DefeatedCount); Assert.AreEqual(StageMode.Stealth, S.State.Mode);
-            Assert.IsFalse(R.IsGuardDefeated(0)); Assert.IsTrue(R.Guards[0].gameObject.activeSelf, "guard restored on the board"); Assert.Less(Vector3.Distance(R.Guards[0].transform.localPosition, R.Pos(new GridCoord(2, 1))), 1e-3f);
+            Assert.IsFalse(R.IsGuardDefeated(0)); Assert.IsTrue(R.Guards[0].gameObject.activeSelf, "guard restored on the board"); Assert.Less(Vector3.Distance(R.Guards[0].transform.localPosition, R.Pos(new GridCoord(3, 2))), 1e-3f);
             Assert.AreEqual(Vector3.one, R.Guards[0].transform.localScale); Assert.AreEqual(1f, R.Guards[0].body.color.a, 1e-3f);
             Assert.IsTrue(new HashSet<GridCoord>(Sight.GuardVision(stage, S.State, GuardTrack.PoseAt(stage.Guards[0], 0))).SetEquals(DrawnGuardCells()), "guard vision is back");
             Assert.IsFalse(S.IsBusy); Assert.IsFalse(S.InputLocked); Assert.AreEqual(StageMode.Stealth, AppServices.Save.SelectedMode);
             // Stealth: the same contact is fatal, and the knockout request is refused.
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle();
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
-            Assert.IsFalse(S.TrySubmit(StageAction.Knockout(0))); Assert.IsTrue(Hud.messageLabel.text.Contains("Stealth"));
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (3,1) again
+            Assert.IsFalse(S.TrySubmit(StageAction.Knockout(0))); Assert.IsTrue(Hud.messageLabel.text.Contains("Stealth"));
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.South))); yield return Settle(); // onto the guard: collision
             Assert.AreEqual(StageResult.Caught, S.State.Result); Assert.AreEqual(CaptureCause.Collision, S.State.Result == StageResult.Caught ? CaptureCause.Collision : CaptureCause.None);
             float waited = 0f; while (_bridge.CaptureSequenceRunning && waited < 5f) { waited += Time.deltaTime; yield return null; }
             yield return null;
@@ -149,20 +153,24 @@ namespace ShadowSteps.Art2D.Tests
             yield return OpenGame("LEVEL-1");
             S.SetRulesMode(StageMode.Knockout); yield return null;
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle();
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (1,1)
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); // knockout starts animating
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (3,1): above the guard at (3,2)
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.South))); // knockout starts animating
             Assert.IsTrue(S.IsBusy);
             S.SetRulesMode(StageMode.Stealth); yield return null; // switch while the knockout tween runs
             Assert.IsFalse(S.IsBusy, "the old animation was cancelled"); Assert.AreEqual(0, S.State.T); Assert.AreEqual(StageMode.Stealth, S.RulesMode);
             Assert.IsFalse(R.IsGuardDefeated(0)); Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(S.State.Player)), 1e-3f, "spy snapped to the fresh start");
             yield return new WaitForSeconds(0.5f); // a surviving callback must not alter the new run
             Assert.AreEqual(0, S.State.T); Assert.IsFalse(R.IsGuardDefeated(0)); Assert.AreEqual(StageResult.Playing, S.State.Result);
-            // Frontal entry in Knockout: guard faces S, (2,2) is its front. From (2,2) moving N is rejected and costs nothing.
+            // Frontal entry in Knockout: guard faces W, (2,2) is its front. Stepping into its front is a capture (its vision covers it), never a free knockout.
             S.SetRulesMode(StageMode.Knockout); yield return null;
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (1,2)
-            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (2,2) front of the guard (guard sees (2,2),(2,3): caught!)
-            if (S.State.Result == StageResult.Caught) { Assert.AreEqual(1, S.State.T, "the clock stays at the old index on a capture"); yield break; } // the guard's vision covers its front: entering it is a Stealth-identical capture
-            Assert.IsFalse(S.TrySubmit(StageAction.Move(Direction.North))); Assert.AreEqual(2, S.State.T);
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle(); // (0,1)
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (1,1)
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // (2,1)
+            Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.South))); yield return Settle(); // (2,2): front of the guard, which sees (2,2),(1,2): caught
+            Assert.AreEqual(StageResult.Caught, S.State.Result, "the guard's vision covers its front: entering it is a Stealth-identical capture");
+            Assert.AreEqual(3, S.State.T, "the clock stays at the old index on a capture"); Assert.AreEqual(0, S.State.DefeatedCount);
         }
 
         [UnityTest]

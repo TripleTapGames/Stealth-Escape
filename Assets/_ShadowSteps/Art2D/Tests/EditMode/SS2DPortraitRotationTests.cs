@@ -35,7 +35,7 @@ namespace ShadowSteps.Art2D.Tests
             var r = Build(stage, true);
             try
             {
-                Assert.IsTrue(r.Rotated, "6×4 must rotate for portrait");
+                Assert.IsTrue(r.Rotated, "7×4 must rotate for portrait");
                 Assert.AreEqual(stage.Height, r.ViewLayout.Width); Assert.AreEqual(stage.Width, r.ViewLayout.Height);
                 var seen = new HashSet<Vector2>();
                 for (int y = 0; y < stage.Height; y++) for (int x = 0; x < stage.Width; x++)
@@ -46,10 +46,10 @@ namespace ShadowSteps.Art2D.Tests
                     Assert.AreEqual(c, r.ToGrid(world + new Vector3(0.3f, -0.3f, 0f)), "picking within the cell must stay on " + c);
                     Assert.IsTrue(seen.Add(new Vector2(Mathf.Round(world.x * 100f), Mathf.Round(world.y * 100f))), "two cells drawn at the same place");
                 }
-                // The drawn board is 4 wide × 6 tall (node centres span 3 × 5 units).
+                // The drawn board is 4 wide × 7 tall (node centres span 3 × 6 units).
                 float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
                 foreach (var c in stage.FloorNodes()) { var p = r.Pos(c); minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x); minY = Mathf.Min(minY, p.y); maxY = Mathf.Max(maxY, p.y); }
-                Assert.AreEqual(3f, maxX - minX, 1e-4f); Assert.AreEqual(5f, maxY - minY, 1e-4f);
+                Assert.AreEqual(3f, maxX - minX, 1e-4f); Assert.AreEqual(6f, maxY - minY, 1e-4f);
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }
@@ -99,7 +99,7 @@ namespace ShadowSteps.Art2D.Tests
                 var state = StageState.Initial(stage);
                 var cells = new List<GridCoord>();
                 for (int i = 0; i < stage.Guards.Count; i++) cells.AddRange(Sight.GuardVision(stage, state, GuardTrack.PoseAt(stage.Guards[i], 0)));
-                Assert.AreEqual(2, cells.Count, "LEVEL-2's rotating guard sees two nodes at t=0");
+                Assert.AreEqual(1, cells.Count, "LEVEL-2's rotating guard at (3,2) faces S at t=0 (D-046) and sees only (3,3)");
                 r.SetGuard(0, GuardTrack.PoseAt(stage.Guards[0], 0), null);
                 r.SetVision(cells, new List<GridCoord>());
                 var drawn = new List<Vector3>();
@@ -115,12 +115,12 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.Less(Vector3.Distance(fan[0], gp), 1e-4f, "fan apex on the guard's drawn node");
                 foreach (var c in cells) Assert.IsTrue(InsideFan(fan, r.Pos(c)), "fan covers the seen node " + c);
                 for (int y = 0; y < stage.Height; y++) for (int x = 0; x < stage.Width; x++) { var c = new GridCoord(x, y); if (stage.IsFloor(c) && !cells.Contains(c) && c != GuardTrack.PoseAt(stage.Guards[0], 0).Position) Assert.IsFalse(InsideFan(fan, r.Pos(c)), "fan must not cover the unseen node " + c); }
-                // The guard faces logical East; drawn, that is screen North, and the lit cells lie above the guard on screen.
+                // The guard faces logical South; drawn, that is screen East, and the lit cell lies to the right of the guard on screen.
                 var pose = GuardTrack.PoseAt(stage.Guards[0], 0);
-                Assert.AreEqual(Direction.East, pose.Facing);
-                Assert.AreEqual(Direction.North, r.View(pose.Facing));
+                Assert.AreEqual(Direction.South, pose.Facing);
+                Assert.AreEqual(Direction.East, r.View(pose.Facing));
                 var g = r.Pos(pose.Position);
-                foreach (var c in cells) { var p = r.Pos(c); Assert.AreEqual(g.x, p.x, 1e-4f); Assert.Greater(p.y, g.y); }
+                foreach (var c in cells) { var p = r.Pos(c); Assert.AreEqual(g.y, p.y, 1e-4f); Assert.Greater(p.x, g.x); }
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }
@@ -148,7 +148,7 @@ namespace ShadowSteps.Art2D.Tests
             try
             {
                 Assert.IsTrue(r.HasExitDoor);
-                Assert.AreEqual(Direction.East, ShadowSteps2DRenderer.ExitEdge(stage), "exit (5,2) sits on the east edge");
+                Assert.AreEqual(Direction.East, ShadowSteps2DRenderer.ExitEdge(stage), "exit (6,2) sits on the east edge");
                 Assert.AreEqual(Direction.North, r.DoorOutward, "east edge is drawn at the top after rotation");
                 var exit = r.Pos(stage.Exit);
                 Assert.AreEqual(exit.x, r.DoorPosition.x, 1e-4f); Assert.Greater(r.DoorPosition.y, exit.y + 1f, "door at least one spacing beyond the node");
