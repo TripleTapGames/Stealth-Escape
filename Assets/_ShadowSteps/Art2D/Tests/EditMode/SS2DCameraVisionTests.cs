@@ -185,12 +185,21 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.Less(Vector3.Distance(poly[0], r.PosF(origin.X, origin.Y)), 1e-4f, "apex on the rotated wall face");
                 var facing = CameraTrack.FacingAt(cam, 0);
                 var drawnDir = r.RotationFor(facing) * Vector3.up;
-                Assert.AreEqual(3, poly.Length, "nominal cone: apex + two far corners (D-042)");
-                var centre = (poly[1] + poly[2]) * 0.5f;
-                var expectedCentre = poly[0] + drawnDir * (float)Sight.CameraRange * r.Layout.NodeSpacing;
-                Assert.Less(Vector3.Distance(centre, expectedCentre), 1e-3f, "far edge centred two spacings out along the drawn facing, never clipped");
-                float halfWidth = (float)(Sight.CameraRange * System.Math.Tan(Sight.CameraHalfAngleDegrees * System.Math.PI / 180.0)) * r.Layout.NodeSpacing;
-                Assert.AreEqual(halfWidth * 2f, Vector3.Distance(poly[1], poly[2]), 1e-3f, "70° total: far edge width = 2·D·tan 35°");
+                if (r.library.fullCameraCone)
+                {
+                    Assert.AreEqual(3, poly.Length, "nominal cone: apex + two far corners (D-042)");
+                    var centre = (poly[1] + poly[2]) * 0.5f;
+                    var expectedCentre = poly[0] + drawnDir * (float)Sight.CameraRange * r.Layout.NodeSpacing;
+                    Assert.Less(Vector3.Distance(centre, expectedCentre), 1e-3f, "far edge centred along the drawn facing, never clipped");
+                    float halfWidth = (float)(Sight.CameraRange * System.Math.Tan(Sight.CameraHalfAngleDegrees * System.Math.PI / 180.0)) * r.Layout.NodeSpacing;
+                    Assert.AreEqual(halfWidth * 2f, Vector3.Distance(poly[1], poly[2]), 1e-3f, "70° total: far edge width = 2·D·tan 35°");
+                }
+                else
+                {
+                    Assert.AreEqual(Sight.ConeOutlineRays + 2, poly.Length, "traced silhouette (D-054): apex + one point per ray");
+                    var central = poly[1 + Sight.ConeOutlineRays / 2];
+                    Assert.Less(Vector3.Distance(central, poly[0] + drawnDir * (float)Sight.CameraRange * r.Layout.NodeSpacing), 1e-3f, "nothing in front of this camera: the central ray reaches the full radius along the drawn facing");
+                }
                 AssertOverlayMatchesEngine(r, stage, state, "LEVEL-17 rotated cone");
                 Assert.Less(Quaternion.Angle(r.RotationFor(facing), r.CameraHeads[0].localRotation), 0.01f);
             }

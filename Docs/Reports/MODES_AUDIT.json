@@ -730,7 +730,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": -1,
         "ghost_offered": false,
-        "states_explored": 5,
+        "states_explored": 8,
         "hit_limit": false
       },
       "knockout": {
@@ -743,7 +743,7 @@
         "shortest_without_knockout": 5,
         "shortest_alarm_free": -1,
         "ghost_offered": false,
-        "states_explored": 5,
+        "states_explored": 8,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -756,28 +756,28 @@
       "cameras": 1,
       "stealth": {
         "solvable": true,
-        "par": 7,
-        "actions": ["E", "W", "N", "E", "E", "S", "S"],
-        "three_star": 8,
-        "two_star": 10,
+        "par": 5,
+        "actions": ["E", "N", "N", "E", "E"],
+        "three_star": 6,
+        "two_star": 7,
         "knockouts_in_par": -1,
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 7,
         "ghost_offered": true,
-        "states_explored": 15,
+        "states_explored": 9,
         "hit_limit": false
       },
       "knockout": {
         "solvable": true,
-        "par": 7,
-        "actions": ["E", "W", "N", "E", "E", "S", "S"],
-        "three_star": 8,
-        "two_star": 10,
+        "par": 5,
+        "actions": ["E", "N", "N", "E", "E"],
+        "three_star": 6,
+        "two_star": 7,
         "knockouts_in_par": 0,
-        "shortest_without_knockout": 7,
+        "shortest_without_knockout": 5,
         "shortest_alarm_free": 7,
         "ghost_offered": true,
-        "states_explored": 15,
+        "states_explored": 9,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -790,28 +790,28 @@
       "cameras": 1,
       "stealth": {
         "solvable": true,
-        "par": 7,
-        "actions": ["N", "E", "S", "S", "E", "E", "E"],
-        "three_star": 8,
-        "two_star": 10,
+        "par": 6,
+        "actions": ["E", "E", "S", "E", "E", "S"],
+        "three_star": 7,
+        "two_star": 8,
         "knockouts_in_par": -1,
         "shortest_without_knockout": -1,
-        "shortest_alarm_free": 7,
+        "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 24,
+        "states_explored": 18,
         "hit_limit": false
       },
       "knockout": {
         "solvable": true,
-        "par": 7,
-        "actions": ["N", "E", "S", "S", "E", "E", "E"],
-        "three_star": 8,
-        "two_star": 10,
+        "par": 6,
+        "actions": ["E", "E", "S", "E", "E", "S"],
+        "three_star": 7,
+        "two_star": 8,
         "knockouts_in_par": 0,
-        "shortest_without_knockout": 7,
-        "shortest_alarm_free": 7,
+        "shortest_without_knockout": 6,
+        "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 24,
+        "states_explored": 18,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -832,7 +832,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": -1,
         "ghost_offered": false,
-        "states_explored": 6,
+        "states_explored": 7,
         "hit_limit": false
       },
       "knockout": {
@@ -845,7 +845,7 @@
         "shortest_without_knockout": 4,
         "shortest_alarm_free": -1,
         "ghost_offered": false,
-        "states_explored": 6,
+        "states_explored": 7,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -960,28 +960,28 @@
       "cameras": 1,
       "stealth": {
         "solvable": true,
-        "par": 5,
-        "actions": ["N", "E", "E", "S", "S"],
-        "three_star": 6,
-        "two_star": 7,
+        "par": 6,
+        "actions": ["N", "N", "E", "E", "S", "S"],
+        "three_star": 7,
+        "two_star": 8,
         "knockouts_in_par": -1,
         "shortest_without_knockout": -1,
-        "shortest_alarm_free": 5,
+        "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 31,
+        "states_explored": 40,
         "hit_limit": false
       },
       "knockout": {
         "solvable": true,
-        "par": 5,
-        "actions": ["N", "E", "E", "S", "S"],
-        "three_star": 6,
-        "two_star": 7,
+        "par": 6,
+        "actions": ["N", "N", "E", "E", "S", "S"],
+        "three_star": 7,
+        "two_star": 8,
         "knockouts_in_par": 0,
-        "shortest_without_knockout": 5,
-        "shortest_alarm_free": 5,
+        "shortest_without_knockout": 6,
+        "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 31,
+        "states_explored": 40,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1002,7 +1002,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 102,
+        "states_explored": 94,
         "hit_limit": false
       },
       "knockout": {
@@ -1015,7 +1015,7 @@
         "shortest_without_knockout": 6,
         "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 102,
+        "states_explored": 94,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1102,7 +1102,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 11,
         "ghost_offered": true,
-        "states_explored": 270,
+        "states_explored": 272,
         "hit_limit": false
       },
       "knockout": {
@@ -1115,7 +1115,7 @@
         "shortest_without_knockout": 11,
         "shortest_alarm_free": 11,
         "ghost_offered": true,
-        "states_explored": 270,
+        "states_explored": 272,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1170,7 +1170,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 20,
         "ghost_offered": true,
-        "states_explored": 1690,
+        "states_explored": 2231,
         "hit_limit": false
       },
       "knockout": {
@@ -1181,9 +1181,9 @@
         "two_star": 25,
         "knockouts_in_par": 1,
         "shortest_without_knockout": 20,
-        "shortest_alarm_free": 19,
+        "shortest_alarm_free": 20,
         "ghost_offered": true,
-        "states_explored": 1679,
+        "states_explored": 2223,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true

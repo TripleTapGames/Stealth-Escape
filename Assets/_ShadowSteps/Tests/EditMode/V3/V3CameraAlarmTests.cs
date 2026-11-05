@@ -68,11 +68,12 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void CameraSeeingThePlayerOnTheExitMove_StillWins_ButForfeitsGhost()
         {
-            var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(3, 3); b.Exit = C(3, 1); b.AlarmBudget = 4;
+            var b = Board("#######", "#.....#", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(3, 4); b.Exit = C(3, 1); b.AlarmBudget = 4;
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
             var s = StageState.Initial(stage);
-            Assert.IsFalse(Sight.AnyCameraSees(stage, s, 0, s.Player), "start (3,3) is at forward 2.5, beyond the cone's reach");
+            Assert.IsFalse(Sight.AnyCameraSees(stage, s, 0, s.Player), "start (3,4) is at forward 3.5, beyond the cone's reach (D-053: reach 3)");
+            Step(stage, ref s, N); Assert.IsTrue(s.AlarmEver);
             Step(stage, ref s, N); Assert.IsTrue(s.AlarmEver);
             var o = Step(stage, ref s, N);
             Assert.IsTrue(o.Won); Assert.IsTrue(s.AlarmEver);
@@ -81,10 +82,13 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void Ghost_OfferedOnlyWithACameraAndAnAlarmFreeRoute()
         {
-            var ghost = StageMetrics.Analyze(Room(5).Build());
-            Assert.AreEqual(4, ghost.Par); Assert.AreEqual(8, ghost.ShortestAlarmFree); Assert.IsTrue(ghost.GhostOffered); Assert.IsFalse(ghost.ForcedAlarm);
+            // 7×6 room, camera on the bottom wall (3,5) facing N: with reach 3 (D-053) it lights rows 4, 3 and 2, so the Ghost route goes round by row 1.
+            var tall = Board("#######", "#.....#", "#.....#", "#.....#", "#.....#", "#######"); tall.Start = C(1, 4); tall.Exit = C(5, 4); tall.AlarmBudget = 5; tall.Cameras.Add(Camera(C(3, 5), Direction.North, Direction.North));
+            var ghost = StageMetrics.Analyze(tall.Build());
+            Assert.AreEqual(4, ghost.Par); Assert.AreEqual(10, ghost.ShortestAlarmFree); Assert.IsTrue(ghost.GhostOffered); Assert.IsFalse(ghost.ForcedAlarm);
+            Assert.IsFalse(StageMetrics.Analyze(Room(5).Build()).GhostOffered, "in the 7×5 room the cone reaches row 1: no alarm-free route");
 
-            // Corridor: the camera lights (1,2) and (2,2); every route is lit, so the alarm is forced. Budget 6 covers the 5 actions after the trigger.
+            // Corridor: the camera lights (2,2), (1,2) and (0,2); every route is lit, so the alarm is forced. Budget 6 covers the actions after the trigger.
             var corridor = Board("#######", "#######", ".......", "#######"); corridor.Start = C(0, 2); corridor.Exit = C(6, 2); corridor.AlarmBudget = 6;
             corridor.Cameras.Add(Camera(C(3, 1), Direction.South, Direction.West));
             var forced = StageMetrics.Analyze(corridor.Build());
@@ -111,12 +115,12 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void ForcedAlarmBudget_RequiresTheIntendedNumberOfSubsequentActions()
         {
-            // Corridor like LEVEL-23: the cone from (4,1.5) facing W lights (3,2) and (2,2). Without EMP the alarm fires at (2,2) and the exit (5,2) is 3 actions away: budget 2 fails.
-            // With EMP (fired at (1,2)): (2,2) and (3,2) are crossed while disabled, the camera reactivates on (3,2) and the remaining 2 actions fit the budget.
-            var corridor = Board("#######", "#######", "......#", "#######"); corridor.Start = C(0, 2); corridor.Exit = C(5, 2); corridor.AlarmBudget = 2;
+            // Corridor like LEVEL-23: the cone from (4,1.5) facing W lights (3,2), (2,2) and (1,2) (D-053: reach 3). Without EMP the alarm fires at (1,2) and the exit (5,2) is 4 actions away: budget 3 fails.
+            // With EMP (fired at the start): (1,2) and (2,2) are crossed while disabled, the camera reactivates on (3,2) and the remaining 2 actions fit the budget.
+            var corridor = Board("#######", "#######", "......#", "#######"); corridor.Start = C(0, 2); corridor.Exit = C(5, 2); corridor.AlarmBudget = 3;
             corridor.Cameras.Add(Camera(C(4, 1), Direction.South, Direction.West));
             var m = StageMetrics.Analyze(corridor.Build());
-            Assert.IsFalse(m.Solvable, "budget 2 cannot be beaten without EMP: " + m);
+            Assert.IsFalse(m.Solvable, "budget 3 cannot be beaten without EMP: " + m);
             var withEmp = corridor; withEmp.EmpCharges = 1;
             var m2 = StageMetrics.Analyze(withEmp.Build());
             Assert.AreEqual(5, m2.Par); Assert.IsTrue(m2.EmpRequired); Assert.IsTrue(m2.ForcedAlarm);

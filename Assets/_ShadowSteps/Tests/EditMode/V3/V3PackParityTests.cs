@@ -164,7 +164,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55, blocked); Assert.AreEqual(25, stagesWithCover);
             int shipped = 0;
             foreach (var s in Pack().Stages) shipped += s.BlockedCount;
-            Assert.AreEqual(47, shipped, "shipped pack after the D-048 campaign redesign: 47 cover cells (the imported 55 no longer apply; the browser export is only compared through Imported())");
+            Assert.AreEqual(46, shipped, "shipped pack after the D-048 campaign redesign and the LEVEL-17 planter removal: 46 cover cells (the imported 55 no longer apply; the browser export is only compared through Imported())");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-18", "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-24's flag corrected to true in the no-WAIT pack (D-044) // stored flags; LEVEL-24's stored flag is stale pending the cone decision

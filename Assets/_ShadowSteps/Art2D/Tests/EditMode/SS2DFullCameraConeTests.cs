@@ -76,19 +76,21 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void ObstacleInsideTheCone_DoesNotTrimTheDrawing_ButStillBlocksDetection()
         {
-            // LEVEL-19 at t=2 the camera faces the authored cover cell (4,1): detection is clipped by the crate; the drawn cone is not.
+            if (!Library().fullCameraCone) Assert.Ignore("fullCameraCone is off (D-054): the nominal-cone behaviour is covered only when the flag is on");
+            // LEVEL-19: the sweep starts eastward (D-053), straight at the authored cover cell (4,1): detection is clipped by the crate; the drawn cone is not.
             var stage = Pack().FindByCode("LEVEL-19"); Assert.IsNotNull(stage); var r = Build(stage);
             try
             {
-                var open = Pack().FindByCode("LEVEL-19");
-                var s2 = new StageState(stage.Start, 2, false, 0, null, null, stage.SmokeCharges, stage.EmpCharges, -1, false, StageResult.Playing, null);
+                int t = -1; for (int k = 0; k < 4 && t < 0; k++) if (CameraTrack.FacingAt(stage.Cameras[0], k) == Direction.East) t = k;
+                Assert.GreaterOrEqual(t, 0, "the sweep faces the crate at some turn");
+                var s2 = new StageState(stage.Start, t, false, 0, null, null, stage.SmokeCharges, stage.EmpCharges, -1, false, StageResult.Playing, null);
                 Present(r, stage, s2);
-                var poly = r.CameraCones[0]; var facing = CameraTrack.FacingAt(stage.Cameras[0], 2);
-                AssertNominal(r, stage, 0, facing, poly, "LEVEL-19 t2");
-                var detected = Sight.CameraVision(stage, s2, 0, 2);
+                var poly = r.CameraCones[0]; var facing = CameraTrack.FacingAt(stage.Cameras[0], t);
+                AssertNominal(r, stage, 0, facing, poly, "LEVEL-19 t" + t);
+                var detected = Sight.CameraVision(stage, s2, 0, t);
                 var traced = Sight.CameraConeOutline(stage, 0, null, stage.Cameras[0], facing);
                 float tracedReach = 0f; foreach (var p in traced) tracedReach = Mathf.Max(tracedReach, Vector3.Distance(r.PosF(p.X, p.Y), poly[0]));
-                Assert.Less(tracedReach, (float)Sight.CameraRange * r.Layout.NodeSpacing - 0.05f, "the engine's occluded silhouette is shorter than two spacings here (cover in the way)");
+                Assert.Less(tracedReach, (float)Sight.CameraRange * r.Layout.NodeSpacing - 0.05f, "the engine's occluded silhouette is shorter than the full reach here (cover in the way)");
                 Assert.Greater(Vector3.Distance((poly[1] + poly[2]) * 0.5f, poly[0]), tracedReach + 0.05f, "the drawn cone is NOT shortened by the obstacle");
                 Assert.IsTrue(new HashSet<GridCoord>(detected).SetEquals(r.CameraOverlay.DrawnCells), "detection rings still respect the cover");
                 // The cone paints straight over the cover cell in front of the lens (an 'X' cell, never a node); any floor node it shades without detection has no ring.
@@ -103,6 +105,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void DoorsAndSmoke_ChangeDetectionOnly_NeverTheDrawnGeometry()
         {
+            if (!Library().fullCameraCone) Assert.Ignore("fullCameraCone is off (D-054): see ClippedCone_StopsAtCoverDoorsAndSmoke_WhenFullConeIsOff");
             var b = new StageBuilder { Id = 900, Code = "CONE", Title = "cone" }.FromRows(new[] { "###.###", "#.....#", "#.....#", "#.....#", "#######" });
             b.Start = new GridCoord(1, 3); b.Exit = new GridCoord(5, 3); b.Key = new GridCoord(1, 1); b.AlarmBudget = 3; b.SmokeCharges = 1;
             b.Cameras.Add(new CameraSpec("cam", new GridCoord(3, 0), Direction.South, Direction.South, CameraKind.Fixed));
@@ -131,6 +134,7 @@ namespace ShadowSteps.Art2D.Tests
         [Test]
         public void BoardEdgeCamera_ConeAndRendererBoundsExtendBeyondTheGrid_AndSortAboveObstacles()
         {
+            if (!Library().fullCameraCone) Assert.Ignore("fullCameraCone is off (D-054): the nominal-cone behaviour is covered only when the flag is on");
             // Camera on the top wall of a 3-wide board facing S: the far corners lie outside the board's x range.
             var b = new StageBuilder { Id = 901, Code = "EDGE", Title = "edge" }.FromRows(new[] { "#..", "...", "...", "..." });
             b.Start = new GridCoord(0, 3); b.Exit = new GridCoord(2, 3); b.AlarmBudget = 3;
@@ -163,6 +167,48 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsNull(fill.GetComponent<Collider2D>()); Assert.IsNull(fill.GetComponent<Collider>());
                 // Rotating camera: all four facings nominal.
                 for (int t = 0; t < 4; t++) { Present(r, stage, new StageState(stage.Start, t, false, 0, null, null, 0, 0, -1, false, StageResult.Playing, null)); AssertNominal(r, stage, 0, CameraTrack.FacingAt(stage.Cameras[0], t), r.CameraCones[0], "edge t=" + t); }
+            }
+            finally { Object.DestroyImmediate(r.gameObject); }
+        }
+
+        /// <summary>D-054: with the full cone off, the drawn silhouette is the engine's traced outline: it stops at cover, at a closed door and at smoke, and opens up when the door opens.</summary>
+        [Test]
+        public void ClippedCone_StopsAtCoverDoorsAndSmoke_WhenFullConeIsOff()
+        {
+            if (Library().fullCameraCone) Assert.Ignore("fullCameraCone is on: the nominal cone is never clipped");
+            var b = new StageBuilder { Id = 901, Code = "CLIP", Title = "clip" }.FromRows(new[] { "###.###", "#.....#", "#.....#", "#.....#", "#######" });
+            b.Start = new GridCoord(1, 3); b.Exit = new GridCoord(5, 3); b.Key = new GridCoord(1, 1); b.AlarmBudget = 3; b.SmokeCharges = 1;
+            b.Cameras.Add(new CameraSpec("cam", new GridCoord(3, 0), Direction.South, Direction.South, CameraKind.Fixed));
+            b.Doors.Add(new DoorSpec(new GridCoord(3, 1), new GridCoord(3, 2)));
+            var stage = b.Build(); var r = Build(stage);
+            try
+            {
+                float s = r.Layout.NodeSpacing; var apex = r.PosF(3.0, 0.5);
+                float Reach(Vector3[] poly, int ray) => Vector3.Distance(poly[1 + ray], poly[0]);
+                var closed = StageState.Initial(stage); Present(r, stage, closed); var polyClosed = (Vector3[])r.CameraCones[0].Clone();
+                Assert.AreEqual(Sight.ConeOutlineRays + 2, polyClosed.Length, "traced outline: apex + one point per ray");
+                Assert.Less(Vector3.Distance(polyClosed[0], apex), 1e-4f, "apex on the wall face");
+                Assert.AreEqual(1.0f * s, Reach(polyClosed, Sight.ConeOutlineRays / 2), 1e-3f, "central ray stops on the closed door between (3,1) and (3,2)");
+                Assert.IsFalse(r.CameraOverlay.Contains(new GridCoord(3, 2)));
+                var opened = new StageState(stage.Start, 0, true, 1, null, null, 1, 0, -1, false, StageResult.Playing, null);
+                Present(r, stage, opened); var polyOpen = r.CameraCones[0];
+                Assert.AreEqual((float)Sight.CameraRange * s, Reach(polyOpen, Sight.ConeOutlineRays / 2), 1e-3f, "open door: the central ray reaches the full radius");
+                Assert.IsTrue(r.CameraOverlay.Contains(new GridCoord(3, 2)));
+                var smoked = new StageState(stage.Start, 0, false, 0, new[] { new SmokeCloud(new GridCoord(3, 1), 2) }, null, 0, 0, -1, false, StageResult.Playing, null);
+                Present(r, stage, smoked); var polySmoke = r.CameraCones[0];
+                Assert.Less(Reach(polySmoke, Sight.ConeOutlineRays / 2), 0.5f * s + 1e-3f, "smoke on the lens node: the central ray stops at the cloud's near edge");
+                Assert.AreEqual(0, r.CameraOverlay.DrawnCells.Count);
+                // Cover inside the cone clips the rays behind it: the node behind the crate is neither painted nor detected.
+                var c = new StageBuilder { Id = 902, Code = "CLIP2", Title = "clip" }.FromRows(new[] { "#######", "#..X..#", "#.....#", "#.....#", "#######" });
+                c.Start = new GridCoord(1, 3); c.Exit = new GridCoord(5, 3); c.AlarmBudget = 3; c.Cameras.Add(new CameraSpec("cam", new GridCoord(3, 0), Direction.South, Direction.South, CameraKind.Fixed));
+                var cs = c.Build(); var r2 = Build(cs);
+                try
+                {
+                    Present(r2, cs, StageState.Initial(cs)); var poly = r2.CameraCones[0];
+                    Assert.Less(Reach(poly, Sight.ConeOutlineRays / 2), 0.5f * r2.Layout.NodeSpacing + 1e-3f, "central ray stops on the crate's near edge");
+                    Assert.IsFalse(Contains(poly, r2.Pos(new GridCoord(3, 2))), "the node behind the crate is not painted"); Assert.IsFalse(r2.CameraOverlay.Contains(new GridCoord(3, 2)));
+                }
+                finally { Object.DestroyImmediate(r2.gameObject); }
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }

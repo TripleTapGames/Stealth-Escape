@@ -179,7 +179,7 @@ namespace ShadowSteps.Art2D
         [Tooltip("Curve of the camera cone's far edge: 1 = circular arc centred on the lens, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only; detected nodes always stay inside.")]
         [Range(0f, 1f)] public float cameraConeCurvature = 1f;
         [Tooltip("D-042: draw the full geometric camera cone (70°, two spacings forward, flat far edge) across obstacles and beyond the board. Off = the old silhouette traced by the detection occluders.")]
-        public bool fullCameraCone = true;
+        public bool fullCameraCone = false; // D-054: off = the engine-traced silhouette, clipped by cover, walls, closed doors and smoke, so the painted cone is exactly what detects
         [Tooltip("With the full cone: draw its fill/outline on the Props layer above obstacle art (below actors, markers and HUD) so bushes and walls do not cut it.")]
         public bool cameraConeAboveObstacles = true;
         public int cameraConePropsOrder = 5000;

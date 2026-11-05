@@ -67,15 +67,17 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void Camera_Cone70Degrees_CoversTheLensNodeAndThreeNodesOfTheSecondRow()
         {
-            // Cone rule (2026-11-03): origin on the wall face (3, 0.5), 35° half-angle, forward reach 2. Lens node (3,1) at forward 0.5;
-            // its neighbours (2,1)/(4,1) sit at 63° and are outside; the second row (2..4, 2) is at forward 1.5 and ≤ 33.7°; (3,3) is at forward 2.5.
+            // Cone rule (2026-11-03, reach raised to 3 by D-053): origin on the wall face (3, 0.5), 35° half-angle, forward reach 3. Lens node (3,1) at forward 0.5;
+            // its neighbours (2,1)/(4,1) sit at 63° and are outside; the second row (2..4, 2) is at forward 1.5 and ≤ 33.7°; the third row (2..4, 3) at forward 2.5 and ≤ 21.8°.
             var b = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); b.Start = C(1, 3); b.Exit = C(5, 3);
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
-            Assert.AreEqual(70.0, Sight.CameraFovDegrees, 1e-9); Assert.AreEqual(2.0, Sight.CameraRange, 1e-9);
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
+            Assert.AreEqual(70.0, Sight.CameraFovDegrees, 1e-9); Assert.AreEqual(3.0, Sight.CameraRange, 1e-9);
+            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
             Assert.IsTrue(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(3, 1)));
-            Assert.IsFalse(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(3, 3)), "forward 2.5 exceeds the 2-spacing reach");
+            Assert.IsTrue(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(3, 3)), "forward 2.5 is within the 3-spacing reach (D-053: two node rows past the lens node, walkway or not)");
+            var far = Board("#######", "#.....#", "#.....#", "#.....#", "#.....#", "#######"); far.Start = C(1, 4); far.Exit = C(5, 4); far.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
+            Assert.IsFalse(Sight.AnyCameraSees(far.Build(), StageState.Initial(far.Build()), 0, C(3, 4)), "forward 3.5 exceeds the reach");
             Assert.IsFalse(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(2, 1)), "63° beside the lens is outside the 35° half-angle");
         }
 
@@ -109,7 +111,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             int guard = 0;
             while (s.Clouds.Count > 0 && guard++ < 6) { var o = StageRules.TryApply(stage, s, StageAction.Wait); Assert.IsTrue(o.Valid); s = o.After; }
             Assert.AreEqual(0, s.Clouds.Count, "smoke expires after its counted actions");
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2)), Sight.CameraVision(stage, s, 0, s.T), "cone restored after expiry");
+            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, s, 0, s.T), "cone restored after expiry");
         }
 
         [Test]
@@ -119,9 +121,9 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(tan35, 1.0)), "exactly on the 35° edge counts as inside");
             Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(-tan35, 1.0)), "symmetric on the other side");
             Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(tan35 + 1e-3, 1.0)), "just past the half-angle is outside");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 2.0)), "forward 2.0 is the last reachable projection");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 2.0 + 1e-7)), "within the tolerance");
-            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, 2.01)), "beyond the reach");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.0)), "forward 3.0 is the last reachable projection (D-053)");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.0 + 1e-7)), "within the tolerance");
+            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.01)), "beyond the reach");
             Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0.1, 0)), "zero forward projection (beside the origin) is outside");
             Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, -1)), "behind the camera");
             Assert.IsTrue(Sight.InCameraCone(o, Direction.East, new Vec2(1.5, -1)), "East: forward is +x, lateral is y");
@@ -132,7 +134,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         [Test]
         public void Camera_Cone_FromEveryWallFace_AndEveryFacing()
         {
-            // 7×7 room; a camera on each wall looking inward sees the lens node plus three nodes of the second row.
+            // 7×7 room; a camera on each wall looking inward sees the lens node plus three nodes of the second and of the third row (D-053: reach 3).
             string[] rows = { "#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######" };
             void Check(GridCoord wall, Direction face, (int, int)[] expected)
             {
@@ -140,10 +142,10 @@ namespace ShadowSteps.Tests.EditMode.V3
                 var stage = b.Build();
                 CollectionAssert.AreEquivalent(Cells(expected), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0), wall + " " + face);
             }
-            Check(C(3, 0), Direction.South, new[] { (3, 1), (2, 2), (3, 2), (4, 2) });
-            Check(C(3, 6), Direction.North, new[] { (3, 5), (2, 4), (3, 4), (4, 4) });
-            Check(C(0, 3), Direction.East, new[] { (1, 3), (2, 2), (2, 3), (2, 4) });
-            Check(C(6, 3), Direction.West, new[] { (5, 3), (4, 2), (4, 3), (4, 4) });
+            Check(C(3, 0), Direction.South, new[] { (3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3) });
+            Check(C(3, 6), Direction.North, new[] { (3, 5), (2, 4), (3, 4), (4, 4), (2, 3), (3, 3), (4, 3) });
+            Check(C(0, 3), Direction.East, new[] { (1, 3), (2, 2), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4) });
+            Check(C(6, 3), Direction.West, new[] { (5, 3), (4, 2), (4, 3), (4, 4), (3, 2), (3, 3), (3, 4) });
             // Sideways along the wall (mount S, facing E): the two nodes along the wall at forward 1 and 2, lateral ½ (26.6°); nothing further out.
             var side = Board(rows); side.Start = C(1, 5); side.Exit = C(5, 5); side.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.East));
             var ss = side.Build();
@@ -164,7 +166,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             var closed = StageState.Initial(stage);
             CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (4, 2)), Sight.CameraVision(stage, closed, 0, 0), "the closed door across (3,1)-(3,2) hides (3,2); the diagonal rays pass beside it");
             var opened = new StageState(C(1, 3), 0, true, 1, null, null, 0, 0, -1, false, StageResult.Playing, null);
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2)), Sight.CameraVision(stage, opened, 0, 0), "an unlocked door no longer blocks vision");
+            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, opened, 0, 0), "an unlocked door no longer blocks vision (reach 3: two rows past the lens)");
         }
 
         [Test]
@@ -188,7 +190,7 @@ namespace ShadowSteps.Tests.EditMode.V3
                 double dr = System.Math.Sqrt((round[i].X - 3) * (round[i].X - 3) + (round[i].Y - 0.5) * (round[i].Y - 0.5));
                 Assert.GreaterOrEqual(df, dr - 1e-9);
             }
-            Assert.AreEqual(2.5, flat[1].Y, 1e-9, "flat: edge rays end on the forward plane");
+            Assert.AreEqual(0.5 + Sight.CameraRange, flat[1].Y, 1e-9, "flat: edge rays end on the forward plane");
         }
 
         [Test]
@@ -207,22 +209,22 @@ namespace ShadowSteps.Tests.EditMode.V3
             var first = pts[1]; var last = pts[49];
             Assert.AreEqual(Sight.CameraRange, Dist(first), 1e-9, "the ±35° edge rays reach the sector arc (curved far edge)");
             Assert.AreEqual(Sight.CameraRange, Dist(last), 1e-9);
-            double halfWidth = 2.0 * System.Math.Sin(35.0 * System.Math.PI / 180.0);
+            double halfWidth = Sight.CameraRange * System.Math.Sin(35.0 * System.Math.PI / 180.0);
             Assert.AreEqual(halfWidth, System.Math.Abs(first.X - 3.0), 1e-9); Assert.AreEqual(halfWidth, System.Math.Abs(last.X - 3.0), 1e-9);
             Assert.AreEqual(-1.0, System.Math.Sign(first.X - 3.0) * System.Math.Sign(last.X - 3.0), "the two edge rays are on opposite sides");
             var clear = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); clear.Start = C(1, 3); clear.Exit = C(5, 3);
             clear.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var cs = clear.Build();
             var open = Sight.CameraConeOutline(cs, 0, null, cs.Cameras[0], Direction.South, 48);
-            foreach (var p in open.GetRange(1, 49)) Assert.AreEqual(Sight.CameraRange, Dist(p), 1e-9, "unobstructed: every ray ends on the arc of radius 2");
-            Assert.AreEqual(2.5, open[1 + 24].Y, 1e-9, "the central ray reaches forward 2 exactly");
-            // Sideways camera: the node at forward 2 / lateral ½ (distance 2.06) is detected, so the sector widens to keep it inside.
+            foreach (var p in open.GetRange(1, 49)) Assert.AreEqual(Sight.CameraRange, Dist(p), 1e-9, "unobstructed: every ray ends on the arc of radius 3");
+            Assert.AreEqual(3.5, open[1 + 24].Y, 1e-9, "the central ray reaches forward 3 exactly");
+            // Sideways camera: the node at forward 3 / lateral ½ (distance 3.04) is detected, so the sector widens to keep it inside.
             var side = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); side.Start = C(1, 3); side.Exit = C(5, 3);
             side.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.East));
             var ss = side.Build();
             var so = Sight.CameraConeOutline(ss, 0, null, ss.Cameras[0], Direction.East, 48);
             double rad = 0; foreach (var p in so.GetRange(1, 49)) rad = System.Math.Max(rad, Dist(p));
-            Assert.AreEqual(System.Math.Sqrt(4.0 + 0.25), rad, 1e-5, "radius widened to the farthest detected node");
+            Assert.AreEqual(Sight.CameraRange, rad, 1e-5, "the farthest detected node (5,1) at 2.06 lies inside the radius 3: no widening needed");
             var smoked = Sight.CameraConeOutline(cs, 0, new[] { new SmokeCloud(C(3, 1), 2) }, cs.Cameras[0], Direction.South, 48);
             Assert.AreEqual(0.5, smoked[1 + 24].Y, 1e-9, "smoke on the lens node clips the central ray at the origin");
         }
@@ -283,7 +285,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             {
                 var q = Sight.CameraConeGeometry(cam, d); double fx = DirectionUtil.DeltaX(d), fy = DirectionUtil.DeltaY(d);
                 Assert.AreEqual(0.0, (q[1].X - q[2].X) * fx + (q[1].Y - q[2].Y) * fy, 1e-9, d + ": flat far edge");
-                Assert.AreEqual(Sight.CameraRange, (((q[1].X + q[2].X) / 2 - o.X) * fx + ((q[1].Y + q[2].Y) / 2 - o.Y) * fy), 1e-9, d + ": depth 2");
+                Assert.AreEqual(Sight.CameraRange, (((q[1].X + q[2].X) / 2 - o.X) * fx + ((q[1].Y + q[2].Y) / 2 - o.Y) * fy), 1e-9, d + ": depth = reach");
             }
         }
 }

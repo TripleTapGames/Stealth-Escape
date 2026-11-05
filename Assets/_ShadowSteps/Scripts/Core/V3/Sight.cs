@@ -27,7 +27,7 @@ namespace ShadowSteps.V3
         public const double CameraFovDegrees = 70.0;
         public const double CameraHalfAngleDegrees = CameraFovDegrees * 0.5;
         /// <summary>Maximum forward projection (node spacings from the wall-face origin) a detected node centre may have.</summary>
-        public const double CameraRange = 2.0;
+        public const double CameraRange = 3.0;
         /// <summary>Tolerance applied to every cone boundary comparison (forward reach and half-angle), so a node exactly on the boundary counts as inside.</summary>
         public const double ConeTolerance = 1e-6;
         private static readonly double TanHalfAngle = Math.Tan(CameraHalfAngleDegrees * Math.PI / 180.0);

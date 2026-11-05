@@ -1640,7 +1640,7 @@
       "rows": [
         "#######",
         "#.-.-.#",
-        "#|__X.#",
+        "#|___.#",
         "#._X_.#",
         "#######"
       ],
@@ -1688,7 +1688,8 @@
         "imported from browser playtest export (Level 17, 2 blocked cover nodes)",
         "historical browser par 8, browser ghostOffered False (re-scored 2026-11-03 under the front-node camera footprint, D-035)",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
-        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved",
+        "planter at (4,2) removed 2026-11-05 at the user's request: it hid the whole painted cone; the camera now watches (3,1) and (5,2)"
       ]
     },
     {
@@ -1699,8 +1700,8 @@
       "intro": "The camera turns every move. A clean route earns a Ghost.",
       "rows": [
         "#######",
-        "#.-.-.#",
-        "#|__X.#",
+        "#_.-..#",
+        "#_._X|#",
         "#..X_.#",
         "#######"
       ],
@@ -1710,7 +1711,7 @@
       ],
       "exit": [
         5,
-        3
+        1
       ],
       "key": null,
       "cuts": [],
@@ -1720,7 +1721,7 @@
         {
           "id": "cam1",
           "wall": [
-            1,
+            4,
             0
           ],
           "mountFace": "S",
@@ -1736,18 +1737,19 @@
       "alarmBudget": 3,
       "waitLimit": 0,
       "scoring": {
-        "par": 7,
-        "threeStar": 8,
-        "twoStar": 10,
+        "par": 5,
+        "threeStar": 6,
+        "twoStar": 7,
         "ghostOffered": true,
-        "knockoutPar": 7,
-        "knockoutThreeStar": 8,
-        "knockoutTwoStar": 10
+        "knockoutPar": 5,
+        "knockoutThreeStar": 6,
+        "knockoutTwoStar": 7
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
         "imported from browser playtest export (Level 18, 2 blocked cover nodes)",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "re-tuned 2026-11-05 (D-053): camera reach 3 squares",
         "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
@@ -1766,7 +1768,7 @@
       ],
       "start": [
         1,
-        2
+        1
       ],
       "exit": [
         5,
@@ -1784,7 +1786,7 @@
             0
           ],
           "mountFace": "S",
-          "facing": "S",
+          "facing": "E",
           "kind": "sweeping",
           "clockwise": false
         }
@@ -1796,19 +1798,20 @@
       "alarmBudget": 2,
       "waitLimit": 0,
       "scoring": {
-        "par": 7,
-        "threeStar": 8,
-        "twoStar": 10,
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
         "ghostOffered": true,
-        "knockoutPar": 7,
-        "knockoutThreeStar": 8,
-        "knockoutTwoStar": 10
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "camera cam1 mounting node (3, 0) was floor in the browser export; converted to wall",
         "imported from browser playtest export (Level 19, 2 blocked cover nodes)",
         "redesigned 2026-11-03 for the front-node camera footprint (start (1,1), cover at (4,1),(1,3)); browser par/ghost no longer apply",
-        "No-WAIT review draft: start moved from (1,1) to (1,2) to provide a movement-based sweep timing route; camera, cover and alarm budget unchanged."
+        "No-WAIT review draft: start moved from (1,1) to (1,2) to provide a movement-based sweep timing route; camera, cover and alarm budget unchanged.",
+        "re-tuned 2026-11-05 (D-053): camera reach 3 squares"
       ]
     },
     {
@@ -2075,7 +2078,7 @@
       "rows": [
         "#######",
         "#.-.-.#",
-        "#|_X_.#",
+        "#._X_.#",
         "#._X_.#",
         "#######"
       ],
@@ -2111,18 +2114,19 @@
       "alarmBudget": 1,
       "waitLimit": 0,
       "scoring": {
-        "par": 5,
-        "threeStar": 6,
-        "twoStar": 7,
+        "par": 6,
+        "threeStar": 7,
+        "twoStar": 8,
         "ghostOffered": true,
-        "knockoutPar": 5,
-        "knockoutThreeStar": 6,
-        "knockoutTwoStar": 7
+        "knockoutPar": 6,
+        "knockoutThreeStar": 7,
+        "knockoutTwoStar": 8
       },
       "notes": [
         "imported from browser playtest export (Level 24, 2 blocked cover nodes)",
         "historical browser par 9, browser ghostOffered True (re-scored 2026-11-03 under the front-node camera footprint, D-035)",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
+        "re-tuned 2026-11-05 (D-053): camera reach 3 squares",
         "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
       ]
     },
@@ -2687,7 +2691,7 @@
             2
           ],
           "mountFace": "W",
-          "facing": "W",
+          "facing": "S",
           "kind": "rotating",
           "clockwise": true
         }
@@ -2696,7 +2700,7 @@
         "smoke": 1,
         "emp": 1
       },
-      "alarmBudget": 2,
+      "alarmBudget": 3,
       "waitLimit": 0,
       "scoring": {
         "par": 19,
@@ -2712,7 +2716,7 @@
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 35, \"Level 30\"); reference optimal 28 counted actions, Ghost route supplied",
         "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
-        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+        "re-tuned 2026-11-05 (D-053): camera reach 3 squares"
       ]
     }
   ]

@@ -60,8 +60,8 @@ namespace ShadowSteps.Tests.EditMode.V3
             var beside = Board("#######", "#...X.#", "#.....#", "#.....#", "#######"); beside.Start = C(1, 3); beside.Exit = C(5, 3);
             beside.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var bs = beside.Build();
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2)), Sight.CameraVision(bs, StageState.Initial(bs), 0, 0),
-                "cover beside the lens at (4,1) sits on the ray to (4,2) (it enters that cell at (3.5, 1.25))");
+            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(bs, StageState.Initial(bs), 0, 0),
+                "cover beside the lens at (4,1) sits on the ray to (4,2) (it enters that cell at (3.5, 1.25)); the steeper ray to (4,3) clears it (reach 3)");
         }
 
         [Test]

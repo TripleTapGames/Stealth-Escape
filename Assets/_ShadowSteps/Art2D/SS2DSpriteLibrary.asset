@@ -190,7 +190,7 @@ MonoBehaviour:
   guardConeOvershoot: 0.308
   guardConeCurvature: 1
   cameraConeCurvature: 1
-  fullCameraCone: 1
+  fullCameraCone: 0
   cameraConeAboveObstacles: 1
   cameraConePropsOrder: 5000
   cameraVisionFill: {r: 1, g: 0.72, b: 0.18, a: 0.3}
