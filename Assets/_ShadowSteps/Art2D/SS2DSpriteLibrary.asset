@@ -155,6 +155,16 @@ MonoBehaviour:
   captureBeat: 0.3
   exitPulse: 0.08
   hazardFade: 0.16
+  uiPill: {fileID: 21300000, guid: 925d5eff144474bfc911b987c1a4173f, type: 3}
+  uiPillSlim: {fileID: 21300000, guid: d530ba344844b4820bcfb782141c0e22, type: 3}
+  uiRoundButton: {fileID: 21300000, guid: dc6495c693b8f4f8abd61eaf2aaeb9f8, type: 3}
+  uiPauseIcon: {fileID: 21300000, guid: d9a7db31452944bf59d8aa54fa17a9c3, type: 3}
+  uiSmokeIcon: {fileID: 21300000, guid: 87e2b45cb58c648df9950f3080aacdae, type: 3}
+  uiEmpIcon: {fileID: 21300000, guid: fb86f4f8ee22744efb02a01ad6ddc855, type: 3}
+  uiStarIcon: {fileID: 21300000, guid: 8da95a7e0009d4f20bb8f3836e15e0d1, type: 3}
+  uiFootIcon: {fileID: 21300000, guid: 58f8f6c4bee2f4e16812048b43eb05aa, type: 3}
+  uiText: {r: 0.2, g: 0.29, b: 0.42, a: 1}
+  uiLabelOnBoard: {r: 1, g: 1, b: 1, a: 1}
   hudTop: 0.115
   hudBottom: 0.165
   cameraSize: 0.62
@@ -211,6 +221,10 @@ MonoBehaviour:
   captured: {r: 1, g: 0.35, b: 0.35, a: 1}
   knockoutTarget: {r: 1, g: 0.62, b: 0.2, a: 0.95}
   knockedOut: {r: 0.55, g: 0.58, b: 0.64, a: 0.85}
+  knockoutFlyDuration: 0.45
+  knockoutFlyDistance: 3.2
+  knockoutFlyLift: 1.4
+  knockoutFlySpins: 1.5
   won: {r: 0.55, g: 1, b: 0.7, a: 1}
   lockdown: {r: 1, g: 0.65, b: 0.25, a: 1}
   moveDuration: 0.18

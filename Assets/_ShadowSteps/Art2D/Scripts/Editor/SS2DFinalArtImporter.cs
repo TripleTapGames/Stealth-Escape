@@ -39,6 +39,8 @@ namespace ShadowSteps.Art2D.Editor
         public const string LevelArtDir = "Assets/_ShadowSteps/Art2D/LevelArt/";
         public const string CastShadowPath = SpritesRoot + "Characters/character_shadow.png";
         public const string RotationArrowPath = SpritesRoot + "Markers/rotation_arrow.png";
+        public const string UiDir = SpritesRoot + "_UI/";
+        public static bool HasUiArt() => File.Exists(UiDir + "round button.png") && File.Exists(UiDir + "Level_footsteps_stars.png") && File.Exists(UiDir + "info box.png");
         public const string CameraDir = SpritesRoot + "Cameras/";
         /// <summary>Drawn-direction order (North, East, South, West): back view, side right, front (lens), side left.</summary>
         static readonly string[] CameraFiles = { "cam_back.png", "cam_right.png", "cam_front.png", "cam_left.png" };
@@ -106,6 +108,19 @@ namespace ShadowSteps.Art2D.Editor
                 Configure(RotationArrowPath, CharacterPpu, new Vector2(0.5f, 0.5f), 1024, SpriteMeshType.Tight);
                 AssetDatabase.Refresh();
                 lib.rotationArrowArt = AssetDatabase.LoadAssetAtPath<Sprite>(RotationArrowPath);
+            }
+            if (HasUiArt())
+            {
+                // HUD skin (user art, 2026-11-05): each PNG is a 1024² canvas with a lot of transparent margin, so the sprite rect is trimmed to the
+                // visible pixels; pills get round-cap 9-slice borders (half the visible height) so they stretch to any text width.
+                lib.uiPill = ConfigureTrimmed(UiDir + "Level_footsteps_stars.png", "ui_pill", 0.5f);
+                lib.uiPillSlim = ConfigureTrimmed(UiDir + "info box.png", "ui_pill_slim", 0.5f);
+                lib.uiRoundButton = ConfigureTrimmed(UiDir + "round button.png", "ui_round_button", 0f);
+                lib.uiPauseIcon = ConfigureTrimmed(UiDir + "Pause lines.png", "ui_pause", 0f);
+                lib.uiSmokeIcon = ConfigureTrimmed(UiDir + "Smoke.png", "ui_smoke", 0f);
+                lib.uiEmpIcon = ConfigureTrimmed(UiDir + "Emp.png", "ui_emp", 0f);
+                lib.uiStarIcon = ConfigureTrimmed(UiDir + "Star.png", "ui_star", 0f);
+                lib.uiFootIcon = ConfigureTrimmed(UiDir + "foot icon.png", "ui_foot", 0f);
             }
             if (HasCameraArt())
             {
@@ -188,6 +203,58 @@ namespace ShadowSteps.Art2D.Editor
         }
 
         static void ConfigureCharacter(string path) => Configure(path, CharacterPpu, CharacterPivot, 1024, SpriteMeshType.Tight);
+
+        /// <summary>
+        /// Trims a UI PNG to its alpha bounding box (plus a 2 px margin) into a generated copy under _UI/Trimmed/ and imports THAT as a plain
+        /// single sprite (stable fileID 21300000 on every machine; Multiple-mode sub-sprite IDs are not), with an optional 9-slice border
+        /// expressed as a fraction of the trimmed height (0.5 = round caps on a pill). The user's original PNG is never modified.
+        /// </summary>
+        static Sprite ConfigureTrimmed(string path, string spriteName, float borderHeightFraction)
+        {
+            if (!File.Exists(path)) { Debug.LogError("[SS2D] missing UI art: " + path); return null; }
+            string dir = UiDir + "Trimmed/"; string outPath = dir + spriteName + ".png";
+            Directory.CreateDirectory(dir);
+            var png = new Texture2D(2, 2, TextureFormat.RGBA32, false); png.LoadImage(File.ReadAllBytes(path));
+            var px = png.GetPixels32(); int w = png.width, h = png.height, minX = w, minY = h, maxX = -1, maxY = -1;
+            for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) if (px[y * w + x].a > 8) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+            if (maxX < 0) { Object.DestroyImmediate(png); Debug.LogError("[SS2D] empty UI sprite: " + path); return null; }
+            minX = Mathf.Max(0, minX - 2); minY = Mathf.Max(0, minY - 2); maxX = Mathf.Min(w - 1, maxX + 2); maxY = Mathf.Min(h - 1, maxY + 2);
+            int tw = maxX - minX + 1, th = maxY - minY + 1;
+            bool stale = !File.Exists(outPath) || File.GetLastWriteTimeUtc(outPath) < File.GetLastWriteTimeUtc(path);
+            if (stale)
+            {
+                var cut = new Texture2D(tw, th, TextureFormat.RGBA32, false);
+                var block = new Color32[tw * th];
+                for (int y = 0; y < th; y++) for (int x = 0; x < tw; x++) block[y * tw + x] = px[(minY + y) * w + (minX + x)];
+                cut.SetPixels32(block); cut.Apply();
+                File.WriteAllBytes(outPath, cut.EncodeToPNG()); Object.DestroyImmediate(cut);
+                AssetDatabase.ImportAsset(outPath, ImportAssetOptions.ForceSynchronousImport);
+            }
+            Object.DestroyImmediate(png);
+            var imp = AssetImporter.GetAtPath(outPath) as TextureImporter;
+            if (imp == null) { Debug.LogError("[SS2D] trimmed UI sprite did not import: " + outPath); return null; }
+            float b = Mathf.Floor(th * borderHeightFraction);
+            var border = borderHeightFraction > 0f ? new Vector4(b, 0f, b, 0f) : Vector4.zero;
+            var settings = new TextureImporterSettings(); imp.ReadTextureSettings(settings);
+            bool same = imp.textureType == TextureImporterType.Sprite && imp.spriteImportMode == SpriteImportMode.Single && imp.alphaIsTransparency && !imp.mipmapEnabled
+                && imp.maxTextureSize == 1024 && Mathf.Approximately(imp.spritePixelsPerUnit, 100f) && settings.spriteMeshType == SpriteMeshType.FullRect && (imp.spriteBorder - border).sqrMagnitude < 1e-6f
+                && settings.spriteAlignment == (int)SpriteAlignment.Center;
+            if (!same)
+            {
+                imp.textureType = TextureImporterType.Sprite; imp.spriteImportMode = SpriteImportMode.Single;
+                imp.alphaIsTransparency = true; imp.alphaSource = TextureImporterAlphaSource.FromInput; imp.mipmapEnabled = false; imp.filterMode = FilterMode.Bilinear; imp.wrapMode = TextureWrapMode.Clamp;
+                imp.sRGBTexture = true; imp.maxTextureSize = 1024; imp.textureCompression = TextureImporterCompression.Compressed; imp.spritePixelsPerUnit = 100; imp.spriteBorder = border;
+                imp.ReadTextureSettings(settings); settings.spriteAlignment = (int)SpriteAlignment.Center; settings.spritePivot = new Vector2(0.5f, 0.5f); settings.spriteMeshType = SpriteMeshType.FullRect; settings.spriteExtrude = 1; imp.SetTextureSettings(settings);
+                imp.SaveAndReimport();
+            }
+            // The original stays a plain single sprite (no stray sub-sprites from earlier Multiple-mode imports).
+            var orig = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (orig != null && orig.spriteImportMode == SpriteImportMode.Multiple) { orig.spriteImportMode = SpriteImportMode.Single; orig.SaveAndReimport(); }
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(outPath);
+            if (sprite == null) Debug.LogError("[SS2D] no sprite at " + outPath);
+            return sprite;
+        }
+
         static void ConfigureBackground(string path) => Configure(path, BackgroundPpu, new Vector2(0.5f, 0.5f), 2048, SpriteMeshType.FullRect);
 
         static void Configure(string path, int ppu, Vector2 pivot, int maxSize, SpriteMeshType mesh)

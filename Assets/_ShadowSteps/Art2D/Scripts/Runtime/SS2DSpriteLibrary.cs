@@ -139,6 +139,12 @@ namespace ShadowSteps.Art2D
         public float captureBeat = 0.30f;
         [Range(0f, 0.3f)] public float exitPulse = 0.06f;
         [Range(0f, 0.5f)] public float hazardFade = 0.16f;
+        [Header("HUD skin (user art under Sprites/_UI; imported trimmed, pills 9-sliced). Empty = generated shapes.")]
+        public Sprite uiPill, uiPillSlim, uiRoundButton, uiPauseIcon, uiSmokeIcon, uiEmpIcon, uiStarIcon, uiFootIcon;
+        [Tooltip("Text and badge colour on the white pills/buttons (the icons' navy).")] public Color uiText = new Color(0.20f, 0.29f, 0.42f);
+        public Color uiLabelOnBoard = Color.white;
+        public bool HasUiSkin => uiPill != null && uiPillSlim != null && uiRoundButton != null;
+
         [Header("Portrait bands (HUD safe areas the board is fitted between)")]
         [Range(0f, 0.4f)] public float hudTop = 0.10f;
         [Range(0f, 0.4f)] public float hudBottom = 0.145f;

@@ -188,7 +188,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.IsTrue(expected.SetEquals(DrawnHazardCells()));
             // HUD retry button does the same.
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T);
-            hud.retryButton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); yield return Settle();
+            _flow.Router.Get<PauseScreen>().OnRestart(); yield return Settle(); // Restart lives on the pause card (the skinned HUD has no retry button)
             Assert.AreEqual(0, S.State.T);
         }
 
@@ -223,7 +223,7 @@ namespace ShadowSteps.Art2D.Tests
             var next = AppServices.Stages.NextAfter(wonStageId); Assert.IsNotNull(next);
             _flow.Router.PopAllModals(); _composer.OpenStage(next); yield return null; yield return null;
             Assert.AreEqual("LEVEL-3", S.Stage.Code); Assert.AreEqual(0, S.State.T); Assert.IsTrue(R.IsBuilt);
-            Assert.IsTrue(((SS2DHudCanvas)_composer.Hud).levelLabel.text.StartsWith("LEVEL 3"));
+            var hud3 = (SS2DHudCanvas)_composer.Hud; Assert.IsTrue((hud3.levelCaption != null ? hud3.levelCaption.text : hud3.levelLabel.text).StartsWith("LEVEL 3"), "skinned HUD: caption carries the level number");
             Assert.AreEqual(Color.white, R.Player.body.color); Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(S.State.Player)), 1e-3f);
         }
 
@@ -301,7 +301,10 @@ namespace ShadowSteps.Art2D.Tests
             _flow.Router.Pop(); yield return null;
             Assert.IsFalse(S.InputLocked);
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); Assert.AreEqual(1, S.State.T);
-            Assert.IsFalse(hud.smokeButton.gameObject.activeSelf, "no smoke on LEVEL-2"); Assert.IsFalse(hud.empButton.gameObject.activeSelf, "no EMP on LEVEL-2");
+            // Skinned HUD (D-045): gadget buttons are always shown; without charges they are dimmed and not interactable.
+            Assert.IsTrue(hud.smokeButton.gameObject.activeSelf); Assert.IsFalse(hud.smokeButton.GetComponent<UnityEngine.UI.Button>().interactable, "no smoke on LEVEL-2");
+            Assert.IsTrue(hud.empButton.gameObject.activeSelf); Assert.IsFalse(hud.empButton.GetComponent<UnityEngine.UI.Button>().interactable, "no EMP on LEVEL-2");
+            Assert.Less(hud.smokeButton.GetComponent<UnityEngine.UI.Image>().color.a, 0.9f, "dimmed at zero charges");
         }
     }
 }

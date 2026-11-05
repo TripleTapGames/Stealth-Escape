@@ -48,6 +48,9 @@ namespace ShadowSteps.Art2D
         public void Bind(GameSessionController session)
         {
             _session = session;
+            // The HUD is bound before the 2D bridge creates its renderer, so take the library from the composer first.
+            var composer = FindObjectOfType<GameSceneComposer>(); if (composer != null && composer.Art2DLibrary is SS2DSpriteLibrary cl) Library = cl;
+            var r = FindObjectOfType<ShadowSteps2DRenderer>(); if (Library == null && r != null && r.library != null) Library = r.library;
             Build();
             AttachCamera(Camera.main);
             _session.StateChanged += OnStateChanged; _session.StageLoaded += OnStageLoaded; _session.ModeChanged += OnModeChanged;
@@ -85,13 +88,13 @@ namespace ShadowSteps.Art2D
         public void ShowMessage(string message, float seconds)
         {
             if (messageLabel == null) return;
-            messageLabel.text = message ?? string.Empty;
+            messageLabel.text = string.IsNullOrEmpty(message) ? _hint : message; // an empty message shows the level hint (skinned HUD)
             _messageUntil = seconds <= 0f ? float.MaxValue : Time.unscaledTime + seconds;
         }
 
         private void Update()
         {
-            if (messageLabel != null && _messageUntil != float.MaxValue && Time.unscaledTime > _messageUntil && messageLabel.text.Length > 0) messageLabel.text = string.Empty;
+            if (messageLabel != null && _messageUntil != float.MaxValue && Time.unscaledTime > _messageUntil && messageLabel.text != _hint) { messageLabel.text = _hint; _messageUntil = float.MaxValue; }
             if (alertOverlay != null)
             {
                 float a = _alertUntil > Time.unscaledTime ? Mathf.Clamp01((_alertUntil - Time.unscaledTime) / 0.45f) * 0.35f : 0f;
@@ -134,8 +137,23 @@ namespace ShadowSteps.Art2D
         }
         private void OnAlarm(ActionOutcome o) { _alertColor = amber; _alertUntil = Time.unscaledTime + 0.6f; ShowMessage("Camera spotted you!", 1.5f); }
 
+        private string _hint = string.Empty;
+
         private void ApplyStage(Stage stage, StageMode mode)
         {
+            if (levelCaption != null)
+            {
+                // Skinned: caption "LEVEL 2" / "TUTORIAL 3", title below; star pill "≤ n"; hint pill shows the level intro while no message is up.
+                levelCaption.text = stage.Group == "FTUE" ? "TUTORIAL " + stage.Id : "LEVEL " + stage.Code.Replace("LEVEL-", "");
+                levelLabel.text = stage.Title;
+                starsLabel.text = "\u2264 " + stage.ThreeStarFor(mode);
+                if (actionsParLabel != null) actionsParLabel.text = "/ " + stage.ParFor(mode);
+                _hint = stage.Intro ?? string.Empty; if (messageLabel != null && (_messageUntil == float.MaxValue || messageLabel.text.Length == 0)) messageLabel.text = _hint;
+                // Mock: the gadget buttons are always present; without charges they are dimmed (and not interactable, see ApplyState).
+                smokeButton.gameObject.SetActive(true); empButton.gameObject.SetActive(true);
+                Dim(smokeButton, stage.SmokeCharges == 0, smokeLabel); Dim(empButton, stage.EmpCharges == 0, empLabel);
+                return;
+            }
             levelLabel.text = (stage.Group == "FTUE" ? "TUTORIAL " + stage.Id : "LEVEL " + stage.Code.Replace("LEVEL-", "")) + "  ·  " + stage.Title;
             starsLabel.text = StarsText(stage, mode, null);
             smokeButton.gameObject.SetActive(stage.SmokeCharges > 0); empButton.gameObject.SetActive(stage.EmpCharges > 0);
@@ -148,7 +166,8 @@ namespace ShadowSteps.Art2D
             bool lockdown = state.AlarmActive && !state.IsTerminal;
             if (lockdownPanel != null) lockdownPanel.gameObject.SetActive(lockdown);
             if (lockdownLabel != null) lockdownLabel.text = lockdown ? "LOCKDOWN  \u00b7  " + state.Alarm + (state.Alarm == 1 ? " action" : " actions") + " to escape" : string.Empty;
-            starsLabel.text = StarsText(stage, _shownMode, state);
+            if (levelCaption == null) starsLabel.text = StarsText(stage, _shownMode, state);
+            else { Dim(smokeButton, state.SmokeCharges == 0, smokeLabel); Dim(empButton, state.EmpCharges == 0, empLabel); } // skinned: dim once the charges are spent
             SetInteractable(smokeButton, state.SmokeCharges > 0 && !state.IsTerminal); SetInteractable(empButton, state.EmpCharges > 0 && !state.IsTerminal);
         }
 
@@ -187,6 +206,10 @@ namespace ShadowSteps.Art2D
             Anchor(alert.GetComponent<RectTransform>(), 0f, 0f, 1f, 1f);
             alertOverlay = alert.AddComponent<Image>(); alertOverlay.color = new Color(danger.r, danger.g, danger.b, 0f); alertOverlay.raycastTarget = false;
 
+            var lib = Library;
+            if (lib != null && lib.HasUiSkin) { BuildSkinned(lib, font); return; }
+            Debug.LogWarning("[SS2D] HUD skin not available (" + (lib == null ? "no sprite library found" : "library '" + lib.name + "' missing: " + (lib.uiPill == null ? "uiPill " : "") + (lib.uiPillSlim == null ? "uiPillSlim " : "") + (lib.uiRoundButton == null ? "uiRoundButton" : "")) + "); drawing the generated HUD. Run Shadow Steps ▸ 2D ▸ Import final art.");
+
             // ---- top: one slim pill (level · title | actions | pause, retry)
             var top = Panel("TopPill", canvas.transform, pill, 0.035f, 0.925f, 0.965f, 0.978f, 50f);
             levelLabel = Label("Level", top, "", 30, TextAnchor.MiddleLeft, font, true); Anchor(levelLabel.rectTransform, 0.045f, 0f, 0.56f, 1f);
@@ -213,9 +236,128 @@ namespace ShadowSteps.Art2D
 
         }
 
-        private static void Wire(RectTransform rt, UnityEngine.Events.UnityAction action) { var b = rt.GetComponent<Button>(); if (b != null) { b.onClick.RemoveAllListeners(); b.onClick.AddListener(action); } }
+        /// <summary>The sprite library the skin comes from: the composer's library when bound, else the one found in the scene (art preview).</summary>
+        public SS2DSpriteLibrary Library
+        {
+            get
+            {
+                if (_library != null) return _library;
+                var r = FindObjectOfType<ShadowSteps2DRenderer>(); if (r != null && r.library != null) _library = r.library;
+                if (_library == null) _library = Resources.Load<SS2DSpriteLibrary>("SS2DSpriteLibrary");
+                return _library;
+            }
+            set { _library = value; }
+        }
+        private SS2DSpriteLibrary _library;
+        public Text levelCaption, actionsParLabel, hintLabel, smokeLabel, empLabel;
+
+        /// <summary>
+        /// Mock layout (2026-11-05, user art): pause round button top-left; centre title pill ("LEVEL 2" caption + title) with a slim hint pill
+        /// under it; top-right two pills: footsteps icon "actions / par" and star icon "≤ three-star"; bottom-left SMOKE / EMP round buttons
+        /// with icon, dark count badge and a label underneath. No WAIT, no retry (Restart lives on the pause card), no mode toggle.
+        /// </summary>
+        private void BuildSkinned(SS2DSpriteLibrary lib, Font font)
+        {
+            var navy = lib.uiText; var root = canvas.transform;
+            // Pause (top-left).
+            pauseButton = SkinButton("PauseButton", root, lib, 0.075f, 0.962f, 100f);
+            IconOn(pauseButton, "Icon", lib.uiPauseIcon, 0.44f, Color.white);
+            retryButton = null;
+            // Title pill (top-centre): caption + title.
+            var title = Pill("TitlePill", root, lib.uiPill, 0.30f, 0.924f, 0.70f, 0.982f);
+            levelCaption = Label("Caption", title, "LEVEL", 22, TextAnchor.UpperCenter, font, true); levelCaption.color = new Color(navy.r, navy.g, navy.b, 0.75f); Anchor(levelCaption.rectTransform, 0.05f, 0.56f, 0.95f, 0.92f);
+            levelLabel = Label("Level", title, "", 40, TextAnchor.LowerCenter, font, true); levelLabel.color = navy; Anchor(levelLabel.rectTransform, 0.05f, 0.10f, 0.95f, 0.60f);
+            // Hint / message pill under the title.
+            var sub = Pill("SubPill", root, lib.uiPillSlim, 0.29f, 0.889f, 0.71f, 0.919f);
+            messageLabel = Label("Message", sub, "", 24, TextAnchor.MiddleCenter, font, false); messageLabel.color = navy; messageLabel.horizontalOverflow = HorizontalWrapMode.Wrap; messageLabel.resizeTextForBestFit = true; messageLabel.resizeTextMinSize = 14; messageLabel.resizeTextMaxSize = 24; Anchor(messageLabel.rectTransform, 0.04f, 0.05f, 0.96f, 0.95f);
+            hintLabel = messageLabel;
+            // Right pills: actions / par, three-star threshold.
+            var acts = Pill("ActionsPill", root, lib.uiPill, 0.80f, 0.947f, 0.972f, 0.985f);
+            IconIn(acts, "Icon", lib.uiFootIcon, 0.06f, 0.30f, navy);
+            actionsValue = Label("ActionsValue", acts, "0", 30, TextAnchor.MiddleRight, font, true); actionsValue.color = navy; Anchor(actionsValue.rectTransform, 0.30f, 0f, 0.60f, 1f);
+            actionsParLabel = Label("ActionsPar", acts, "/ 0", 30, TextAnchor.MiddleLeft, font, true); actionsParLabel.color = navy; Anchor(actionsParLabel.rectTransform, 0.62f, 0f, 0.96f, 1f);
+            var stars = Pill("StarsPill", root, lib.uiPill, 0.80f, 0.905f, 0.972f, 0.943f);
+            IconIn(stars, "Icon", lib.uiStarIcon, 0.06f, 0.30f, Color.white);
+            starsLabel = Label("Stars", stars, "", 30, TextAnchor.MiddleCenter, font, true); starsLabel.color = navy; Anchor(starsLabel.rectTransform, 0.32f, 0f, 0.96f, 1f);
+            // Lockdown indicator: amber slim pill under the right pills.
+            lockdownPanel = Pill("LockdownPanel", root, lib.uiPillSlim, 0.20f, 0.852f, 0.80f, 0.885f); lockdownPanel.GetComponent<Image>().color = amber;
+            lockdownLabel = Label("LockdownLabel", lockdownPanel, "", 26, TextAnchor.MiddleCenter, font, true); lockdownLabel.color = new Color(0.20f, 0.12f, 0.02f);
+            lockdownPanel.gameObject.SetActive(false);
+            // Gadgets (bottom-left): round white button, icon, dark count badge, label under.
+            smokeButton = SkinButton("SmokeButton", root, lib, 0.13f, 0.095f, 130f); IconOn(smokeButton, "Icon", lib.uiSmokeIcon, 0.56f, Color.white); smokeCount = SkinBadge(smokeButton, lib, font); smokeLabel = UnderLabel("SmokeLabel", root, "SMOKE", 0.13f, 0.040f, font, lib.uiLabelOnBoard);
+            empButton = SkinButton("EmpButton", root, lib, 0.29f, 0.095f, 130f); IconOn(empButton, "Icon", lib.uiEmpIcon, 0.56f, Color.white); empCount = SkinBadge(empButton, lib, font); empLabel = UnderLabel("EmpLabel", root, "EMP", 0.29f, 0.040f, font, lib.uiLabelOnBoard);
+        }
+
+        private static void Dim(RectTransform button, bool dim, Text label)
+        {
+            float a = dim ? 0.55f : 1f;
+            foreach (var g in button.GetComponentsInChildren<Graphic>(true)) { var c = g.color; c.a = a; g.color = c; }
+            if (label != null) { var c = label.color; c.a = a; label.color = c; }
+        }
+
+        private static RectTransform Pill(string name, Transform parent, Sprite sprite, float xMin, float yMin, float xMax, float yMax)
+        {
+            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>(); Anchor(rt, xMin, yMin, xMax, yMax);
+            var img = go.AddComponent<Image>(); img.sprite = sprite; img.type = Image.Type.Sliced; img.color = Color.white; img.raycastTarget = false; img.pixelsPerUnitMultiplier = 1f;
+            // Keep the round caps round: scale the 9-slice so the border equals half the pill height at the reference resolution.
+            float h = (yMax - yMin) * 1920f; if (sprite != null && sprite.border.x > 0f) img.pixelsPerUnitMultiplier = Mathf.Max(0.05f, (sprite.border.x * 2f) / Mathf.Max(1f, h));
+            return rt;
+        }
+
+        private static RectTransform SkinButton(string name, Transform parent, SS2DSpriteLibrary lib, float ax, float ay, float diameter)
+        {
+            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(ax, ay); rt.sizeDelta = new Vector2(diameter, diameter); rt.anchoredPosition = Vector2.zero;
+            var img = go.AddComponent<Image>(); img.sprite = lib.uiRoundButton; img.type = Image.Type.Simple; img.preserveAspect = true; img.color = Color.white; img.raycastTarget = true;
+            var b = go.AddComponent<Button>(); b.targetGraphic = img; var colors = b.colors; colors.pressedColor = new Color(0.85f, 0.85f, 0.85f); colors.disabledColor = new Color(1f, 1f, 1f, 0.55f); b.colors = colors;
+            return rt;
+        }
+
+        /// <summary>Icon centred on a round button, sized as a fraction of the button's diameter; tinted with <paramref name="tint"/> (white keeps the art's own colour).</summary>
+        private static Image IconOn(RectTransform button, string name, Sprite sprite, float fraction, Color tint)
+        {
+            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(button, false);
+            var rt = go.GetComponent<RectTransform>(); rt.anchorMin = new Vector2(0.5f - fraction * 0.5f, 0.5f - fraction * 0.5f); rt.anchorMax = new Vector2(0.5f + fraction * 0.5f, 0.5f + fraction * 0.5f); rt.offsetMin = rt.offsetMax = Vector2.zero;
+            var img = go.AddComponent<Image>(); img.sprite = sprite; img.preserveAspect = true; img.color = tint; img.raycastTarget = false;
+            return img;
+        }
+
+        /// <summary>Icon at the left end of a pill, between the given x fractions, square and vertically centred.</summary>
+        private static Image IconIn(RectTransform pill, string name, Sprite sprite, float xMin, float xMax, Color tint)
+        {
+            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(pill, false);
+            var rt = go.GetComponent<RectTransform>(); Anchor(rt, xMin, 0.16f, xMax, 0.84f);
+            var img = go.AddComponent<Image>(); img.sprite = sprite; img.preserveAspect = true; img.color = tint; img.raycastTarget = false;
+            return img;
+        }
+
+        private Text SkinBadge(RectTransform parent, SS2DSpriteLibrary lib, Font font)
+        {
+            var go = new GameObject("Badge", typeof(RectTransform)); go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(0.86f, 0.14f); rt.sizeDelta = new Vector2(50f, 50f); rt.anchoredPosition = Vector2.zero;
+            var img = go.AddComponent<Image>(); img.color = lib.uiText; img.sprite = SS2DRoundedRect.Shape(50, 50, 25f); img.type = Image.Type.Simple; img.raycastTarget = false;
+            var t = Label("Count", rt, "0", 26, TextAnchor.MiddleCenter, font, true); t.color = Color.white;
+            return t;
+        }
+
+        private Text UnderLabel(string name, Transform parent, string text, float ax, float ay, Font font, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform)); go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(ax, ay); rt.sizeDelta = new Vector2(220f, 40f); rt.anchoredPosition = Vector2.zero;
+            var t = Label("Text", rt, text, 24, TextAnchor.MiddleCenter, font, true); t.color = color;
+            var sh = t.gameObject.AddComponent<Shadow>(); sh.effectColor = new Color(0f, 0f, 0f, 0.45f); sh.effectDistance = new Vector2(1.5f, -1.5f);
+            return t;
+        }
+
+        private static void Wire(RectTransform rt, UnityEngine.Events.UnityAction action) { if (rt == null) return; var b = rt.GetComponent<Button>(); if (b != null) { b.onClick.RemoveAllListeners(); b.onClick.AddListener(action); } }
         private static void SetInteractable(RectTransform rt, bool on) { var b = rt != null ? rt.GetComponent<Button>() : null; if (b != null) b.interactable = on; }
-        private void Highlight(RectTransform rt, bool on) { var img = rt != null ? rt.GetComponent<Image>() : null; if (img != null) img.color = on ? accent : button; }
+        private void Highlight(RectTransform rt, bool on)
+        {
+            var img = rt != null ? rt.GetComponent<Image>() : null; if (img == null) return;
+            if (levelCaption != null) { var c = on ? accent : Color.white; c.a = img.color.a; img.color = c; } // skinned: white art, targeting = accent, keep the dim alpha
+            else img.color = on ? accent : button;
+        }
 
         private Text Badge(RectTransform parent, Font font)
         {

@@ -344,6 +344,24 @@ namespace ShadowSteps.Art2D.Editor
             RenderOpenScene("Docs/Reports/Renders/" + name + ".png", 1080, 1920, false);
         }
 
+        /// <summary>Batch entry: import the HUD skin (Sprites/_UI) into the library and render LEVEL-2 / LEVEL-19 / LEVEL-25 (gadgets) for review.</summary>
+        public static void ImportUiSkinAndRender()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) throw new System.IO.FileNotFoundException("no sprite library");
+                if (!SS2DFinalArtImporter.Import(lib)) throw new System.IO.FileNotFoundException("final art PNGs missing");
+                EditorUtility.SetDirty(lib); AssetDatabase.SaveAssets();
+                if (!lib.HasUiSkin) throw new System.IO.FileNotFoundException("UI skin sprites not imported");
+                RenderReview(ScenePath, "LEVEL-2", null, "Art2D_HudSkin_LEVEL-2_1080x1920");
+                RenderReview(ScenePath, "LEVEL-25", null, "Art2D_HudSkin_LEVEL-25_1080x1920");
+                RenderReview(ScenePath, "LEVEL-19", new[] { "N" }, "Art2D_HudSkin_LEVEL-19_t1_1080x1920");
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] HUD skin failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
         /// <summary>Batch entry: import the user's rotation-arrow art into the library and render LEVEL-2 (rotating guard, clockwise) and FTUE-4 for review.</summary>
         public static void ImportRotationArrowAndRender()
         {

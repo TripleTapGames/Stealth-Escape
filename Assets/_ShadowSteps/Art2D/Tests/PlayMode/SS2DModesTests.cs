@@ -139,7 +139,7 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual(Color.white, R.Player.body.color); Assert.IsFalse(R.IsGuardDefeated(0)); Assert.IsFalse(S.InputLocked);
             // Retry keeps the chosen mode.
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.North))); yield return Settle(); Assert.AreEqual(1, S.State.T);
-            Click(Hud.retryButton); yield return Settle();
+            _flow.Router.Get<PauseScreen>().OnRestart(); yield return Settle(); // Restart lives on the pause card (the skinned HUD has no retry button)
             Assert.AreEqual(0, S.State.T); Assert.AreEqual(StageMode.Knockout, S.RulesMode); Assert.AreEqual(StageMode.Knockout, S.State.Mode);
         }
 
