@@ -367,6 +367,54 @@ namespace ShadowSteps.Art2D.Editor
             catch (System.Exception e) { Debug.LogError("[SS2D] redesign frames failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
+        /// <summary>
+        /// Batch entry (D-055): import the screen skin, then render the skinned Failure, Results, Settings and Level Select screens over the LEVEL-2
+        /// preview as Docs/Reports/Renders/Art2D_Screen_<name>_1080x1920.png for review.
+        /// </summary>
+        public static void ImportScreenSkinAndRender()
+        {
+            try
+            {
+                var skin = ShadowSteps.UI.Editor.UiSkinImporter.Import();
+                if (skin == null || !skin.IsComplete) throw new System.IO.FileNotFoundException("screen skin incomplete");
+                ShadowSteps.UI.UiSkin.Current = skin;
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                var pv = Object.FindObjectOfType<SS2DPreviewController>(); if (pv == null) throw new System.Exception("no preview controller in " + ScenePath);
+                pv.stageCode = "LEVEL-2"; pv.previewActions = null; pv.previewMode = ShadowSteps.V3.StageMode.Knockout; pv.BuildPreview();
+                if (!ShadowSteps.Runtime.AppServices.IsInitialized) ShadowSteps.Runtime.AppServices.TryInitializeSync();
+                var cam = Camera.main != null ? Camera.main : Object.FindObjectOfType<Camera>();
+                var cgo = new GameObject("ScreenReviewCanvas", typeof(RectTransform)); var canvas = cgo.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam; canvas.planeDistance = 1f; canvas.sortingLayerName = SS2DLayers.FX; canvas.sortingOrder = 150; // above the background sprites, like the guard-card capture
+                var scaler = cgo.AddComponent<UnityEngine.UI.CanvasScaler>(); scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1080f, 1920f); scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight; scaler.matchWidthOrHeight = 0.5f;
+                cgo.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                var set = ScriptableObject.CreateInstance<ShadowSteps.UI.UiPrefabSet>();
+                var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+                var stage = pack.FindByCode("LEVEL-2");
+                void Shoot(ShadowSteps.UI.UIScreen screen, string name)
+                {
+                    screen.gameObject.SetActive(true); var g = screen.GetComponent<CanvasGroup>(); if (g != null) g.alpha = 1f;
+                    Canvas.ForceUpdateCanvases(); UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(screen.Rect); Canvas.ForceUpdateCanvases();
+                    RenderOpenScene("Docs/Reports/Renders/Art2D_Screen_" + name + "_1080x1920.png", 1080, 1920, false);
+                    Object.DestroyImmediate(screen.gameObject);
+                }
+                var failure = set.Create<ShadowSteps.UI.FailureScreen>(cgo.transform, null);
+                failure.Present(new ShadowSteps.V3.ActionOutcome { CaptureCause = ShadowSteps.V3.CaptureCause.Seen, CapturePhase = ShadowSteps.V3.CapturePhase.BeforeEnemyUpdate }, false);
+                Shoot(failure, "Failure");
+                var results = set.Create<ShadowSteps.UI.ResultsScreen>(cgo.transform, null);
+                results.Present(stage, ShadowSteps.V3.StageMode.Knockout, stage.ParFor(ShadowSteps.V3.StageMode.Knockout), stage.ParFor(ShadowSteps.V3.StageMode.Knockout), true, false, false, true);
+                Shoot(results, "Results");
+                var settings = set.Create<ShadowSteps.UI.SettingsScreen>(cgo.transform, null);
+                typeof(ShadowSteps.UI.SettingsScreen).GetMethod("Refresh", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(settings, null);
+                Shoot(settings, "Settings");
+                var levels = set.Create<ShadowSteps.UI.LevelSelectScreen>(cgo.transform, null);
+                levels.Rebuild();
+                Shoot(levels, "LevelSelect");
+                Object.DestroyImmediate(cgo);
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] screen skin failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
         /// <summary>Batch entry: import the HUD skin (Sprites/_UI) into the library and render LEVEL-2 / LEVEL-19 / LEVEL-25 (gadgets) for review.</summary>
         public static void ImportUiSkinAndRender()
         {

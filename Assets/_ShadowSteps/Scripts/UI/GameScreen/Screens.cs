@@ -123,9 +123,12 @@ namespace ShadowSteps.UI
         public Action<int> OnLevelChosen;
         private readonly List<GameObject> _buttons = new List<GameObject>();
 
+        private bool _skinned;
+
         public override void BuildHierarchy()
         {
             IsModal = false;
+            if (UiSkin.Available) { BuildSkinned(UiSkin.Current); Wire(); return; }
             var safe = UiBuilder.CreateRect("SafeArea", transform);
             UiBuilder.Anchor(safe, 0f, 0f, 1f, 1f);
             safe.gameObject.AddComponent<SafeAreaFitter>();
@@ -160,6 +163,36 @@ namespace ShadowSteps.UI
             Wire();
         }
 
+        /// <summary>D-055 skin: the tall card fills the safe area; back button, LEVELS header pill and progress pill on top; a 4-column grid of level boxes below.</summary>
+        private void BuildSkinned(UiSkin skin)
+        {
+            _skinned = true;
+            var safe = UiSkinKit.SafeArea(transform);
+            var card = UiSkinKit.Image("Card", safe, skin.cardTall, Color.white, true).rectTransform;
+            UiBuilder.Anchor(card, 0.035f, 0.025f, 0.965f, 0.975f);
+            var back = UiSkinKit.Image("Back", card, skin.backButton, Color.white, true); UiBuilder.Anchor(back.rectTransform, 0.025f, 0.925f, 0.165f, 0.978f);
+            var backBtn = back.gameObject.AddComponent<Button>(); backBtn.targetGraphic = back;
+            UiSkinKit.IconAt(back.transform, "Arrow", skin.backArrow, 0.33f, 0.28f, 0.67f, 0.72f, skin.navy);
+            BackButton = back.gameObject.AddComponent<UiButton>(); BackButton.Button = backBtn; BackButton.Label = UiSkinKit.TextAt(back.transform, "Label", "", 1f, skin.navy, true, TextAnchor.MiddleCenter, 0f, 0f, 1f, 1f);
+            var header = UiSkinKit.Image("Header", card, skin.headerPill, Color.white); UiBuilder.Anchor(header.rectTransform, 0.27f, 0.925f, 0.73f, 0.978f); UiSkinKit.FitCaps(header, 0.053f * 1920f * 0.95f);
+            UiSkinKit.TextAt(header.transform, "Title", "LEVELS", 52f, skin.navy, true, TextAnchor.MiddleCenter, 0.05f, 0.08f, 0.95f, 0.92f);
+            var progress = UiSkinKit.Image("Progress", card, skin.smallPill, Color.white); UiBuilder.Anchor(progress.rectTransform, 0.825f, 0.925f, 0.975f, 0.978f);
+            ProgressText = UiSkinKit.TextAt(progress.transform, "Text", "", 34f, skin.navy, true, TextAnchor.MiddleCenter, 0.05f, 0.08f, 0.95f, 0.92f);
+            var scrollRt = UiBuilder.CreateRect("Scroll", card);
+            UiBuilder.Anchor(scrollRt, 0.02f, 0.015f, 0.98f, 0.905f);
+            var scroll = scrollRt.gameObject.AddComponent<ScrollRect>(); scroll.horizontal = false;
+            scrollRt.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
+            scrollRt.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+            Grid = UiBuilder.CreateRect("Grid", scrollRt);
+            Grid.anchorMin = new Vector2(0f, 1f); Grid.anchorMax = new Vector2(1f, 1f); Grid.pivot = new Vector2(0.5f, 1f);
+            Grid.offsetMin = Vector2.zero; Grid.offsetMax = Vector2.zero;
+            var layout = Grid.gameObject.AddComponent<GridLayoutGroup>();
+            layout.cellSize = new Vector2(214f, 168f); layout.spacing = new Vector2(20f, 20f); layout.padding = new RectOffset(22, 22, 20, 24);
+            layout.childAlignment = TextAnchor.UpperCenter; layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount; layout.constraintCount = 4;
+            Grid.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            scroll.content = Grid;
+        }
+
         private bool _wired;
         private void Wire()
         {
@@ -179,6 +212,7 @@ namespace ShadowSteps.UI
             var catalog = AppServices.Stages; var save = AppServices.Save;
             if (catalog == null) return;
             ProgressText.Text = (save?.CompletedCount() ?? 0) + "/" + catalog.Count;
+            if (_skinned && UiSkin.Current != null) { RebuildSkinned(UiSkin.Current, catalog, save); return; }
             foreach (var stage in catalog.Stages)
             {
                 bool unlocked = StageProgression.IsUnlocked(catalog, save, stage.Id);
@@ -198,6 +232,39 @@ namespace ShadowSteps.UI
                 _buttons.Add(btn.gameObject);
             }
         }
+
+        /// <summary>Skinned cells: green box with code, title and three stars when unlocked; grey box with a lock, code and title when locked.</summary>
+        private void RebuildSkinned(UiSkin skin, StageCatalog catalog, SaveData save)
+        {
+            foreach (var stage in catalog.Stages)
+            {
+                bool unlocked = StageProgression.IsUnlocked(catalog, save, stage.Id);
+                var result = save?.DisplayResult(stage.Id);
+                bool done = result != null && result.Completed;
+                string code = stage.Code.Replace("LEVEL-", "Level ").Replace("FTUE-", "FTUE ");
+                var box = UiSkinKit.Image("Stage " + stage.Id, Grid, unlocked ? skin.levelBoxOpen : skin.levelBoxLocked, Color.white, true); UiSkinKit.FitCorners(box, 168f, 0.22f);
+                var button = box.gameObject.AddComponent<Button>(); button.targetGraphic = box; button.interactable = unlocked;
+                var ui = box.gameObject.AddComponent<UiButton>(); ui.Button = button;
+                if (unlocked)
+                {
+                    ui.Label = UiSkinKit.TextAt(box.transform, "Code", code, 30f, Color.white, true, TextAnchor.MiddleCenter, 0.04f, 0.64f, 0.96f, 0.95f);
+                    UiSkinKit.TextAt(box.transform, "Title", stage.Title, 22f, Color.white, true, TextAnchor.UpperCenter, 0.05f, 0.34f, 0.95f, 0.66f);
+                    var stars = UiBuilder.CreateRect("Stars", box.transform); UiBuilder.Anchor(stars, 0.2f, 0.06f, 0.8f, 0.32f);
+                    var h = stars.gameObject.AddComponent<HorizontalLayoutGroup>(); h.spacing = 6f; h.childAlignment = TextAnchor.MiddleCenter; h.childControlWidth = true; h.childControlHeight = true; h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+                    int earned = done ? Mathf.Clamp(result.BestStars, 0, 3) : 0;
+                    for (int i = 0; i < 3; i++) UiSkinKit.Icon(stars, "Star" + i, i < earned ? skin.starFull : skin.starBlank, 38f, Color.white);
+                }
+                else
+                {
+                    UiSkinKit.IconAt(box.transform, "Lock", skin.lockIcon, 0.36f, 0.56f, 0.64f, 0.92f, Color.white);
+                    ui.Label = UiSkinKit.TextAt(box.transform, "Code", code, 28f, skin.lockedText, true, TextAnchor.MiddleCenter, 0.04f, 0.30f, 0.96f, 0.56f);
+                    UiSkinKit.TextAt(box.transform, "Title", stage.Title, 20f, skin.lockedText, true, TextAnchor.UpperCenter, 0.05f, 0.04f, 0.95f, 0.32f);
+                }
+                int id = stage.Id;
+                button.onClick.AddListener(() => OnLevelChosen?.Invoke(id));
+                _buttons.Add(box.gameObject);
+            }
+        }
     }
 
     // ------------------------------------------------------------------ Settings
@@ -211,9 +278,14 @@ namespace ShadowSteps.UI
         [Tooltip("Placeholder. Replace with the real privacy policy URL before release.")]
         public string PrivacyPolicyUrl = "https://example.com/shadow-steps/privacy";
 
+        private Image _musicToggle, _sfxToggle, _hapticsToggle, _motionToggle, _contrastToggle;
+        private UiText _musicState, _sfxState, _hapticsState, _motionState, _contrastState, _unlockState;
+        private bool _skinned;
+
         public override void BuildHierarchy()
         {
             IsModal = true;
+            if (UiSkin.Available) { BuildSkinned(UiSkin.Current); Wire(); return; }
             var card = ScreenLayout.Card(this, "SETTINGS", 0.88f, 0.78f);
             MusicButton = UiBuilder.CreateButton("Music", card, "MUSIC", UiBuilder.ButtonColor, 34f);
             SfxButton = UiBuilder.CreateButton("Sfx", card, "SOUND EFFECTS", UiBuilder.ButtonColor, 34f);
@@ -225,6 +297,39 @@ namespace ShadowSteps.UI
             CreditsText = ScreenLayout.Line(card, "Credits", "Shadow Steps — original design, code, art and audio by Triple Tap Games.\nNo third-party assets.", 24f);
             CloseButton = UiBuilder.CreateButton("Close", card, "CLOSE", UiBuilder.ButtonAccent, 38f);
             Wire();
+        }
+
+        /// <summary>D-055 skin: title, one grey row per setting with its label, ON/OFF word and toggle art, a privacy row with a chevron, credits, CLOSE.</summary>
+        private void BuildSkinned(UiSkin skin)
+        {
+            _skinned = true;
+            var card = UiSkinKit.Card(this, skin, skin.card, 0.86f, 48f, 56f, 48f, 22f);
+            UiSkinKit.Text(card, "Title", "SETTINGS", 72f, skin.navy, true, TextAnchor.MiddleCenter, 110f);
+            MusicButton = ToggleRow(card, skin, "Music", "MUSIC", out _musicToggle, out _musicState);
+            SfxButton = ToggleRow(card, skin, "Sfx", "SOUND EFFECTS", out _sfxToggle, out _sfxState);
+            HapticsButton = ToggleRow(card, skin, "Haptics", "HAPTICS", out _hapticsToggle, out _hapticsState);
+            ReducedMotionButton = ToggleRow(card, skin, "ReducedMotion", "REDUCED MOTION", out _motionToggle, out _motionState);
+            ColorAssistButton = ToggleRow(card, skin, "ColorAssist", "HIGH-CONTRAST CONES", out _contrastToggle, out _contrastState);
+            UnlockAllButton = ToggleRow(card, skin, "UnlockAll", "UNLOCK ALL (DEV)", out _, out _unlockState);
+            UnlockAllButton.Label.Color = UiBuilder.ButtonDanger;
+            var privacy = UiSkinKit.Row(card, "Privacy", skin.statBox, 110f, true);
+            var privacyButton = privacy.gameObject.AddComponent<Button>(); privacyButton.targetGraphic = privacy.GetComponent<Image>();
+            PrivacyButton = privacy.gameObject.AddComponent<UiButton>(); PrivacyButton.Button = privacyButton;
+            PrivacyButton.Label = UiSkinKit.TextAt(privacy, "Label", "PRIVACY POLICY (placeholder)", 32f, skin.navy, true, TextAnchor.MiddleLeft, 0.06f, 0f, 0.86f, 1f);
+            UiSkinKit.IconAt(privacy, "Chevron", skin.chevron, 0.89f, 0.3f, 0.95f, 0.7f, skin.navy);
+            CreditsText = UiSkinKit.Text(card, "Credits", "Shadow Steps \u2014 original design, code, art and audio by Triple Tap Games.\nNo third-party assets.", 22f, skin.muted, false, TextAnchor.MiddleCenter, 84f);
+            CloseButton = UiSkinKit.Button(card, "Close", skin.buttonGreen, "CLOSE", Color.white, 136f, 44f);
+        }
+
+        private static UiButton ToggleRow(RectTransform card, UiSkin skin, string name, string label, out Image toggle, out UiText state)
+        {
+            var row = UiSkinKit.Row(card, name, skin.statBox, 110f, true);
+            var button = row.gameObject.AddComponent<Button>(); button.targetGraphic = row.GetComponent<Image>();
+            var ui = row.gameObject.AddComponent<UiButton>(); ui.Button = button;
+            ui.Label = UiSkinKit.TextAt(row, "Label", label, 32f, skin.navy, true, TextAnchor.MiddleLeft, 0.06f, 0f, 0.62f, 1f);
+            state = UiSkinKit.TextAt(row, "State", "ON", 30f, skin.muted, true, TextAnchor.MiddleRight, 0.60f, 0f, 0.78f, 1f);
+            toggle = UiSkinKit.IconAt(row, "Toggle", skin.toggleOn, 0.80f, 0.17f, 0.96f, 0.83f, Color.white);
+            return ui;
         }
 
         private bool _wired;
@@ -275,6 +380,15 @@ namespace ShadowSteps.UI
             UnlockAllButton.gameObject.SetActive(DevOptionsAvailable);
             UnlockAllButton.Label.Text = "UNLOCK ALL STAGES (DEV): " + (save != null && save.DebugUnlockAll ? "ON" : "OFF");
             var s = AppServices.Save?.Settings ?? new SettingsData();
+            if (_skinned)
+            {
+                var skin = UiSkin.Current;
+                void Set(Image toggle, UiText state, bool on) { if (state != null) state.Text = on ? "ON" : "OFF"; if (toggle != null && skin != null) toggle.sprite = on ? skin.toggleOn : skin.toggleOff; }
+                Set(_musicToggle, _musicState, s.MusicOn); Set(_sfxToggle, _sfxState, s.SfxOn); Set(_hapticsToggle, _hapticsState, s.HapticsOn);
+                Set(_motionToggle, _motionState, s.ReducedMotion); Set(_contrastToggle, _contrastState, s.ColorBlindAssist);
+                UnlockAllButton.Label.Text = "UNLOCK ALL (DEV)"; if (_unlockState != null) _unlockState.Text = save != null && save.DebugUnlockAll ? "ON" : "OFF";
+                return;
+            }
             MusicButton.Label.Text = "MUSIC: " + (s.MusicOn ? "ON" : "OFF");
             SfxButton.Label.Text = "SOUND EFFECTS: " + (s.SfxOn ? "ON" : "OFF");
             HapticsButton.Label.Text = "HAPTICS: " + (s.HapticsOn ? "ON" : "OFF");
@@ -323,9 +437,12 @@ namespace ShadowSteps.UI
         public UiButton NextButton, ReplayButton, LevelSelectButton;
         public Action OnNext, OnReplay, OnLevelSelect;
 
+        private Image[] _stars; private Image[] _thresholdIcons; private UiText[] _thresholdTexts; private bool _skinned;
+
         public override void BuildHierarchy()
         {
             IsModal = true;
+            if (UiSkin.Available) { BuildSkinned(UiSkin.Current); Wire(); return; }
             var card = ScreenLayout.Card(this, "ESCAPED", 0.84f, 0.66f);
             StarsText = ScreenLayout.Line(card, "Stars", "", 60f);
             ActionsText = ScreenLayout.Line(card, "Actions", "", 32f);
@@ -335,6 +452,35 @@ namespace ShadowSteps.UI
             ReplayButton = UiBuilder.CreateButton("Replay", card, "REPLAY", UiBuilder.ButtonColor, 36f);
             LevelSelectButton = UiBuilder.CreateButton("Levels", card, "LEVEL SELECT", UiBuilder.ButtonColor, 36f);
             Wire();
+        }
+
+        /// <summary>D-055 skin: ESCAPED, three big stars, the action count, the grey threshold strip, best/ghost lines and the three pill buttons.</summary>
+        private void BuildSkinned(UiSkin skin)
+        {
+            _skinned = true;
+            var card = UiSkinKit.Card(this, skin, skin.card, 0.84f, 56f, 60f, 52f, 20f);
+            UiSkinKit.Text(card, "Title", "ESCAPED", 80f, skin.navy, true, TextAnchor.MiddleCenter, 110f);
+            var starsRow = UiSkinKit.Strip(card, "StarsRow", 180f, 26f);
+            _stars = new Image[3]; for (int i = 0; i < 3; i++) _stars[i] = UiSkinKit.Icon(starsRow, "Star" + i, skin.starBlank, 160f, Color.white);
+            StarsText = UiSkinKit.Text(card, "Stars", "", 1f, skin.navy, false, TextAnchor.MiddleCenter, 0f); StarsText.gameObject.SetActive(false); // kept for tests/tools; the stars above are the visible ones
+            ActionsText = UiSkinKit.Text(card, "Actions", "", 44f, skin.navyDim, true, TextAnchor.MiddleCenter, 70f);
+            var strip = UiSkinKit.Row(card, "Thresholds", skin.statBox, 130f);
+            var inner = UiSkinKit.Strip(strip, "Items", 130f, 70f); UiBuilder.Anchor(inner, 0f, 0f, 1f, 1f); UiBuilder.RemoveComponent(inner.GetComponent<LayoutElement>());
+            _thresholdIcons = new Image[3]; _thresholdTexts = new UiText[3];
+            var icons = new[] { skin.starFull, skin.starBlank, skin.starBlank }; var tints = new[] { Color.white, Color.white, new Color(0.62f, 0.62f, 0.62f) }; // gold, the grey blank star, the blank star darkened
+            for (int i = 0; i < 3; i++)
+            {
+                var item = UiSkinKit.Strip(inner, "Item" + i, 130f, 12f); UiBuilder.RemoveComponent(item.GetComponent<LayoutElement>());
+                var le = item.gameObject.AddComponent<LayoutElement>(); le.preferredWidth = 190f; le.preferredHeight = 130f;
+                _thresholdIcons[i] = UiSkinKit.Icon(item, "Icon", icons[i], 56f, tints[i]);
+                _thresholdTexts[i] = UiBuilder.CreateText("Text", item, "", 34f, TextAnchor.MiddleLeft, true); _thresholdTexts[i].Color = skin.navy;
+                var tle = _thresholdTexts[i].gameObject.AddComponent<LayoutElement>(); tle.preferredWidth = 110f; tle.preferredHeight = 130f;
+            }
+            BestText = UiSkinKit.Text(card, "Best", "", 32f, skin.muted, false, TextAnchor.MiddleCenter, 54f);
+            GhostText = UiSkinKit.Text(card, "Ghost", "", 28f, skin.muted, false, TextAnchor.MiddleCenter, 46f);
+            NextButton = UiSkinKit.Button(card, "Next", skin.buttonGreen, "NEXT STAGE", Color.white, 136f, 44f);
+            ReplayButton = UiSkinKit.Button(card, "Replay", skin.buttonWhite, "REPLAY", skin.navy, 136f, 44f);
+            LevelSelectButton = UiSkinKit.Button(card, "Levels", skin.buttonWhite, "LEVEL SELECT", skin.navy, 136f, 44f);
         }
 
         private bool _wired;
@@ -355,10 +501,19 @@ namespace ShadowSteps.UI
         public void Present(Stage stage, StageMode mode, int actions, int best, bool newBest, bool ghostEarned, bool ghostEver, bool hasNext)
         {
             int stars = StageScoring.Stars(actions, stage.ParFor(mode));
-            StarsText.Text = new string('★', stars) + new string('☆', 3 - stars);
-            ActionsText.Text = actions + " actions   ·   3★ ≤ " + stage.ThreeStarFor(mode) + "   2★ ≤ " + stage.TwoStarFor(mode);
-            GhostText.Text = !stage.GhostOffered ? "" : ghostEarned ? "Ghost earned: no alarm!" : ghostEver ? "Ghost already earned" : "Alarm triggered: no Ghost this time";
+            StarsText.Text = new string('\u2605', stars) + new string('\u2606', 3 - stars);
+            string ghost = !stage.GhostOffered ? "" : ghostEarned ? "Ghost earned: no alarm!" : ghostEver ? "Ghost already earned" : "Alarm triggered: no Ghost this time";
+            GhostText.Text = ghost;
             BestText.Text = newBest ? "New best!" : "Best " + best;
+            if (_skinned)
+            {
+                var skin = UiSkin.Current;
+                for (int i = 0; i < 3; i++) if (_stars != null && _stars[i] != null && skin != null) _stars[i].sprite = i < stars ? skin.starFull : skin.starBlank;
+                ActionsText.Text = actions + (actions == 1 ? " action" : " actions");
+                if (_thresholdTexts != null) { _thresholdTexts[0].Text = "\u2264 " + stage.ThreeStarFor(mode); _thresholdTexts[1].Text = "\u2264 " + stage.TwoStarFor(mode); _thresholdTexts[2].Text = "> " + stage.TwoStarFor(mode); }
+                GhostText.gameObject.SetActive(!string.IsNullOrEmpty(ghost));
+            }
+            else ActionsText.Text = actions + " actions   \u00b7   3\u2605 \u2264 " + stage.ThreeStarFor(mode) + "   2\u2605 \u2264 " + stage.TwoStarFor(mode);
             NextButton.Interactable = hasNext;
             NextButton.Label.Text = hasNext ? "NEXT STAGE" : "ALL CLEAR";
         }
@@ -375,6 +530,7 @@ namespace ShadowSteps.UI
         public override void BuildHierarchy()
         {
             IsModal = true;
+            if (UiSkin.Available) { BuildSkinned(UiSkin.Current); Wire(); return; }
             var card = ScreenLayout.Card(this, "BUSTED", 0.84f, 0.5f);
             TitleText = card.Find("Title").GetComponent<UiText>();
             ReasonText = ScreenLayout.Line(card, "Reason", "", 30f);
@@ -382,6 +538,18 @@ namespace ShadowSteps.UI
             UndoButton = UiBuilder.CreateButton("Undo", card, "UNDO (DEBUG)", UiBuilder.ButtonColor, 30f);
             LevelSelectButton = UiBuilder.CreateButton("Levels", card, "LEVEL SELECT", UiBuilder.ButtonColor, 36f);
             Wire();
+        }
+
+        /// <summary>D-055 skin: the guard on his disc with his pink wedge, BUSTED, the cause line, RETRY (green), LEVEL SELECT (white); the debug undo stays a small white pill.</summary>
+        private void BuildSkinned(UiSkin skin)
+        {
+            var card = UiSkinKit.Card(this, skin, skin.card, 0.82f, 52f, 44f, 56f, 20f);
+            UiSkinKit.Art(card, "Cop", skin.cop, 420f);
+            TitleText = UiSkinKit.Text(card, "Title", "BUSTED", 84f, skin.navy, true, TextAnchor.MiddleCenter, 110f);
+            ReasonText = UiSkinKit.Text(card, "Reason", "", 36f, skin.navy, false, TextAnchor.MiddleCenter, 84f);
+            RetryButton = UiSkinKit.Button(card, "Retry", skin.buttonGreen, "RETRY", Color.white, 136f, 44f);
+            LevelSelectButton = UiSkinKit.Button(card, "Levels", skin.buttonWhite, "LEVEL SELECT", skin.navy, 136f, 44f);
+            UndoButton = UiSkinKit.Button(card, "Undo", skin.buttonWhite, "UNDO (DEBUG)", skin.navy, 96f, 30f);
         }
 
         private bool _wired;

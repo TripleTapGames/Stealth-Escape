@@ -7,7 +7,9 @@
         "ShadowSteps.Runtime",
         "ShadowSteps.Art2D",
         "Unity.RenderPipelines.Core.Runtime",
-        "Unity.RenderPipelines.Universal.Runtime"
+        "Unity.RenderPipelines.Universal.Runtime",
+        "ShadowSteps.UI",
+        "ShadowSteps.Editor"
     ],
     "includePlatforms": [
         "Editor"
