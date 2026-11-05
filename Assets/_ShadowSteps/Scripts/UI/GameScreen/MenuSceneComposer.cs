@@ -33,7 +33,7 @@ namespace ShadowSteps.UI
             var canvas = UiBuilder.CreateCanvas("MenuCanvas", 10);
             Router = canvas.gameObject.AddComponent<ScreenRouter>();
             Router.ReducedMotion = AppServices.Save != null && AppServices.Save.Settings.ReducedMotion;
-            var set = Prefabs != null ? Prefabs : ScriptableObject.CreateInstance<UiPrefabSet>();
+            var set = Prefabs != null ? Prefabs : (UiPrefabSet.FromResources() ?? ScriptableObject.CreateInstance<UiPrefabSet>()); // D-056: baked prefabs from Resources unless the scene assigns a set
             var home = Router.Register(set.Create<HomeScreen>(canvas.transform, set.HomeScreen));
             var levels = Router.Register(set.Create<LevelSelectScreen>(canvas.transform, set.LevelSelectScreen));
             var settings = Router.Register(set.Create<SettingsScreen>(canvas.transform, set.SettingsScreen));

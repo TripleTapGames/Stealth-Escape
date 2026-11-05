@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e60e262f69d64b09be7c520e1c556448, type: 3}
+  m_Name: UiPrefabSet
+  m_EditorClassIdentifier: 
+  GameHud: {fileID: 0}
+  HomeScreen: {fileID: 3000861996619910142, guid: 94316dbc25900436c9f175dc2f74dc81,
+    type: 3}
+  LevelSelectScreen: {fileID: 7412580073578335929, guid: 9ee46546a92d8498abd38a4e40f85222,
+    type: 3}
+  SettingsScreen: {fileID: 7435167576715320217, guid: 5736a939ed5f040c291fa3e76e07e0d8,
+    type: 3}
+  PauseScreen: {fileID: 3542774823725422985, guid: 496ae72e592d84ba9a17e9bd4e2c63a3,
+    type: 3}
+  ResultsScreen: {fileID: 5505988887343115727, guid: 0bb3d849d152345e7b89a0c4152f7b1c,
+    type: 3}
+  FailureScreen: {fileID: 5302861984818691272, guid: cdf2761d458844ed7927e8e2ed8587f8,
+    type: 3}
+  OnboardingScreen: {fileID: 2428238521482933078, guid: 087b894c367cc429eac283fe23026a82,
+    type: 3}
+  AlarmPopupScreen: {fileID: 6824768447519820395, guid: 210d0867c79a64283a574c3a7c56ec68,
+    type: 3}
+  GuardIntroScreen: {fileID: 6215000370176101698, guid: 6ba6d19cba0414885821e2bdb235b166,
+    type: 3}

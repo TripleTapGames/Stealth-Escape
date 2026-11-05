@@ -31,7 +31,7 @@ namespace ShadowSteps.UI
                 var go = new GameObject("GameFlow");
                 var flow = go.AddComponent<GameFlowController>();
                 flow.Composer = composer;
-                flow.Prefabs = composer.UiPrefabs as UiPrefabSet;
+                flow.Prefabs = composer.UiPrefabs as UiPrefabSet ?? UiPrefabSet.FromResources(); // D-056: the baked set in Resources unless the scene assigns one
                 flow.Build();
             };
         }
@@ -49,7 +49,7 @@ namespace ShadowSteps.UI
             var failure = Router.Register(set.Create<FailureScreen>(canvas.transform, set.FailureScreen));
             var onboarding = Router.Register(set.Create<OnboardingScreen>(canvas.transform, set.OnboardingScreen));
             var alarm = Router.Register(set.Create<AlarmPopupScreen>(canvas.transform, set.AlarmPopupScreen));
-            _guardIntro = Router.Register(set.Create<GuardIntroScreen>(canvas.transform, null));
+            _guardIntro = Router.Register(set.Create<GuardIntroScreen>(canvas.transform, set.GuardIntroScreen));
 
             pause.OnResume = () => Router.Pop();
             pause.OnRestart = () => { Router.PopAllModals(); Session.Retry(); };
