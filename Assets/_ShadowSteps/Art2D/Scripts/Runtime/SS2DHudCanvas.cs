@@ -38,7 +38,7 @@ namespace ShadowSteps.Art2D
 
         public void Show(Stage stage, StageState state, Camera cam)
         {
-            Build(); // generated shapes are not saved with the scene (DontSave), so the hierarchy is rebuilt on every show
+            Build(); // a baked prefab keeps its hierarchy; the generated fallback HUD (DontSave shapes) is rebuilt on every show
             AttachCamera(cam);
             _shownMode = state.Mode; ApplyStage(stage, state.Mode); ApplyState(stage, state);
         }
@@ -84,17 +84,33 @@ namespace ShadowSteps.Art2D
         }
         public StageMode ShownMode => _shownMode;
 
+        /// <summary>The skinned slim pill (null on the generated HUD); shown only while it carries a message.</summary>
+        [SerializeField] private RectTransform _subPill;
+        /// <summary>Set by the HUD baker (D-062): the hierarchy below came from the prefab and is reused instead of rebuilt.</summary>
+        [SerializeField] private bool _baked;
+        /// <summary>True when this instance carries a baked hierarchy (skinned prefab) with its references intact; <see cref="Build"/> then leaves it alone.</summary>
+        public bool IsBaked => _baked && canvas != null && canvas.transform.parent == transform && levelCaption != null && messageLabel != null && smokeButton != null && empButton != null;
+        /// <summary>Marks the current hierarchy as baked (editor baker) or clears the mark so the next Build rebuilds from code.</summary>
+        public void MarkBaked(bool baked) { _baked = baked; }
+        private void SetMessageText(string text)
+        {
+            messageLabel.text = text ?? string.Empty;
+            if (_subPill != null) _subPill.gameObject.SetActive(messageLabel.text.Length > 0);
+        }
+        /// <summary>True while the skinned message pill is visible (it hides when there is nothing to say).</summary>
+        public bool MessagePillVisible => _subPill == null ? messageLabel != null && messageLabel.text.Length > 0 : _subPill.gameObject.activeSelf;
+
         public void ShowMessage(string message) => ShowMessage(message, 2.5f);
         public void ShowMessage(string message, float seconds)
         {
             if (messageLabel == null) return;
-            messageLabel.text = string.IsNullOrEmpty(message) ? _hint : message; // an empty message shows the level hint (skinned HUD)
+            SetMessageText(string.IsNullOrEmpty(message) ? _hint : message); // an empty message falls back to the hint (empty on the skinned HUD, which then hides the pill)
             _messageUntil = seconds <= 0f ? float.MaxValue : Time.unscaledTime + seconds;
         }
 
         private void Update()
         {
-            if (messageLabel != null && _messageUntil != float.MaxValue && Time.unscaledTime > _messageUntil && messageLabel.text != _hint) { messageLabel.text = _hint; _messageUntil = float.MaxValue; }
+            if (messageLabel != null && _messageUntil != float.MaxValue && Time.unscaledTime > _messageUntil && messageLabel.text != _hint) { SetMessageText(_hint); _messageUntil = float.MaxValue; }
             if (alertOverlay != null)
             {
                 float a = _alertUntil > Time.unscaledTime ? Mathf.Clamp01((_alertUntil - Time.unscaledTime) / 0.45f) * 0.35f : 0f;
@@ -143,12 +159,13 @@ namespace ShadowSteps.Art2D
         {
             if (levelCaption != null)
             {
-                // Skinned: caption "LEVEL 2" / "TUTORIAL 3", title below; star pill "≤ n"; hint pill shows the level intro while no message is up.
+                // Skinned: caption "LEVEL 2" / "TUTORIAL 3", title below; star pill "≤ n". The slim pill carries only transient messages
+                // (targeting prompts, rejections, outcomes) and is hidden while empty: the level intro is no longer shown on the HUD (user, 2026-11-06).
                 levelCaption.text = stage.Group == "FTUE" ? "TUTORIAL " + stage.Id : "LEVEL " + stage.Code.Replace("LEVEL-", "");
                 levelLabel.text = stage.Title;
                 starsLabel.text = "\u2264 " + stage.ThreeStarFor(mode);
                 if (actionsParLabel != null) actionsParLabel.text = "/ " + stage.ParFor(mode);
-                _hint = stage.Intro ?? string.Empty; if (messageLabel != null && (_messageUntil == float.MaxValue || messageLabel.text.Length == 0)) messageLabel.text = _hint;
+                _hint = string.Empty; if (messageLabel != null && (_messageUntil == float.MaxValue || messageLabel.text.Length == 0)) SetMessageText(_hint);
                 // Mock: the gadget buttons are always present; without charges they are dimmed (and not interactable, see ApplyState).
                 smokeButton.gameObject.SetActive(true); empButton.gameObject.SetActive(true);
                 Dim(smokeButton, stage.SmokeCharges == 0, smokeLabel); Dim(empButton, stage.EmpCharges == 0, empLabel);
@@ -194,6 +211,7 @@ namespace ShadowSteps.Art2D
 
         public void Build()
         {
+            if (IsBaked) { SetMessageText(messageLabel.text); return; } // prefab-authored HUD (D-062): layout, sprites and sizes are edited on Assets/_ShadowSteps/Art2D/Prefabs/SS2DHud.prefab; the message pill may be left visible there for editing, it hides at runtime while empty
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             var cgo = new GameObject("Canvas", typeof(RectTransform)); cgo.transform.SetParent(transform, false);
             canvas = cgo.AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.sortingOrder = 10;
@@ -265,10 +283,13 @@ namespace ShadowSteps.Art2D
             retryButton = null;
             // Title pill (top-centre): caption + title.
             var title = Pill("TitlePill", root, lib.uiPill, 0.30f, 0.924f, 0.70f, 0.982f);
-            levelCaption = Label("Caption", title, "LEVEL", 22, TextAnchor.UpperCenter, font, true); levelCaption.color = new Color(navy.r, navy.g, navy.b, 0.75f); Anchor(levelCaption.rectTransform, 0.05f, 0.56f, 0.95f, 0.92f);
-            levelLabel = Label("Level", title, "", 40, TextAnchor.LowerCenter, font, true); levelLabel.color = navy; Anchor(levelLabel.rectTransform, 0.05f, 0.10f, 0.95f, 0.60f);
+            // Caption sits bottom-aligned just above the title band; the title band is the user's editor-tuned rect (anchors 0.07–0.93 × 0.10–0.467, top-aligned, 2026-11-06).
+            levelCaption = Label("Caption", title, "LEVEL", 22, TextAnchor.LowerCenter, font, true); levelCaption.color = new Color(navy.r, navy.g, navy.b, 0.75f); Anchor(levelCaption.rectTransform, 0.05f, 0.50f, 0.95f, 0.92f);
+            levelLabel = Label("Level", title, "", 40, TextAnchor.UpperCenter, font, true); levelLabel.color = navy; Anchor(levelLabel.rectTransform, 0.07f, 0.10f, 0.93f, 0.4674f);
+            // Long titles ("Unlock at the Right Time") shrink to stay inside the pill instead of spilling past its caps (user, 2026-11-06); never wider than the pill, never taller than its band.
+            levelLabel.horizontalOverflow = HorizontalWrapMode.Wrap; levelLabel.verticalOverflow = VerticalWrapMode.Truncate; levelLabel.resizeTextForBestFit = true; levelLabel.resizeTextMinSize = 18; levelLabel.resizeTextMaxSize = 40;
             // Hint / message pill under the title.
-            var sub = Pill("SubPill", root, lib.uiPillSlim, 0.29f, 0.889f, 0.71f, 0.919f);
+            var sub = Pill("SubPill", root, lib.uiPillSlim, 0.29f, 0.889f, 0.71f, 0.919f); _subPill = sub;
             messageLabel = Label("Message", sub, "", 24, TextAnchor.MiddleCenter, font, false); messageLabel.color = navy; messageLabel.horizontalOverflow = HorizontalWrapMode.Wrap; messageLabel.resizeTextForBestFit = true; messageLabel.resizeTextMinSize = 14; messageLabel.resizeTextMaxSize = 24; Anchor(messageLabel.rectTransform, 0.04f, 0.05f, 0.96f, 0.95f);
             hintLabel = messageLabel;
             // Right pills: actions / par, three-star threshold.
@@ -336,7 +357,8 @@ namespace ShadowSteps.Art2D
         {
             var go = new GameObject("Badge", typeof(RectTransform)); go.transform.SetParent(parent, false);
             var rt = go.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(0.86f, 0.14f); rt.sizeDelta = new Vector2(50f, 50f); rt.anchoredPosition = Vector2.zero;
-            var img = go.AddComponent<Image>(); img.color = lib.uiText; img.sprite = SS2DRoundedRect.Shape(50, 50, 25f); img.type = Image.Type.Simple; img.raycastTarget = false;
+            // The library's plain node disc (a saved PNG, so the badge survives in the baked prefab) tinted navy; the generated rounded shape is DontSave.
+            var img = go.AddComponent<Image>(); img.color = lib.uiText; img.sprite = lib.node != null ? lib.node : SS2DRoundedRect.Shape(50, 50, 25f); img.type = Image.Type.Simple; img.preserveAspect = true; img.raycastTarget = false;
             var t = Label("Count", rt, "0", 26, TextAnchor.MiddleCenter, font, true); t.color = Color.white;
             return t;
         }

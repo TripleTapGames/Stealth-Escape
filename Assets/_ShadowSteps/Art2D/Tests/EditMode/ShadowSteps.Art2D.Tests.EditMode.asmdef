@@ -9,7 +9,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "ShadowSteps.UI",
-        "ShadowSteps.Editor"
+        "ShadowSteps.Editor",
+        "ShadowSteps.Art2D.Editor"
     ],
     "includePlatforms": [
         "Editor"

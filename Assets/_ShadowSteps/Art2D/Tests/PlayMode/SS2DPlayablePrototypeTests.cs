@@ -226,6 +226,13 @@ namespace ShadowSteps.Art2D.Tests
             _flow.Router.PopAllModals(); _composer.OpenStage(next); yield return null; yield return null;
             Assert.AreEqual("LEVEL-3", S.Stage.Code); Assert.AreEqual(0, S.State.T); Assert.IsTrue(R.IsBuilt);
             var hud3 = (SS2DHudCanvas)_composer.Hud; Assert.IsTrue((hud3.levelCaption != null ? hud3.levelCaption.text : hud3.levelLabel.text).StartsWith("LEVEL 3"), "skinned HUD: caption carries the level number");
+            if (hud3.levelCaption != null)
+            {
+                Assert.IsTrue(hud3.levelLabel.resizeTextForBestFit, "the title shrinks to fit the pill"); Assert.AreEqual(HorizontalWrapMode.Wrap, hud3.levelLabel.horizontalOverflow); Assert.AreEqual(VerticalWrapMode.Truncate, hud3.levelLabel.verticalOverflow);
+                Assert.AreEqual(string.Empty, hud3.messageLabel.text, "the level intro is no longer shown on the HUD"); Assert.IsFalse(hud3.MessagePillVisible, "the slim pill hides while empty");
+                hud3.ShowMessage("Tap a highlighted node to drop smoke", 0f); Assert.IsTrue(hud3.MessagePillVisible, "and shows for a message");
+                hud3.ShowMessage(string.Empty, 0f); Assert.IsFalse(hud3.MessagePillVisible);
+            }
             Assert.AreEqual(Color.white, R.Player.body.color); Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(S.State.Player)), 1e-3f);
         }
 

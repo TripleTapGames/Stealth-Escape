@@ -299,7 +299,10 @@ namespace ShadowSteps.Art2D
         private readonly Dictionary<int, GuardPose3> _guardPoses = new Dictionary<int, GuardPose3>();
         public bool HasNode(GridCoord c) => _nodeSprites.ContainsKey(c);
         private readonly List<Transform> _clouds = new List<Transform>();
-        private SpriteRenderer _key, _exit, _previewMarker;
+        private SpriteRenderer _key, _exit, _exitGlow, _previewMarker;
+        /// <summary>The exit marker sprite (final "home" disc or the generated highlight) and its glow (null without the home art).</summary>
+        public SpriteRenderer ExitMarker => _exit;
+        public SpriteRenderer ExitGlow => _exitGlow;
         private readonly Overlay _guardVision = new Overlay(), _cameraVision = new Overlay(), _previewGuard = new Overlay(), _previewCamera = new Overlay(), _targets = new Overlay();
         private Sprite _placeholderDisc;
 
@@ -391,8 +394,22 @@ namespace ShadowSteps.Art2D
                 }
 
             // Exit: highlight on the node (the logical exit) and a door beyond the board edge as the visible destination, joined by a doorstep path.
-            _exit = Make(_props, "Exit", lib.exitHighlight != null ? lib.exitHighlight : lib.exit, Pos(stage.Exit), lib.exitSize * s, lib.exitTint, SS2DLayers.Nodes, 2);
-            var pulse = _exit.gameObject.AddComponent<SS2DPulse>(); pulse.amplitude = lib.exitPulse; pulse.baseScale = lib.exitSize * s;
+            if (lib.HasExitHome)
+            {
+                // Final art (D-063, user mock): the green "home" disc sits still on the exit node; its soft glow ring under it breathes with the exit pulse.
+                float glowScale = lib.exitHomeSize * lib.exitHomeGlowScale * s;
+                _exitGlow = Make(_props, "ExitGlow", lib.exitHomeGlow, Pos(stage.Exit), glowScale, lib.exitHomeGlowTint, SS2DLayers.Nodes, 1);
+                SpriteRenderer ripple = lib.exitHomeRipple ? Make(_props, "ExitRipple", lib.exitHomeGlow, Pos(stage.Exit), glowScale, lib.exitHomeGlowTint, SS2DLayers.Nodes, 0) : null;
+                var anim = _exitGlow.gameObject.AddComponent<SS2DExitGlowAnimator>();
+                anim.glow = _exitGlow; anim.ripple = ripple; anim.baseScale = glowScale; anim.tint = lib.exitHomeGlowTint; anim.pulse = lib.exitHomePulse; anim.alphaMin = lib.exitHomeGlowAlphaMin; anim.period = lib.exitHomePeriod; anim.rippleGrow = lib.exitHomeRippleGrow;
+                anim.Apply(0f);
+                _exit = Make(_props, "Exit", lib.exitHome, Pos(stage.Exit), lib.exitHomeSize * s, Color.white, SS2DLayers.Nodes, 2);
+            }
+            else
+            {
+                _exit = Make(_props, "Exit", lib.exitHighlight != null ? lib.exitHighlight : lib.exit, Pos(stage.Exit), lib.exitSize * s, lib.exitTint, SS2DLayers.Nodes, 2);
+                var pulse = _exit.gameObject.AddComponent<SS2DPulse>(); pulse.amplitude = lib.exitPulse; pulse.baseScale = lib.exitSize * s;
+            }
             DoorOutward = View(ExitEdge(stage));
             var outVec = WorldDir(DoorOutward);
             DoorPosition = Pos(stage.Exit) + outVec * (lib.doorOffset * s);
@@ -534,7 +551,7 @@ namespace ShadowSteps.Art2D
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
-            Player = null; _key = null; _exit = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null;
+            Player = null; _key = null; _exit = null; _exitGlow = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null;
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Reset();
             Stage = null;
         }
@@ -828,6 +845,35 @@ namespace ShadowSteps.Art2D
     }
 
     /// <summary>Gentle scale pulse (runtime only; static in edit mode).</summary>
+    /// <summary>
+    /// D-064 exit animation: the glow ring breathes (scale and alpha) while a second ring expands from the disc and fades out once per period.
+    /// <see cref="Apply"/> is a pure function of time so the motion is testable and the t0 renders show the rest pose.
+    /// </summary>
+    public sealed class SS2DExitGlowAnimator : MonoBehaviour
+    {
+        public SpriteRenderer glow, ripple;
+        public float baseScale = 1f, pulse = 0.16f, alphaMin = 0.45f, period = 1.6f, rippleGrow = 0.7f;
+        public Color tint = Color.white;
+        private void Update() { if (Application.isPlaying) Apply(Time.time); }
+        /// <summary>Pose at time <paramref name="t"/> (seconds): glow at base scale and full tint when t = 0, biggest and brightest half a period later; the ripple starts at the glow's size and alpha, ends grown by rippleGrow and transparent.</summary>
+        public void Apply(float t)
+        {
+            float p = Mathf.Max(0.05f, period);
+            float k = 0.5f - 0.5f * Mathf.Cos(t * Mathf.PI * 2f / p); // 0 at t = 0, 1 at half a period
+            if (glow != null)
+            {
+                glow.transform.localScale = Vector3.one * baseScale * (1f + pulse * k);
+                var c = tint; c.a = Mathf.Lerp(Mathf.Min(alphaMin, tint.a), tint.a, k); glow.color = c;
+            }
+            if (ripple != null)
+            {
+                float u = Mathf.Repeat(t, p) / p; // 0..1 once per period
+                ripple.transform.localScale = Vector3.one * baseScale * (1f + rippleGrow * u);
+                var c = tint; c.a = tint.a * (1f - u) * (1f - u); ripple.color = c;
+            }
+        }
+    }
+
     public sealed class SS2DPulse : MonoBehaviour
     {
         public float amplitude = 0.08f, period = 1.6f, baseScale = 1f;

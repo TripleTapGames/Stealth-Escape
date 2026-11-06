@@ -992,7 +992,7 @@
     "mode": "knockout",
     "rules": "knockout-nowait-v3",
     "par": 19,
-    "actions": ["E", "E", "E", "W", "W", "W", "N", "EMP#0", "N", "N", "N", "E", "E", "N", "S", "N", "N", "KO#1", "N", "E"],
+    "actions": ["E", "E", "E", "W", "W", "W", "N", "EMP#0", "N", "N", "N", "E", "E", "N", "S", "N", "N", "KO#0", "N", "E"],
     "knockouts": 1,
     "hit_limit": false,
     "counted_actions": 19,

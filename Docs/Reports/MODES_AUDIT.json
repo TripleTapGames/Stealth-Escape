@@ -1158,7 +1158,7 @@
       "id": 35,
       "code": "LEVEL-30",
       "title": "Inner Citadel",
-      "guards": 2,
+      "guards": 1,
       "cameras": 2,
       "stealth": {
         "solvable": true,
@@ -1176,7 +1176,7 @@
       "knockout": {
         "solvable": true,
         "par": 19,
-        "actions": ["E", "E", "E", "W", "W", "W", "N", "EMP#0", "N", "N", "N", "E", "E", "N", "S", "N", "N", "KO#1", "N", "E"],
+        "actions": ["E", "E", "E", "W", "W", "W", "N", "EMP#0", "N", "N", "N", "E", "E", "N", "S", "N", "N", "KO#0", "N", "E"],
         "three_star": 20,
         "two_star": 25,
         "knockouts_in_par": 1,

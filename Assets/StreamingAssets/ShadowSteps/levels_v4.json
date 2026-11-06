@@ -2649,17 +2649,6 @@
       ],
       "guards": [
         {
-          "id": "g1",
-          "kind": "static",
-          "route": [
-            [
-              4,
-              6
-            ]
-          ],
-          "facing": "N"
-        },
-        {
           "id": "g2",
           "kind": "rotating",
           "route": [
@@ -2716,7 +2705,8 @@
         "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 35, \"Level 30\"); reference optimal 28 counted actions, Ghost route supplied",
         "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
-        "re-tuned 2026-11-05 (D-053): camera reach 3 squares"
+        "re-tuned 2026-11-05 (D-053): camera reach 3 squares",
+        "centre guard g1 (static at (4,6) facing N) removed 2026-11-06 (user's call: it never shaped the route; par 19 and the Ghost route unchanged, the knockout now targets the upper sentry)"
       ]
     }
   ]

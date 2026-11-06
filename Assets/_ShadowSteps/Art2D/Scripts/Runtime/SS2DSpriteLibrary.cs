@@ -127,6 +127,21 @@ namespace ShadowSteps.Art2D
         public Sprite cameraPole;
         [Header("Exit door (destination beyond the exit node) and exit highlight (on the node)")]
         public Sprite exitDoorClosed, exitDoorOpen, exitHighlight;
+        [Header("Exit \"home\" marker (final art, D-063): green disc on the exit node with a soft glow ring under it; replaces exitHighlight when set")]
+        [Tooltip("Markers/Home.png: the green disc (2048 px = 1 unit, disc ≈ 0.62 unit wide).")] public Sprite exitHome;
+        [Tooltip("Markers/Home glow.png: soft ring, transparent under the disc, peaking just outside its edge; tinted with exitHomeGlowTint.")] public Sprite exitHomeGlow;
+        [Tooltip("Node spacings per sprite unit for the disc (1.13 ≈ a 0.70-spacing disc).")] public float exitHomeSize = 1.13f;
+        [Tooltip("Scale of the glow relative to the disc (1 = the ring hugs the disc edge).")] public float exitHomeGlowScale = 1.0f;
+        public Color exitHomeGlowTint = new Color(0.40f, 1.00f, 0.50f, 0.85f);
+        [Tooltip("Exit animation (D-064): the glow breathes by this fraction of its size and between exitHomeGlowAlphaMin and the tint alpha, over exitHomePeriod seconds.")]
+        [Range(0f, 0.5f)] public float exitHomePulse = 0.16f;
+        [Range(0f, 1f)] public float exitHomeGlowAlphaMin = 0.45f;
+        public float exitHomePeriod = 1.6f;
+        [Tooltip("A second copy of the glow ring expands outward from the disc and fades to nothing once per period (off = breathing only).")]
+        public bool exitHomeRipple = true;
+        [Tooltip("How far the ripple grows (fraction of the glow size) before it has faded out.")]
+        [Range(0f, 1.5f)] public float exitHomeRippleGrow = 0.7f;
+        public bool HasExitHome => exitHome != null && exitHomeGlow != null;
         [Tooltip("Legacy exit disc; kept for the preview of older scenes. The door + highlight replace it.")]
         public Sprite exit;
         [Header("VFX")]

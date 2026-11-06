@@ -43,6 +43,9 @@ namespace ShadowSteps.Art2D.Editor
         public const string LevelArtDir = "Assets/_ShadowSteps/Art2D/LevelArt/";
         public const string CastShadowPath = SpritesRoot + "Characters/character_shadow.png";
         public const string RotationArrowPath = SpritesRoot + "Markers/rotation_arrow.png";
+        /// <summary>Exit marker art (user, 2026-11-06): the green "home" disc and its glow ring, both 2048² with the shape centred.</summary>
+        public const string HomePath = SpritesRoot + "Markers/Home.png", HomeGlowPath = SpritesRoot + "Markers/Home glow.png";
+        public static bool HasHomeArt() => File.Exists(HomePath) && File.Exists(HomeGlowPath);
         public const string UiDir = SpritesRoot + "_UI/";
         public static bool HasUiArt() => File.Exists(UiDir + "round button.png") && File.Exists(UiDir + "Level_footsteps_stars.png") && File.Exists(UiDir + "info box.png");
         public const string CameraDir = SpritesRoot + "Cameras/";
@@ -113,6 +116,15 @@ namespace ShadowSteps.Art2D.Editor
                 Configure(RotationArrowPath, CharacterPpu, new Vector2(0.5f, 0.5f), 1024, SpriteMeshType.Tight);
                 AssetDatabase.Refresh();
                 lib.rotationArrowArt = AssetDatabase.LoadAssetAtPath<Sprite>(RotationArrowPath);
+            }
+            if (HasHomeArt())
+            {
+                // Exit "home" marker (D-063): disc + glow ring, pivot at the centre, 2048 px = 1 unit; the renderer scales by exitHomeSize.
+                Configure(HomePath, CharacterPpu, new Vector2(0.5f, 0.5f), 1024, SpriteMeshType.Tight);
+                Configure(HomeGlowPath, CharacterPpu, new Vector2(0.5f, 0.5f), 1024, SpriteMeshType.FullRect);
+                AssetDatabase.Refresh();
+                lib.exitHome = AssetDatabase.LoadAssetAtPath<Sprite>(HomePath);
+                lib.exitHomeGlow = AssetDatabase.LoadAssetAtPath<Sprite>(HomeGlowPath);
             }
             if (HasUiArt())
             {
