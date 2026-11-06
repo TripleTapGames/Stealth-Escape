@@ -22,6 +22,19 @@ namespace ShadowSteps.Art2D
         private Sprite _placeholder;
         private float _spacing = 1f;
         private Vector3 _bodyScale = Vector3.one, _shadowScale = Vector3.one; private Color _shadowColor = Color.white; private float _lift;
+        /// <summary>D-071: with the final arrowhead art, the marker under the base disc shows the guard's NEXT step (set by the renderer from the schedule); without it, the generated chevron above the head shows the facing.</summary>
+        private bool _rimArrow; private float _rimOffset; private Direction? _rimDir;
+        public bool UsesRimArrow => _rimArrow;
+        /// <summary>Direction (drawn) the rim arrow points, or null when hidden (no next step: static and turning guards).</summary>
+        public Direction? RimArrowDirection => _rimArrow ? _rimDir : null;
+        /// <summary>Show the rim arrow toward the guard's next step (drawn direction), or hide it.</summary>
+        public void SetRimArrow(Direction? drawnNextStep)
+        {
+            if (!_rimArrow || chevron == null) return;
+            _rimDir = drawnNextStep;
+            chevron.gameObject.SetActive(drawnNextStep.HasValue && !Defeated && _showChevron);
+            PlaceChevron();
+        }
 
         public void Setup(SS2DSpriteLibrary lib, SS2DCharacterSet characterSet, Color accent, bool showChevron, float spacing, Sprite placeholder)
         {
@@ -56,7 +69,15 @@ namespace ShadowSteps.Art2D
             _showShadow = ownBase || castShadow; _showRing = ownBase; _showChevron = showChevron;
             shadow.gameObject.SetActive(_showShadow); ring.gameObject.SetActive(_showRing);
             chevron.gameObject.SetActive(showChevron);
-            chevron.transform.localScale = Vector3.one * 0.24f * spacing;
+            _rimArrow = showChevron && lib.facingArrow != null; _rimDir = null;
+            if (_rimArrow)
+            {
+                chevron.gameObject.SetActive(false); // shown by SetRimArrow once the schedule says where the guard steps next
+                // Final art: the arrowhead sits between the cast shadow and the body so only its tip shows past the painted disc rim.
+                chevron.sprite = lib.facingArrow; chevron.color = lib.facingArrowTint; chevron.sortingLayerName = SS2DLayers.Actors; chevron.sortingOrder = 1;
+                chevron.transform.localScale = Vector3.one * lib.facingArrowSize * spacing; _rimOffset = lib.facingArrowOffset * spacing;
+            }
+            else { chevron.sprite = lib.arrow; chevron.color = new Color(accent.r, accent.g, accent.b, 0.95f); chevron.sortingLayerName = SS2DLayers.Markers; chevron.sortingOrder = 4; chevron.transform.localScale = Vector3.one * 0.24f * spacing; }
             _markerY = lib.characterHeight * 0.92f * spacing;
             SetFacing(Facing);
             Apply();
@@ -72,13 +93,29 @@ namespace ShadowSteps.Art2D
         public void SetFacing(Direction d)
         {
             Facing = d;
-            if (chevron != null)
-            {
-                // Facing badge floats above the head so it reads for every direction, including "up" where a ground chevron would hide behind the body.
-                chevron.transform.localPosition = new Vector3(0f, _markerY, 0f);
-                chevron.transform.localRotation = Quaternion.Euler(0f, 0f, -90f * (int)d);
-            }
+            PlaceChevron();
             Apply();
+        }
+
+        /// <summary>Screen-space unit vector of a drawn facing (N up, E right, S down, W left).</summary>
+        public static Vector2 ScreenDir(Direction d) => d == Direction.North ? Vector2.up : d == Direction.East ? Vector2.right : d == Direction.South ? Vector2.down : Vector2.left;
+
+        private void PlaceChevron()
+        {
+            if (chevron == null) return;
+            if (_rimArrow)
+            {
+                // D-071: pivot a little inside the rim on the side of the NEXT step, pointing outward; rides with the hop lift.
+                var d = _rimDir ?? Facing; var dir = ScreenDir(d);
+                chevron.transform.localPosition = new Vector3(dir.x * _rimOffset, dir.y * _rimOffset + _lift, 0f);
+                chevron.transform.localRotation = Quaternion.Euler(0f, 0f, 90f - 90f * (int)d); // art points east
+            }
+            else
+            {
+                // Generated badge floats above the head so it reads for every direction, including "up" where a ground chevron would hide behind the body.
+                chevron.transform.localPosition = new Vector3(0f, _markerY + _lift, 0f);
+                chevron.transform.localRotation = Quaternion.Euler(0f, 0f, -90f * (int)Facing);
+            }
         }
 
         /// <summary>
@@ -92,7 +129,7 @@ namespace ShadowSteps.Art2D
             body.transform.localPosition = new Vector3(0f, _lift, 0f);
             body.transform.localScale = new Vector3(_bodyScale.x * pose.ScaleX, _bodyScale.y * pose.ScaleY, _bodyScale.z);
             if (shadow != null) { shadow.transform.localScale = _shadowScale * pose.ShadowScale; var c = _shadowColor; c.a *= pose.ShadowAlpha; shadow.color = c; }
-            if (chevron != null) chevron.transform.localPosition = new Vector3(0f, _markerY + _lift, 0f);
+            PlaceChevron();
         }
         /// <summary>Back on the ground at rest (called when a move tween ends or is cancelled).</summary>
         public void ClearHop() => ApplyHop(SS2DHop.Rest);
@@ -117,14 +154,14 @@ namespace ShadowSteps.Art2D
         }
         private bool _showChevron, _showRing, _showShadow;
 
-        public void SetSortingOrderFromY() { if (body != null) { int o = Mathf.RoundToInt(-transform.position.y * 10f) * 4 - (Defeated ? 40 : 0); body.sortingOrder = o + 2; shadow.sortingOrder = o; ring.sortingOrder = o + 1; } }
+        public void SetSortingOrderFromY() { if (body != null) { int o = Mathf.RoundToInt(-transform.position.y * 10f) * 4 - (Defeated ? 40 : 0); body.sortingOrder = o + 2; shadow.sortingOrder = o; ring.sortingOrder = o + 1; if (_rimArrow && chevron != null) chevron.sortingOrder = o + 1; } }
 
         /// <summary>Facing badge height follows the drawn sprite (its top edge plus a small gap), so any frame size or pivot works.</summary>
         private void PlaceMarker()
         {
             if (body != null && body.sprite != null)
                 _markerY = body.sprite.bounds.max.y * _bodyScale.y + 0.10f * _spacing;
-            if (chevron != null) chevron.transform.localPosition = new Vector3(0f, _markerY + _lift, 0f);
+            PlaceChevron();
         }
 
         private void Update()

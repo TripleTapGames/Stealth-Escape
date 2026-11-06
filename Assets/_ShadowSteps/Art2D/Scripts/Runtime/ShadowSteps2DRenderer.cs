@@ -571,9 +571,17 @@ namespace ShadowSteps.Art2D
             float s = Layout.NodeSpacing; var p = Pos(pose.Position);
             _guardPoses[i] = pose;
             _guards[i].transform.localPosition = p; _guards[i].SetFacing(View(pose.Facing)); _guards[i].SetSortingOrderFromY();
-            _guardNext[i].gameObject.SetActive(nextStep.HasValue);
             float my = _guards[i].MarkerY;
-            if (nextStep.HasValue) { _guardNext[i].transform.localPosition = p + new Vector3(0.34f * s, my, 0f); _guardNext[i].transform.localRotation = RotationFor(nextStep.Value); }
+            if (_guards[i].UsesRimArrow)
+            {
+                // D-071: the next step is the dark arrowhead under the disc rim (user art); the cyan badge stays off.
+                _guards[i].SetRimArrow(nextStep.HasValue ? View(nextStep.Value) : (Direction?)null); _guardNext[i].gameObject.SetActive(false);
+            }
+            else
+            {
+                _guardNext[i].gameObject.SetActive(nextStep.HasValue);
+                if (nextStep.HasValue) { _guardNext[i].transform.localPosition = p + new Vector3(0.34f * s, my, 0f); _guardNext[i].transform.localRotation = RotationFor(nextStep.Value); }
+            }
             if (_guardRotation[i].gameObject.activeSelf)
             {
                 if (library.rotationArrowArt != null)

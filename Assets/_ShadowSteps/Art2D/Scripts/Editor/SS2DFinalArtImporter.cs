@@ -46,6 +46,8 @@ namespace ShadowSteps.Art2D.Editor
         /// <summary>Exit marker art (user, 2026-11-06): the green "home" disc and its glow ring, both 2048² with the shape centred.</summary>
         public const string HomePath = SpritesRoot + "Markers/Home.png", HomeGlowPath = SpritesRoot + "Markers/Home glow.png";
         public static bool HasHomeArt() => File.Exists(HomePath) && File.Exists(HomeGlowPath);
+        /// <summary>Guard facing arrow (user, 2026-11-06): dark arrowhead pointing right, 2048², drawn from under the base disc rim (D-071).</summary>
+        public const string FacingArrowPath = SpritesRoot + "Markers/cap_arrow.png";
         /// <summary>Locked-edge door art (user, 2026-11-06): the padlocked gate and the open gate, 2048², same frame footprint; pivot at the frame's base centre (measured from the solid pixels: x 632–1470, feet at y 1380 from the top).</summary>
         public const string DoorLockedPath = SpritesRoot + "Door locked.png", DoorOpenPath = SpritesRoot + "Door opened.png";
         static readonly Vector2 DoorPivot = new Vector2(0.513f, 0.326f);
@@ -130,6 +132,13 @@ namespace ShadowSteps.Art2D.Editor
                 lib.doorLocked = AssetDatabase.LoadAssetAtPath<Sprite>(DoorLockedPath);
                 lib.doorOpen = AssetDatabase.LoadAssetAtPath<Sprite>(DoorOpenPath);
                 lib.lockSize = 1.5f;
+            }
+            if (File.Exists(FacingArrowPath))
+            {
+                Configure(FacingArrowPath, CharacterPpu, new Vector2(0.5f, 0.5f), 512, SpriteMeshType.Tight);
+                AssetDatabase.Refresh();
+                lib.facingArrow = AssetDatabase.LoadAssetAtPath<Sprite>(FacingArrowPath);
+                lib.facingArrowSize = 0.45f; lib.facingArrowOffset = 0.26f;
             }
             if (HasHomeArt())
             {

@@ -224,6 +224,10 @@ MonoBehaviour:
   keyTint: {r: 1, g: 1, b: 1, a: 1}
   nextMarkerTint: {r: 0.2, g: 0.8, b: 1, a: 1}
   rotationMarkerTint: {r: 1, g: 0.86, b: 0.35, a: 1}
+  facingArrow: {fileID: 21300000, guid: 2108e8f6f757d4e178dac94f89a9fea4, type: 3}
+  facingArrowSize: 0.45
+  facingArrowOffset: 0.26
+  facingArrowTint: {r: 0.16, g: 0.19, b: 0.18, a: 1}
   rotationArrowArt: {fileID: 21300000, guid: c5a1b03a6b3f842839a1a88e58ee1686, type: 3}
   rotationArrowSize: 0.7
   rotationArrowSideOffset: 0.3

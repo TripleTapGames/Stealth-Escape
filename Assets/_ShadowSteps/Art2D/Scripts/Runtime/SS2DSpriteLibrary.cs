@@ -249,6 +249,11 @@ namespace ShadowSteps.Art2D
         public Color nextMarkerTint = new Color(0.20f, 0.80f, 1.00f);
         public Color rotationMarkerTint = new Color(1.00f, 0.86f, 0.35f);
         [Header("Rotating guard arcs (user art; two curved arrows around the guard like the reference mock)")]
+        [Header("Guard facing arrow (final art, D-071): the dark arrowhead peeking out from under the base disc on the facing side, as in the mock")]
+        [Tooltip("Sprites/Markers/cap_arrow.png, authored pointing right (east), pivot at its centre. Empty = the generated chevron above the head.")] public Sprite facingArrow;
+        [Tooltip("Node spacings per sprite unit (0.45 → the arrow is ≈ 0.33 spacing long).")] public float facingArrowSize = 0.45f;
+        [Tooltip("Distance of the arrow's pivot from the disc centre along the facing (spacings); with the disc ≈ 0.34 spacing in radius, 0.26 leaves the tip ≈ 0.08 spacing outside the rim and the tail under the disc.")] public float facingArrowOffset = 0.26f;
+        public Color facingArrowTint = new Color(0.16f, 0.19f, 0.18f, 1f);
         [Tooltip("Curved arrow PNG (Sprites/Markers/rotation_arrow.png): drawn once on the guard's right (turned 90°) and once on its left (turned 270°), bracketing the figure. Unflipped = counter-clockwise; mirrored for clockwise guards. Empty = the generated rotation badge.")]
         public Sprite rotationArrowArt;
         [Tooltip("Length of one arc in node spacings.")] public float rotationArrowSize = 0.7f;
