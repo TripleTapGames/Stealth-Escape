@@ -5,8 +5,21 @@ using UnityEngine;
 
 namespace ShadowSteps.Runtime
 {
-    /// <summary>Named game sounds. Add a value here and a recipe in <see cref="AudioService"/> to extend.</summary>
-    public enum Sfx { Footstep, Tick, Rotate, Gadget, Alert, Unlock, Clear, Tap, Error }
+    /// <summary>Named game sounds. Add a value here and a recipe in <see cref="AudioService"/> to extend; a real clip can be assigned per sound in the SfxLibrary asset (D-069).</summary>
+    public enum Sfx
+    {
+        Footstep, Tick, Rotate, Gadget, Alert, Unlock, Clear, Tap, Error,
+        // D-069: sounds for the board-piece presentation (hop, knockout, gate, gadgets)
+        Land,     // token touches down after a hop
+        Leap,     // attacker leaves the ground for a knockout
+        Impact,   // attacker slams onto the guard's node
+        Whoosh,   // the flung guard piece leaves the board
+        Thud,     // the flung piece lands beside the board
+        Key,      // key picked up
+        DoorOpen, // gate swings open
+        Smoke,    // smoke dropped
+        Emp,      // EMP fired
+    }
 
     /// <summary>
     /// Plays short procedurally generated tones (original, licence-free) and a soft generated ambient loop.
@@ -58,11 +71,25 @@ namespace ShadowSteps.Runtime
             if (!MusicEnabled && _music.isPlaying) _music.Stop();
         }
 
+        /// <summary>When a presentation (the 2D bridge) times the movement sounds itself (landing, knockout beats), the flow skips its per-action footstep.</summary>
+        public static bool MovementSoundsByPresentation;
+
         public void Play(Sfx sfx)
         {
             if (!SfxEnabled || _sfx == null) return;
-            if (!_clips.TryGetValue(sfx, out var clip)) { clip = Build(sfx); _clips[sfx] = clip; }
-            _sfx.PlayOneShot(clip, SfxVolume);
+            var entry = SfxLibrary.Current != null ? SfxLibrary.Current.Find(sfx) : null;
+            AudioClip clip = entry != null ? entry.clip : null; float volume = entry != null ? entry.volume : SfxLibrary.DefaultVolume(sfx);
+            if (clip == null && !_clips.TryGetValue(sfx, out clip)) { clip = Build(sfx); _clips[sfx] = clip; }
+            float spread = entry != null ? entry.pitchVariation : 0.04f;
+            _sfx.pitch = spread > 0f ? 1f + UnityEngine.Random.Range(-spread, spread) : 1f;
+            _sfx.PlayOneShot(clip, SfxVolume * volume);
+        }
+
+        /// <summary>The clip that <see cref="Play"/> would use for <paramref name="sfx"/> (library clip or generated tone); for tests and tools.</summary>
+        public static AudioClip Resolve(Sfx sfx)
+        {
+            var entry = SfxLibrary.Current != null ? SfxLibrary.Current.Find(sfx) : null;
+            return entry != null && entry.clip != null ? entry.clip : Build(sfx);
         }
 
         // ---- procedural recipes: (frequency curve, duration, envelope, noise mix)
@@ -78,6 +105,16 @@ namespace ShadowSteps.Runtime
                 case Sfx.Unlock: return Tone("unlock", 0.25f, t => 500f + 700f * t, 0.6f, 0.05f);
                 case Sfx.Clear: return Tone("clear", 0.60f, t => 440f * Mathf.Pow(2f, Mathf.Floor(t * 4f) / 4f), 0.5f, 0.0f);
                 case Sfx.Tap: return Tone("tap", 0.04f, t => 900f, 1f, 0.2f);
+                // D-069 board-piece sounds (original synthesis): soft wooden tap, rising whoosh, heavy slam, airy sweep, dull landing, bright key, creaking swing, puff, zap.
+                case Sfx.Land: return Tone("land", 0.06f, t => 220f - 90f * t, 1f, 0.35f);
+                case Sfx.Leap: return Tone("leap", 0.16f, t => 260f + 520f * t, 0.5f, 0.45f);
+                case Sfx.Impact: return Tone("impact", 0.14f, t => 140f - 70f * t, 1f, 0.55f);
+                case Sfx.Whoosh: return Tone("whoosh", 0.28f, t => 900f - 500f * t, 0.3f, 0.85f);
+                case Sfx.Thud: return Tone("thud", 0.10f, t => 110f - 40f * t, 1f, 0.5f);
+                case Sfx.Key: return Tone("key", 0.22f, t => 1200f + 600f * Mathf.Floor(t * 3f) / 3f, 0.8f, 0.0f);
+                case Sfx.DoorOpen: return Tone("dooropen", 0.30f, t => 180f + 120f * Mathf.Sin(t * 9f), 0.4f, 0.3f);
+                case Sfx.Smoke: return Tone("smoke", 0.35f, t => 300f - 200f * t, 0.2f, 0.95f);
+                case Sfx.Emp: return Tone("emp", 0.25f, t => 1500f - 1300f * t * t, 0.9f, 0.35f);
                 default: return Tone("error", 0.15f, t => 160f, 0.8f, 0.3f);
             }
         }

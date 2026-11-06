@@ -4,6 +4,7 @@
     "references": [
         "ShadowSteps.Core",
         "ShadowSteps.Data",
+        "ShadowSteps.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

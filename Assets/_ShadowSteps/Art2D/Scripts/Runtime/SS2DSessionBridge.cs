@@ -39,6 +39,7 @@ namespace ShadowSteps.Art2D
         public void Bind(GameSceneComposer composer)
         {
             _composer = composer; _session = composer.Session;
+            AudioService.MovementSoundsByPresentation = true; // D-069: landing / knockout beats are played from the tween at touchdown
             // The placeholder board keeps running its sync (rules/HUD paths identical) but is hidden; its camera fitter and picking stay in use.
             if (composer.Board != null) foreach (var r in composer.Board.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
             composer.BoardCamera.backgroundColor = Renderer.library.background;
@@ -325,7 +326,8 @@ namespace ShadowSteps.Art2D
                 var d = DirectionUtil.Toward(o.PlayerTo.X - o.PlayerFrom.X, o.PlayerTo.Y - o.PlayerFrom.Y); // a move may span passage cells (D-047)
                 if (d.HasValue) Renderer.SetPlayerFacing(d.Value);
                 Renderer.SetPlayerWalking(true);
-                float t = 0f;
+                if (launch) AudioService.Instance?.Play(Sfx.Leap);
+                bool landed = false; float t = 0f;
                 while (t < total)
                 {
                     // D-065: the token hops from node to node (eased travel, sine lift, landing squash); the final frame is the snapped state.
@@ -334,14 +336,16 @@ namespace ShadowSteps.Art2D
                     float squash = o.Knockout ? lib.knockoutImpactSquash : lib.moveSquash;
                     Renderer.Player.ApplyHop(SS2DHop.At(t, dur, lib.moveSettle, hopHeight, lib.moveStretch, squash, lib.moveShadowShrink)); Renderer.Player.SetSortingOrderFromY();
                     if (o.Knockout && !shaken && t >= dur && lib.knockoutShake > 0f) { shaken = true; StartCoroutine(ShakeBoard(0.2f, lib.knockoutShake * Renderer.Layout.NodeSpacing)); }
-                    if (launch && t >= dur) { if (!launched) { launched = true; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); } else { flyT += Time.deltaTime; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); } }
+                    if (!landed && t >= dur) { landed = true; AudioService.Instance?.Play(o.Knockout ? Sfx.Impact : Sfx.Land); } // D-069: the sound lands with the token
+                    if (launch && t >= dur) { if (!launched) { launched = true; AudioService.Instance?.Play(Sfx.Whoosh); Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); } else { flyT += Time.deltaTime; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); } }
                     yield return null;
                 }
                 Renderer.Player.ClearHop(); Renderer.SetPlayerWalking(false);
             }
             // Knockout: the spy has landed on the guard's node. Launch style: the guard piece is already in the air (from touchdown) and keeps flying while the survivors take their turn; Topple style: it tips over now.
             if (o.Knockout && !launch) Renderer.ApplyGuardTopple(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f);
-            if (o.Knockout && launch && !launched) { launched = true; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); }
+            if (o.Knockout && launch && !launched) { launched = true; AudioService.Instance?.Play(Sfx.Whoosh); Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); }
+            bool thudded = false;
             if (o.Caught && o.CapturePhase == CapturePhase.BeforeEnemyUpdate) { FinishTween(); yield break; }
             int n = stage.Guards.Count; var gFrom = new Vector3[n]; var gTo = new Vector3[n]; var turned = new bool[n];
             var down = new bool[n];
@@ -358,6 +362,7 @@ namespace ShadowSteps.Art2D
             {
                 k += Time.deltaTime; float e = SS2DHop.Travel(k, dur); var hop = SS2DHop.At(lib, k);
                 if (o.Knockout && flyT < flyDur) { flyT += Time.deltaTime; Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); }
+                if (launch && !thudded && flyT >= flyDur * SS2DLaunch.Landing) { thudded = true; AudioService.Instance?.Play(Sfx.Thud); } // the flung piece hits the ground beside the board
                 for (int i = 0; i < n; i++)
                 {
                     if (down[i]) continue;
@@ -371,6 +376,7 @@ namespace ShadowSteps.Art2D
                 }
                 yield return null;
             }
+            if (launch && !thudded) AudioService.Instance?.Play(Sfx.Thud);
             for (int i = 0; i < n; i++) { if (down[i]) continue; Renderer.Guards[i].ClearHop(); Renderer.SetGuardWalking(i, false); if (!turned[i]) Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); }
             if (o.Knockout) Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 1f); // landed beside the board (Launch) or faded into it (Topple)
             FinishTween(); // the guard has finished its step/turn: snap to the published state (guards/fans at their new facing), then the capture

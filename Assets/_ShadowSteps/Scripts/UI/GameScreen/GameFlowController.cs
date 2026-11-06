@@ -190,11 +190,13 @@ namespace ShadowSteps.UI
         {
             var audio = AudioService.Instance;
             if (audio == null) return;
-            if (o.Free) audio.Play(Sfx.Gadget);
-            else if (o.PlayerFrom != o.PlayerTo) audio.Play(Sfx.Footstep);
+            // D-069: gadgets have their own sounds; movement sounds come from the presentation's touchdown when it times them (2D bridge), else a footstep here.
+            if (o.Free) audio.Play(o.Action.Kind == StageActionKind.Smoke ? Sfx.Smoke : o.Action.Kind == StageActionKind.Emp ? Sfx.Emp : Sfx.Gadget);
+            else if (o.PlayerFrom != o.PlayerTo) { if (!AudioService.MovementSoundsByPresentation) audio.Play(Sfx.Footstep); }
             else audio.Play(Sfx.Tick);
             if (o.Knockout) HapticsService.Pulse();
-            if (o.KeyCollected || o.DoorOpened >= 0) audio.Play(Sfx.Unlock);
+            if (o.KeyCollected) audio.Play(Sfx.Key);
+            if (o.DoorOpened >= 0) audio.Play(Sfx.DoorOpen);
         }
 
         private void OnActionCompleted(ActionOutcome o)
