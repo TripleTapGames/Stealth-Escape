@@ -158,12 +158,12 @@ namespace ShadowSteps.V3
     public static class StageRules
     {
         /// <summary>
-        /// true = the pre-2026-11-03 rule (a key-holder arriving at either endpoint of a locked edge opened it at once, so the
-        /// door stopped blocking sight one step before the crossing). false (default since D-038) = a locked edge opens only
-        /// when the key-holder crosses it; until then the closed door blocks movement and sight. The switch is kept for
-        /// measurement; the shipped 30 levels solve identically under both.
+        /// true (default again since D-068, user's call 2026-11-06: "the door should unlock as soon as the player comes near it") = a
+        /// key-holder arriving at either endpoint of a locked edge (including the key pickup itself) opens it at once, so the gate
+        /// swings open on approach and stops blocking sight one step before the crossing. false (the D-038 rule) = a locked edge
+        /// opens only when the key-holder crosses it. The switch is kept for measurement and tests.
         /// </summary>
-        public static bool DoorsOpenOnApproach = false;
+        public static bool DoorsOpenOnApproach = true;
 
         public static ActionOutcome TryApply(Stage stage, StageState s, StageAction action)
         {

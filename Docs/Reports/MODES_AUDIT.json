@@ -526,7 +526,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 6,
         "ghost_offered": false,
-        "states_explored": 17,
+        "states_explored": 18,
         "hit_limit": false
       },
       "knockout": {
@@ -539,7 +539,7 @@
         "shortest_without_knockout": 6,
         "shortest_alarm_free": 6,
         "ghost_offered": false,
-        "states_explored": 17,
+        "states_explored": 18,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -560,7 +560,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 12,
         "ghost_offered": false,
-        "states_explored": 16,
+        "states_explored": 17,
         "hit_limit": false
       },
       "knockout": {
@@ -573,7 +573,7 @@
         "shortest_without_knockout": 12,
         "shortest_alarm_free": 12,
         "ghost_offered": false,
-        "states_explored": 16,
+        "states_explored": 17,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -594,7 +594,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 13,
         "ghost_offered": false,
-        "states_explored": 43,
+        "states_explored": 44,
         "hit_limit": false
       },
       "knockout": {
@@ -607,7 +607,7 @@
         "shortest_without_knockout": 13,
         "shortest_alarm_free": 9,
         "ghost_offered": false,
-        "states_explored": 30,
+        "states_explored": 31,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -628,7 +628,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 10,
         "ghost_offered": false,
-        "states_explored": 57,
+        "states_explored": 62,
         "hit_limit": false
       },
       "knockout": {
@@ -641,7 +641,7 @@
         "shortest_without_knockout": 10,
         "shortest_alarm_free": 7,
         "ghost_offered": false,
-        "states_explored": 36,
+        "states_explored": 39,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -662,7 +662,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 8,
         "ghost_offered": false,
-        "states_explored": 26,
+        "states_explored": 31,
         "hit_limit": false
       },
       "knockout": {
@@ -675,7 +675,7 @@
         "shortest_without_knockout": 8,
         "shortest_alarm_free": 8,
         "ghost_offered": false,
-        "states_explored": 26,
+        "states_explored": 31,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1002,7 +1002,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 94,
+        "states_explored": 109,
         "hit_limit": false
       },
       "knockout": {
@@ -1015,7 +1015,7 @@
         "shortest_without_knockout": 6,
         "shortest_alarm_free": 6,
         "ghost_offered": true,
-        "states_explored": 94,
+        "states_explored": 109,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1036,7 +1036,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": -1,
         "ghost_offered": false,
-        "states_explored": 49,
+        "states_explored": 47,
         "hit_limit": false
       },
       "knockout": {
@@ -1049,7 +1049,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 17,
         "ghost_offered": false,
-        "states_explored": 44,
+        "states_explored": 47,
         "hit_limit": false
       }
     },
@@ -1102,7 +1102,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 11,
         "ghost_offered": true,
-        "states_explored": 272,
+        "states_explored": 277,
         "hit_limit": false
       },
       "knockout": {
@@ -1115,7 +1115,7 @@
         "shortest_without_knockout": 11,
         "shortest_alarm_free": 11,
         "ghost_offered": true,
-        "states_explored": 272,
+        "states_explored": 277,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1136,7 +1136,7 @@
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 22,
         "ghost_offered": true,
-        "states_explored": 288,
+        "states_explored": 312,
         "hit_limit": false
       },
       "knockout": {
@@ -1149,7 +1149,7 @@
         "shortest_without_knockout": 22,
         "shortest_alarm_free": 14,
         "ghost_offered": true,
-        "states_explored": 796,
+        "states_explored": 856,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true
@@ -1163,27 +1163,27 @@
       "stealth": {
         "solvable": true,
         "par": 20,
-        "actions": ["E", "E", "E", "W", "W", "W", "N", "EMP#0", "N", "N", "N", "E", "E", "N", "S", "N", "N", "W", "N", "E", "E"],
+        "actions": ["N", "S", "E", "E", "E", "W", "W", "W", "EMP#0", "N", "N", "N", "N", "E", "E", "SMOKE@5,4", "N", "N", "W", "N", "E", "E"],
         "three_star": 22,
         "two_star": 26,
         "knockouts_in_par": -1,
         "shortest_without_knockout": -1,
         "shortest_alarm_free": 20,
         "ghost_offered": true,
-        "states_explored": 2231,
+        "states_explored": 2495,
         "hit_limit": false
       },
       "knockout": {
         "solvable": true,
         "par": 19,
-        "actions": ["E", "E", "E", "W", "W", "W", "N", "EMP#0", "N", "N", "N", "E", "E", "N", "S", "N", "N", "KO#0", "N", "E"],
+        "actions": ["N", "S", "E", "E", "E", "W", "W", "W", "EMP#0", "N", "N", "N", "N", "E", "E", "SMOKE@5,4", "N", "N", "KO#0", "N", "E"],
         "three_star": 20,
         "two_star": 25,
         "knockouts_in_par": 1,
         "shortest_without_knockout": 20,
         "shortest_alarm_free": 20,
         "ghost_offered": true,
-        "states_explored": 2223,
+        "states_explored": 2466,
         "hit_limit": false
       },
       "stealth_path_parity_in_knockout": true

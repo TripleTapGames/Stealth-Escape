@@ -21,6 +21,7 @@ namespace ShadowSteps.Art2D
         public float MarkerY => _markerY;
         private Sprite _placeholder;
         private float _spacing = 1f;
+        private Vector3 _bodyScale = Vector3.one, _shadowScale = Vector3.one; private Color _shadowColor = Color.white; private float _lift;
 
         public void Setup(SS2DSpriteLibrary lib, SS2DCharacterSet characterSet, Color accent, bool showChevron, float spacing, Sprite placeholder)
         {
@@ -49,6 +50,7 @@ namespace ShadowSteps.Art2D
             ring.transform.localScale = new Vector3(0.56f * spacing, 0.34f * spacing, 1f);
             ring.transform.localPosition = new Vector3(0f, 0.0f, 0f);
             body.transform.localScale = Vector3.one * lib.characterHeight * spacing;
+            _bodyScale = body.transform.localScale; _shadowScale = shadow.transform.localScale; _shadowColor = shadow.color; _lift = 0f;
             // Final art paints its own base disc and shadow: the generated ring and blob would double it.
             bool ownBase = set == null || !set.includesBase;
             _showShadow = ownBase || castShadow; _showRing = ownBase; _showChevron = showChevron;
@@ -79,6 +81,23 @@ namespace ShadowSteps.Art2D
             Apply();
         }
 
+        /// <summary>
+        /// D-065 hop pose: the token (body sprite, which carries its own base disc in the final art) lifts by <paramref name="pose"/>.Lift
+        /// spacings and is stretched/squashed; the cast shadow stays on the ground, shrinking and fading with height; the facing badge rides along.
+        /// </summary>
+        public void ApplyHop(SS2DHop.Pose pose)
+        {
+            if (body == null) return;
+            _lift = pose.Lift * _spacing;
+            body.transform.localPosition = new Vector3(0f, _lift, 0f);
+            body.transform.localScale = new Vector3(_bodyScale.x * pose.ScaleX, _bodyScale.y * pose.ScaleY, _bodyScale.z);
+            if (shadow != null) { shadow.transform.localScale = _shadowScale * pose.ShadowScale; var c = _shadowColor; c.a *= pose.ShadowAlpha; shadow.color = c; }
+            if (chevron != null) chevron.transform.localPosition = new Vector3(0f, _markerY + _lift, 0f);
+        }
+        /// <summary>Back on the ground at rest (called when a move tween ends or is cancelled).</summary>
+        public void ClearHop() => ApplyHop(SS2DHop.Rest);
+        public float Lift => _lift;
+
         public void SetWalking(bool walking) { if (Walking != walking) { Walking = walking; _clock = 0f; _frame = 0; Apply(); } }
 
         public void SetTint(Color? tint) { _tint = tint ?? Color.white; if (body != null) body.color = _tint; }
@@ -104,8 +123,8 @@ namespace ShadowSteps.Art2D
         private void PlaceMarker()
         {
             if (body != null && body.sprite != null)
-                _markerY = body.sprite.bounds.max.y * body.transform.localScale.y + 0.10f * _spacing;
-            if (chevron != null) chevron.transform.localPosition = new Vector3(0f, _markerY, 0f);
+                _markerY = body.sprite.bounds.max.y * _bodyScale.y + 0.10f * _spacing;
+            if (chevron != null) chevron.transform.localPosition = new Vector3(0f, _markerY + _lift, 0f);
         }
 
         private void Update()
@@ -127,5 +146,39 @@ namespace ShadowSteps.Art2D
             body.color = _tint;
             PlaceMarker();
         }
+    }
+
+    /// <summary>
+    /// D-065 movement feel, a pure function of time so it is testable: during the move (0..dur) the token rises and falls on a sine arc,
+    /// stretching a little at the top while its shadow shrinks and fades; after touchdown (dur..dur+settle) it squashes and recovers.
+    /// Original motion design for Shadow Steps (a lifted board piece), not copied from any other game.
+    /// </summary>
+    public static class SS2DHop
+    {
+        public struct Pose { public float Lift, ScaleX, ScaleY, ShadowScale, ShadowAlpha; }
+        public static readonly Pose Rest = new Pose { Lift = 0f, ScaleX = 1f, ScaleY = 1f, ShadowScale = 1f, ShadowAlpha = 1f };
+
+        /// <summary>Eased travel progress (0..1) at time <paramref name="t"/> of a move lasting <paramref name="dur"/>: fast in the middle, soft at both ends.</summary>
+        public static float Travel(float t, float dur) => Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / Mathf.Max(0.0001f, dur)));
+
+        public static Pose At(float t, float dur, float settle, float height, float stretch, float squash, float shadowShrink)
+        {
+            dur = Mathf.Max(0.0001f, dur);
+            if (t <= 0f) return Rest;
+            if (t < dur)
+            {
+                float a = Mathf.Sin(Mathf.Clamp01(t / dur) * Mathf.PI); // 0 at take-off, 1 at the top, 0 at touchdown
+                return new Pose { Lift = height * a, ScaleX = 1f - stretch * 0.5f * a, ScaleY = 1f + stretch * a, ShadowScale = 1f - shadowShrink * a, ShadowAlpha = 1f - 0.5f * shadowShrink * a };
+            }
+            if (settle > 0f && t < dur + settle)
+            {
+                float b = Mathf.Sin(Mathf.Clamp01((t - dur) / settle) * Mathf.PI); // one squash bounce
+                return new Pose { Lift = 0f, ScaleX = 1f + squash * 0.6f * b, ScaleY = 1f - squash * b, ShadowScale = 1f, ShadowAlpha = 1f };
+            }
+            return Rest;
+        }
+
+        public static Pose At(SS2DSpriteLibrary lib, float t) => At(t, lib.moveDuration, lib.moveSettle, lib.moveHopHeight, lib.moveStretch, lib.moveSquash, lib.moveShadowShrink);
+        public static float Total(SS2DSpriteLibrary lib) => Mathf.Max(0.01f, lib.moveDuration) + Mathf.Max(0f, lib.moveSettle);
     }
 }

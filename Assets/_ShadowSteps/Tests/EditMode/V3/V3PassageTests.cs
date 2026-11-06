@@ -68,7 +68,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             var ds = StageState.Initial(sd);
             Assert.AreEqual(RejectReason.KeyRequired, StageRules.TryApply(sd, ds, E).Reason, "locked long edge");
             Step(sd, ref ds, S); Assert.IsTrue(ds.HasKey); Step(sd, ref ds, N);
-            o = Step(sd, ref ds, E); Assert.IsTrue(o.Valid); Assert.AreEqual(0, o.DoorOpened); Assert.AreEqual(C(3, 0), ds.Player); Assert.AreEqual(3, ds.T);
+            o = Step(sd, ref ds, E); Assert.IsTrue(o.Valid); Assert.AreEqual(-1, o.DoorOpened, "the lock opened on arrival at its near end (D-068)"); Assert.IsTrue(ds.IsDoorOpen(0)); Assert.AreEqual(C(3, 0), ds.Player); Assert.AreEqual(3, ds.T);
             // From (1,1) the lattice neighbour above is a passage of the other axis: no move, nothing counted.
             var mid = StageState.Initial(s); mid = StageRules.TryApply(s, mid, S).After; mid = StageRules.TryApply(s, mid, E).After; Assert.AreEqual(C(1, 1), mid.Player);
             Assert.AreEqual(RejectReason.Blocked, StageRules.TryApply(s, mid, N).Reason); Assert.AreEqual(2, mid.T);

@@ -120,7 +120,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         }
 
         [Test]
-        public void LockedConnection_WithoutKeyIsInvalid_WithKeyOpensWhenCrossed()
+        public void LockedConnection_WithoutKeyIsInvalid_WithKeyOpensOnApproach()
         {
             var stage = DoorStage();
             var s = StageState.Initial(stage);
@@ -131,29 +131,33 @@ namespace ShadowSteps.Tests.EditMode.V3
             Step(stage, ref s, W); var pick = Step(stage, ref s, N);
             Assert.IsTrue(pick.KeyCollected); Assert.IsTrue(s.HasKey); Assert.IsFalse(s.IsDoorOpen(0), "a distant key pickup does not open the door");
             Step(stage, ref s, S); var approach = Step(stage, ref s, E);
-            Assert.AreEqual(-1, approach.DoorOpened); Assert.IsFalse(s.IsDoorOpen(0), "D-038: standing beside a locked edge with the key does not open it");
+            Assert.AreEqual(0, approach.DoorOpened); Assert.IsTrue(s.IsDoorOpen(0), "D-068: arriving beside a locked edge with the key opens it at once");
             Assert.AreEqual(C(2, 1), s.Player);
             var cross = Step(stage, ref s, E);
-            Assert.IsTrue(cross.Valid); Assert.AreEqual(0, cross.DoorOpened); Assert.IsTrue(s.IsDoorOpen(0)); Assert.AreEqual(C(3, 1), s.Player, "the door opens as part of the crossing");
+            Assert.IsTrue(cross.Valid); Assert.AreEqual(-1, cross.DoorOpened, "already open"); Assert.IsTrue(s.IsDoorOpen(0)); Assert.AreEqual(C(3, 1), s.Player);
             Assert.IsTrue(s.HasKey, "the key is reusable and not consumed");
             Assert.AreEqual(RejectReason.NoConnection, StageRules.TryApply(stage, new StageState(C(2, 0), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null), E).Reason, "cut edge is a missing connection");
         }
 
         [Test]
-        public void ClosedDoor_KeepsBlockingSight_UntilTheCrossingOpensIt()
+        public void Door_OpensOnApproach_AndStopsBlockingSightAtOnce_CrossingOnlyIsTheSwitchedOffRule()
         {
-            // Guard at (4,1) looks W through the locked edge (2,1)-(3,1). With the key, stepping onto (2,1) is safe (door still closed);
-            // the crossing to (3,1) opens it as part of the movement and the guard sees the player on arrival (old-state check, door open).
+            // Guard at (4,1) looks W through the locked edge (2,1)-(3,1). With the key, stepping onto (2,1) opens the door at once (D-068),
+            // so the guard sees the player on arrival; under the switched-off D-038 rule the door stayed closed until the crossing.
             var stage = DoorStage(Static(C(4, 1), Direction.West));
             var withKey = new StageState(C(1, 1), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
+            Assert.IsTrue(StageRules.DoorsOpenOnApproach, "shipped rule: doors open on approach");
             var o = StageRules.TryApply(stage, withKey, E);
-            Assert.IsFalse(o.After.IsDoorOpen(0)); Assert.IsFalse(o.Caught, "the closed door still blocks the guard's sight");
-            var cross = StageRules.TryApply(stage, o.After, E);
-            Assert.IsTrue(cross.After.IsDoorOpen(0)); Assert.IsTrue(cross.Caught, "crossing opens the door and exposes the player"); Assert.AreEqual(CapturePhase.BeforeEnemyUpdate, cross.CapturePhase);
-            // Legacy switch (measurement only): approach-opening exposes the player one step earlier.
-            StageRules.DoorsOpenOnApproach = true;
-            try { var legacy = StageRules.TryApply(stage, withKey, E); Assert.IsTrue(legacy.After.IsDoorOpen(0)); Assert.IsTrue(legacy.Caught); }
-            finally { StageRules.DoorsOpenOnApproach = false; }
+            Assert.IsTrue(o.After.IsDoorOpen(0), "opened on arrival beside it"); Assert.IsTrue(o.Caught, "and the open door no longer blocks the guard's sight"); Assert.AreEqual(CapturePhase.BeforeEnemyUpdate, o.CapturePhase);
+            StageRules.DoorsOpenOnApproach = false;
+            try
+            {
+                var beside = StageRules.TryApply(stage, withKey, E);
+                Assert.IsFalse(beside.After.IsDoorOpen(0)); Assert.IsFalse(beside.Caught, "D-038 rule: the closed door still blocks the guard's sight");
+                var cross = StageRules.TryApply(stage, beside.After, E);
+                Assert.IsTrue(cross.After.IsDoorOpen(0)); Assert.IsTrue(cross.Caught, "crossing opens the door and exposes the player");
+            }
+            finally { StageRules.DoorsOpenOnApproach = true; }
         }
 
         [Test]
@@ -164,16 +168,16 @@ namespace ShadowSteps.Tests.EditMode.V3
             var stage = b.Build();
             var s = StageState.Initial(stage);
             Step(stage, ref s, E); Assert.IsTrue(s.HasKey); Assert.AreEqual(0, s.OpenDoors);
-            Step(stage, ref s, E); Assert.AreEqual(0, s.OpenDoors, "beside the first lock: still closed (D-038)");
-            Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors, "crossing (2,0)-(3,0) opens door 0");
-            Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors);
+            Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors, "beside the first lock (2,0)-(3,0): opens on approach (D-068)");
+            Step(stage, ref s, E); Assert.AreEqual(1, s.OpenDoors, "crossing an open door changes nothing");
+            Step(stage, ref s, E); Assert.AreEqual(3, s.OpenDoors, "beside the second lock (4,0)-(5,0): opens too");
             Assert.IsTrue(s.HasKey);
-            var win = Step(stage, ref s, E); // crossing (4,0)-(5,0) opens door 1 and lands on the exit
+            var win = Step(stage, ref s, E); // crossing (4,0)-(5,0) lands on the exit
             Assert.IsTrue(win.Won); Assert.AreEqual(3, s.OpenDoors);
         }
 
         [Test]
-        public void KeyPickup_AtSharedEndpoint_OpensNothing_EachLockOpensOnItsOwnCrossing()
+        public void KeyPickup_AtSharedEndpoint_OpensEveryLockTouchingIt_OthersStayClosed()
         {
             var b = Open(5, 3, C(1, 0), C(4, 2)); b.Key = C(1, 1);
             b.Doors.Add(new DoorSpec(C(1, 1), C(2, 1)));
@@ -181,22 +185,22 @@ namespace ShadowSteps.Tests.EditMode.V3
             b.Doors.Add(new DoorSpec(C(3, 1), C(4, 1)));
             var stage = b.Build(); var initial = StageState.Initial(stage);
             var o = StageRules.TryApply(stage, initial, S);
-            Assert.IsTrue(o.KeyCollected); Assert.AreEqual(0, o.After.OpenDoors, "D-038: collecting the key on a shared endpoint opens no lock");
+            Assert.IsTrue(o.KeyCollected); Assert.AreEqual(3, o.After.OpenDoors, "D-068: collecting the key on a shared endpoint opens both locks touching it; the far lock (3,1)-(4,1) stays closed"); Assert.AreEqual(0, o.DoorOpened, "first opened door reported");
             Assert.AreEqual(1, o.After.T);
-            var east = StageRules.TryApply(stage, o.After, E); Assert.AreEqual(1, east.After.OpenDoors, "crossing (1,1)-(2,1) opens door 0 only"); Assert.AreEqual(0, east.DoorOpened);
-            var south = StageRules.TryApply(stage, o.After, S); Assert.AreEqual(2, south.After.OpenDoors, "crossing (1,1)-(1,2) opens door 1 only"); Assert.AreEqual(1, south.DoorOpened);
+            var east = StageRules.TryApply(stage, o.After, E); Assert.AreEqual(3, east.After.OpenDoors, "crossing (1,1)-(2,1): already open"); Assert.AreEqual(-1, east.DoorOpened);
+            var south = StageRules.TryApply(stage, o.After, S); Assert.AreEqual(3, south.After.OpenDoors); Assert.AreEqual(-1, south.DoorOpened);
             Assert.AreEqual(0, initial.OpenDoors, "preview/solver inputs remain immutable");
             Assert.AreEqual(0, StageState.Initial(stage).OpenDoors, "retry closes locks");
         }
 
         [Test]
-        public void Lock_OpensOnlyOnTheCrossing_FromEitherSide()
+        public void Lock_OpensOnArrival_FromEitherSide()
         {
             var stage = DoorStage(); // door (2,1)-(3,1)
             var below = new StageState(C(3, 2), 0, true, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
-            Assert.IsFalse(StageRules.TryApply(stage, below, WAIT).After.IsDoorOpen(0));
-            var onEndpoint = StageRules.TryApply(stage, below, N).After; Assert.IsFalse(onEndpoint.IsDoorOpen(0), "arriving on (3,1) with the key does not open the lock");
-            var crossedWest = StageRules.TryApply(stage, onEndpoint, W); Assert.IsTrue(crossedWest.Valid); Assert.IsTrue(crossedWest.After.IsDoorOpen(0), "crossing from the east side opens it");
+            Assert.IsFalse(StageRules.TryApply(stage, below, WAIT).After.IsDoorOpen(0), "a node away from the lock: still closed");
+            var arrive = StageRules.TryApply(stage, below, N); var onEndpoint = arrive.After; Assert.IsTrue(onEndpoint.IsDoorOpen(0), "D-068: arriving on (3,1) with the key opens the lock from the east side too"); Assert.AreEqual(0, arrive.DoorOpened);
+            var crossedWest = StageRules.TryApply(stage, onEndpoint, W); Assert.IsTrue(crossedWest.Valid); Assert.IsTrue(crossedWest.After.IsDoorOpen(0)); Assert.AreEqual(-1, crossedWest.DoorOpened, "already open");
             var noKey = new StageState(C(3, 1), 0, false, 0, null, null, 0, 0, -1, false, StageResult.Playing, null);
             Assert.AreEqual(RejectReason.KeyRequired, StageRules.TryApply(stage, noKey, W).Reason);
         }

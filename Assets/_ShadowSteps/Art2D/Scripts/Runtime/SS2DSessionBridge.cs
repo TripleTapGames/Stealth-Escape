@@ -81,7 +81,12 @@ namespace ShadowSteps.Art2D
         {
             StopAllCoroutines(); _tween = null; _pendingState = null; _lastOutcome = null; _pendingCapture = null; _pendingCapturePresent = null;
             CaptureSequenceRunning = false; DoorSequenceRunning = false;
-            if (Renderer != null && Renderer.IsBuilt) { Renderer.ClearPreview(); Renderer.ClearTargets(); }
+            if (Renderer != null && Renderer.IsBuilt)
+            {
+                Renderer.ClearPreview(); Renderer.ClearTargets();
+                if (Renderer.Player != null) Renderer.Player.ClearHop(); foreach (var g in Renderer.Guards) if (g != null) g.ClearHop(); // a cancelled move never leaves a token mid-air
+                if (_shakeOrigin.HasValue) { Renderer.transform.localPosition = _shakeOrigin.Value; _shakeOrigin = null; } // nor the board off-centre
+            }
         }
 
         private void OnAlarm(ActionOutcome o) { Renderer.FlashCameraVision(); }
@@ -173,6 +178,15 @@ namespace ShadowSteps.Art2D
             if (Renderer.Player != null) yield return Shake(Renderer.Player.transform, 0.38f, 0.06f);
             CaptureSequenceRunning = false;
             present?.Invoke();
+        }
+
+        /// <summary>Impact shake of the whole drawn board (D-066); the origin is restored on completion and on cancel.</summary>
+        private Vector3? _shakeOrigin;
+        private IEnumerator ShakeBoard(float duration, float amplitude)
+        {
+            var t = Renderer.transform; if (_shakeOrigin.HasValue) t.localPosition = _shakeOrigin.Value; _shakeOrigin = t.localPosition; var origin = _shakeOrigin.Value; float e = 0f;
+            while (e < duration) { e += Time.deltaTime; float k = 1f - e / duration; t.localPosition = origin + new Vector3(Mathf.Sin(e * 70f) * amplitude * k, Mathf.Cos(e * 55f) * amplitude * 0.5f * k, 0f); yield return null; }
+            t.localPosition = origin; _shakeOrigin = null;
         }
 
         private IEnumerator Shake(Transform t, float duration, float amplitude)
@@ -299,25 +313,35 @@ namespace ShadowSteps.Art2D
         /// <summary>Cosmetic tween in step with the placeholder animator's timing; the final frame is always the snapped state.</summary>
         private IEnumerator Tween(ActionOutcome o)
         {
-            var stage = _session.Stage; float dur = Mathf.Max(0.01f, Renderer.library.moveDuration);
+            var stage = _session.Stage; var lib = Renderer.library;
+            bool launch = o.Knockout && lib.knockoutStyle == SS2DKnockoutStyle.Launch;
+            // D-066 (reference clip): a knockout move is a high leap instead of the hop; the flung guard starts moving at touchdown.
+            float dur = Mathf.Max(0.01f, launch ? lib.knockoutLeapDuration : lib.moveDuration), hopHeight = launch ? lib.knockoutLeapHeight : lib.moveHopHeight, total = dur + Mathf.Max(0f, lib.moveSettle);
+            float flyDur = o.Knockout ? Mathf.Max(0.05f, launch ? lib.knockoutLaunchDuration : lib.knockoutToppleDuration) : 0f; float flyT = 0f; bool launched = false;
             Renderer.ClearPreview(); Renderer.ClearTargets();
-            var from = Renderer.Pos(o.PlayerFrom); var to = Renderer.Pos(o.PlayerTo);
+            var from = Renderer.Pos(o.PlayerFrom); var to = Renderer.Pos(o.PlayerTo); bool shaken = false;
             if (o.PlayerFrom != o.PlayerTo)
             {
                 var d = DirectionUtil.Toward(o.PlayerTo.X - o.PlayerFrom.X, o.PlayerTo.Y - o.PlayerFrom.Y); // a move may span passage cells (D-047)
                 if (d.HasValue) Renderer.SetPlayerFacing(d.Value);
                 Renderer.SetPlayerWalking(true);
                 float t = 0f;
-                while (t < dur)
+                while (t < total)
                 {
-                    t += Time.deltaTime; Renderer.Player.transform.localPosition = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t / dur)); Renderer.Player.SetSortingOrderFromY();
+                    // D-065: the token hops from node to node (eased travel, sine lift, landing squash); the final frame is the snapped state.
+                    t += Time.deltaTime; Renderer.Player.transform.localPosition = Vector3.Lerp(from, to, SS2DHop.Travel(t, dur));
+                    // D-066: on a knockout the landing squash is heavier and the board shakes once at touchdown.
+                    float squash = o.Knockout ? lib.knockoutImpactSquash : lib.moveSquash;
+                    Renderer.Player.ApplyHop(SS2DHop.At(t, dur, lib.moveSettle, hopHeight, lib.moveStretch, squash, lib.moveShadowShrink)); Renderer.Player.SetSortingOrderFromY();
+                    if (o.Knockout && !shaken && t >= dur && lib.knockoutShake > 0f) { shaken = true; StartCoroutine(ShakeBoard(0.2f, lib.knockoutShake * Renderer.Layout.NodeSpacing)); }
+                    if (launch && t >= dur) { if (!launched) { launched = true; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); } else { flyT += Time.deltaTime; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); } }
                     yield return null;
                 }
-                Renderer.SetPlayerWalking(false);
+                Renderer.Player.ClearHop(); Renderer.SetPlayerWalking(false);
             }
-            // Knockout: the spy has stepped onto the guard's node; the guard flies off the board (away from the spy, spinning, fading) while the survivors take their turn.
-            float flyDur = o.Knockout ? Mathf.Max(0.05f, Renderer.library.knockoutFlyDuration) : 0f; float flyT = 0f;
-            if (o.Knockout) Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f);
+            // Knockout: the spy has landed on the guard's node. Launch style: the guard piece is already in the air (from touchdown) and keeps flying while the survivors take their turn; Topple style: it tips over now.
+            if (o.Knockout && !launch) Renderer.ApplyGuardTopple(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f);
+            if (o.Knockout && launch && !launched) { launched = true; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); }
             if (o.Caught && o.CapturePhase == CapturePhase.BeforeEnemyUpdate) { FinishTween(); yield break; }
             int n = stage.Guards.Count; var gFrom = new Vector3[n]; var gTo = new Vector3[n]; var turned = new bool[n];
             var down = new bool[n];
@@ -330,14 +354,14 @@ namespace ShadowSteps.Art2D
                 if (gFrom[i] != gTo[i]) { Renderer.SetGuardWalking(i, true); Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); turned[i] = true; }
             }
             float k = 0f;
-            while (k < dur || flyT < flyDur)
+            while (k < total || flyT < flyDur)
             {
-                k += Time.deltaTime; float e = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(k / dur));
+                k += Time.deltaTime; float e = SS2DHop.Travel(k, dur); var hop = SS2DHop.At(lib, k);
                 if (o.Knockout && flyT < flyDur) { flyT += Time.deltaTime; Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); }
                 for (int i = 0; i < n; i++)
                 {
                     if (down[i]) continue;
-                    Renderer.Guards[i].transform.localPosition = Vector3.Lerp(gFrom[i], gTo[i], e); Renderer.Guards[i].SetSortingOrderFromY();
+                    if (gFrom[i] != gTo[i]) { Renderer.Guards[i].transform.localPosition = Vector3.Lerp(gFrom[i], gTo[i], e); Renderer.Guards[i].ApplyHop(hop); Renderer.Guards[i].SetSortingOrderFromY(); } // walking guards hop like the player; turning guards stay put
                     if (!turned[i] && e >= 0.5f) { Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); turned[i] = true; }
                 }
                 for (int i = 0; i < stage.Cameras.Count; i++)
@@ -347,8 +371,8 @@ namespace ShadowSteps.Art2D
                 }
                 yield return null;
             }
-            for (int i = 0; i < n; i++) { if (down[i]) continue; Renderer.SetGuardWalking(i, false); if (!turned[i]) Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); }
-            if (o.Knockout) Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 1f); // off the board and hidden
+            for (int i = 0; i < n; i++) { if (down[i]) continue; Renderer.Guards[i].ClearHop(); Renderer.SetGuardWalking(i, false); if (!turned[i]) Renderer.Guards[i].SetFacing(Renderer.View(o.GuardsAfter[i].Facing)); }
+            if (o.Knockout) Renderer.ApplyGuardFlyOff(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 1f); // landed beside the board (Launch) or faded into it (Topple)
             FinishTween(); // the guard has finished its step/turn: snap to the published state (guards/fans at their new facing), then the capture
         }
     }

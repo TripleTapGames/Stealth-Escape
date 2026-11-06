@@ -435,6 +435,24 @@ namespace ShadowSteps.Art2D.Editor
             catch (System.Exception e) { Debug.LogError("[SS2D] backgrounds failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
+        /// <summary>Batch entry (D-067): import the final art (gate pieces) and render LEVEL-14 locked (t0) and just after the unlock, plus LEVEL-11 locked.</summary>
+        public static void ImportDoorsAndRender()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) throw new System.IO.FileNotFoundException("no sprite library");
+                if (!SS2DFinalArtImporter.Import(lib)) throw new System.IO.FileNotFoundException("final art PNGs missing");
+                EditorUtility.SetDirty(lib); AssetDatabase.SaveAssets();
+                if (!lib.HasDoorArt) throw new System.IO.FileNotFoundException("door art not imported");
+                RenderReview(ScenePath, "LEVEL-14", null, "Art2D_Door_LEVEL-14_locked_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                RenderReview(ScenePath, "LEVEL-14", new[] { "S", "E", "N", "E" }, "Art2D_Door_LEVEL-14_opened_1080x1920", ShadowSteps.V3.StageMode.Knockout); // key at (2,3); the 4th move arrives beside the door (3,2)-(4,2), which opens on approach (D-068)
+                RenderReview(ScenePath, "LEVEL-11", null, "Art2D_Door_LEVEL-11_locked_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] door art failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
         /// <summary>Batch entry: import the HUD skin (Sprites/_UI) into the library and render LEVEL-2 / LEVEL-19 / LEVEL-25 (gadgets) for review.</summary>
         public static void ImportUiSkinAndRender()
         {

@@ -46,6 +46,10 @@ namespace ShadowSteps.Art2D.Editor
         /// <summary>Exit marker art (user, 2026-11-06): the green "home" disc and its glow ring, both 2048² with the shape centred.</summary>
         public const string HomePath = SpritesRoot + "Markers/Home.png", HomeGlowPath = SpritesRoot + "Markers/Home glow.png";
         public static bool HasHomeArt() => File.Exists(HomePath) && File.Exists(HomeGlowPath);
+        /// <summary>Locked-edge door art (user, 2026-11-06): the padlocked gate and the open gate, 2048², same frame footprint; pivot at the frame's base centre (measured from the solid pixels: x 632–1470, feet at y 1380 from the top).</summary>
+        public const string DoorLockedPath = SpritesRoot + "Door locked.png", DoorOpenPath = SpritesRoot + "Door opened.png";
+        static readonly Vector2 DoorPivot = new Vector2(0.513f, 0.326f);
+        public static bool HasDoorArt() => File.Exists(DoorLockedPath) && File.Exists(DoorOpenPath);
         public const string UiDir = SpritesRoot + "_UI/";
         public static bool HasUiArt() => File.Exists(UiDir + "round button.png") && File.Exists(UiDir + "Level_footsteps_stars.png") && File.Exists(UiDir + "info box.png");
         public const string CameraDir = SpritesRoot + "Cameras/";
@@ -116,6 +120,16 @@ namespace ShadowSteps.Art2D.Editor
                 Configure(RotationArrowPath, CharacterPpu, new Vector2(0.5f, 0.5f), 1024, SpriteMeshType.Tight);
                 AssetDatabase.Refresh();
                 lib.rotationArrowArt = AssetDatabase.LoadAssetAtPath<Sprite>(RotationArrowPath);
+            }
+            if (HasDoorArt())
+            {
+                // Locked-edge doors (D-067): the gate stands upright on the edge midpoint; frame ≈ 0.41 unit wide, drawn ≈ 0.6 spacing at lockSize 1.5.
+                Configure(DoorLockedPath, CharacterPpu, DoorPivot, 1024, SpriteMeshType.Tight);
+                Configure(DoorOpenPath, CharacterPpu, DoorPivot, 1024, SpriteMeshType.Tight);
+                AssetDatabase.Refresh();
+                lib.doorLocked = AssetDatabase.LoadAssetAtPath<Sprite>(DoorLockedPath);
+                lib.doorOpen = AssetDatabase.LoadAssetAtPath<Sprite>(DoorOpenPath);
+                lib.lockSize = 1.5f;
             }
             if (HasHomeArt())
             {

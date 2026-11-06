@@ -38,8 +38,8 @@ MonoBehaviour:
   crate: {fileID: 21300000, guid: bcc45a059cd154b1680b290d8dca3f8c, type: 3}
   crateShadow: {fileID: 21300000, guid: 61b0df671f44f4e238636e20abf243f8, type: 3}
   wall: {fileID: 21300000, guid: 95ca46e9440364e6eba8c6c48aa86338, type: 3}
-  doorLocked: {fileID: 21300000, guid: ea0314571449f45eabbd641c4ca62419, type: 3}
-  doorOpen: {fileID: 21300000, guid: 3c90ef629440d453c9aa14f23cf3fff8, type: 3}
+  doorLocked: {fileID: 21300000, guid: 5912671e7f3cb42eea8287f70615e9bf, type: 3}
+  doorOpen: {fileID: 21300000, guid: 693fa9a349639476197e3b598d624acd, type: 3}
   key: {fileID: 21300000, guid: d3d7cd8d67337436da7d8ca1bfa425a9, type: 3}
   cameraBody: {fileID: 21300000, guid: 6f75390f885994958b4ebecfb8605f9f, type: 3}
   cameraHead: {fileID: 21300000, guid: 781ccbe0ea65b4a44b1e2b9bcc4a0064, type: 3}
@@ -84,6 +84,11 @@ MonoBehaviour:
   exitHomeSize: 0.7
   exitHomeGlowScale: 1
   exitHomeGlowTint: {r: 0.4, g: 1, b: 0.5, a: 0.85}
+  exitHomePulse: 0.16
+  exitHomeGlowAlphaMin: 0.45
+  exitHomePeriod: 1.6
+  exitHomeRipple: 1
+  exitHomeRippleGrow: 0.7
   exit: {fileID: 21300000, guid: a61de9dfde7054a6498b7852e1a1116c, type: 3}
   vfxGlow: {fileID: 21300000, guid: 238c4adb12b1a4f25b7ae404a644e8ed, type: 3}
   vfxSparkle: {fileID: 21300000, guid: 697b6228f65b74a0ba4d952ae09f0d9f, type: 3}
@@ -150,6 +155,7 @@ MonoBehaviour:
   exitSize: 0.78
   doorSize: 1.3
   doorOffset: 1.55
+  lockSize: 1.5
   autoAdvanceAfterDoor: 1
   showExitDoor: 0
   playExitDoorSequence: 0
@@ -229,10 +235,25 @@ MonoBehaviour:
   captured: {r: 1, g: 0.35, b: 0.35, a: 1}
   knockoutTarget: {r: 1, g: 0.62, b: 0.2, a: 0.95}
   knockedOut: {r: 0.55, g: 0.58, b: 0.64, a: 0.85}
-  knockoutFlyDuration: 0.45
-  knockoutFlyDistance: 3.2
-  knockoutFlyLift: 1.4
-  knockoutFlySpins: 1.5
+  knockoutStyle: 0
+  knockoutLeapHeight: 0.9
+  knockoutLeapDuration: 0.32
+  knockoutLaunchDuration: 0.8
+  knockoutLaunchHeight: 2.2
+  knockoutSpins: 2
+  knockoutLandBeyond: 0.8
+  knockoutRestVisible: 1
+  knockoutToppleDuration: 0.6
+  knockoutToppleAngle: 90
+  knockoutToppleSlide: 0.3
+  knockoutFadeStart: 0.6
+  knockoutImpactSquash: 0.26
+  knockoutShake: 0.04
   won: {r: 0.55, g: 1, b: 0.7, a: 1}
   lockdown: {r: 1, g: 0.65, b: 0.25, a: 1}
-  moveDuration: 0.18
+  moveDuration: 0.15
+  moveHopHeight: 0.1
+  moveStretch: 0.06
+  moveSquash: 0.12
+  moveSettle: 0.1
+  moveShadowShrink: 0.35

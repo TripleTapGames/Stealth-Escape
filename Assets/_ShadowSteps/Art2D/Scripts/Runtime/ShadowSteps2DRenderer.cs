@@ -388,7 +388,8 @@ namespace ShadowSteps.Art2D
                     int door = stage.DoorIndex(a, b);
                     if (door >= 0)
                     {
-                        var ds = Make(_props, "Door_" + door, lib.doorLocked, mid, lib.propSize * 0.9f * s, Color.white, SS2DLayers.Props, PropOrder(mid) + 1);
+                        // Final gate art (D-067) stands upright on the edge midpoint at lockSize; the generated padlock keeps the prop size.
+                        var ds = Make(_props, "Door_" + door, lib.doorLocked, mid, (lib.HasDoorArt ? lib.lockSize : lib.propSize * 0.9f) * s, Color.white, SS2DLayers.Props, PropOrder(mid) + 1);
                         _doors[door] = ds;
                     }
                 }
@@ -551,7 +552,7 @@ namespace ShadowSteps.Art2D
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
-            Player = null; _key = null; _exit = null; _exitGlow = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null;
+            Player = null; _key = null; _exit = null; _exitGlow = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null; _resting.Clear();
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Reset();
             Stage = null;
         }
@@ -602,10 +603,11 @@ namespace ShadowSteps.Art2D
             {
                 if (!g.Defeated) g.SetDefeated(true, library.knockedOut);
                 _guardNext[i].gameObject.SetActive(false); _guardRotation[i].gameObject.SetActive(false);
-                g.gameObject.SetActive(false); // off the board (the fly-off, if any, has already played)
+                g.gameObject.SetActive(_resting.Contains(i)); // hidden, unless the launch left it lying beside the board (D-066)
             }
             else
             {
+                _resting.Remove(i);
                 g.gameObject.SetActive(true);
                 if (g.Defeated) g.SetDefeated(false, library.knockedOut);
                 g.transform.localRotation = Quaternion.identity; g.transform.localScale = Vector3.one;
@@ -619,21 +621,63 @@ namespace ShadowSteps.Art2D
         /// One frame of the knock-out fly-off (k = 0..1): the guard shoots away from the spy with an upward arc, spins, shrinks and fades;
         /// at k = 1 it is hidden. Decorative only; the logical state already has the guard defeated.
         /// </summary>
-        public void ApplyGuardFlyOff(int i, GridCoord from, GridCoord awayFrom, float k)
+        /// <summary>
+        /// D-066 knockout: frame <paramref name="k"/> (0..1) of the guard piece toppling away from the attacker's node: it tips about its
+        /// base (with a small bounce as it hits the board) while sliding a little, rests flat, then fades and sinks into the board.
+        /// Decorative only: the logical state is unchanged; at k = 1 the guard is hidden (<see cref="SetGuardDefeated"/>).
+        /// </summary>
+        public void ApplyGuardTopple(int i, GridCoord from, GridCoord awayFrom, float k)
         {
             if (i < 0 || i >= _guards.Count) return;
             var g = _guards[i]; var lib = library; float s = Layout.NodeSpacing;
             if (k <= 0f) { g.gameObject.SetActive(true); g.SetDefeated(true, lib.knockedOut); _guardNext[i].gameObject.SetActive(false); _guardRotation[i].gameObject.SetActive(false); }
-            var start = Pos(from); var dir = (Pos(from) - Pos(awayFrom)); dir.z = 0f; if (dir.sqrMagnitude < 1e-6f) dir = Vector3.up; dir.Normalize();
-            float e = Mathf.SmoothStep(0f, 1f, k);
-            var p = start + dir * (lib.knockoutFlyDistance * s * e) + Vector3.up * (lib.knockoutFlyLift * s * Mathf.Sin(k * Mathf.PI));
-            g.transform.localPosition = p;
-            g.transform.localRotation = Quaternion.Euler(0f, 0f, 360f * lib.knockoutFlySpins * k);
-            g.transform.localScale = Vector3.one * Mathf.Lerp(1f, 0.35f, e);
-            if (g.body != null) { var c = g.body.color; c.a = 1f - e; g.body.color = c; }
+            var start = Pos(from); var dir = (Pos(from) - Pos(awayFrom)); dir.z = 0f; if (dir.sqrMagnitude < 1e-6f) dir = Vector3.right; dir.Normalize();
+            var pose = SS2DTopple.At(k, lib.knockoutFadeStart, lib.knockoutToppleAngle, lib.knockoutToppleSlide);
+            float sign = dir.x >= 0f ? -1f : 1f; // head falls away from the attacker; a vertical push topples to the right
+            g.transform.localPosition = start + dir * (pose.Slide * s) + Vector3.down * (pose.Sink * s);
+            g.transform.localRotation = Quaternion.Euler(0f, 0f, sign * pose.Angle);
+            g.transform.localScale = Vector3.one * pose.Scale;
+            if (g.body != null) { var c = g.body.color; c.a = pose.Alpha; g.body.color = c; }
             g.SetSortingOrderFromY();
             if (k >= 1f) SetGuardDefeated(i, true);
         }
+        /// <summary>Guards whose launched piece came to rest lying beside the board (kept visible while defeated).</summary>
+        private readonly HashSet<int> _resting = new HashSet<int>();
+        /// <summary>True when the knocked-out guard's piece lies beside the board (after a Launch-style knockout).</summary>
+        public bool IsGuardResting(int i) => _resting.Contains(i);
+
+        /// <summary>Where a piece flung from <paramref name="start"/> along <paramref name="dir"/> lands: just beyond the drawn board edge.</summary>
+        public Vector3 LaunchLanding(Vector3 start, Vector3 dir)
+        {
+            var b = ViewBounds; float best = 0f;
+            if (Mathf.Abs(dir.x) > 1e-5f) best = Mathf.Max(best, ((dir.x > 0f ? b.xMax : b.xMin) - start.x) / dir.x);
+            if (Mathf.Abs(dir.y) > 1e-5f) best = Mathf.Max(best, ((dir.y > 0f ? b.yMax : b.yMin) - start.y) / dir.y);
+            return start + dir * (best + library.knockoutLandBeyond * Layout.NodeSpacing);
+        }
+
+        /// <summary>
+        /// D-066 knockout (Launch style, from the reference clip): frame <paramref name="k"/> (0..1) of the guard piece flung away from the
+        /// attacker's node in a high spinning arc, landing on its side just beyond the board edge, where it stays lying (knockoutRestVisible)
+        /// or is hidden. Decorative only; the logical state already has the guard defeated.
+        /// </summary>
+        public void ApplyGuardLaunch(int i, GridCoord from, GridCoord awayFrom, float k)
+        {
+            if (i < 0 || i >= _guards.Count) return;
+            var g = _guards[i]; var lib = library; float s = Layout.NodeSpacing;
+            if (k <= 0f) { _resting.Remove(i); g.gameObject.SetActive(true); g.SetDefeated(true, lib.knockedOut); g.ClearHop(); _guardNext[i].gameObject.SetActive(false); _guardRotation[i].gameObject.SetActive(false); }
+            var start = Pos(from); var dir = (Pos(from) - Pos(awayFrom)); dir.z = 0f; if (dir.sqrMagnitude < 1e-6f) dir = Vector3.right; dir.Normalize();
+            var land = LaunchLanding(start, dir); float dist = Vector3.Distance(start, land);
+            var pose = SS2DLaunch.At(k, dist, lib.knockoutLaunchHeight * s, lib.knockoutSpins);
+            float sign = dir.x >= 0f ? -1f : 1f; // tumbles forward, away from the attacker
+            g.transform.localPosition = start + dir * pose.Distance + Vector3.up * pose.Height;
+            g.transform.localRotation = Quaternion.Euler(0f, 0f, sign * pose.Angle);
+            g.transform.localScale = Vector3.one * pose.Scale;
+            if (g.body != null) { var c = g.body.color; c.a = pose.Alpha; g.body.color = c; }
+            g.SetSortingOrderFromY();
+            if (k >= 1f) { if (lib.knockoutRestVisible) _resting.Add(i); SetGuardDefeated(i, true); }
+        }
+        /// <summary>Kept for callers of the old name: the knockout in the library's style (D-066).</summary>
+        public void ApplyGuardFlyOff(int i, GridCoord from, GridCoord awayFrom, float k) { if (library.knockoutStyle == SS2DKnockoutStyle.Topple) ApplyGuardTopple(i, from, awayFrom, k); else ApplyGuardLaunch(i, from, awayFrom, k); }
         public bool IsGuardDefeated(int i) => i >= 0 && i < _guards.Count && _guards[i].Defeated;
 
         /// <summary>
@@ -677,7 +721,7 @@ namespace ShadowSteps.Art2D
         public void SetDoor(int i, bool open)
         {
             if (open) _openDoorMask |= 1 << i; else _openDoorMask &= ~(1 << i);
-            if (_doors.TryGetValue(i, out var d) && d != null) { d.sprite = open ? library.doorOpen : library.doorLocked; var c = d.color; c.a = open ? 0.75f : 1f; d.color = c; }
+            if (_doors.TryGetValue(i, out var d) && d != null) { d.sprite = open ? library.doorOpen : library.doorLocked; var c = d.color; c.a = open && !library.HasDoorArt ? 0.75f : 1f; d.color = c; } // the open gate art is opaque; the generated open padlock stays faint
         }
         public void SetKeyCollected(bool collected) { if (_key != null) _key.gameObject.SetActive(!collected); }
 
@@ -871,6 +915,61 @@ namespace ShadowSteps.Art2D
                 ripple.transform.localScale = Vector3.one * baseScale * (1f + rippleGrow * u);
                 var c = tint; c.a = tint.a * (1f - u) * (1f - u); ripple.color = c;
             }
+        }
+    }
+
+    /// <summary>
+    /// D-066 topple pose, a pure function of the normalized time k (0..1): fall with gravity-like acceleration and one small bounce
+    /// (0..0.45), rest flat, then from fadeStart fade out, shrink a little and sink into the board. Original motion for a knocked board piece.
+    /// </summary>
+    public static class SS2DTopple
+    {
+        public struct Pose { public float Angle, Slide, Alpha, Scale, Sink; }
+        public const float FallEnd = 0.45f;
+        public static Pose At(float k, float fadeStart, float angle, float slide)
+        {
+            k = Mathf.Clamp01(k); fadeStart = Mathf.Clamp(fadeStart, FallEnd, 0.99f);
+            var p = new Pose { Angle = angle, Slide = slide, Alpha = 1f, Scale = 1f, Sink = 0f };
+            if (k < FallEnd)
+            {
+                float u = k / FallEnd;
+                if (u < 0.8f) { float f = u / 0.8f; p.Angle = angle * f * f; p.Slide = slide * Mathf.SmoothStep(0f, 1f, f); }
+                else p.Angle = angle * (1f + 0.08f * Mathf.Sin((u - 0.8f) / 0.2f * Mathf.PI)); // hits the board and settles back
+                return p;
+            }
+            if (k > fadeStart)
+            {
+                float v = (k - fadeStart) / (1f - fadeStart);
+                p.Alpha = 1f - v; p.Scale = Mathf.Lerp(1f, 0.85f, v); p.Sink = 0.08f * v;
+            }
+            return p;
+        }
+    }
+
+    /// <summary>
+    /// D-066 launch pose (reference clip), a pure function of the normalized time k (0..1): the piece shoots out fast and slows (ease-out)
+    /// over <c>distance</c>, rises on a high arc (drawn as an upward offset plus a size gain for "nearer the camera"), spins, and lands
+    /// on its side (a quarter turn past its spins) with a small bounce; it never fades. Original motion for a flung board piece.
+    /// </summary>
+    public static class SS2DLaunch
+    {
+        public struct Pose { public float Distance, Height, Angle, Scale, Alpha; }
+        /// <summary>Fraction of the flight at which the piece first touches the ground (the rest is the skip and the slide to a stop).</summary>
+        public const float Landing = 0.86f;
+        public static Pose At(float k, float distance, float height, float spins)
+        {
+            k = Mathf.Clamp01(k);
+            float travel = 1f - (1f - k) * (1f - k); // fast start, soft landing
+            float arc = Mathf.Sin(Mathf.Min(1f, k / Landing) * Mathf.PI); // in the air until Landing, peak half-way there
+            float bounce = k > Landing ? 0.06f * Mathf.Sin((k - Landing) / (1f - Landing) * Mathf.PI) : 0f; // one small skip after touching down
+            return new Pose
+            {
+                Distance = distance * travel,
+                Height = height * (arc + bounce),
+                Angle = (360f * spins + 90f) * k, // ends lying on its side
+                Scale = 1f + 0.45f * arc,
+                Alpha = 1f,
+            };
         }
     }
 

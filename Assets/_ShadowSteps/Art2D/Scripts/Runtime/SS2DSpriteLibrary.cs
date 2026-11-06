@@ -12,6 +12,8 @@ namespace ShadowSteps.Art2D
     }
 
     public enum SS2DBackgroundFit { CoverView, FrameBoard }
+    /// <summary>D-066 knockout presentation: Launch = the attacker leaps and the guard piece is flung off the board, landing on its side outside it (reference clip); Topple = the piece tips over in place and fades.</summary>
+    public enum SS2DKnockoutStyle { Launch, Topple }
 
     /// <summary>
     /// One painted backdrop (D-058): the image, the part of it that is the playable ground, and the inclusive level-id
@@ -166,6 +168,10 @@ namespace ShadowSteps.Art2D
         [Tooltip("Door sprite size in node spacings and its distance from the exit node along the outward edge direction.")]
         public float doorSize = 1.30f;
         public float doorOffset = 1.55f;
+        [Tooltip("Locked-edge door piece (final art, D-067): node spacings per sprite unit for the gate drawn upright on the edge midpoint (0 = the generated padlock at propSize).")]
+        public float lockSize = 0f;
+        /// <summary>True when the locked-edge doors use the final gate art (lockSize set by the importer).</summary>
+        public bool HasDoorArt => lockSize > 0f && doorLocked != null && doorOpen != null;
         [Header("Level completion (door transition)")]
         public bool autoAdvanceAfterDoor = true;
         [Tooltip("Draw the exit door beyond the exit node. Off: the exit node highlight alone marks the goal (the courtyard's own architecture stays visible).")]
@@ -255,15 +261,36 @@ namespace ShadowSteps.Art2D
         public Color captured = new Color(1.00f, 0.35f, 0.35f);
         [Tooltip("Disc under a guard the player can knock out right now (Knockout mode only).")]
         public Color knockoutTarget = new Color(1.00f, 0.62f, 0.20f, 0.95f);
-        [Tooltip("Tint of a knocked-out guard while it flies off (decorative only).")]
+        [Tooltip("Tint of a knocked-out guard while it topples (decorative only).")]
         public Color knockedOut = new Color(0.55f, 0.58f, 0.64f, 0.85f);
-        [Tooltip("Knocked-out guard fly-off: seconds, distance in node spacings (away from the spy, upward arc), spins.")]
-        public float knockoutFlyDuration = 0.45f, knockoutFlyDistance = 3.2f, knockoutFlyLift = 1.4f, knockoutFlySpins = 1.5f;
+        [Header("Knockout (D-066, reference clip): the attacker leaps high and slams down; the guard piece is flung off the board and lands on its side outside it")]
+        public SS2DKnockoutStyle knockoutStyle = SS2DKnockoutStyle.Launch;
+        [Tooltip("Attacker's leap onto the guard: peak height (spacings) and seconds; replaces the normal hop for that move.")] [Range(0f, 2f)] public float knockoutLeapHeight = 0.9f;
+        public float knockoutLeapDuration = 0.32f;
+        [Tooltip("Flung guard piece: flight seconds (starts at the attacker's touchdown), arc height (spacings), full spins in the air, and how far beyond the board edge it lands (spacings).")]
+        public float knockoutLaunchDuration = 0.8f;
+        [Range(0f, 4f)] public float knockoutLaunchHeight = 2.2f;
+        [Range(0f, 4f)] public float knockoutSpins = 2f;
+        [Range(0f, 2f)] public float knockoutLandBeyond = 0.8f;
+        [Tooltip("The fallen piece stays lying beside the board for the rest of the attempt (off: it is hidden once it lands).")] public bool knockoutRestVisible = true;
+        [Header("Knockout: Topple style (the piece tips over away from the attacker, rests, then fades into the board)")]
+        [Tooltip("Seconds for the whole topple (fall, rest, fade).")] public float knockoutToppleDuration = 0.6f;
+        [Tooltip("How far the piece tips (degrees; 90 = flat on the board).")] [Range(45f, 120f)] public float knockoutToppleAngle = 90f;
+        [Tooltip("How far the base slides away from the attacker during the fall (node spacings).")] [Range(0f, 1f)] public float knockoutToppleSlide = 0.3f;
+        [Tooltip("Fraction of the duration after which the fallen piece starts fading and sinking.")] [Range(0.3f, 0.95f)] public float knockoutFadeStart = 0.6f;
+        [Tooltip("Landing squash of the attacker on a knockout (replaces moveSquash for that move).")] [Range(0f, 0.5f)] public float knockoutImpactSquash = 0.26f;
+        [Tooltip("Board shake on impact, amplitude in node spacings (0 = none).")] [Range(0f, 0.2f)] public float knockoutShake = 0.04f;
         public Color won = new Color(0.55f, 1.00f, 0.70f);
         public Color lockdown = new Color(1.00f, 0.65f, 0.25f);
 
         [Header("Timing")]
         public float moveDuration = 0.18f;
+        [Header("Movement feel (D-065): the token lifts off the board, travels in an arc and lands with a small squash; the cast shadow stays on the ground")]
+        [Tooltip("Peak lift of the hop in node spacings (0 = slide).")] [Range(0f, 0.6f)] public float moveHopHeight = 0.22f;
+        [Tooltip("Vertical stretch of the token at the top of the hop (fraction of its scale).")] [Range(0f, 0.3f)] public float moveStretch = 0.06f;
+        [Tooltip("Squash on landing (fraction of its scale), recovered over moveSettle seconds.")] [Range(0f, 0.4f)] public float moveSquash = 0.12f;
+        [Tooltip("Seconds after touchdown for the landing squash to settle.")] [Range(0f, 0.4f)] public float moveSettle = 0.10f;
+        [Tooltip("How much the cast shadow shrinks and fades at the top of the hop.")] [Range(0f, 1f)] public float moveShadowShrink = 0.35f;
 
         public bool Validate(System.Collections.Generic.List<string> problems)
         {

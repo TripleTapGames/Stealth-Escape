@@ -76,10 +76,26 @@ namespace ShadowSteps.Art2D.Tests
                 var frozen = r.Guards[0].transform.localPosition;
                 r.SetGuard(0, new GuardPose3(new GridCoord(0, 0), Direction.West), Direction.North);
                 Assert.AreEqual(frozen, r.Guards[0].transform.localPosition, "schedule updates are ignored while knocked out");
-                // Fly-off frames: starts on the node, ends hidden, never alters the logical state.
-                r.ApplyGuardFlyOff(0, new GridCoord(3, 2), new GridCoord(3, 1), 0f); Assert.IsTrue(r.Guards[0].gameObject.activeSelf); Assert.Less(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f);
-                r.ApplyGuardFlyOff(0, new GridCoord(3, 2), new GridCoord(3, 1), 0.5f); Assert.Greater(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 0.5f * r.Layout.NodeSpacing, "flying away");
-                r.ApplyGuardFlyOff(0, new GridCoord(3, 2), new GridCoord(3, 1), 1f); Assert.IsFalse(r.Guards[0].gameObject.activeSelf, "gone");
+                // Topple frames (D-066): starts upright on the node, lies flat and slid away from the attacker half-way, ends hidden; never alters the logical state.
+                r.ApplyGuardTopple(0, new GridCoord(3, 2), new GridCoord(3, 1), 0f); Assert.IsTrue(r.Guards[0].gameObject.activeSelf); Assert.Less(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f); Assert.AreEqual(Quaternion.identity, r.Guards[0].transform.localRotation);
+                r.ApplyGuardTopple(0, new GridCoord(3, 2), new GridCoord(3, 1), 0.5f);
+                Assert.AreEqual(r.library.knockoutToppleAngle, Mathf.Abs(Mathf.DeltaAngle(0f, r.Guards[0].transform.localRotation.eulerAngles.z)), 0.5f, "fallen flat");
+                Assert.AreEqual(r.library.knockoutToppleSlide * r.Layout.NodeSpacing, Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f, "slid away by the authored distance"); Assert.AreEqual(1f, r.Guards[0].body.color.a, 1e-4f, "not fading yet");
+                r.ApplyGuardTopple(0, new GridCoord(3, 2), new GridCoord(3, 1), 0.9f); Assert.Less(r.Guards[0].body.color.a, 0.5f, "fading into the board");
+                r.ApplyGuardTopple(0, new GridCoord(3, 2), new GridCoord(3, 1), 1f); Assert.IsFalse(r.Guards[0].gameObject.activeSelf, "gone");
+                // Launch frames (D-066, reference clip): shoots away from the attacker, high and spinning half-way, lands on its side beyond the board edge and stays there.
+                r.ApplyGuardLaunch(0, new GridCoord(3, 2), new GridCoord(3, 1), 0f); Assert.IsTrue(r.Guards[0].gameObject.activeSelf); Assert.Less(Vector3.Distance(r.Guards[0].transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f);
+                var dir = (r.Pos(new GridCoord(3, 2)) - r.Pos(new GridCoord(3, 1))).normalized; var landing = r.LaunchLanding(r.Pos(new GridCoord(3, 2)), dir);
+                Assert.IsFalse(r.ViewBounds.Contains(landing), "lands outside the drawn board"); Assert.Greater(Vector3.Dot(landing - r.Pos(new GridCoord(3, 2)), dir), 0.5f * r.Layout.NodeSpacing, "away from the attacker");
+                r.ApplyGuardLaunch(0, new GridCoord(3, 2), new GridCoord(3, 1), 0.5f);
+                var mid = r.Guards[0].transform.localPosition; Assert.Greater(Vector3.Dot(mid - r.Pos(new GridCoord(3, 2)), dir), 0.5f * r.Layout.NodeSpacing, "flying away"); Assert.Greater(mid.y - (r.Pos(new GridCoord(3, 2)) + dir * Vector3.Dot(mid - r.Pos(new GridCoord(3, 2)), dir)).y, 1f * r.Layout.NodeSpacing, "high in the air"); Assert.Greater(r.Guards[0].transform.localScale.x, 1.2f, "nearer the camera");
+                r.ApplyGuardLaunch(0, new GridCoord(3, 2), new GridCoord(3, 1), 1f);
+                Assert.IsTrue(r.Guards[0].gameObject.activeSelf, "stays lying beside the board"); Assert.IsTrue(r.IsGuardResting(0)); Assert.IsTrue(r.IsGuardDefeated(0));
+                Assert.Less(Vector3.Distance(r.Guards[0].transform.localPosition, landing), 1e-3f, "at the landing point"); Assert.AreEqual(90f, Mathf.Abs(Mathf.DeltaAngle(0f, r.Guards[0].transform.localRotation.eulerAngles.z)), 0.5f, "on its side"); Assert.Less(Vector3.Distance(Vector3.one, r.Guards[0].transform.localScale), 1e-3f, "back to its size");
+                r.SetGuardDefeated(0, true); Assert.IsTrue(r.Guards[0].gameObject.activeSelf, "a state re-sync keeps the fallen piece visible");
+                r.SetGuardDefeated(0, false); Assert.IsFalse(r.IsGuardResting(0)); Assert.AreEqual(Quaternion.identity, r.Guards[0].transform.localRotation, "revived upright");
+                r.SetGuardDefeated(0, true); Assert.IsFalse(r.Guards[0].gameObject.activeSelf, "defeated without a launch is hidden as before");
+                r.SetGuardDefeated(0, false);
                 Assert.Less(Vector3.Distance(r.Player.transform.localPosition, r.Pos(new GridCoord(3, 2))), 1e-3f, "spy drawn on the guard's node");
 
                 // Stealth on the same board: no discs, guard standing, fan present.

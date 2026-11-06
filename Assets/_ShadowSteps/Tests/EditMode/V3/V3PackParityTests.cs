@@ -151,7 +151,8 @@ namespace ShadowSteps.Tests.EditMode.V3
                 if (m.ForcedAlarm) forcedAlarm.Add(s.Code);
             }
             // Under Knockout / no WAIT (validation_v4.json export, 2026-11-04): LEVEL-30 now needs its EMP as well (no WAIT to time the camera).
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27" }, smokeRequired);
+            // D-068 (doors open on approach): LEVEL-30's lock now swings open under the sentry when the key-holder arrives beside it, so its Smoke is mandatory too.
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27", "LEVEL-30" }, smokeRequired);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25", "LEVEL-30" }, empRequired);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-20", "LEVEL-23" }, forcedAlarm);
         }

@@ -1375,7 +1375,7 @@
               2
             ]
           ],
-          "facing": "S",
+          "facing": "W",
           "clockwise": true
         }
       ],
@@ -1399,7 +1399,8 @@
         "imported from browser playtest export (Level 13, 2 blocked cover nodes)",
         "browser par 10, browser ghostOffered False",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
-        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved"
+        "sparsified 2026-11-05 (D-049/D-050): redundant nodes dissolved into passages / empty ground, edges at most 2 squares; solver character preserved",
+        "re-tuned 2026-11-06 (D-068, doors open on approach): the rotating guard now starts facing W; par 9 unchanged, the par route knocks him out, 13 moves without"
       ]
     },
     {
@@ -2158,11 +2159,11 @@
       "doors": [
         {
           "a": [
-            1,
+            2,
             2
           ],
           "b": [
-            2,
+            3,
             2
           ]
         }
@@ -2210,7 +2211,8 @@
       },
       "notes": [
         "imported from browser playtest export (Level 25)",
-        "corridor extended to 7 nodes (exit (6,2)) on 2026-11-03 so Smoke and EMP both stay mandatory under the front-node camera footprint with alarm budget 1"
+        "corridor extended to 7 nodes (exit (6,2)) on 2026-11-03 so Smoke and EMP both stay mandatory under the front-node camera footprint with alarm budget 1",
+        "re-tuned 2026-11-06 (D-068, doors open on approach): the lock moved one edge east to (2,2)-(3,2) so the key pickup no longer swings it open under the camera; par 6, Smoke + EMP still required, Ghost kept"
       ]
     },
     {
@@ -2606,7 +2608,7 @@
         "#.-.-.__#",
         "#####.###",
         "#.-.-.-.#",
-        "#.##.####",
+        "#.#######",
         "#.-.-.-.#",
         "#.#######",
         "#.-.-.-.#",
@@ -2706,7 +2708,7 @@
         "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md",
         "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT",
         "re-tuned 2026-11-05 (D-053): camera reach 3 squares",
-        "centre guard g1 (static at (4,6) facing N) removed 2026-11-06 (user's call: it never shaped the route; par 19 and the Ghost route unchanged, the knockout now targets the upper sentry)"
+        "centre guard g1 (static at (4,6) facing N) removed 2026-11-06 (user's call: it never shaped the route; par 19 and the Ghost route unchanged, the knockout now targets the upper sentry); its isolated node (4,6) became wall, closing the middle stone run (solver character identical)"
       ]
     }
   ]

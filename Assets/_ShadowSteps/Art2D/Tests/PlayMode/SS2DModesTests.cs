@@ -102,16 +102,22 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual(new GridCoord(3, 2), S.State.Player, "the spy stands on the guard's node");
             Assert.IsTrue(S.State.IsDefeated(0)); Assert.AreEqual(StageResult.Playing, S.State.Result);
             Assert.IsTrue(R.IsGuardDefeated(0), "drawn as knocked out"); Assert.AreEqual(0, DrawnGuardCells().Count, "no vision from a knocked-out guard");
-            Assert.IsFalse(R.Guards[0].gameObject.activeSelf, "the knocked-out guard flew off the board");
+            if (R.library.knockoutStyle == SS2DKnockoutStyle.Launch)
+            {
+                // D-066 (reference clip): the flung piece lies beside the board, outside the drawn bounds, on its side.
+                Assert.IsTrue(R.Guards[0].gameObject.activeSelf, "the knocked-out guard lies beside the board"); Assert.IsTrue(R.IsGuardResting(0));
+                Assert.IsFalse(R.ViewBounds.Contains(R.Guards[0].transform.localPosition), "outside the drawn board"); Assert.AreEqual(90f, Mathf.Abs(Mathf.DeltaAngle(0f, R.Guards[0].transform.localRotation.eulerAngles.z)), 0.5f, "on its side");
+            }
+            else Assert.IsFalse(R.Guards[0].gameObject.activeSelf, "the knocked-out guard toppled and faded off the board");
             // Frozen: further turns never move or turn it, and it never comes back.
             var gone = R.Guards[0].transform.localPosition; var goneRot = R.Guards[0].Facing;
             Assert.IsFalse(S.TrySubmit(StageAction.Wait), "WAIT does not exist in the game (D-044)"); yield return null; Assert.AreEqual(5, S.State.T);
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.West))); yield return Settle(); // (2,2): the node it used to watch
-            Assert.AreEqual(6, S.State.T); Assert.IsFalse(R.Guards[0].gameObject.activeSelf); Assert.AreEqual(gone, R.Guards[0].transform.localPosition); Assert.AreEqual(goneRot, R.Guards[0].Facing);
+            Assert.AreEqual(6, S.State.T); Assert.AreEqual(R.library.knockoutStyle == SS2DKnockoutStyle.Launch, R.Guards[0].gameObject.activeSelf, "still lying beside the board (Launch) / still hidden (Topple)"); Assert.AreEqual(gone, R.Guards[0].transform.localPosition); Assert.AreEqual(goneRot, R.Guards[0].Facing);
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle(); // back onto the node: still gone
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.West))); yield return Settle();
             Assert.IsTrue(S.TrySubmit(StageAction.Move(Direction.East))); yield return Settle();
-            Assert.AreEqual(9, S.State.T); Assert.IsFalse(R.Guards[0].gameObject.activeSelf); Assert.AreEqual(0, DrawnGuardCells().Count);
+            Assert.AreEqual(9, S.State.T); Assert.AreEqual(R.library.knockoutStyle == SS2DKnockoutStyle.Launch, R.Guards[0].gameObject.activeSelf, "the fallen piece never comes back into play"); Assert.AreEqual(0, DrawnGuardCells().Count);
             Assert.Less(Vector3.Distance(R.Player.transform.localPosition, R.Pos(new GridCoord(3, 2))), 1e-3f);
             Assert.AreEqual("9", Hud.actionsValue.text);
             Assert.IsFalse(S.TrySubmit(StageAction.Knockout(0)), "already down"); Assert.AreEqual(9, S.State.T);
