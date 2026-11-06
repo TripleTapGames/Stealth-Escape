@@ -66,7 +66,7 @@ namespace ShadowSteps.Editor
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel22;
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24; // Firebase 13.x / AppLovin 13.x / Facebook 17 need 23+; the project ships 24
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
             PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.Android, ManagedStrippingLevel.Medium);
             PlayerSettings.Android.forceInternetPermission = false;

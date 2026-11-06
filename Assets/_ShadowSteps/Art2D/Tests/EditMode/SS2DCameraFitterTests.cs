@@ -8,9 +8,9 @@ using UnityEngine;
 namespace ShadowSteps.Art2D.Tests
 {
     /// <summary>
-    /// Every level is framed at the zoom of the pack's largest grid: a node, a character and the painted ground read
-    /// the same size on a 3×3 tutorial board as on the 9×11 finale, and the largest level itself is framed exactly as
-    /// a plain fit would frame it. Uses the shipped levels_v4.json and the generated sprite library.
+    /// D-057 zoom policy: every level is framed at least at the library's reference grid (5×7 by default), so boards up to that
+    /// size share one zoom and read big, while a bigger board zooms out exactly as a plain fit would so it stays fully visible.
+    /// Uses the shipped levels_v4.json and the generated sprite library.
     /// </summary>
     public class SS2DCameraFitterTests
     {
@@ -40,36 +40,49 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
-        public void EveryLevel_IsFramedAtTheLargestGridZoom_AndTheLargestLevelIsUnchanged()
+        public void EveryLevel_IsFramedAtTheReferenceZoom_OrFitsItselfWhenBigger()
         {
-            var pack = Pack(); var reference = SS2DCameraFitter.LargestPortraitGrid(pack.Stages);
-            Stage largest = null; foreach (var st in pack.Stages) if (Mathf.Min(st.Width, st.Height) == reference.x && Mathf.Max(st.Width, st.Height) == reference.y) largest = st;
-            Assert.IsNotNull(largest, "a level with the largest grid in both axes exists");
-            float expected; float plainLargest;
-            using (var rig = new Rig(largest)) { plainLargest = rig.Fit(null); expected = rig.Fit(pack); }
-            Assert.AreEqual(plainLargest, expected, 1e-4f, "the largest level is framed exactly as a plain fit frames it");
+            var pack = Pack(); var lib = Library(); var reference = SS2DCameraFitter.ReferenceFor(lib, pack.Stages);
+            Assert.AreEqual(new Vector2Int(5, 7), reference, "D-057: the shipped reference is the common 5×7 board");
+            Stage typical = null; foreach (var st in pack.Stages) if (Mathf.Min(st.Width, st.Height) == reference.x && Mathf.Max(st.Width, st.Height) == reference.y) { typical = st; break; }
+            Assert.IsNotNull(typical, "a level with the reference grid exists");
+            float referenceZoom; float plainTypical;
+            using (var rig = new Rig(typical)) { plainTypical = rig.Fit(null); referenceZoom = rig.Fit(pack); }
+            Assert.AreEqual(plainTypical, referenceZoom, 1e-4f, "a reference-sized level is framed exactly as a plain fit frames it");
+            int shared = 0, bigger = 0;
             foreach (var st in pack.Stages)
                 using (var rig = new Rig(st))
                 {
                     float plain = rig.Fit(null), framed = rig.Fit(pack);
-                    Assert.AreEqual(expected, framed, 1e-4f, st.Code + ": same zoom as the largest grid");
-                    Assert.LessOrEqual(plain, framed + 1e-4f, st.Code + ": the reference only ever zooms out");
+                    Assert.AreEqual(Mathf.Max(plain, referenceZoom), framed, 1e-4f, st.Code + ": the reference zoom, unless the board needs more room");
+                    Assert.LessOrEqual(plain, framed + 1e-4f, st.Code + ": the whole board always stays in view");
                     Assert.AreEqual(1f, rig.Renderer.transform.lossyScale.x, 1e-5f, "node spacing in world units is the same on every board");
+                    if (Mathf.Abs(framed - referenceZoom) < 1e-4f) shared++; else bigger++;
                 }
+            Assert.Greater(shared, bigger, "most of the campaign shares the reference zoom");
+            Assert.Greater(bigger, 0, "the big late levels zoom out to fit");
+            // The D-039 behaviour is still one switch away: frame everything at the largest grid.
+            var largestLib = Object.Instantiate(lib); largestLib.zoomReferenceFromPackLargest = true;
+            try { Assert.AreEqual(SS2DCameraFitter.LargestPortraitGrid(pack.Stages), SS2DCameraFitter.ReferenceFor(largestLib, pack.Stages)); }
+            finally { Object.DestroyImmediate(largestLib); }
         }
 
         [Test]
-        public void SmallLevel_ShowsSpritesAtTheSameScreenSizeAsTheLargest()
+        public void SmallLevel_ShowsSpritesAtTheSameScreenSizeAsATypicalLevel()
         {
             var pack = Pack(); var small = pack.FindByCode("FTUE-2"); Assert.IsNotNull(small); Assert.AreEqual(3, small.Width); Assert.AreEqual(3, small.Height);
-            var reference = SS2DCameraFitter.LargestPortraitGrid(pack.Stages);
+            var reference = SS2DCameraFitter.ReferenceFor(Library(), pack.Stages);
             float zoomSmall, zoomSmallPlain;
             using (var rig = new Rig(small)) { zoomSmallPlain = rig.Fit(null); zoomSmall = rig.Fit(pack); }
-            Assert.Greater(zoomSmall, zoomSmallPlain * 2f, "a plain fit of the 3×3 board blows sprites up to more than twice the size");
-            // One node spacing in viewport height: identical for the small and the largest board once the reference applies.
-            Stage largest = null; foreach (var st in pack.Stages) if (Mathf.Min(st.Width, st.Height) == reference.x && Mathf.Max(st.Width, st.Height) == reference.y) largest = st;
-            float zoomLargest; using (var rig = new Rig(largest)) zoomLargest = rig.Fit(pack);
-            Assert.AreEqual(1f / (2f * zoomLargest), 1f / (2f * zoomSmall), 1e-5f, "a node covers the same fraction of the screen on both boards");
+            Assert.Greater(zoomSmall, zoomSmallPlain * 1.4f, "a plain fit of the 3×3 board would still blow sprites up well past the shared size");
+            // One node spacing in viewport height: identical for the small board and a reference-sized board.
+            Stage typical = null; foreach (var st in pack.Stages) if (Mathf.Min(st.Width, st.Height) == reference.x && Mathf.Max(st.Width, st.Height) == reference.y) { typical = st; break; }
+            float zoomTypical; using (var rig = new Rig(typical)) zoomTypical = rig.Fit(pack);
+            Assert.AreEqual(1f / (2f * zoomTypical), 1f / (2f * zoomSmall), 1e-5f, "a node covers the same fraction of the screen on both boards");
+            // The 9×11 finale is bigger than the reference: it zooms out to its own plain fit so nothing is cut off.
+            var finale = pack.FindByCode("LEVEL-30"); float plainFinale, framedFinale;
+            using (var rig = new Rig(finale)) { plainFinale = rig.Fit(null); framedFinale = rig.Fit(pack); }
+            Assert.AreEqual(plainFinale, framedFinale, 1e-4f); Assert.Greater(framedFinale, zoomTypical, "further out than the shared zoom");
         }
 
         [Test]

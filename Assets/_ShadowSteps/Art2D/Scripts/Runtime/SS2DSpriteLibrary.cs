@@ -146,6 +146,10 @@ namespace ShadowSteps.Art2D
         public bool HasUiSkin => uiPill != null && uiPillSlim != null && uiRoundButton != null;
 
         [Header("Portrait bands (HUD safe areas the board is fitted between)")]
+        [Tooltip("D-057 zoom reference (portrait: short side × long side, in nodes). Every level is framed at least this large, so boards up to this grid share one zoom and read big; a bigger board zooms out just enough to stay fully visible. 0 × 0 = fit each board on its own.")]
+        public Vector2Int zoomReferenceGrid = new Vector2Int(5, 7);
+        [Tooltip("Ignore zoomReferenceGrid and frame every level at the pack's largest grid instead (the D-039 behaviour: small boards look small).")]
+        public bool zoomReferenceFromPackLargest = false;
         [Range(0f, 0.4f)] public float hudTop = 0.10f;
         [Range(0f, 0.4f)] public float hudBottom = 0.145f;
         public float cameraSize = 0.80f;

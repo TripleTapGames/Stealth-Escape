@@ -48,13 +48,21 @@ namespace ShadowSteps.Art2D
             return new Vector2Int(w, h);
         }
 
-        /// <summary>Frames every level at the zoom of the pack's largest grid; refits on the next frame.</summary>
+        /// <summary>
+        /// Picks the zoom reference for the pack: the library's <see cref="SS2DSpriteLibrary.zoomReferenceGrid"/> (D-057: boards up to that grid share one
+        /// zoom and read big; bigger boards zoom out to stay fully visible), or the pack's largest grid when the library asks for it (D-039).
+        /// Refits on the next frame.
+        /// </summary>
         public void SetReferenceFromPack(IEnumerable<Stage> stages)
         {
-            var g = LargestPortraitGrid(stages);
-            if (g.x > 0 && g.y > 0) referenceGridNodes = g;
+            var lib = board != null ? board.library : null;
+            var g = lib != null && !lib.zoomReferenceFromPackLargest ? lib.zoomReferenceGrid : LargestPortraitGrid(stages);
+            referenceGridNodes = g.x > 0 && g.y > 0 ? g : Vector2Int.zero;
             _lastW = _lastH = _lastHash = 0;
         }
+
+        /// <summary>The reference the pack would use with this library (for tests and tools).</summary>
+        public static Vector2Int ReferenceFor(SS2DSpriteLibrary lib, IEnumerable<Stage> stages) => lib != null && !lib.zoomReferenceFromPackLargest ? lib.zoomReferenceGrid : LargestPortraitGrid(stages);
 
         /// <summary>Width and height, in world units, of the smallest view the fitter frames (reference grid + board margin + fitter margin); zero when no reference is set.</summary>
         public Vector2 ReferenceExtent(float spacing)
