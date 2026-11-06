@@ -854,6 +854,8 @@ MonoBehaviour:
   border: {r: 0.98, g: 0.62, b: 0.1, a: 0.95}
   glow: {r: 1, g: 0.78, b: 0.3, a: 0.16}
   rootName: CameraVision
+  meshLayer: Overlays
+  meshOrder: -1
 --- !u!1 &155388304
 GameObject:
   m_ObjectHideFlags: 0
@@ -1036,12 +1038,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 46
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 46
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -1580,6 +1582,7 @@ MonoBehaviour:
   bottomReservedFraction: 0.165
   marginNodes: 0.25
   respectSafeArea: 1
+  referenceGridNodes: {x: 9, y: 11}
 --- !u!114 &279385926
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1950,7 +1953,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 36
     m_FontStyle: 1
     m_BestFit: 0
@@ -2037,7 +2040,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 28
     m_FontStyle: 1
     m_BestFit: 0
@@ -2608,7 +2611,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 26
     m_FontStyle: 1
     m_BestFit: 0
@@ -2675,6 +2678,8 @@ MonoBehaviour:
   border: {r: 0.9, g: 0.18, b: 0.18, a: 0.95}
   glow: {r: 0.96, g: 0.32, b: 0.32, a: 0.14}
   rootName: GuardVision
+  meshLayer: Overlays
+  meshOrder: -1
 --- !u!1 &608209425
 GameObject:
   m_ObjectHideFlags: 0
@@ -2933,7 +2938,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
@@ -3810,7 +3815,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 30
     m_FontStyle: 1
     m_BestFit: 0
@@ -4092,7 +4097,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 26
     m_FontStyle: 1
     m_BestFit: 0
@@ -5788,7 +5793,6 @@ MonoBehaviour:
   lockdownPanel: {fileID: 1198799223}
   smokeButton: {fileID: 1050192661}
   empButton: {fileID: 1412449571}
-  waitButton: {fileID: 251840634}
   pauseButton: {fileID: 244000292}
   retryButton: {fileID: 307346493}
   alertOverlay: {fileID: 1053160203}
@@ -5800,6 +5804,11 @@ MonoBehaviour:
   textColor: {r: 0.97, g: 0.98, b: 1, a: 1}
   dimText: {r: 0.7, g: 0.78, b: 0.86, a: 1}
   deferCaptureFeedback: 0
+  levelCaption: {fileID: 0}
+  actionsParLabel: {fileID: 0}
+  hintLabel: {fileID: 0}
+  smokeLabel: {fileID: 0}
+  empLabel: {fileID: 0}
 --- !u!4 &1178777126
 Transform:
   m_ObjectHideFlags: 0
@@ -6291,7 +6300,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 26
     m_FontStyle: 1
     m_BestFit: 0
@@ -6884,7 +6893,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 22
     m_FontStyle: 1
     m_BestFit: 0
@@ -7055,7 +7064,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 30
     m_FontStyle: 1
     m_BestFit: 0
@@ -7416,7 +7425,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 36
     m_FontStyle: 1
     m_BestFit: 0
@@ -8241,7 +8250,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 16
     m_FontStyle: 1
     m_BestFit: 0
@@ -8480,7 +8489,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 22
     m_FontStyle: 1
     m_BestFit: 0
@@ -8636,6 +8645,7 @@ MonoBehaviour:
   hud: {fileID: 1178777125}
   showInitialHazards: 1
   previewActions: []
+  previewMode: 0
   rebuildOnLoad: 1
 --- !u!4 &1805438539
 Transform:
@@ -9854,7 +9864,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: ad193c872f1ff704182021983825413f, type: 3}
     m_FontSize: 26
     m_FontStyle: 1
     m_BestFit: 0

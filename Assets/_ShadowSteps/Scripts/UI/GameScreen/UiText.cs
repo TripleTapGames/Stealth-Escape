@@ -10,13 +10,14 @@ namespace ShadowSteps.UI
         public Text Legacy;
         public RectTransform Rect => (RectTransform)transform;
 
-        public static bool TmpAvailable => TMPro.TMP_Settings.instance != null && TMPro.TMP_Settings.defaultFontAsset != null;
+        public static bool TmpAvailable => GameFontSettings.TmpFont != null;
 
         public void Initialize(string text, float size, TextAnchor align, bool bold, Color color)
         {
             if (TmpAvailable)
             {
                 Tmp = gameObject.AddComponent<TMPro.TextMeshProUGUI>();
+                Tmp.font = GameFontSettings.TmpFont;
                 Tmp.fontSize = size;
                 Tmp.fontStyle = bold ? TMPro.FontStyles.Bold : TMPro.FontStyles.Normal;
                 Tmp.alignment = ToTmpAlignment(align);
@@ -27,7 +28,7 @@ namespace ShadowSteps.UI
             else
             {
                 Legacy = gameObject.AddComponent<Text>();
-                Legacy.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                Legacy.font = GameFontSettings.LegacyFont;
                 Legacy.fontSize = Mathf.RoundToInt(size);
                 Legacy.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
                 Legacy.alignment = align;

@@ -204,9 +204,7 @@ namespace ShadowSteps.Art2D
 
         private static Font DefaultFont()
         {
-            var f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (f == null) f = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            return f;
+            return ShadowSteps.UI.GameFontSettings.LegacyFont;
         }
 
         public void Build()
