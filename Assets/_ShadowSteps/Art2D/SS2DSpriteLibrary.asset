@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df7a242ed8453406abc3c53e8c803152, type: 3}
   m_Name: SS2DSpriteLibrary
   m_EditorClassIdentifier: 
-  backgroundSprite: {fileID: 21300000, guid: 96a6676608fed403eb6101643c5bff6a, type: 3}
+  backgroundSprite: {fileID: 21300000, guid: 340a97fc4eb31644eb09c74694cb3f4d, type: 3}
   backgroundTint: {r: 1, g: 1, b: 1, a: 1}
   backgroundFit: 1
   backgroundBoardRect:
@@ -165,6 +165,8 @@ MonoBehaviour:
   uiFootIcon: {fileID: 21300000, guid: 58f8f6c4bee2f4e16812048b43eb05aa, type: 3}
   uiText: {r: 0.2, g: 0.29, b: 0.42, a: 1}
   uiLabelOnBoard: {r: 1, g: 1, b: 1, a: 1}
+  zoomReferenceGrid: {x: 5, y: 7}
+  zoomReferenceFromPackLargest: 0
   hudTop: 0.115
   hudBottom: 0.165
   cameraSize: 0.62
