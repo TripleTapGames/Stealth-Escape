@@ -4,7 +4,8 @@
     "references": [
         "ShadowSteps.Core",
         "ShadowSteps.Data",
-        "ShadowSteps.Runtime"
+        "ShadowSteps.Runtime",
+        "ShadowSteps.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
