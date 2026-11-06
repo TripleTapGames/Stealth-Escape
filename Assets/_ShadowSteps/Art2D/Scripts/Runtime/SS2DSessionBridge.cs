@@ -186,6 +186,7 @@ namespace ShadowSteps.Art2D
         {
             CancelPresentation();
             Renderer.Build(stage);
+            _composer.BoardCamera.backgroundColor = Renderer.BackgroundClearColor; // per-theme surround (D-058)
             if (_fitter != null) _fitter.Fit(_composer.BoardCamera.aspect);
             Renderer.FitBackground(_composer.BoardCamera);
             if (_composer.Board != null) foreach (var r in _composer.Board.GetComponentsInChildren<Renderer>(true)) r.enabled = false;

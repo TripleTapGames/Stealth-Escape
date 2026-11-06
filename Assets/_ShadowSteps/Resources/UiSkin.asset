@@ -30,6 +30,12 @@ MonoBehaviour:
   starFull: {fileID: 21300000, guid: 0936b6d84b5cb4049a7d5954340afd72, type: 3}
   starBlank: {fileID: 21300000, guid: 1a88462863f174e5783de9e4bbe0cdbe, type: 3}
   cop: {fileID: 21300000, guid: e91a0291d059b47b1bedb33a4f5487e4, type: 3}
+  resultsCard: {fileID: 21300000, guid: 0c8daa007bab34e1ba59361a40c225e2, type: 3}
+  resultsStatBox: {fileID: 21300000, guid: a26939b97f7744283b491ffd7160760f, type: 3}
+  resultsButtonGreen: {fileID: 21300000, guid: 4802e99ca7b5a474c96e4c0d27e0dc31, type: 3}
+  resultsButtonWhite: {fileID: 21300000, guid: 0b8fce935e695428287df7a0c5c724de, type: 3}
+  resultsStarFull: {fileID: 21300000, guid: e0c86b5f986c049439ea23a31b3710f4, type: 3}
+  resultsStarBlank: {fileID: 21300000, guid: f25874477afb44088973cf9268325e7c, type: 3}
   navy: {r: 0.2, g: 0.29, b: 0.42, a: 1}
   navyDim: {r: 0.2, g: 0.29, b: 0.42, a: 0.72}
   muted: {r: 0.46, g: 0.5, b: 0.57, a: 1}

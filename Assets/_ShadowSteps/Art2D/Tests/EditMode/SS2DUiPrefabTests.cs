@@ -35,13 +35,15 @@ namespace ShadowSteps.Art2D.Tests
                 var stage = new StageBuilder { Id = 1, Code = "T", Par = 6, ThreeStarActions = 7, TwoStarActions = 9 }.FromRows(new[] { "....." }).Build();
                 var r = set.Create<ResultsScreen>(root.transform, set.ResultsScreen);
                 r.Present(stage, StageMode.Knockout, 6, 6, true, false, false, true);
-                Assert.AreEqual("★★★", r.StarsText.Text); Assert.IsTrue(r.NextButton.Interactable);
+                Assert.AreEqual(3, r.StarCount); Assert.IsTrue(r.NextButton.Interactable);
                 if (UiSkin.Available)
                 {
-                    var stars = r.transform.Find("SafeArea/Card/StarsRow"); Assert.IsNotNull(stars, "skinned prefab");
-                    Assert.AreEqual(UiSkin.Current.starFull, stars.GetChild(2).GetComponent<Image>().sprite, "serialized star images still driven by Present");
-                    r.Present(stage, StageMode.Knockout, 10, 6, false, false, false, true); Assert.AreEqual(UiSkin.Current.starBlank, stars.GetChild(2).GetComponent<Image>().sprite);
+                    var skin = UiSkin.Current; var full = skin.resultsStarFull != null ? skin.resultsStarFull : skin.starFull; var blank = skin.resultsStarBlank != null ? skin.resultsStarBlank : skin.starBlank;
+                    var stars = r.transform.Find("SafeArea/CardBounds/Card/StarsRow"); Assert.IsNotNull(stars, "skinned prefab (user layout: card inside CardBounds)");
+                    Assert.AreEqual(full, stars.GetChild(2).GetComponent<Image>().sprite, "serialized star images still driven by Present");
+                    r.Present(stage, StageMode.Knockout, 10, 6, false, false, false, true); Assert.AreEqual(1, r.StarCount); Assert.AreEqual(blank, stars.GetChild(2).GetComponent<Image>().sprite);
                 }
+                else Assert.AreEqual("★★★", r.StarsText.Text);
                 AppServices.ResetForTests(); AppServices.InstallSaveForTests(new SaveData());
                 var s = set.Create<SettingsScreen>(root.transform, set.SettingsScreen);
                 typeof(SettingsScreen).GetMethod("Refresh", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(s, null);

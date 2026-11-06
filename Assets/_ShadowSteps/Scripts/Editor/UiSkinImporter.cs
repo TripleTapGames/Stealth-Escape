@@ -55,6 +55,13 @@ namespace ShadowSteps.UI.Editor
             skin.starFull = Trim("LevelSelect/Star.png", "screen_star_full", 0f, 0f);
             skin.starBlank = Trim("LevelSelect/blank star.png", "screen_star_blank", 0f, 0f);
             skin.cop = Trim("LevelFailed/Cop.png", "screen_cop", 0f, 0f);
+            // Level-complete pieces (user mock Mock_ResultScreen, 2026-11-06): the results screen prefers these and falls back to the shared pieces.
+            skin.resultsCard = Trim("LevelComplete/Popup box.png", "screen_results_card", 0f, 0.12f);
+            skin.resultsStatBox = Trim("LevelComplete/3 actions box.png", "screen_results_strip", 0.5f, 0f);
+            skin.resultsButtonGreen = Trim("LevelComplete/green button.png", "screen_results_button_green", 0.5f, 0f);
+            skin.resultsButtonWhite = Trim("LevelComplete/white button.png", "screen_results_button_white", 0.5f, 0f);
+            skin.resultsStarFull = Trim("LevelComplete/Star.png", "screen_results_star_full", 0f, 0f);
+            skin.resultsStarBlank = Trim("LevelComplete/blank star.png", "screen_results_star_blank", 0f, 0f);
             EditorUtility.SetDirty(skin); AssetDatabase.SaveAssets();
             UiSkin.Current = null;
             return skin;

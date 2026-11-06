@@ -96,7 +96,7 @@ namespace ShadowSteps.Art2D
             }
             boardRenderer.SetReachable(reachNodes, reachEdges);
             var cam = fitter != null ? fitter.GetComponent<Camera>() : Camera.main;
-            if (cam != null) { cam.orthographic = true; cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = library.background; }
+            if (cam != null) { cam.orthographic = true; cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = boardRenderer.BackgroundClearColor; }
             if (fitter != null) { fitter.board = boardRenderer; fitter.SetReferenceFromPack(pack.Stages); fitter.Fit(cam != null ? cam.aspect : 9f / 16f); }
             boardRenderer.FitBackground(cam);
             if (hud != null) hud.Show(stage, state, cam);

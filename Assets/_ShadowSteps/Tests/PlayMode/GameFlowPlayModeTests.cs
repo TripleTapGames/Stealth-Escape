@@ -53,7 +53,8 @@ namespace ShadowSteps.Tests.PlayMode
             var results = _flow.Router.Get<ResultsScreen>();
             Assert.IsTrue(results.IsVisible);
             Assert.IsTrue(_composer.Session.InputLocked);
-            Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), results.StarsText.Text);
+            Assert.AreEqual(3, results.StarCount); // the skinned card draws star images (no text mirror); the placeholder card still mirrors them in StarsText
+            if (results.StarsText != null) Assert.AreEqual("★★★", results.StarsText.Text.Substring(0, 3), results.StarsText.Text);
             Assert.IsTrue(AppServices.Save.IsCompleted(1));
             Assert.AreEqual(2, AppServices.Save.GetResult(1, StageModeUtil.Default).BestTurns); // runs are recorded in the shipped mode's table (D-043)
             Assert.AreEqual(3, AppServices.Save.GetResult(1, StageModeUtil.Default).BestStars);

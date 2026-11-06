@@ -19,6 +19,8 @@ namespace ShadowSteps.UI
         [Header("Buttons")] public Sprite buttonGreen; public Sprite buttonWhite; public Sprite backButton; public Sprite backArrow; public Sprite chevron; public Sprite toggleOn; public Sprite toggleOff;
         [Header("Level select")] public Sprite headerPill; public Sprite smallPill; public Sprite levelBoxOpen; public Sprite levelBoxLocked; public Sprite lockIcon;
         [Header("Icons and art")] public Sprite starFull; public Sprite starBlank; public Sprite cop;
+        [Header("Level complete overrides (optional; the results screen falls back to the shared pieces above)")]
+        public Sprite resultsCard; public Sprite resultsStatBox; public Sprite resultsButtonGreen; public Sprite resultsButtonWhite; public Sprite resultsStarFull; public Sprite resultsStarBlank;
         [Header("Colours")]
         public Color navy = new Color(0.20f, 0.29f, 0.42f);
         public Color navyDim = new Color(0.20f, 0.29f, 0.42f, 0.72f);

@@ -13,6 +13,25 @@ namespace ShadowSteps.Art2D
 
     public enum SS2DBackgroundFit { CoverView, FrameBoard }
 
+    /// <summary>
+    /// One painted backdrop (D-058): the image, the part of it that is the playable ground, and the inclusive level-id
+    /// range it paints. The renderer picks the first theme whose range holds the level's id and falls back to the
+    /// library's single background otherwise, so a pack can move from one setting to the next without any level data.
+    /// </summary>
+    [System.Serializable]
+    public sealed class SS2DBackgroundTheme
+    {
+        public string name = "Courtyard";
+        public Sprite sprite;
+        [Tooltip("Part of the image that is the playable ground (floor between the inner wall faces), normalized 0..1 from the bottom-left.")]
+        public Rect boardRect = new Rect(0f, 0f, 1f, 1f);
+        [Tooltip("Inclusive level-id range (ids from the level data) this theme paints. 0..0 = never chosen automatically.")]
+        public int firstLevelId, lastLevelId;
+        [Tooltip("Camera clear colour, matching the image's surround should any edge show.")]
+        public Color clearColor = Color.black;
+        public bool Covers(int levelId) => sprite != null && lastLevelId >= firstLevelId && levelId >= firstLevelId && levelId <= lastLevelId && !(firstLevelId == 0 && lastLevelId == 0);
+    }
+
     /// <summary>Four facings (N, E, S, W in <see cref="Direction"/> order) of one character.</summary>
     [System.Serializable]
     public sealed class SS2DCharacterSet
@@ -62,6 +81,10 @@ namespace ShadowSteps.Art2D
         public float backgroundBoardPadding = 1f;
         [Tooltip("When the level's outer ring is all walls, frame only the interior cells into backgroundBoardRect so the painted boundary wall coincides with the logical one (rays clipped by the hidden ring stop at the painted wall).")]
         public bool backgroundFrameInsideBoundaryWalls = true;
+        [Tooltip("Per-level-range backdrops (D-058). The first theme whose id range holds the level's id is drawn with its own board rect; levels outside every range use backgroundSprite / backgroundBoardRect above.")]
+        public SS2DBackgroundTheme[] backgroundThemes = new SS2DBackgroundTheme[0];
+        /// <summary>The theme painting the level with this id, or null for the single background.</summary>
+        public SS2DBackgroundTheme ThemeFor(int levelId) { if (backgroundThemes != null) foreach (var t in backgroundThemes) if (t != null && t.Covers(levelId)) return t; return null; }
         [Tooltip("Draw the rounded board panel and its shadow under the tiles. Off when the background itself is the board surface.")]
         public bool showBoardPanel = true;
         [Tooltip("Draw the per-cell floor tiles. Off when the background paints the ground (nodes, paths, walls, cover and overlays still draw).")]

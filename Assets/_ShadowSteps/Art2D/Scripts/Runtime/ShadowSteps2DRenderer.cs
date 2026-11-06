@@ -74,7 +74,7 @@ namespace ShadowSteps.Art2D
             float viewH = cam.orthographicSize * 2f, viewW = viewH * Mathf.Max(0.3f, cam.aspect);
             var size = _background.sprite.bounds.size; size.x = Mathf.Max(0.01f, size.x); size.y = Mathf.Max(0.01f, size.y);
             var camP = cam.transform.position;
-            var r = library.backgroundBoardRect;
+            var r = BackgroundBoardRect;
             if (library.backgroundFit == SS2DBackgroundFit.FrameBoard && IsBuilt && r.width > 0.01f && r.height > 0.01f)
             {
                 float s = Layout.NodeSpacing, pad = Mathf.Max(0.1f, library.backgroundBoardPadding);
@@ -102,6 +102,15 @@ namespace ShadowSteps.Art2D
             _background.transform.localScale = Vector3.one * cover;
             _background.transform.position = new Vector3(camP.x, camP.y, 5f);
         }
+
+        /// <summary>Backdrop theme chosen for the built level by its id (D-058); null = the library's single background.</summary>
+        public SS2DBackgroundTheme ActiveTheme { get; private set; }
+        /// <summary>Playable-ground rect of the backdrop in use (the theme's, else the library's).</summary>
+        public Rect BackgroundBoardRect => ActiveTheme != null ? ActiveTheme.boardRect : library.backgroundBoardRect;
+        /// <summary>Camera clear colour for the backdrop in use.</summary>
+        public Color BackgroundClearColor => ActiveTheme != null ? ActiveTheme.clearColor : library.background;
+        /// <summary>The background sprite renderer (null until built or when no background is set).</summary>
+        public SpriteRenderer BackgroundRenderer => _background;
 
         public void SetExitDoorOpen(bool open) { if (_door != null) _door.sprite = open && library.exitDoorOpen != null ? library.exitDoorOpen : library.exitDoorClosed; }
         /// <summary>True when the exit door sprite is drawn (library.showExitDoor).</summary>
@@ -314,7 +323,9 @@ namespace ShadowSteps.Art2D
             _board = Root("Board"); _floor = Root("Floor"); _paths = Root("Paths"); _nodes = Root("Nodes"); _overlays = Root("Overlays"); _props = Root("Props"); _actors = Root("Actors"); _markers = Root("Markers"); _fx = Root("FX");
             _placeholderDisc = lib.node;
 
-            if (lib.backgroundSprite != null) _background = Make(_board, "Background", lib.backgroundSprite, Vector3.zero, 1f, lib.backgroundTint, SS2DLayers.Background, 0);
+            ActiveTheme = lib.ThemeFor(stage.Id);
+            var backdrop = ActiveTheme != null ? ActiveTheme.sprite : lib.backgroundSprite;
+            if (backdrop != null) _background = Make(_board, "Background", backdrop, Vector3.zero, 1f, lib.backgroundTint, SS2DLayers.Background, 0);
             // Board panel (9-sliced) with its soft shadow, sized to the grid plus the margin.
             var panelSize = new Vector2(ViewLayout.Width * s + 2f * lib.boardMargin * s, ViewLayout.Height * s + 2f * lib.boardMargin * s);
             ViewBounds = new Rect(-panelSize * 0.5f, panelSize);
@@ -523,7 +534,7 @@ namespace ShadowSteps.Art2D
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
-            Player = null; _key = null; _exit = null; _previewMarker = null; _background = null; _door = null;
+            Player = null; _key = null; _exit = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null;
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Reset();
             Stage = null;
         }

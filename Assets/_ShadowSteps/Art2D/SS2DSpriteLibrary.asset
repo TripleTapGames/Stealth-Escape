@@ -17,12 +17,13 @@ MonoBehaviour:
   backgroundFit: 1
   backgroundBoardRect:
     serializedVersion: 2
-    x: 0.277
-    y: 0.344
-    width: 0.432
-    height: 0.368
+    x: 0.24
+    y: 0.157
+    width: 0.499
+    height: 0.577
   backgroundBoardPadding: 1
   backgroundFrameInsideBoundaryWalls: 1
+  backgroundThemes: []
   showBoardPanel: 0
   showFloorTiles: 0
   showPerimeterWalls: 0

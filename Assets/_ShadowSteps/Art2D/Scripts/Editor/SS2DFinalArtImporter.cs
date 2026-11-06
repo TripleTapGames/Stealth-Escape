@@ -17,7 +17,9 @@ namespace ShadowSteps.Art2D.Editor
     public static class SS2DFinalArtImporter
     {
         public const string SpritesRoot = "Assets/_ShadowSteps/Art2D/Sprites/";
-        public const string BackgroundPath = SpritesRoot + "Backgrounds/Courtyard-Natural-Sides-1400x2000.png";
+        public const string BackgroundDir = SpritesRoot + "Backgrounds/";
+        /// <summary>The one backdrop of the campaign (user art v2, 2026-11-05; user's call 2026-11-06: "use only the courtyard v2"). The museum and desert paintings in the same folder stay unused.</summary>
+        public const string BackgroundPath = BackgroundDir + "Courtyard-Natural-Sides-1400x2000-v2.png";
         /// <summary>File stems in <see cref="Direction"/> order: North, East, South, West.</summary>
         static readonly string[] PlayerFiles = { "Characters/Player/Suit-Faceless-Up.png", "Characters/Player/Suit-Faceless-Right.png", "Characters/Player/Suit-Faceless-Down.png", "Characters/Player/Suit-Faceless-Left.png" };
         static readonly string[] GuardFiles = { "Characters/Guards/Blue-Guard-Faceless-Up.png", "Characters/Guards/Blue-Guard-Faceless-Right.png", "Characters/Guards/Blue-Guard-Faceless-Down.png", "Characters/Guards/Blue-Guard-Faceless-Left.png" };
@@ -27,9 +29,11 @@ namespace ShadowSteps.Art2D.Editor
         /// <summary>Centre of the painted base disc, measured from the alpha of all eight frames (disc band rows 1110–1505 of 2048); the node sits under the disc centre.</summary>
         static readonly Vector2 CharacterPivot = new Vector2(0.5f, 0.363f);
         const int BackgroundPpu = 256;
-        /// <summary>Courtyard floor inside the walls, normalized from the bottom-left (measured: x 388–992 of 1400, y 576–1312 of 2000 from the top).</summary>
-        static readonly Rect CourtyardFloor = new Rect(0.277f, 0.344f, 0.432f, 0.368f);
+        /// <summary>Courtyard v2 floor between the inner wall faces, normalized from the bottom-left (measured from the pixels: x 334–1036 of 1400, y 532–1686 of 2000 from the top; the v1 floor was x 388–992, y 576–1312).</summary>
+        static readonly Rect CourtyardFloor = new Rect(0.240f, 0.157f, 0.499f, 0.577f);
         static readonly Color Water = new Color32(0x01, 0x6E, 0xC0, 0xFF);
+        /// <summary>Backdrop themes (D-058) with their level-id ranges. Empty by the user's call (2026-11-06): the courtyard v2 above paints every level. Add entries here (name, PNG path, measured floor rect, first/last id, clear colour) to bring a second setting back; the museum and desert floors were measured as (0.321, 0.280, 0.357, 0.4475) and (0.279, 0.245, 0.443, 0.455).</summary>
+        static readonly (string name, string path, Rect floor, int first, int last, Color clear)[] Themes = { };
         public const string ObstacleDir = SpritesRoot + "Obstacles/";
         public const string BushPath = ObstacleDir + "obstacle bush.png", WallSidePath = ObstacleDir + "obstacle wall side.png", WallFrontPath = ObstacleDir + "obstacle wall front.png";
         /// <summary>Obstacle art is authored at 2048 px with pillar centres / the planter box ≈ 1000 px apart: 1000 px = one node spacing.</summary>
@@ -84,6 +88,7 @@ namespace ShadowSteps.Art2D.Editor
             lib.backgroundFit = SS2DBackgroundFit.FrameBoard;
             lib.backgroundBoardRect = CourtyardFloor;
             lib.backgroundBoardPadding = 1f;
+            lib.backgroundThemes = ImportThemes(lib.backgroundThemes);
             lib.showBoardPanel = false;        // the courtyard is the board surface
             lib.showFloorTiles = false;        // the painted floor is the ground; only nodes, paths, walls, cover and overlays draw on it
             lib.showPerimeterWalls = false;    // the courtyard paints the boundary walls; wall-mounted cameras sit on their own wall stub
@@ -256,6 +261,28 @@ namespace ShadowSteps.Art2D.Editor
         }
 
         static void ConfigureBackground(string path) => Configure(path, BackgroundPpu, new Vector2(0.5f, 0.5f), 2048, SpriteMeshType.FullRect);
+
+        /// <summary>
+        /// Imports every backdrop PNG that exists (same importer settings as the default background) and returns the theme list with the
+        /// measured floor rects. A level-id range the user already edited on a theme with the same sprite is kept; a theme whose PNG is
+        /// missing is dropped.
+        /// </summary>
+        static SS2DBackgroundTheme[] ImportThemes(SS2DBackgroundTheme[] existing)
+        {
+            var list = new System.Collections.Generic.List<SS2DBackgroundTheme>();
+            foreach (var t in Themes)
+            {
+                if (!File.Exists(t.path)) continue;
+                ConfigureBackground(t.path);
+                AssetDatabase.Refresh();
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(t.path);
+                if (sprite == null) { Debug.LogError("[SS2D] no sprite at " + t.path); continue; }
+                var theme = new SS2DBackgroundTheme { name = t.name, sprite = sprite, boardRect = t.floor, firstLevelId = t.first, lastLevelId = t.last, clearColor = t.clear };
+                if (existing != null) foreach (var e in existing) if (e != null && e.sprite == sprite && (e.firstLevelId != 0 || e.lastLevelId != 0)) { theme.firstLevelId = e.firstLevelId; theme.lastLevelId = e.lastLevelId; }
+                list.Add(theme);
+            }
+            return list.ToArray();
+        }
 
         static void Configure(string path, int ppu, Vector2 pivot, int maxSize, SpriteMeshType mesh)
         {

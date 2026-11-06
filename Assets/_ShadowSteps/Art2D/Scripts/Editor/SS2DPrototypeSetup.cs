@@ -409,10 +409,30 @@ namespace ShadowSteps.Art2D.Editor
                 var levels = set.Create<ShadowSteps.UI.LevelSelectScreen>(cgo.transform, null);
                 levels.Rebuild();
                 Shoot(levels, "LevelSelect");
+                var pause = set.Create<ShadowSteps.UI.PauseScreen>(cgo.transform, null);
+                Shoot(pause, "Pause");
                 Object.DestroyImmediate(cgo);
                 EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             }
             catch (System.Exception e) { Debug.LogError("[SS2D] screen skin failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
+        /// <summary>Batch entry (D-058): import the backdrop (courtyard v2) and render the smallest, a typical and the largest board for review.</summary>
+        public static void ImportBackgroundsAndRender()
+        {
+            try
+            {
+                var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath);
+                if (lib == null) throw new System.IO.FileNotFoundException("no sprite library");
+                if (!SS2DFinalArtImporter.Import(lib)) throw new System.IO.FileNotFoundException("final art PNGs missing");
+                EditorUtility.SetDirty(lib); AssetDatabase.SaveAssets();
+                if (lib.backgroundSprite == null) throw new System.IO.FileNotFoundException("no background sprite after import");
+                string only = System.Environment.GetEnvironmentVariable("SS2D_RENDER_CODES");
+                var codes = string.IsNullOrEmpty(only) ? new[] { "FTUE-2", "LEVEL-8", "LEVEL-19", "LEVEL-30" } : only.Split(',');
+                foreach (var code in codes) RenderReview(ScenePath, code.Trim(), null, "Art2D_Background_" + code.Trim() + "_1080x1920", ShadowSteps.V3.StageMode.Knockout);
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] backgrounds failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
         /// <summary>Batch entry: import the HUD skin (Sprites/_UI) into the library and render LEVEL-2 / LEVEL-19 / LEVEL-25 (gadgets) for review.</summary>
