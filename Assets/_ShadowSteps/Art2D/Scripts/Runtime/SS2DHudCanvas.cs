@@ -1,4 +1,5 @@
 using ShadowSteps.Core;
+using ShadowSteps.Data;
 using ShadowSteps.Runtime;
 using ShadowSteps.V3;
 using UnityEngine;
@@ -12,8 +13,41 @@ namespace ShadowSteps.Art2D
     /// when the stage carries charges; no Undo. Implements <see cref="IGameHud"/> so the Game composer can drive it:
     /// it only reads <see cref="GameSessionController"/> state and forwards taps. Also usable as a static preview (<see cref="Show"/>).
     /// </summary>
-    public sealed class SS2DHudCanvas : MonoBehaviour, IGameHud, IGameHudPause
+    public sealed class SS2DHudCanvas : MonoBehaviour, IGameHud, IGameHudPause, IGameHudGadgetHighlight
     {
+        /// <summary>D-075: accent the SMOKE / EMP button while its first-encounter card is open (same tint as targeting); off restores the button.</summary>
+        public void HighlightGadget(GadgetKind kind, bool on)
+        {
+            var rt = kind == GadgetKind.Smoke ? smokeButton : empButton;
+            Highlight(rt, on);
+            if (on) _pulse = rt;
+            else if (_pulse == rt) { _pulse.localScale = Vector3.one; _pulse = null; }
+            if (!on && _session != null) { Highlight(smokeButton, _session.Mode == InputMode.SmokeTarget); Highlight(empButton, _session.Mode == InputMode.EmpTarget); }
+        }
+        /// <summary>
+        /// D-076: the guide line is the pill's fallback while a guide is active, so transient lines (the 3 s mode hint at level start,
+        /// rejections, alarms) show on top of it and hand back to it when they expire instead of leaving the pill empty.
+        /// </summary>
+        public void ShowGuide(string message) { _guide = string.IsNullOrEmpty(message) ? null : message; ShowMessage(message, 0f); }
+        public void ClearGuide() { _guide = null; ShowMessage(string.Empty, 0f); }
+        private string _guide;
+        private string Fallback => _guide ?? _hint;
+        /// <summary>Button the guide is pointing at: pulses gently (not under Reduced Motion) so the step reads on the skinned HUD, whose accent tint matches the resting art.</summary>
+        private RectTransform _pulse;
+        public bool IsPulsing(RectTransform rt) => _pulse == rt;
+        public bool TryGetGadgetScreenRect(GadgetKind kind, out Rect screenRect)
+        {
+            var rt = kind == GadgetKind.Smoke ? smokeButton : empButton;
+            screenRect = default;
+            if (rt == null || canvas == null) return false;
+            var corners = new Vector3[4]; rt.GetWorldCorners(corners);
+            var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var min = new Vector2(float.MaxValue, float.MaxValue); var max = new Vector2(float.MinValue, float.MinValue);
+            foreach (var c in corners) { var p = RectTransformUtility.WorldToScreenPoint(cam, c); min = Vector2.Min(min, p); max = Vector2.Max(max, p); }
+            screenRect = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+            return true;
+        }
+
         public Canvas canvas;
         public Text levelLabel, actionsValue, starsLabel, smokeCount, empCount, messageLabel, lockdownLabel, waitCount;
         public RectTransform lockdownPanel;
@@ -104,13 +138,18 @@ namespace ShadowSteps.Art2D
         public void ShowMessage(string message, float seconds)
         {
             if (messageLabel == null) return;
-            SetMessageText(string.IsNullOrEmpty(message) ? _hint : message); // an empty message falls back to the hint (empty on the skinned HUD, which then hides the pill)
+            SetMessageText(string.IsNullOrEmpty(message) ? Fallback : message); // an empty message falls back to the guide line (D-076) or the hint (empty on the skinned HUD, which then hides the pill)
             _messageUntil = seconds <= 0f ? float.MaxValue : Time.unscaledTime + seconds;
         }
 
         private void Update()
         {
-            if (messageLabel != null && _messageUntil != float.MaxValue && Time.unscaledTime > _messageUntil && messageLabel.text != _hint) { SetMessageText(_hint); _messageUntil = float.MaxValue; }
+            if (messageLabel != null && _messageUntil != float.MaxValue && Time.unscaledTime > _messageUntil && messageLabel.text != Fallback) { SetMessageText(Fallback); _messageUntil = float.MaxValue; }
+            if (_pulse != null)
+            {
+                bool reduced = AppServices.Save != null && AppServices.Save.Settings.ReducedMotion;
+                _pulse.localScale = Vector3.one * (reduced ? 1f : 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 6f));
+            }
             if (alertOverlay != null)
             {
                 float a = _alertUntil > Time.unscaledTime ? Mathf.Clamp01((_alertUntil - Time.unscaledTime) / 0.45f) * 0.35f : 0f;
@@ -165,7 +204,7 @@ namespace ShadowSteps.Art2D
                 levelLabel.text = stage.Title;
                 starsLabel.text = "\u2264 " + stage.ThreeStarFor(mode);
                 if (actionsParLabel != null) actionsParLabel.text = "/ " + stage.ParFor(mode);
-                _hint = string.Empty; if (messageLabel != null && (_messageUntil == float.MaxValue || messageLabel.text.Length == 0)) SetMessageText(_hint);
+                _hint = string.Empty; if (messageLabel != null && (_messageUntil == float.MaxValue || messageLabel.text.Length == 0)) SetMessageText(Fallback);
                 // Mock: the gadget buttons are always present; without charges they are dimmed (and not interactable, see ApplyState).
                 smokeButton.gameObject.SetActive(true); empButton.gameObject.SetActive(true);
                 Dim(smokeButton, stage.SmokeCharges == 0, smokeLabel); Dim(empButton, stage.EmpCharges == 0, empLabel);

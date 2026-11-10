@@ -36,6 +36,8 @@ MonoBehaviour:
   resultsButtonWhite: {fileID: 21300000, guid: 0b8fce935e695428287df7a0c5c724de, type: 3}
   resultsStarFull: {fileID: 21300000, guid: e0c86b5f986c049439ea23a31b3710f4, type: 3}
   resultsStarBlank: {fileID: 21300000, guid: f25874477afb44088973cf9268325e7c, type: 3}
+  tapHand: {fileID: 21300000, guid: 79e481448a54c4dc4aed16bfdffb490f, type: 3}
+  tapHandTip: {x: 0.4, y: 0.98}
   navy: {r: 0.2, g: 0.29, b: 0.42, a: 1}
   navyDim: {r: 0.2, g: 0.29, b: 0.42, a: 0.72}
   muted: {r: 0.46, g: 0.5, b: 0.57, a: 1}

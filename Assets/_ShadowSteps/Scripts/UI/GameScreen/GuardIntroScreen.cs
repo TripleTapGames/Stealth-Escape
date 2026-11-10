@@ -9,8 +9,8 @@ using UnityEngine.UI;
 namespace ShadowSteps.UI
 {
     /// <summary>
-    /// First-encounter guard card (guard FTUE, D-041): title, behaviour body, the selected mode's label and tip, and a
-    /// "Got it" button. Modal: gameplay input is locked while it is open; mode toggle / retry / menus stay reachable
+    /// First-encounter card (guard FTUE, D-041; gadget FTUE, D-075): title, body, a labelled tip (the selected mode's
+    /// label and tip for guards, "How to use" for gadgets) and a "Got it" button. Modal: gameplay input is locked while it is open; mode toggle / retry / menus stay reachable
     /// through their own cards and cancel the queue. Copy and selection logic live in <see cref="GuardOnboarding"/>.
     /// </summary>
     public sealed class GuardIntroScreen : UIScreen
@@ -18,7 +18,10 @@ namespace ShadowSteps.UI
         public UiText TitleText, BodyText, ModeLabelText, ModeTipText;
         public UiButton OkButton;
         public Action OnDismiss;
+        /// <summary>The guard card being shown, or null when the active card is a gadget card.</summary>
         public GuardOnboarding.Card Card { get; private set; }
+        /// <summary>Whatever card is being shown (guard or gadget).</summary>
+        public OnboardingCard Active { get; private set; }
 
         public override void BuildHierarchy()
         {
@@ -44,9 +47,10 @@ namespace ShadowSteps.UI
 
         protected override void Awake() { base.Awake(); Wire(); }
 
-        public void Present(GuardOnboarding.Card card)
+        public void Present(OnboardingCard card)
         {
-            Card = card;
+            Active = card;
+            Card = card as GuardOnboarding.Card;
             TitleText.Text = card.Title.ToUpperInvariant();
             BodyText.Text = card.Body;
             ModeLabelText.Text = card.ModeLabel.ToUpperInvariant();

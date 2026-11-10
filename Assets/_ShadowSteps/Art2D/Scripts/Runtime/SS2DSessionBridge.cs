@@ -62,6 +62,10 @@ namespace ShadowSteps.Art2D
             composer.WinTransition = Renderer.library.playExitDoorSequence ? OnWinTransition : (System.Func<ActionOutcome, System.Action, bool>)null; // off: the results screen follows the winning action directly
             composer.CaptureTransition = OnCaptureTransition;
             composer.GuardHighlight = HighlightGuard; // first-encounter guard cards (D-041): accent tint on the representative guard
+            // Spotlight tutorial (D-077): where things are on screen.
+            composer.NodeWorldPosition = c => Renderer.transform.TransformPoint(Renderer.Pos(c));
+            composer.CameraWorldPosition = i => i >= 0 && i < Renderer.CameraHeads.Count && Renderer.CameraHeads[i] != null ? Renderer.CameraHeads[i].position : (Vector3?)null;
+            composer.NodeSpacingWorld = () => Renderer.IsBuilt ? Renderer.Layout.NodeSpacing * Renderer.transform.lossyScale.x : 1f;
             if (composer.Hud is SS2DHudCanvas hudCanvas) hudCanvas.deferCaptureFeedback = true;
             if (_session.HasStage) { OnStageLoaded(_session.Stage); OnStateChanged(_session.State); }
         }

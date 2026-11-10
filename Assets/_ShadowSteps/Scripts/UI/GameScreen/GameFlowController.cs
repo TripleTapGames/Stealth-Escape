@@ -1,3 +1,5 @@
+using System;
+using ShadowSteps.Core;
 using ShadowSteps.Data;
 using ShadowSteps.Runtime;
 using ShadowSteps.V3;
@@ -50,6 +52,8 @@ namespace ShadowSteps.UI
             var onboarding = Router.Register(set.Create<OnboardingScreen>(canvas.transform, set.OnboardingScreen));
             var alarm = Router.Register(set.Create<AlarmPopupScreen>(canvas.transform, set.AlarmPopupScreen));
             _guardIntro = Router.Register(set.Create<GuardIntroScreen>(canvas.transform, set.GuardIntroScreen));
+            _spotlight = set.Create<FtueSpotlightScreen>(canvas.transform, null); // D-077: built from code, managed directly (never on the router stack)
+            _spotlight.Hide(true);
 
             pause.OnResume = () => Router.Pop();
             pause.OnRestart = () => { Router.PopAllModals(); Session.Retry(); };
@@ -74,6 +78,7 @@ namespace ShadowSteps.UI
 
             Session.StageLoaded += OnStageLoaded;
             Session.ActionStarted += OnActionStarted;
+            Session.ModeChanged += OnModeChangedForGuide;
             Session.ActionCompleted += OnActionCompleted;
             Session.ActionRejected += (a, r) => AudioService.Instance?.Play(Sfx.Error);
             Session.Won += OnWon;
@@ -82,8 +87,9 @@ namespace ShadowSteps.UI
             Session.AlarmTriggered += OnAlarmTriggered;
             Session.UndoPerformed += () => AudioService.Instance?.Play(Sfx.Tap);
             Session.Retried += () => AudioService.Instance?.Play(Sfx.Tap);
-            Session.RulesModeChanged += _ => { CancelGuardQueue(); _messageShownThisVisit = false; Router.PopAllModals(); }; // a mode switch restarts the current level: any results/failure/alarm/guard card is stale; the new mode may show its one card
+            Session.RulesModeChanged += _ => { CancelGuardQueue(); CancelGadgetGuide(); _messageShownThisVisit = false; Router.PopAllModals(); }; // a mode switch restarts the current level: any results/failure/alarm/guard card is stale; the new mode may show its one card
             Session.Retried += RebuildGuardQueue; // retry and mode switch: a fresh board context; acknowledged cards never repeat, interrupted ones become eligible again
+            Session.Retried += () => { CancelGadgetGuide(); StartGadgetGuideIfNeeded(); }; // a retry restarts the guide from step 1, or drops it once the gadget has been used
 
             _hud = Composer.Hud as GameHudController;
             if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
@@ -94,17 +100,19 @@ namespace ShadowSteps.UI
         private void OnStageLoaded(Stage stage)
         {
             CancelGuardQueue();
+            CancelGadgetGuide();
+            StartGadgetGuideIfNeeded(); // D-076: the HUD line sits under whatever card or intro opens next
             _messageShownThisVisit = false;
             Router.PopAllModals();
             var save = AppServices.Save;
             string key = "stage:" + stage.Id;
             BuildGuardQueue();
             bool introPending = save != null && !save.HasSeenTutorial(key) && !string.IsNullOrEmpty(stage.Intro);
-            // One message per visit, first-encounter guard card first: a level that introduces a new guard behaviour shows that card;
-            // its own intro is dropped when it only explains that guard (FTUE-3/4/5) and otherwise deferred to the next visit. Every other level shows its intro once.
+            // One message per visit, first-encounter card first: a level that introduces a new guard behaviour (D-041) or hands out a new gadget (D-075) shows that card;
+            // its own intro is dropped when it only explains that guard (FTUE-3/4/5) or that gadget (LEVEL-21 / LEVEL-23) and otherwise deferred to the next visit. Every other level shows its intro once.
             if (_guardQueue.Count > 0)
             {
-                if (introPending && GuardOnboarding.IntroSupersededByGuardCard(stage)) { save.MarkTutorialSeen(key); AppServices.PersistSave(); }
+                if (introPending && IntroSupersededBy(_guardQueue[0], stage)) { save.MarkTutorialSeen(key); AppServices.PersistSave(); }
                 ShowNextGuardCard();
                 return;
             }
@@ -124,24 +132,38 @@ namespace ShadowSteps.UI
         // ---------------------------------------------------------------- guard first-encounter cards (D-041)
 
         private GuardIntroScreen _guardIntro;
-        private readonly System.Collections.Generic.List<GuardOnboarding.Card> _guardQueue = new System.Collections.Generic.List<GuardOnboarding.Card>();
+        private readonly System.Collections.Generic.List<OnboardingCard> _guardQueue = new System.Collections.Generic.List<OnboardingCard>();
         /// <summary>Board-session token: bumped whenever the board context changes so a stale "Got it" cannot act on the new board or mode.</summary>
         public int BoardSession { get; private set; }
         public int PendingGuardCards => _guardQueue.Count;
         public GuardOnboarding.Card ActiveGuardCard => _guardIntro != null && _guardIntro.IsVisible ? _guardIntro.Card : null;
+        /// <summary>The gadget card on screen (D-075), or null.</summary>
+        public GadgetOnboarding.Card ActiveGadgetCard => _guardIntro != null && _guardIntro.IsVisible ? _guardIntro.Active as GadgetOnboarding.Card : null;
 
+        /// <summary>
+        /// Queue order (one card per level visit): on a gadget's own tutorial level (LEVEL-21 Smoke, LEVEL-23 EMP) that gadget's card
+        /// comes first, since the level exists to teach it; otherwise guard cards first (hazards), then gadget cards (tools).
+        /// A fresh save that jumps straight to LEVEL-21 therefore still gets the Smoke card, not the stationary-guard card.
+        /// </summary>
         private void BuildGuardQueue()
         {
             _guardQueue.Clear();
             if (!Session.HasStage || Session.State == null) return;
+            var gadgets = GadgetOnboarding.BuildQueue(Session.Stage, AppServices.Save);
+            foreach (var g in gadgets) if (GadgetOnboarding.IntroSupersededByGadgetCard(Session.Stage, g.Kind)) _guardQueue.Add(g);
             _guardQueue.AddRange(GuardOnboarding.BuildQueue(Session.Stage, Session.State, AppServices.Save));
+            foreach (var g in gadgets) if (!_guardQueue.Contains(g)) _guardQueue.Add(g);
         }
+
+        private static bool IntroSupersededBy(OnboardingCard card, Stage stage) =>
+            card is GadgetOnboarding.Card g ? GadgetOnboarding.IntroSupersededByGadgetCard(stage, g.Kind) : GuardOnboarding.IntroSupersededByGuardCard(stage);
 
         private void CancelGuardQueue()
         {
             BoardSession++;
             _guardQueue.Clear();
             HighlightGuard(-1);
+            HighlightGadget(null);
             if (_guardIntro != null && _guardIntro.IsVisible && Router.Current == _guardIntro) Router.Pop();
         }
 
@@ -158,23 +180,181 @@ namespace ShadowSteps.UI
             if (_guardIntro == null || _guardQueue.Count == 0 || Router.AnyModalOpen || !Session.HasStage || _messageShownThisVisit) return;
             _messageShownThisVisit = true; // the remaining unseen behaviours stay eligible for a later level
             var card = _guardQueue[0]; _guardQueue.RemoveAt(0);
-            int token = BoardSession; var mode = card.Mode;
+            int token = BoardSession; var mode = Session.RulesMode;
             _guardIntro.OnDismiss = () => DismissGuardCard(token, card, mode);
             _guardIntro.Present(card);
             Router.Push<GuardIntroScreen>();
-            HighlightGuard(card.GuardIndex);
+            if (card is GuardOnboarding.Card guard) HighlightGuard(guard.GuardIndex);
+            else if (card is GadgetOnboarding.Card gadget) HighlightGadget(gadget.Kind);
         }
 
-        private void DismissGuardCard(int token, GuardOnboarding.Card card, StageMode mode)
+        private void DismissGuardCard(int token, OnboardingCard card, StageMode mode)
         {
             // Stale callback (board/mode changed under the card): acknowledge nothing, close nothing, unlock nothing.
-            if (token != BoardSession || mode != Session.RulesMode || !Session.HasStage || _guardIntro.Card != card) return;
+            if (token != BoardSession || mode != Session.RulesMode || !Session.HasStage || _guardIntro.Active != card) return;
             if (Router.Current == _guardIntro) Router.Pop();
             HighlightGuard(-1);
-            GuardOnboarding.MarkSeen(AppServices.Save, card.Kind, mode); // seen on "Got it", never on display
+            HighlightGadget(null);
+            if (card is GuardOnboarding.Card guard) GuardOnboarding.MarkSeen(AppServices.Save, guard.Kind, guard.Mode); // seen on "Got it", never on display
+            else if (card is GadgetOnboarding.Card gadget) GadgetOnboarding.MarkSeen(AppServices.Save, gadget.Kind);
             AppServices.PersistSave();
             AudioService.Instance?.Play(Sfx.Tap);
             ShowNextGuardCard();
+            if (_gadgetGuide.Active) ApplyGadgetGuide(); else StartGadgetGuideIfNeeded(); // after the card: "Tap SMOKE to arm it" with the button accented again
+        }
+
+        // ---------------------------------------------------------------- scripted spotlight guide (D-076 / D-077)
+
+        private readonly GadgetOnboarding.Guide _gadgetGuide = new GadgetOnboarding.Guide();
+        private FtueSpotlightScreen _spotlight;
+        public FtueSpotlightScreen Spotlight => _spotlight;
+        /// <summary>The step being taught, or null.</summary>
+        public GadgetOnboarding.ScriptStep GadgetGuideCurrent => _gadgetGuide.Current;
+        public bool GadgetGuideActive => _gadgetGuide.Active;
+        public GadgetKind? GadgetGuideKind => _gadgetGuide.Active ? _gadgetGuide.Kind : (GadgetKind?)null;
+
+        /// <summary>Starts the guide for the first offered gadget the player has never deployed (smoke before EMP); no-op when one is already running or nothing is left to teach.</summary>
+        private void StartGadgetGuideIfNeeded()
+        {
+            if (_gadgetGuide.Active || !Session.HasStage || Session.State == null) return;
+            var kind = GadgetOnboarding.GuideFor(Session.Stage, AppServices.Save);
+            if (!kind.HasValue) return;
+            _gadgetGuide.Start(kind.Value, GadgetOnboarding.BuildScript(Session.Stage, Session.State, kind.Value) ?? GadgetOnboarding.FallbackScript(kind.Value));
+            ApplyGadgetGuide();
+        }
+
+        /// <summary>Re-plans the script from the current state (the player did something the script did not ask for).</summary>
+        private void RescriptGadgetGuide(StageState from)
+        {
+            var kind = _gadgetGuide.Kind;
+            _gadgetGuide.Cancel();
+            if (from == null || from.IsTerminal || !GadgetOnboarding.Offers(Session.Stage, kind)) { ApplyGadgetGuide(); return; }
+            _gadgetGuide.Start(kind, GadgetOnboarding.BuildScript(Session.Stage, from, kind) ?? GadgetOnboarding.FallbackScript(kind));
+            ApplyGadgetGuide();
+        }
+
+        private void CancelGadgetGuide()
+        {
+            if (!_gadgetGuide.Active && !_gadgetGuide.Done) { HideSpotlight(); return; }
+            _gadgetGuide.Cancel();
+            ApplyGadgetGuide();
+        }
+
+        private void OnModeChangedForGuide(InputMode mode)
+        {
+            GadgetKind? targeting = mode == InputMode.SmokeTarget ? GadgetKind.Smoke : mode == InputMode.EmpTarget ? GadgetKind.Emp : (GadgetKind?)null;
+            _gadgetGuide.OnTargeting(targeting);
+            // Re-apply on every mode change while active: the HUD's own handler (subscribed before this one) clears the pill and the
+            // button accent whenever the session returns to movement, including the reset right after a stage loads.
+            if (_gadgetGuide.Active) ApplyGadgetGuide();
+        }
+
+        private void OnGuideAction(ActionOutcome o)
+        {
+            if (!_gadgetGuide.Active) return;
+            bool ours = o.Free && (_gadgetGuide.Kind == GadgetKind.Smoke ? o.Action.Kind == StageActionKind.Smoke : o.Action.Kind == StageActionKind.Emp);
+            if (ours && !GadgetOnboarding.IsUsed(AppServices.Save, _gadgetGuide.Kind)) { GadgetOnboarding.MarkUsed(AppServices.Save, _gadgetGuide.Kind); AppServices.PersistSave(); } // any real throw counts as learned
+            var result = _gadgetGuide.OnAction(o.Action.Kind, o.PlayerTo, o.Action.Kind == StageActionKind.Smoke ? o.Action.Target : default, o.Action.CameraIndex);
+            switch (result)
+            {
+                case GadgetOnboarding.Guide.ActionResult.Advanced:
+                case GadgetOnboarding.Guide.ActionResult.Completed: ApplyGadgetGuide(); break;
+                case GadgetOnboarding.Guide.ActionResult.Diverged:
+                    if (ours) { var kind = _gadgetGuide.Kind; _gadgetGuide.Cancel(); ApplyGadgetGuide(); Composer.Hud?.ShowMessage(GadgetOnboarding.ThrownMessage(kind)); StartGadgetGuideIfNeeded(); } // thrown elsewhere: lesson learned, no charge left to guide
+                    else RescriptGadgetGuide(o.After);
+                    break;
+            }
+        }
+
+        /// <summary>Mirrors the guide onto the screen: spotlight cut-out + hand + line for the current step, pinned HUD line, button accent while arming; done line (transient) when deployed, then the next gadget's guide if any.</summary>
+        private void ApplyGadgetGuide()
+        {
+            var hud = Composer.Hud as IGameHudGadgetHighlight;
+            if (_gadgetGuide.Deployed && !GadgetOnboarding.IsUsed(AppServices.Save, _gadgetGuide.Kind)) { GadgetOnboarding.MarkUsed(AppServices.Save, _gadgetGuide.Kind); AppServices.PersistSave(); }
+            var step = _gadgetGuide.Current;
+            if (step != null && step.Silent)
+            {
+                // Dormant: waiting for the player to reach the node on their own; nothing on screen.
+                HideSpotlight(); HighlightGadget(null); hud?.ClearGuide();
+                return;
+            }
+            if (step != null)
+            {
+                hud?.ShowGuide(step.Message);
+                HighlightGadget(_gadgetGuide.HighlightButton ? _gadgetGuide.Kind : (GadgetKind?)null);
+                Func<Rect?> hole = null;
+                switch (step.Kind)
+                {
+                    case GadgetOnboarding.ScriptStepKind.Arm: var g = step.Gadget; hole = () => ButtonHole(g); break;
+                    case GadgetOnboarding.ScriptStepKind.MoveTo:
+                    case GadgetOnboarding.ScriptStepKind.FollowUp:
+                    case GadgetOnboarding.ScriptStepKind.DeployNode: var n = step.Node; hole = () => NodeHole(n); break;
+                    case GadgetOnboarding.ScriptStepKind.DeployCamera: var c = step.CameraIndex; hole = () => CameraHole(c); break;
+                }
+                if (hole != null) ShowSpotlight(hole, step.Message); else HideSpotlight(); // DeployAny: the session highlights every valid target itself
+                return;
+            }
+            HideSpotlight();
+            HighlightGadget(null);
+            if (_gadgetGuide.Done)
+            {
+                hud?.ClearGuide();
+                Composer.Hud?.ShowMessage(_gadgetGuide.Message);
+                _gadgetGuide.Cancel();
+                StartGadgetGuideIfNeeded();
+                return;
+            }
+            hud?.ClearGuide();
+        }
+
+        private void ShowSpotlight(Func<Rect?> hole, string message)
+        {
+            if (_spotlight == null) return;
+            _spotlight.ReducedMotion = Router.ReducedMotion;
+            _spotlight.Present(hole, message);
+            if (!_spotlight.IsVisible) _spotlight.Show(Router.ReducedMotion);
+            // Modal cards stay above the overlay (they are pushed later and re-ordered to the top); keep the overlay under them.
+            if (Router.Current != null && Router.Current.IsModal) Router.Current.transform.SetAsLastSibling();
+        }
+
+        private void HideSpotlight() { if (_spotlight != null && _spotlight.IsVisible) _spotlight.Hide(true); }
+
+        private Rect? ButtonHole(GadgetKind kind) => Composer.Hud is IGameHudGadgetHighlight h && h.TryGetGadgetScreenRect(kind, out var r) ? r : (Rect?)null;
+
+        private Rect? NodeHole(GridCoord node)
+        {
+            var cam = Composer.BoardCamera; if (cam == null) return null;
+            Vector3 world; float spacing;
+            if (Composer.NodeWorldPosition != null) { world = Composer.NodeWorldPosition(node); spacing = Composer.NodeSpacingWorld != null ? Composer.NodeSpacingWorld() : 1f; }
+            else if (Composer.Board != null && Composer.Board.IsBuilt) { world = Composer.Board.transform.TransformPoint(Composer.Board.Layout.WorldPosition(node)); spacing = Composer.Board.Layout.NodeSpacing; }
+            else return null;
+            return ScreenSquare(cam, world, spacing * 0.9f);
+        }
+
+        private Rect? CameraHole(int cameraIndex)
+        {
+            var cam = Composer.BoardCamera; if (cam == null || Composer.CameraWorldPosition == null) return null;
+            var world = Composer.CameraWorldPosition(cameraIndex); if (!world.HasValue) return null;
+            float spacing = Composer.NodeSpacingWorld != null ? Composer.NodeSpacingWorld() : 1f;
+            return ScreenSquare(cam, world.Value, spacing * 1.1f);
+        }
+
+        private static Rect ScreenSquare(Camera cam, Vector3 world, float sizeWorld)
+        {
+            var centre = cam.WorldToScreenPoint(world);
+            var edge = cam.WorldToScreenPoint(world + cam.transform.right * sizeWorld * 0.5f);
+            float half = Mathf.Abs(edge.x - centre.x);
+            return Rect.MinMaxRect(centre.x - half, centre.y - half, centre.x + half, centre.y + half);
+        }
+
+        private GadgetKind? _highlightedGadget;
+        private void HighlightGadget(GadgetKind? kind)
+        {
+            var hud = Composer.Hud as IGameHudGadgetHighlight;
+            if (hud == null) { _highlightedGadget = kind; return; }
+            if (_highlightedGadget.HasValue && _highlightedGadget != kind) hud.HighlightGadget(_highlightedGadget.Value, false);
+            if (kind.HasValue) hud.HighlightGadget(kind.Value, true);
+            _highlightedGadget = kind;
         }
 
         private void HighlightGuard(int index)
@@ -188,6 +368,8 @@ namespace ShadowSteps.UI
 
         private void OnActionStarted(ActionOutcome o)
         {
+            // D-076/D-077: every started action drives the scripted guide (before the audio early-out so it also works without an AudioService).
+            OnGuideAction(o);
             var audio = AudioService.Instance;
             if (audio == null) return;
             // D-069: gadgets have their own sounds; movement sounds come from the presentation's touchdown when it times them (2D bridge), else a footstep here.

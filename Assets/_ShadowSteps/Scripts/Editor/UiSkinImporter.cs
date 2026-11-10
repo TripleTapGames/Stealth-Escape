@@ -62,6 +62,8 @@ namespace ShadowSteps.UI.Editor
             skin.resultsButtonWhite = Trim("LevelComplete/white button.png", "screen_results_button_white", 0.5f, 0f);
             skin.resultsStarFull = Trim("LevelComplete/Star.png", "screen_results_star_full", 0f, 0f);
             skin.resultsStarBlank = Trim("LevelComplete/blank star.png", "screen_results_star_blank", 0f, 0f);
+            // Tutorial hand (user art, 2026-11-11): optional, so older art drops still import.
+            skin.tapHand = File.Exists(SourceRoot + "Ftue/Tap hand.png") ? Trim("Ftue/Tap hand.png", "screen_tap_hand", 0f, 0f) : skin.tapHand;
             EditorUtility.SetDirty(skin); AssetDatabase.SaveAssets();
             UiSkin.Current = null;
             return skin;

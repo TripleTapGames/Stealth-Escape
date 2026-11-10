@@ -48,13 +48,17 @@ namespace ShadowSteps.V3
     {
         private sealed class Node { public StageState State; public string ParentKey; public StageAction Action; public bool HasParent; }
 
-        public static SolveResult Solve(Stage stage, SolveOptions options = null)
+        public static SolveResult Solve(Stage stage, SolveOptions options = null) => Solve(stage, options, null);
+
+        /// <summary>Same search from <paramref name="start"/> instead of the initial state (null = initial); the start's own mode wins over the options'.</summary>
+        public static SolveResult Solve(Stage stage, SolveOptions options, StageState start)
         {
             options = options ?? new SolveOptions();
             var result = new SolveResult();
             int period = stage.Period;
             bool trackWaits = stage.WaitLimit >= 0 || options.MaxWaits >= 0;
-            var init = StageState.Initial(stage, options.Mode);
+            var init = start ?? StageState.Initial(stage, options.Mode);
+            if (start != null && start.IsTerminal) return result;
             if (!options.AllowSmoke || !options.AllowEmp)
                 init = new StageState(init.Player, 0, false, 0, null, null, options.AllowSmoke ? init.SmokeCharges : 0, options.AllowEmp ? init.EmpCharges : 0, -1, false, StageResult.Playing, null, 0, options.Mode, 0UL);
 

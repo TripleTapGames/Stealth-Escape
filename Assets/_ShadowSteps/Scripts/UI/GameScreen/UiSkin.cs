@@ -21,6 +21,10 @@ namespace ShadowSteps.UI
         [Header("Icons and art")] public Sprite starFull; public Sprite starBlank; public Sprite cop;
         [Header("Level complete overrides (optional; the results screen falls back to the shared pieces above)")]
         public Sprite resultsCard; public Sprite resultsStatBox; public Sprite resultsButtonGreen; public Sprite resultsButtonWhite; public Sprite resultsStarFull; public Sprite resultsStarBlank;
+        [Header("Tutorial (optional)")]
+        [Tooltip("Pointing hand for the spotlight tutorial (D-077); the index fingertip is at the top, about 40% from the left. Procedural fallback when empty.")] public Sprite tapHand;
+        /// <summary>Normalised position of the fingertip inside <see cref="tapHand"/> (x from left, y from bottom).</summary>
+        public Vector2 tapHandTip = new Vector2(0.40f, 0.98f);
         [Header("Colours")]
         public Color navy = new Color(0.20f, 0.29f, 0.42f);
         public Color navyDim = new Color(0.20f, 0.29f, 0.42f, 0.72f);

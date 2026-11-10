@@ -37,6 +37,10 @@ namespace ShadowSteps.Runtime
         public System.Func<ShadowSteps.V3.ActionOutcome, System.Action, bool> WinTransition;
         /// <summary>Presentation hook: highlight guard i (stable index) for a tutorial card, -1 = clear. Set by the active presentation layer.</summary>
         public System.Action<int> GuardHighlight;
+        /// <summary>Presentation hooks for the spotlight tutorial (D-077): world position of a node / camera head and the drawn node spacing. Set by the active presentation layer; the placeholder board is the fallback.</summary>
+        public System.Func<ShadowSteps.Core.GridCoord, Vector3> NodeWorldPosition;
+        public System.Func<int, Vector3?> CameraWorldPosition;
+        public System.Func<float> NodeSpacingWorld;
         /// <summary>
         /// Optional presentation hook for a capture or lockdown: called before the failure screen; return true to own the
         /// timing (finish the guard's step/turn, play the capture beat) and invoke the continuation when the screen may appear.
@@ -154,6 +158,17 @@ namespace ShadowSteps.Runtime
     public interface IGameHudPause
     {
         event System.Action PauseRequested;
+    }
+
+    /// <summary>Optional: a HUD with gadget buttons can accent one while its first-encounter card (D-075) is open and pin the two-step guide text (D-076).</summary>
+    public interface IGameHudGadgetHighlight
+    {
+        void HighlightGadget(ShadowSteps.Data.GadgetKind kind, bool on);
+        /// <summary>Pins a guide line in the message pill until <see cref="ClearGuide"/> or the next guide line.</summary>
+        void ShowGuide(string message);
+        void ClearGuide();
+        /// <summary>Screen-space rectangle (pixels, origin bottom-left) of the gadget's button, for the spotlight cut-out (D-077).</summary>
+        bool TryGetGadgetScreenRect(ShadowSteps.Data.GadgetKind kind, out Rect screenRect);
     }
 
     /// <summary>Lets the UI assembly (which Runtime cannot reference) provide the default HUD without a hard dependency.</summary>

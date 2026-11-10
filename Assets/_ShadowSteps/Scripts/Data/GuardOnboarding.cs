@@ -63,16 +63,16 @@ namespace ShadowSteps.Data
             : "Stay out of sight and avoid the guard’s node. Knockouts are off.";
 
         /// <summary>One queued card: the behaviour, the representative live guard to highlight, the mode it was composed for and its copy.</summary>
-        public sealed class Card
+        public sealed class Card : OnboardingCard
         {
             public GuardKind Kind;
             public int GuardIndex;
             public StageMode Mode;
-            public string Title => GuardOnboarding.Title(Kind);
-            public string Body => GuardOnboarding.Body(Kind);
-            public string ModeLabel => GuardOnboarding.ModeLabel(Mode);
-            public string ModeTip => GuardOnboarding.ModeTip(Mode);
-            public string Dismiss => DismissLabel;
+            public override string Title => GuardOnboarding.Title(Kind);
+            public override string Body => GuardOnboarding.Body(Kind);
+            public override string ModeLabel => GuardOnboarding.ModeLabel(Mode);
+            public override string ModeTip => GuardOnboarding.ModeTip(Mode);
+            public override string Dismiss => DismissLabel;
             public override string ToString() => Token(Kind) + "/" + StageModeUtil.Token(Mode) + " (guard " + GuardIndex + ")";
         }
 
@@ -97,11 +97,12 @@ namespace ShadowSteps.Data
             return queue;
         }
 
-        /// <summary>Marks every behaviour acknowledged in both modes (test fixtures and developer saves that do not want the cards).</summary>
+        /// <summary>Marks every first-encounter card acknowledged: all behaviours in both modes and (D-075) both gadget cards. For test fixtures and developer saves that do not want any card.</summary>
         public static void MarkAllSeen(SaveData save)
         {
             if (save == null) return;
             foreach (var kind in QueueOrder) { MarkSeen(save, kind, StageMode.Stealth); MarkSeen(save, kind, StageMode.Knockout); }
+            GadgetOnboarding.MarkAllSeen(save);
         }
 
         /// <summary>
