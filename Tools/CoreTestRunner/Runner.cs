@@ -25,6 +25,7 @@ public static class Runner
         if (args.Length >= 3 && args[0] == "--v3-cones") return V3Tools.Cones(args[1], args[2], args.Length > 3 ? int.Parse(args[3]) : 4);
         if (args.Length >= 4 && args[0] == "--v3-replay-ko") return V3Tools.ReplayMode(args[1], args[2], ShadowSteps.V3.StageMode.Knockout, args.Skip(3).ToArray());
         if (args.Length >= 3 && args[0] == "--v3-knockout-pars") return V3Tools.KnockoutPars(args[1], args[2]);
+        if (args.Length >= 3 && args[0] == "--v3-rescore") return V3Tools.Rescore(args[1], args[2]);
         if (args.Length >= 3 && args[0] == "--v3-sparsify") return V3Tools.Sparsify(args[1], args[2], args.Length > 3 ? args[3] : "", args.Length > 4 ? int.Parse(args[4]) : 2);
         if (args.Length >= 3 && args[0] == "--v3-modes") return V3Tools.Modes(args[1], args[2], args.Length > 3 ? args[3] : null, args.Length > 4 ? args[4] : null);
         string filter = args.Length > 0 ? args[0] : null;

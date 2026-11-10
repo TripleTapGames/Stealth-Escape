@@ -68,8 +68,9 @@ A capture ends the attempt immediately (the failed action is still shown). Retry
 ### 3.4 Cameras
 - Mounted on a `#` cell (`wall`), looking onto a floor node through `mountFace` (the wall's face toward the floor).
   `facing` is the initial lens direction. Kinds: `fixed`; `rotating` (turns 90° every counted action, `clockwise`);
-  `sweeping` (alternates between `facing` and the next facing clockwise/counter-clockwise, holding each for exactly
-  2 actions: facings at T = 0,1 → facing; 2,3 → other; 4,5 → facing …).
+  `sweeping` (pans back and forth from `facing` in the clockwise/counter-clockwise direction, holding each facing for exactly
+  2 actions). Optional `"sweep": 2` (default: facing and its neighbour, T = 0,1 → facing; 2,3 → other; 4,5 → facing …, period 4)
+  or `"sweep": 3` (a half turn out and back, e.g. facing W clockwise: W W N N E E N N, period 8).
 - **Vision = a 70° cone** (35° either side of the facing), **origin at the wall face** (half a cell from the wall
   centre toward `mountFace`), **forward reach 2 node spacings**. A node is seen when its centre is inside the cone,
   its forward distance is > 0 and ≤ 2, and the straight line from the origin to it crosses no wall, cover, closed door
@@ -263,7 +264,7 @@ The export reports per level: `par`, the solution tokens (`N E S W WAIT SMOKE@x,
 | LEVEL-16 | Camera Basics | 7x5 | (1, 3)→(5, 3) | — | fixed S, S@(3, 0) | — | 2 | 0/0 | 5 | 3 | 8 | no | — |
 | LEVEL-17 | Race the Alarm | 7x5 | (1, 3)→(5, 3) | — | fixed W, W@(6, 2) | — | 2 | 0/0 | 3 | 3 | 8 | no | — |
 | LEVEL-18 | Rotating Security | 7x5 | (1, 3)→(5, 3) | — | rotating S, S@(1, 0) | — | 2 | 0/0 | 3 | 3 | 8 | yes | — |
-| LEVEL-19 | Sweep Window | 7x5 | (1, 1)→(5, 3) | — | sweeping S, S@(3, 0) | — | 2 | 0/0 | 2 | 3 | 7 | yes | — |
+| LEVEL-19 | Sweep Window | 7x7 (3x3 long-edge) | (1, 1)→(5, 5) | rotating S@(3, 5) | sweeping E ccw, sweep 3 (E,N,W), N@(3, 6) | — | 2 | 0/0 | 6 | 7 | 8 | yes | D-074 redesign 2026-11-10 |
 | LEVEL-20 | Risky Shortcut | 7x6 | (1, 4)→(5, 4) | — | fixed W, W@(6, 3) | — | 2 | 0/0 | 2 | 3 | 6 | no | — |
 | LEVEL-21 | Smoke Screen | 7x4 | (0, 2)→(6, 2) | static S@(3, 1) | — | — | 0 | 1/0 | 4 | 3 | 6 | n/a | Smoke |
 | LEVEL-22 | Cloud Timing | 7x5 | (0, 2)→(6, 2) | pingPong N@(3, 0) | — | — | 2 | 1/0 | 4 | 3 | 10 | n/a | — |

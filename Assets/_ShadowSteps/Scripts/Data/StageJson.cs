@@ -98,7 +98,8 @@ namespace ShadowSteps.Data
                     var mount = ParseDir(JsonAccess.RequireString(c, "mountFace", cp), cp + ".mountFace");
                     b.Cameras.Add(new CameraSpec(JsonAccess.OptionalString(c, "id", "cam" + (i + 1), cp), Coord(JsonAccess.Require(c, "wall", cp), cp + ".wall"), mount,
                         ParseDir(JsonAccess.OptionalString(c, "facing", DirectionUtil.ToToken(mount), cp), cp + ".facing"),
-                        ParseCameraKind(JsonAccess.OptionalString(c, "kind", "fixed", cp), cp), JsonAccess.OptionalBool(c, "clockwise", true, cp)));
+                        ParseCameraKind(JsonAccess.OptionalString(c, "kind", "fixed", cp), cp), JsonAccess.OptionalBool(c, "clockwise", true, cp),
+                        JsonAccess.OptionalInt(c, "sweep", CameraSpec.DefaultSweepFacings, cp)));
                 }
             }
             if (o.TryGetValue("gadgets", out var gad) && gad != null)
@@ -153,8 +154,12 @@ namespace ShadowSteps.Data
             o["guards"] = guards;
             var cams = new List<object>();
             foreach (var c in s.Cameras)
-                cams.Add(new JsonObject().Set("id", c.Id).Set("wall", Coord(c.WallCell)).Set("mountFace", DirectionUtil.ToToken(c.MountFace)).Set("facing", DirectionUtil.ToToken(c.Facing))
-                    .Set("kind", CameraKindToken(c.Kind)).Set("clockwise", c.Clockwise));
+            {
+                var co = new JsonObject().Set("id", c.Id).Set("wall", Coord(c.WallCell)).Set("mountFace", DirectionUtil.ToToken(c.MountFace)).Set("facing", DirectionUtil.ToToken(c.Facing))
+                    .Set("kind", CameraKindToken(c.Kind)).Set("clockwise", c.Clockwise);
+                if (c.Kind == CameraKind.Sweeping && c.SweepFacings != CameraSpec.DefaultSweepFacings) co.Set("sweep", (long)c.SweepFacings); // D-073; omitted = 2 so older packs read unchanged
+                cams.Add(co);
+            }
             o["cameras"] = cams;
             o["gadgets"] = new JsonObject().Set("smoke", (long)s.SmokeCharges).Set("emp", (long)s.EmpCharges);
             o["alarmBudget"] = (long)s.AlarmBudget;

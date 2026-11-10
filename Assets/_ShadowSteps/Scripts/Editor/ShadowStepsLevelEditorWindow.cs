@@ -33,7 +33,7 @@ namespace ShadowSteps.Editor
         private const float CellPx = 56f;
         private const float Gap = 10f;
 
-        [MenuItem("Shadow Steps/Level Editor")]
+        [MenuItem("Shadow Steps/Legacy/Level Editor (schema 2, not the shipped pack)")]
         public static void Open()
         {
             var w = GetWindow<ShadowStepsLevelEditorWindow>("Shadow Steps Levels");

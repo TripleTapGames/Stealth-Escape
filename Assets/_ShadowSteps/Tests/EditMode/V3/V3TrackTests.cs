@@ -79,6 +79,26 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(Direction.East, CameraTrack.FacingAt(sweep, 3));
             Assert.AreEqual(Direction.South, CameraTrack.FacingAt(sweep, 4));
             Assert.AreEqual(1, CameraTrack.Period(Camera(C(0, 0), Direction.South, Direction.South)));
+            Assert.AreEqual(4, CameraTrack.Period(sweep));
+        }
+
+        [Test]
+        public void SweepingCamera_ThreeFacings_PansOutAndBack_HoldingTwoActionsEach()
+        {
+            // D-073: user's example — a west-facing sweep should also cover north and east.
+            var cam = new CameraSpec("cam", C(3, 0), Direction.South, Direction.West, CameraKind.Sweeping, clockwise: true, sweepFacings: 3);
+            var expected = new[] { Direction.West, Direction.West, Direction.North, Direction.North, Direction.East, Direction.East, Direction.North, Direction.North, Direction.West, Direction.West };
+            for (int t = 0; t < expected.Length; t++) Assert.AreEqual(expected[t], CameraTrack.FacingAt(cam, t), "t=" + t);
+            Assert.AreEqual(8, CameraTrack.Period(cam));
+            CollectionAssert.AreEqual(new[] { Direction.West, Direction.North, Direction.East }, new System.Collections.Generic.List<Direction>(cam.Facings()));
+            var ccw = new CameraSpec("cam", C(3, 0), Direction.South, Direction.West, CameraKind.Sweeping, clockwise: false, sweepFacings: 3);
+            Assert.AreEqual(Direction.South, CameraTrack.FacingAt(ccw, 2));
+            Assert.AreEqual(Direction.East, CameraTrack.FacingAt(ccw, 4));
+            Assert.AreEqual(Direction.South, CameraTrack.FacingAt(ccw, 6));
+            // Default (2 facings) is unchanged: A A B B.
+            var two = new CameraSpec("cam", C(3, 0), Direction.South, Direction.West, CameraKind.Sweeping);
+            Assert.AreEqual(2, two.SweepFacings);
+            Assert.AreEqual(Direction.North, CameraTrack.FacingAt(two, 2)); Assert.AreEqual(Direction.West, CameraTrack.FacingAt(two, 4));
         }
 
         [Test]

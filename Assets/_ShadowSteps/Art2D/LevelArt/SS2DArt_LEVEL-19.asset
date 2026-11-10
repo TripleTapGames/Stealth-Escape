@@ -14,21 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageCode: LEVEL-19
   defaultObstacle: 1
-  obstacles:
-  - x: 4
-    y: 1
-    art: 2
-    wallAxis: 1
-    offset: {x: -0.36, y: 0}
-    sortingOffset: 0
-    scale: 1
-  - x: 1
-    y: 3
-    art: 1
-    wallAxis: 0
-    offset: {x: 0, y: 0}
-    sortingOffset: 0
-    scale: 1
+  obstacles: []
   cameras:
   - cameraId: cam1
     mount: 1

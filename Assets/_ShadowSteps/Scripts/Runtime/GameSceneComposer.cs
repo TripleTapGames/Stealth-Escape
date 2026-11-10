@@ -21,6 +21,8 @@ namespace ShadowSteps.Runtime
         public ScriptableObject UiPrefabs;
         [Tooltip("Stage id to open when the scene is started directly in the editor and no stage was requested (0 = first unfinished).")]
         public int DebugStageId = 0;
+        /// <summary>SessionState key the editor-only stage editor uses to pin the next stage (consumed once).</summary>
+        public const string EditorPlayStageKey = "ShadowSteps.EditorPlayStageId";
         [Header("Presentation")]
         [Tooltip("Drive the board with the 3D art layer (ShadowSteps.Art3D) instead of the 2D sprite board. The rules engine is identical either way.")]
         public bool Use3DPresentation = false;
@@ -61,7 +63,9 @@ namespace ShadowSteps.Runtime
             }
             int id = AppServices.PendingStageId;
 #if UNITY_EDITOR
-            // Direct scene previews may pin a stage; installed builds always follow saved progress.
+            // The stage editor's Play button (D-072) pins the stage for this one play session; direct scene previews may pin one via the inspector.
+            if (id <= 0) { id = UnityEditor.SessionState.GetInt(EditorPlayStageKey, 0); UnityEditor.SessionState.EraseInt(EditorPlayStageKey); }
+            // Installed builds always follow saved progress.
             if (id <= 0) id = DebugStageId;
 #endif
             AppServices.PendingStageId = 0;

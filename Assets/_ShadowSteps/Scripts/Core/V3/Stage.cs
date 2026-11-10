@@ -23,7 +23,7 @@ namespace ShadowSteps.V3
         Fixed,
         /// <summary>Turns 90° every counted action.</summary>
         Rotating,
-        /// <summary>Alternates between two adjacent facings, holding each for 2 counted actions.</summary>
+        /// <summary>Pans back and forth over <see cref="CameraSpec.SweepFacings"/> adjacent facings (2 or 3), holding each for 2 counted actions.</summary>
         Sweeping
     }
 
@@ -61,10 +61,24 @@ namespace ShadowSteps.V3
         public Direction Facing { get; }
         public CameraKind Kind { get; }
         public bool Clockwise { get; }
+        /// <summary>
+        /// Sweeping only (D-073): how many facings the pan covers, counted from <see cref="Facing"/> in the <see cref="Clockwise"/>
+        /// direction. 2 = facing and its neighbour (the original rule); 3 = a half turn, e.g. W → N → E, panned back and forth.
+        /// </summary>
+        public int SweepFacings { get; }
+        public const int DefaultSweepFacings = 2, MaxSweepFacings = 3;
 
-        public CameraSpec(string id, GridCoord wallCell, Direction mountFace, Direction facing, CameraKind kind, bool clockwise = true)
+        public CameraSpec(string id, GridCoord wallCell, Direction mountFace, Direction facing, CameraKind kind, bool clockwise = true, int sweepFacings = DefaultSweepFacings)
         {
-            Id = id ?? string.Empty; WallCell = wallCell; MountFace = mountFace; Facing = facing; Kind = kind; Clockwise = clockwise;
+            Id = id ?? string.Empty; WallCell = wallCell; MountFace = mountFace; Facing = facing; Kind = kind; Clockwise = clockwise; SweepFacings = sweepFacings;
+        }
+
+        /// <summary>Distinct facings this camera ever shows, in schedule order from t = 0.</summary>
+        public IEnumerable<Direction> Facings()
+        {
+            if (Kind == CameraKind.Fixed) { yield return Facing; yield break; }
+            int n = Kind == CameraKind.Rotating ? 4 : Math.Max(2, Math.Min(MaxSweepFacings, SweepFacings));
+            for (int i = 0; i < n; i++) yield return DirectionUtil.Rotate(Facing, Clockwise ? i : -i);
         }
     }
 

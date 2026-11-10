@@ -57,26 +57,31 @@ public static class V3Tools
     {
         if (Environment.GetEnvironmentVariable("SS_DOOR_CROSSING_ONLY") == "1") { StageRules.DoorsOpenOnApproach = false; Console.WriteLine("rule switch: doors open only when crossed"); }
         var pack = StageJson.Parse(File.ReadAllText(packPath));
-        var list = new List<object>();
-        int unsolvable = 0;
+        // Shipped rules (D-043/D-044): Knockout, no WAIT. Legacy Stealth fixtures are validated by their own tests. Shared with the Unity stage editor (D-072).
+        string json = StagePackTools.ValidationJson(pack.Stages, out int unsolvable, (i, n, m) => { Console.WriteLine(m + (m.HitLimit ? " HIT-LIMIT" : "") + " | " + Tokens(m.Solution)); return true; });
+        File.WriteAllText(outPath, json);
+        Console.WriteLine("wrote " + outPath + (unsolvable > 0 ? " with " + unsolvable + " UNSOLVABLE stage(s)" : ""));
+        return unsolvable == 0 ? 0 : 2;
+    }
+
+    /// <summary>Rewrites every stage's scoring block with <see cref="StagePackTools.WithRecomputedScoring"/> (the stage editor's "Recompute scoring"); diff the output against the input to see what changed.</summary>
+    public static int Rescore(string packPath, string outPath)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var stages = new List<Stage>();
+        int changed = 0, unsolvable = 0;
         foreach (var s in pack.Stages)
         {
-            // Shipped rules (D-043/D-044): Knockout, no WAIT. Legacy Stealth fixtures are validated by their own tests.
-            var m = StageMetrics.Analyze(s, new SolveOptions { Mode = StageModeUtil.Default, MaxWaits = 0 });
+            var u = StagePackTools.WithRecomputedScoring(s, out var m);
+            bool same = u.Par == s.Par && u.ThreeStarActions == s.ThreeStarActions && u.TwoStarActions == s.TwoStarActions && u.GhostOffered == s.GhostOffered
+                        && u.KnockoutPar == s.KnockoutPar && u.KnockoutThreeStarActions == s.KnockoutThreeStarActions && u.KnockoutTwoStarActions == s.KnockoutTwoStarActions;
+            if (!same) changed++;
             if (!m.Solvable) unsolvable++;
-            var actions = new List<object>(); foreach (var a in m.Solution) actions.Add(a.Token);
-            list.Add(new JsonObject().Set("id", (long)s.Id).Set("code", s.Code).Set("title", s.Title).Set("mode", StageModeUtil.Token(StageModeUtil.Default)).Set("rules", StageModeUtil.RulesVersion)
-                .Set("par", (long)m.Par).Set("actions", actions).Set("knockouts", (long)m.KnockoutsInPar).Set("hit_limit", m.HitLimit)
-                .Set("counted_actions", (long)m.Par).Set("three_star", (long)m.ThreeStar).Set("two_star", (long)m.TwoStar)
-                .Set("shortest_without_smoke", (long)m.ShortestWithoutSmoke).Set("shortest_without_emp", (long)m.ShortestWithoutEmp).Set("shortest_without_gadgets", (long)m.ShortestWithoutGadgets)
-                .Set("shortest_alarm_free", (long)m.ShortestAlarmFree).Set("ghost_offered", m.GhostOffered).Set("forced_alarm", m.ForcedAlarm)
-                .Set("smoke_required", m.SmokeRequired).Set("emp_required", m.EmpRequired).Set("period", (long)m.Period).Set("states_explored", (long)m.StatesExplored)
-                .Set("wait_limit", (long)s.WaitLimit).Set("waits_in_par", (long)m.WaitsInPar).Set("min_waits_for_par", (long)m.MinWaitsForPar).Set("shortest_without_wait", (long)m.ShortestWithoutWait)
-                .Set("engine", "ShadowSteps C# V3 solver (0-1 BFS), schema 3"));
-            Console.WriteLine(m + (m.HitLimit ? " HIT-LIMIT" : "") + " | " + Tokens(m.Solution));
+            Console.WriteLine((same ? "same    " : "CHANGED ") + s.Code.PadRight(9) + " par " + s.Par + "/" + s.KnockoutPar + " -> " + u.Par + "  3*<=" + u.ThreeStarActions + " 2*<=" + u.TwoStarActions + " ghost " + s.GhostOffered + " -> " + u.GhostOffered);
+            stages.Add(u);
         }
-        File.WriteAllText(outPath, MiniJson.Serialize(list, true) + "\n");
-        Console.WriteLine("wrote " + outPath + (unsolvable > 0 ? " with " + unsolvable + " UNSOLVABLE stage(s)" : ""));
+        File.WriteAllText(outPath, StageJson.ToJson(stages));
+        Console.WriteLine("wrote " + outPath + " (" + stages.Count + " stages, " + changed + " scoring change(s)" + (unsolvable > 0 ? ", " + unsolvable + " unsolvable in Knockout" : "") + ")");
         return unsolvable == 0 ? 0 : 2;
     }
 

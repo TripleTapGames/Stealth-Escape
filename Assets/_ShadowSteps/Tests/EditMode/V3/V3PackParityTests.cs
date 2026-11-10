@@ -153,8 +153,9 @@ namespace ShadowSteps.Tests.EditMode.V3
             // Under Knockout / no WAIT (validation_v4.json export, 2026-11-04): LEVEL-30 now needs its EMP as well (no WAIT to time the camera).
             // D-068 (doors open on approach): LEVEL-30's lock now swings open under the sentry when the key-holder arrives beside it, so its Smoke is mandatory too.
             CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27", "LEVEL-30" }, smokeRequired);
+            // 2026-11-10 (stage editor, D-073): LEVEL-18 re-authored with a 3-facing sweep (E, clockwise), which leaves no alarm-free route; LEVEL-24 (3-facing sweep N) still has an EMP-free route (8 vs par 6).
             CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25", "LEVEL-30" }, empRequired);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-20", "LEVEL-23" }, forcedAlarm);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-18", "LEVEL-20", "LEVEL-23" }, forcedAlarm);
         }
 
         [Test]
@@ -165,10 +166,10 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55, blocked); Assert.AreEqual(25, stagesWithCover);
             int shipped = 0;
             foreach (var s in Pack().Stages) shipped += s.BlockedCount;
-            Assert.AreEqual(46, shipped, "shipped pack after the D-048 campaign redesign and the LEVEL-17 planter removal: 46 cover cells (the imported 55 no longer apply; the browser export is only compared through Imported())");
+            Assert.AreEqual(44, shipped, "shipped pack after the D-048 campaign redesign, the LEVEL-17 planter removal and the D-074 LEVEL-19 redesign (its 2 cover cells went): 44 cover cells (the imported 55 no longer apply; the browser export is only compared through Imported())");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-18", "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-24's flag corrected to true in the no-WAIT pack (D-044) // stored flags; LEVEL-24's stored flag is stale pending the cone decision
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-18 lost its Ghost route in the 2026-11-10 re-authoring (forced alarm); LEVEL-19 keeps one after D-074
         }
     }
 }

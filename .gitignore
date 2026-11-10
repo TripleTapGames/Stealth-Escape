@@ -122,3 +122,6 @@ Assets/PolygonFantasyKingdom.meta
 # Licensed environment kit (Synty POLYGON Town Pack): never committed
 Assets/PolygonTown/
 Assets/PolygonTown.meta
+
+# Stage editor pack backups (D-072); git is the real history
+/Backups/

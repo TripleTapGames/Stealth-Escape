@@ -76,6 +76,8 @@ namespace ShadowSteps.V3
                 else if (!s.IsWall(c.WallCell)) r.Error(cp, "camera must be mounted on a structural wall ('#'); " + c.WallCell + " is " + (s.IsBlocked(c.WallCell) ? "blocked cover ('X'), which cannot host a camera" : "floor"), c.WallCell);
                 var front = c.WallCell.Neighbor(c.MountFace);
                 if (!s.IsFloor(front)) r.Error(cp + ".mountFace", "camera mounting face must look onto a floor node; " + front + " is not floor", c.WallCell);
+                if (c.Kind == CameraKind.Sweeping && (c.SweepFacings < 2 || c.SweepFacings > CameraSpec.MaxSweepFacings)) r.Error(cp + ".sweep", "sweep must be 2 or " + CameraSpec.MaxSweepFacings + " facings, got " + c.SweepFacings, c.WallCell);
+                else if (c.Kind != CameraKind.Sweeping && c.SweepFacings != CameraSpec.DefaultSweepFacings) r.Warn(cp + ".sweep", "sweep is only used by sweeping cameras");
             }
 
             // guards

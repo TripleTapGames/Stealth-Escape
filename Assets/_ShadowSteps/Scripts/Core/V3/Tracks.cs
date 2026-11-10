@@ -94,14 +94,27 @@ namespace ShadowSteps.V3
     /// <summary>Deterministic camera facing schedule. Port of <c>camDir</c> in the v3 prototype.</summary>
     public static class CameraTrack
     {
-        public static int Period(CameraSpec c) => c.Kind == CameraKind.Fixed ? 1 : 4;
+        /// <summary>Counted actions each sweep facing is held for.</summary>
+        public const int SweepHold = 2;
+
+        /// <summary>Fixed 1; Rotating 4; Sweeping 2 facings 4, 3 facings 8 (the pan goes out and back: A A B B C C B B).</summary>
+        public static int Period(CameraSpec c) => c.Kind == CameraKind.Fixed ? 1 : c.Kind == CameraKind.Rotating ? 4 : SweepHold * 2 * (SweepFacingCount(c) - 1);
+
+        private static int SweepFacingCount(CameraSpec c) => Math.Max(2, Math.Min(CameraSpec.MaxSweepFacings, c.SweepFacings));
 
         public static Direction FacingAt(CameraSpec c, int t)
         {
             switch (c.Kind)
             {
                 case CameraKind.Rotating: return DirectionUtil.Rotate(c.Facing, c.Clockwise ? t : -t);
-                case CameraKind.Sweeping: return (t / 2) % 2 == 1 ? DirectionUtil.Rotate(c.Facing, c.Clockwise ? 1 : -1) : c.Facing;
+                case CameraKind.Sweeping:
+                {
+                    int n = SweepFacingCount(c);
+                    int cycle = 2 * (n - 1);                       // facings per out-and-back pan
+                    int k = (t / SweepHold) % cycle;               // position in the pan
+                    int step = k < n ? k : cycle - k;              // 0..n-1 going out, n-2..1 coming back
+                    return DirectionUtil.Rotate(c.Facing, c.Clockwise ? step : -step);
+                }
                 default: return c.Facing;
             }
         }

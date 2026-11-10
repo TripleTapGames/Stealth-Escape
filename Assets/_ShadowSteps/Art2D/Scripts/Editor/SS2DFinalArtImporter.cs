@@ -193,7 +193,7 @@ namespace ShadowSteps.Art2D.Editor
             return true;
         }
 
-        /// <summary>LEVEL-19 "Sweep Window" decoration: the X beside the camera wall (4,1) is a stone wall stub running off the boundary (logical Y), the standalone X at (1,3) a bush planter, the camera on a stone wall piece.</summary>
+        /// <summary>LEVEL-19 "Sweep Window" decoration (D-074 board: no cover cells; the 3-facing sweep camera on the bottom wall (3,6) sits on a stone mount). Before D-074: the X beside the camera wall (4,1) was a stone wall stub running off the boundary (logical Y), the standalone X at (1,3) a bush planter, the camera on a stone wall piece.</summary>
         public static SS2DLevelArtLayout Level19Layout()
         {
             string path = LevelArtDir + "SS2DArt_LEVEL-19.asset";
@@ -201,12 +201,7 @@ namespace ShadowSteps.Art2D.Editor
             var layout = AssetDatabase.LoadAssetAtPath<SS2DLevelArtLayout>(path);
             if (layout == null) { layout = ScriptableObject.CreateInstance<SS2DLevelArtLayout>(); AssetDatabase.CreateAsset(layout, path); }
             layout.stageCode = "LEVEL-19"; layout.defaultObstacle = SS2DObstacleArt.BushPlanter;
-            layout.obstacles = new System.Collections.Generic.List<SS2DObstacleArtEntry>
-            {
-                // Slid 0.36 toward the camera side (logical −x) so the thin stone body sits on the cell edge where the camera's rays are clipped by this cover cell.
-                new SS2DObstacleArtEntry { x = 4, y = 1, art = SS2DObstacleArt.StoneWall, wallAxis = SS2DWallAxis.LogicalY, offset = new Vector2(-0.36f, 0f) },
-                new SS2DObstacleArtEntry { x = 1, y = 3, art = SS2DObstacleArt.BushPlanter },
-            };
+            layout.obstacles = new System.Collections.Generic.List<SS2DObstacleArtEntry>(); // D-074: the redesigned board has no X cells (entries are only read for authored X cells anyway)
             layout.cameras = new System.Collections.Generic.List<SS2DCameraArtEntry> { new SS2DCameraArtEntry { cameraId = "cam1", mount = SS2DCameraMountArt.StoneWall } };
             EditorUtility.SetDirty(layout);
             return layout;

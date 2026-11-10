@@ -207,8 +207,9 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
-        public void LevelArt_Level19_UsesStoneWallAndBush_ForItsTwoAuthoredCoverCells_AndAStoneCameraMount()
+        public void LevelArt_Level19_HasNoCoverCells_AndAStoneCameraMount()
         {
+            // D-074 (2026-11-10): the redesigned "Sweep Window" is a 3x3 long-edge board with no X cells; the camera moved to the bottom wall (3,6).
             var stage = Unlimited(Pack().FindByCode("LEVEL-19")); var lib = Library();
             Assert.IsNotNull(lib.bush, "obstacle bush imported"); Assert.IsNotNull(lib.wallSide); Assert.IsNotNull(lib.wallFront);
             var art = lib.FindLevelArt("LEVEL-19"); Assert.IsNotNull(art, "LEVEL-19 layout registered on the library");
@@ -218,15 +219,8 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.IsTrue(r.Rotated); Assert.AreSame(art, r.ArtLayout);
                 // Gameplay data drives the cells: exactly the authored X cells get a cover sprite, nothing else.
                 var covers = new List<Transform>(); foreach (Transform t in r.transform.Find("Props")) if (t.name.StartsWith("Cover_X_") && !t.name.EndsWith("_Shadow")) covers.Add(t);
-                Assert.AreEqual(stage.BlockedCount, covers.Count); Assert.AreEqual(2, covers.Count);
-                var wall = r.transform.Find("Props/Cover_X_4_1").GetComponent<SpriteRenderer>();
-                var bush = r.transform.Find("Props/Cover_X_1_3").GetComponent<SpriteRenderer>();
-                Assert.AreEqual(lib.wallFront, wall.sprite, "(4,1) is a stone wall running along logical Y: drawn horizontal after the rotation → front piece");
-                Assert.AreEqual(lib.bush, bush.sprite, "(1,3) is the bush planter");
-                var entry = art.Find(new GridCoord(4, 1));
-                Assert.Less(Vector3.Distance(wall.transform.localPosition, r.Pos(new GridCoord(4, 1)) + r.DrawnOffset(entry.offset)), 1e-4f, "on its node plus the layout's decorative offset (slid to the cell edge where the cone is clipped)");
-                Assert.LessOrEqual(Mathf.Abs(entry.offset.x) + Mathf.Abs(entry.offset.y), 0.5f, "offset stays inside the cell");
-                Assert.Less(Vector3.Distance(bush.transform.localPosition, r.Pos(new GridCoord(1, 3))), 1e-4f);
+                Assert.AreEqual(stage.BlockedCount, covers.Count); Assert.AreEqual(0, covers.Count, "D-074 board has no cover cells");
+                Assert.AreEqual(1, stage.Guards.Count, "the rotating guard beside the camera");
                 // Camera: logical anchor unchanged (wall-face edge), mounted on the stone side piece (drawn vertical along the rotated boundary).
                 var cam = stage.Cameras[0];
                 var edge = r.Pos(cam.WallCell) + (r.Pos(cam.WallCell.Neighbor(cam.MountFace)) - r.Pos(cam.WallCell)) * 0.5f;
@@ -488,7 +482,10 @@ namespace ShadowSteps.Art2D.Tests
                     state = After(stage, state, "WAIT");
                 }
                 var other = DirectionUtil.Rotate(cam.Facing, cam.Clockwise ? 1 : -1);
-                CollectionAssert.AreEqual(new[] { cam.Facing, cam.Facing, other, other, cam.Facing, cam.Facing }, facings, "two adjacent facings, two actions each");
+                // D-073: a 3-facing sweep goes on to the far facing (A A B B C C) instead of coming straight back (A A B B A A).
+                var third = cam.SweepFacings >= 3 ? DirectionUtil.Rotate(cam.Facing, cam.Clockwise ? 2 : -2) : cam.Facing;
+                Assert.AreEqual(3, cam.SweepFacings, "LEVEL-19 ships the 3-facing sweep (D-074)");
+                CollectionAssert.AreEqual(new[] { cam.Facing, cam.Facing, other, other, third, third }, facings, "adjacent facings, two actions each");
                 var marker = r.transform.Find("Props/Camera_0/TypeMarker").GetComponent<SpriteRenderer>();
                 Assert.IsTrue(marker.gameObject.activeSelf); Assert.AreEqual(r.library.sweepMarker, marker.sprite);
             }
