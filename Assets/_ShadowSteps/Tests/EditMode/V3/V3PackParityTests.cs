@@ -78,12 +78,12 @@ namespace ShadowSteps.Tests.EditMode.V3
         }
 
         [Test]
-        public void ShippedPack_Has35Stages_WithSolverScoring_AndNoWarnings()
+        public void ShippedPack_Has37Stages_WithSolverScoring_AndNoWarnings()
         {
             var pack = Pack();
-            Assert.AreEqual(35, pack.Stages.Count, "5 FTUE + 25 main + Levels 26-30 (ids 31-35)");
+            Assert.AreEqual(37, pack.Stages.Count, "5 FTUE + 25 main + Levels 26-30 (ids 31-35) + Levels 31-32 (ids 36-37, D-078)");
             Assert.AreEqual(0, pack.Warnings.Count, string.Join("\n", pack.Warnings));
-            for (int i = 0; i < 35; i++) Assert.AreEqual(i + 1, pack.Stages[i].Id);
+            for (int i = 0; i < 37; i++) Assert.AreEqual(i + 1, pack.Stages[i].Id);
             var report = StageValidator.ValidatePack(pack.Stages);
             Assert.IsTrue(report.IsValid, report.ToString());
             foreach (var s in pack.Stages)
@@ -99,7 +99,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         {
             var pack = Pack();
             var entries = JsonAccess.AsArray(MiniJson.Parse(File.ReadAllText(P(ValidationRelative))), "validation_v4");
-            Assert.AreEqual(35, entries.Count);
+            Assert.AreEqual(37, entries.Count);
             foreach (JsonObject e in entries)
             {
                 var stage = pack.FindByCode((string)e["code"]);
@@ -166,7 +166,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55, blocked); Assert.AreEqual(25, stagesWithCover);
             int shipped = 0;
             foreach (var s in Pack().Stages) shipped += s.BlockedCount;
-            Assert.AreEqual(44, shipped, "shipped pack after the D-048 campaign redesign, the LEVEL-17 planter removal and the D-074 LEVEL-19 redesign (its 2 cover cells went): 44 cover cells (the imported 55 no longer apply; the browser export is only compared through Imported())");
+            Assert.AreEqual(49, shipped, "44 after D-048 / LEVEL-17 / D-074, plus LEVEL-31 (4 cover cells) and LEVEL-32 (1) from the 2026-11-11 kit (D-078); the imported 55 no longer apply (the browser export is only compared through Imported())");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
             CollectionAssert.AreEquivalent(new[] { "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-18 lost its Ghost route in the 2026-11-10 re-authoring (forced alarm); LEVEL-19 keeps one after D-074

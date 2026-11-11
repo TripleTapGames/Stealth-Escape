@@ -29,6 +29,8 @@ namespace ShadowSteps.UI
 
         /// <summary>The current cut-out in screen pixels (null = nothing visible yet).</summary>
         public Rect? Hole => _lastHole;
+        /// <summary>Centre of the cut-out in this screen's local units; the hand's fingertip returns to it on every tap.</summary>
+        public Vector2 HoleCentreLocal { get; private set; }
 
         public override void BuildHierarchy()
         {
@@ -165,13 +167,15 @@ namespace ShadowSteps.UI
             Bar(Frame, 2, new Vector2(-w * 0.5f + thick * 0.5f, 0f), new Vector2(thick, h));
             Bar(Frame, 3, new Vector2(w * 0.5f - thick * 0.5f, 0f), new Vector2(thick, h));
 
-            // Hand: fingertip on the target, bobbing in from the lower right as a tap; mirrored to come from above when the target sits near the bottom edge.
+            // Hand: the fingertip lands exactly on the cut-out centre at the bottom of every tap and lifts away toward the lower right
+            // between taps (user, 2026-11-11: "the hand is slightly off the node"); mirrored to come from above near the bottom edge.
             Hand.gameObject.SetActive(true);
-            float bob = ReducedMotion ? 0f : Mathf.Abs(Mathf.Sin(t * 3f)) * 26f;
+            float lift = ReducedMotion ? 0f : Mathf.Abs(Mathf.Sin(t * 3f)) * 26f; // 0 = pressed on the target
             bool fromAbove = cy - 220f < full.yMin;
             float dir = fromAbove ? -1f : 1f;
-            Hand.anchoredPosition = new Vector2(cx + 30f + bob * 0.6f, cy - dir * (34f + bob));
-            float press = ReducedMotion ? 1f : 1f - 0.06f * Mathf.Abs(Mathf.Sin(t * 3f)); // slight press at the top of the bob
+            HoleCentreLocal = new Vector2(cx, cy);
+            Hand.anchoredPosition = new Vector2(cx + lift * 0.6f, cy - dir * lift);
+            float press = ReducedMotion ? 1f : 1f - 0.06f * (1f - lift / 26f); // slight squash while pressed
             Hand.localScale = new Vector3(press, press * dir, 1f);
 
             // Message below the cut-out (above it when the cut-out sits in the lower part of the screen).

@@ -1672,6 +1672,117 @@
         "knockoutTwoStar": 25
       },
       "notes": ["imported from browser playtest export (Level 30, 1 blocked cover nodes)", "imported 2026-11-03 from the ChatGPT Levels 26-30 kit (reference id 35, \"Level 30\"); reference optimal 28 counted actions, Ghost route supplied", "scoring = C# solver (D-038 door rule); see Docs/Reports/LEVELS_26_30_IMPORT_REPORT.md", "redesigned 2026-11-05 (D-048): Knockout board with long edges, solved by the C# solver under Knockout/no-WAIT", "re-tuned 2026-11-05 (D-053): camera reach 3 squares", "centre guard g1 (static at (4,6) facing N) removed 2026-11-06 (user's call: it never shaped the route; par 19 and the Ghost route unchanged, the knockout now targets the upper sentry); its isolated node (4,6) became wall, closing the middle stone run (solver character identical)"]
+    },
+    {
+      "id": 36,
+      "code": "LEVEL-31",
+      "group": "Main",
+      "title": "Garden Gambit",
+      "intro": "Take the key. Flank a guard or circle the garden.",
+      "rows": ["__.-.-.__", "__|_|_|__", ".-.-.-.__", "|_|X|X|__", ".-._.-.-.", "|_|X|X|__", ".-.-.-.__", "__|_|_|__", "__.-.-.__"],
+      "start": [0, 4],
+      "exit": [8, 4],
+      "key": [2, 0],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [6, 4],
+          "b": [8, 4]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "rotating",
+          "route": [
+            [4, 4]
+          ],
+          "facing": "E",
+          "clockwise": true
+        },
+        {
+          "id": "g2",
+          "kind": "rotating",
+          "route": [
+            [6, 2]
+          ],
+          "facing": "S",
+          "clockwise": true
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
+      },
+      "notes": ["kit name L36_GARDEN_GAMBIT_V1 (handoff \"LEVEL-36\", 2026-11-11), base hint LEVEL-30", "Original Hitman GO-inspired courtyard graph; not a copy of any Hitman GO level.", "Key at (2,0) is required to cross the sole locked door from (6,4) to exit (8,4).", "Design idea: secure the key, then choose the shorter upper knockout approach or longer lower outer circuit without knockouts.", "Independent BFS: 8 actions with knockout of g2 at (6,2), route: (0,2),(2,2),(2,0) key,(4,0),(6,0),(6,2) KO,(6,4),(8,4) exit.", "Independent BFS: 12 actions without knockouts, route: (0,2),(2,2),(2,0) key,(2,2),(2,4),(2,6),(2,8),(4,8),(6,8),(6,6),(6,4),(8,4) exit.", "Guard sight checks are before and after each counted move; no WAIT. C# authoritative solver must confirm both routes and assign official par/stars.", "C# solver (2026-11-11): par 8 with one knockout (g2), 12 without knockouts; key mandatory (unsolvable with the door edge cut); both kit routes replay as wins."]
+    },
+    {
+      "id": 37,
+      "code": "LEVEL-32",
+      "group": "Main",
+      "title": "The Locked Flank",
+      "intro": "Unlock the gate or circle behind the guard. Avoid the top patrol.",
+      "rows": [".-.-.-.-.", "|_______|", "._..._._.", "|___X_|_|", ".-.-.-.-.", "__|___#_|", "__.-.-.-.", "__|_____|", "__.-.-.-."],
+      "start": [0, 4],
+      "exit": [6, 2],
+      "key": [4, 6],
+      "cuts": [],
+      "doors": [
+        {
+          "a": [6, 6],
+          "b": [8, 6]
+        }
+      ],
+      "guards": [
+        {
+          "id": "g1",
+          "kind": "static",
+          "route": [
+            [6, 4]
+          ],
+          "facing": "W"
+        },
+        {
+          "id": "g2",
+          "kind": "pingPong",
+          "route": [
+            [2, 2],
+            [3, 2],
+            [4, 2]
+          ],
+          "facing": "E",
+          "offset": 0
+        }
+      ],
+      "cameras": [],
+      "gadgets": {
+        "smoke": 0,
+        "emp": 0
+      },
+      "alarmBudget": 4,
+      "waitLimit": 0,
+      "scoring": {
+        "par": 8,
+        "threeStar": 9,
+        "twoStar": 11,
+        "ghostOffered": false,
+        "knockoutPar": 8,
+        "knockoutThreeStar": 9,
+        "knockoutTwoStar": 11
+      },
+      "notes": ["kit name L37_LOCKED_FLANK_V2_UNREACHABLE_PATROL (handoff \"LEVEL-37\", 2026-11-11), base hint LEVEL-30", "Design: main guard g1 faces West at [6,4]. The front approach from [4,4] is illegal/detected; rear approach from [8,4] is the only way to KO g1 and reach exit [6,2].", "Main guard g1 is mandatory. The only physical approach to exit [6,2] is through g1 node [6,4]; [8,2] and exit are not connected.", "The upper guard g2 is a 3-node pingPong patrol [2,2]->[3,2]->[4,2] and back. This 3-node component has NO movement connection to the player-accessible component, regardless of whether the locked gate opens. Thus a knockout is physically impossible; no guard immunity flag or special exception is used.", "Even though g2 cannot be approached, sight passes through empty ground: at the right endpoint facing E it sees exit [6,2] at distance 2; at the left endpoint facing W it sees [0,2]. Timing matters with before/after sight checks.", "Key + gate route: [2,4],[2,6],[4,6] key,[6,6],[8,6] gate,[8,4],[6,4] KO g1,[6,2] exit (8 counted moves).", "No-key lower detour example: [0,2],[0,4],[2,4],[2,6],[2,8],[4,8],[6,8],[8,8],[8,6],[8,4],[6,4] KO g1,[6,2] exit (12 counted moves), using two extra actions to align the exit with the patrol blind phase.", "No-key upper approach example: [0,2],[0,0],[2,0],[4,0],[6,0],[8,0],[8,2],[8,0],[8,2],[8,4],[6,4] KO g1,[6,2] exit (12 counted moves). Returning to [8,0] and back uses movement, not WAIT, to synchronize the final exit.", "Bespoke 9x9 puzzle, 24 nodes, all walkway cells are valid, no WAIT, 2-square guard sight, no cameras. Candidate pending official Unity C# solver verification.", "C# engine note (2026-11-11): a ping-pong guard at its first route node faces the endpoint at t=0 (here W, watching (0,2)), unlike the kit prototype (E); the kit's two 12-action no-key routes are caught on their first step, but a 12-action no-key route still exists (E S N S S E E E N N KO N). Par 8 via key + gate; no knockout-free route (as designed); patrol g2 unreachable with the gate open or closed.", "Knockout-only design (D-078): the exit is reachable only through g1, so no knockout-free (legacy Stealth) route exists; intended."]
     }
   ]
 }

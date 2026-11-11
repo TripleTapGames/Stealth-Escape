@@ -93,6 +93,8 @@ namespace ShadowSteps.Art2D.Tests
                 + " step " + _flow.GadgetGuideCurrent + " mode " + S.Mode + " pulsing " + Hud.IsPulsing(Hud.smokeButton) + " smokeScale " + Hud.smokeButton.localScale);
             Assert.AreEqual(message, Spot.MessageText.Text, why); Assert.AreEqual(message, Hud.messageLabel.text, why + ": HUD line");
             Assert.IsTrue(Spot.Top.raycastTarget && Spot.Bottom.raycastTarget, why + ": dim panels block taps");
+            // The fingertip (the hand's pivot) stays within one tap-lift of the cut-out centre and touches it at the bottom of each tap.
+            Assert.LessOrEqual(Vector2.Distance(Spot.Hand.anchoredPosition, Spot.HoleCentreLocal), 26f * 1.2f + 0.5f, why + ": fingertip on the target (hand " + Spot.Hand.anchoredPosition + ", centre " + Spot.HoleCentreLocal + ")");
         }
 
         [UnityTest]

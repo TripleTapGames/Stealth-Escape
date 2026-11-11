@@ -11,15 +11,16 @@ namespace ShadowSteps.Tests.EditMode.V3
         private static StagePack Pack() => StageJson.Parse(File.ReadAllText(Path.Combine(TestPaths.ProjectRoot, V3PackParityTests.PackRelative)));
 
         [Test]
-        public void Campaign_Has35Stages_Main25ProceedsToMain26_AndMain30IsLast()
+        public void Campaign_Has37Stages_Main25ProceedsToMain26_AndMain32IsLast()
         {
             var catalog = new StageCatalog(Pack().Stages);
-            Assert.AreEqual(35, catalog.Count);
-            for (int i = 0; i < 35; i++) Assert.AreEqual(i + 1, catalog.ByIndex(i).Id, "ids stay sequential");
+            Assert.AreEqual(37, catalog.Count);
+            for (int i = 0; i < 37; i++) Assert.AreEqual(i + 1, catalog.ByIndex(i).Id, "ids stay sequential");
             Assert.AreEqual("LEVEL-25", catalog.ById(30).Code); Assert.AreEqual("LEVEL-26", catalog.NextAfter(30).Code);
-            for (int n = 26; n < 30; n++) Assert.AreEqual("LEVEL-" + (n + 1), catalog.NextAfter(catalog.ByCode("LEVEL-" + n).Id).Code);
-            Assert.AreEqual("LEVEL-30", catalog.ById(35).Code); Assert.IsNull(catalog.NextAfter(35), "no stage after Main 30 (the flow returns to level select)");
-            foreach (var code in new[] { "LEVEL-26", "LEVEL-27", "LEVEL-28", "LEVEL-29", "LEVEL-30" }) Assert.AreEqual("Main", catalog.ByCode(code).Group);
+            for (int n = 26; n < 32; n++) Assert.AreEqual("LEVEL-" + (n + 1), catalog.NextAfter(catalog.ByCode("LEVEL-" + n).Id).Code);
+            Assert.AreEqual("LEVEL-30", catalog.ById(35).Code); Assert.AreEqual("LEVEL-31", catalog.NextAfter(35).Code, "D-078: Garden Gambit follows Main 30");
+            Assert.AreEqual("LEVEL-32", catalog.ById(37).Code); Assert.IsNull(catalog.NextAfter(37), "no stage after Main 32 (the flow returns to level select)");
+            foreach (var code in new[] { "LEVEL-26", "LEVEL-27", "LEVEL-28", "LEVEL-29", "LEVEL-30", "LEVEL-31", "LEVEL-32" }) Assert.AreEqual("Main", catalog.ByCode(code).Group);
         }
 
         [Test]
