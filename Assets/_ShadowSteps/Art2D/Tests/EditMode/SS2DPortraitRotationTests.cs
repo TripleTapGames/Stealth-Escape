@@ -162,6 +162,31 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
+        public void WideBoards_AtLeastThePanThreshold_StayLandscape_AndPan()
+        {
+            // D-080: every board at least horizontalPanMinWidth (11) columns wide keeps its orientation; narrower wide boards still rotate (Level2 above).
+            var pack = StageJson.Parse(File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "ShadowSteps/levels_v4.json")));
+            var lib = AssetDatabase.LoadAssetAtPath<SS2DSpriteLibrary>(SS2DSpriteLibrary.DefaultAssetPath); Assert.IsNotNull(lib);
+            Assert.AreEqual(11, lib.horizontalPanMinWidth, "shipped threshold: the 11-15 column levels 33-45 pan, every earlier board (at most 9 wide) is unchanged");
+            int wide = 0;
+            foreach (var st in pack.Stages)
+            {
+                var go = new GameObject("rot-test"); var r = go.AddComponent<ShadowSteps2DRenderer>(); r.library = lib; r.Build(st);
+                try
+                {
+                    bool expectPan = st.Width >= lib.horizontalPanMinWidth;
+                    Assert.AreEqual(expectPan, r.PanHorizontal, st.Code);
+                    if (expectPan) { Assert.IsFalse(r.Rotated, st.Code + " drawn landscape"); Assert.AreEqual(st.Width, r.ViewLayout.Width); wide++; }
+                    else Assert.AreEqual(st.Width > st.Height, r.Rotated, st.Code + " rotation rule unchanged for the earlier campaign");
+                    // Picking round-trips either way.
+                    foreach (var n in st.FloorNodes()) Assert.AreEqual(n, r.ToGrid(r.transform.TransformPoint(r.Pos(n))), st.Code + " node " + n);
+                }
+                finally { Object.DestroyImmediate(go); }
+            }
+            Assert.AreEqual(13, wide, "the thirteen handoff levels (ids 38-50)");
+        }
+
+        [Test]
         public void TallOrSquareStages_AreNotRotated()
         {
             var pack = Pack();

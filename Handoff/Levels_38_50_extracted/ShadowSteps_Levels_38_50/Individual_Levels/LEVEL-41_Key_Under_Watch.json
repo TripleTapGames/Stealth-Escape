@@ -1,0 +1,105 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L41_KEY_UNDER_WATCH",
+    "title": "Key Under Watch",
+    "intro": "Collect the lower key, then pass the rotating guard to unlock exit.",
+    "rows": [
+      "_____#_______",
+      "_.-.-.-.-.-._",
+      "_|_|_|___|_|_",
+      "_.-.-.-.-.-._",
+      "_|_|_|_|X|___",
+      "_.-.-.-._.-._",
+      "_|_|_|X__|___",
+      "_.-.-.___.-._",
+      "___|_|_______",
+      "___.-._______",
+      "_____________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      11,
+      5
+    ],
+    "key": [
+      3,
+      9
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          9,
+          5
+        ],
+        "b": [
+          11,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "E",
+        "clockwise": true
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            7,
+            3
+          ],
+          [
+            9,
+            3
+          ],
+          [
+            11,
+            3
+          ]
+        ],
+        "facing": "W",
+        "offset": 1
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          5,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "rotating",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "The key is mandatory and off the direct route; unlock the exit edge only after collecting it.",
+      "The rotating camera complicates the return from the key branch.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [3, 5], [3, 7], [3, 9], [3, 7], [3, 5], [5, 5], [7, 5], [7, 3], [9, 3], [9, 5], [11, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=11; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  }
+]

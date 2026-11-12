@@ -194,6 +194,11 @@ namespace ShadowSteps.Art2D
         public Vector2Int zoomReferenceGrid = new Vector2Int(5, 7);
         [Tooltip("Ignore zoomReferenceGrid and frame every level at the pack's largest grid instead (the D-039 behaviour: small boards look small).")]
         public bool zoomReferenceFromPackLargest = false;
+        [Header("Wide boards (D-080): kept landscape, zoomed to their height and panned sideways instead of rotated and shrunk")]
+        [Tooltip("Boards at least this many columns wide are drawn unrotated, zoomed so their full height fits the portrait band, and pan horizontally: the view follows the player after every move and a two-finger drag (right/middle mouse drag in the editor) pans it by hand. Panning is never a game action. 0 = off (every wide board rotates to portrait and zooms out to fit).")]
+        public int horizontalPanMinWidth = 11;
+        [Tooltip("How quickly the panned view settles on the player (per second; higher = snappier).")]
+        public float panFollowSmoothing = 6f;
         [Range(0f, 0.4f)] public float hudTop = 0.10f;
         [Range(0f, 0.4f)] public float hudBottom = 0.145f;
         public float cameraSize = 0.80f;

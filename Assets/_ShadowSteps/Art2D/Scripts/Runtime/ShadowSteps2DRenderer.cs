@@ -26,6 +26,12 @@ namespace ShadowSteps.Art2D
         /// <summary>Layout of the drawn board: width/height swapped when <see cref="Rotated"/>; used by the camera fit.</summary>
         public BoardLayout ViewLayout { get; private set; }
         public bool Rotated { get; private set; }
+        /// <summary>D-080: this board is at least <see cref="SS2DSpriteLibrary.horizontalPanMinWidth"/> columns wide, so it is drawn unrotated and the camera pans sideways instead of zooming out (see <see cref="SS2DCameraFitter"/>).</summary>
+        public bool PanHorizontal { get; private set; }
+        /// <summary>Half the horizontal overflow of the board beyond the view, in world units (set by the camera fitter; 0 = the whole board is in view). The background is scaled to cover the view at every pan position.</summary>
+        public float PanRange { get; set; }
+        /// <summary>World x of the camera with no pan applied (set by the camera fitter); the pan runs ±<see cref="PanRange"/> around it.</summary>
+        public float PanHomeX { get; set; }
 
         /// <summary>Drawn (local) position of a logical cell.</summary>
         public Vector3 Pos(GridCoord c) { var p = Layout.WorldPosition(c); return Rotated ? new Vector3(-p.y, p.x, 0f) : p; }
@@ -74,6 +80,8 @@ namespace ShadowSteps.Art2D
             float viewH = cam.orthographicSize * 2f, viewW = viewH * Mathf.Max(0.3f, cam.aspect);
             var size = _background.sprite.bounds.size; size.x = Mathf.Max(0.01f, size.x); size.y = Mathf.Max(0.01f, size.y);
             var camP = cam.transform.position;
+            // D-080: on a panning board the image must cover the view at every pan position: the half-width grows by the pan range around the home x.
+            float cx = PanRange > 0f ? PanHomeX : camP.x, halfW = viewW * 0.5f + Mathf.Max(0f, PanRange);
             var r = BackgroundBoardRect;
             if (library.backgroundFit == SS2DBackgroundFit.FrameBoard && IsBuilt && r.width > 0.01f && r.height > 0.01f)
             {
@@ -89,8 +97,8 @@ namespace ShadowSteps.Art2D
                 var grid = transform.position;
                 // Coverage: for each view edge, the scale at which the image edge reaches it (image centre = grid − off·k).
                 float need = 0f;
-                need = Mathf.Max(need, (grid.x - camP.x + viewW * 0.5f) / Mathf.Max(0.01f, off.x + size.x * 0.5f));
-                need = Mathf.Max(need, (camP.x + viewW * 0.5f - grid.x) / Mathf.Max(0.01f, size.x * 0.5f - off.x));
+                need = Mathf.Max(need, (grid.x - cx + halfW) / Mathf.Max(0.01f, off.x + size.x * 0.5f));
+                need = Mathf.Max(need, (cx + halfW - grid.x) / Mathf.Max(0.01f, size.x * 0.5f - off.x));
                 need = Mathf.Max(need, (grid.y - camP.y + viewH * 0.5f) / Mathf.Max(0.01f, off.y + size.y * 0.5f));
                 need = Mathf.Max(need, (camP.y + viewH * 0.5f - grid.y) / Mathf.Max(0.01f, size.y * 0.5f - off.y));
                 k = Mathf.Max(k, need * 1.01f);
@@ -98,9 +106,9 @@ namespace ShadowSteps.Art2D
                 _background.transform.position = new Vector3(grid.x - off.x * k, grid.y - off.y * k, 5f);
                 return;
             }
-            float cover = Mathf.Max(viewW * 1.04f / size.x, viewH * 1.04f / size.y);
+            float cover = Mathf.Max(halfW * 2f * 1.04f / size.x, viewH * 1.04f / size.y);
             _background.transform.localScale = Vector3.one * cover;
-            _background.transform.position = new Vector3(camP.x, camP.y, 5f);
+            _background.transform.position = new Vector3(cx, camP.y, 5f);
         }
 
         /// <summary>Backdrop theme chosen for the built level by its id (D-058); null = the library's single background.</summary>
@@ -320,8 +328,11 @@ namespace ShadowSteps.Art2D
             Stage = stage;
             ArtLayout = library.FindLevelArt(stage.Code);
             Layout = BoardLayout.For(stage);
-            Rotated = autoRotatePortrait && stage.Width > stage.Height;
+            var lib0 = library;
+            PanHorizontal = lib0.horizontalPanMinWidth > 0 && stage.Width >= lib0.horizontalPanMinWidth; // D-080: wide boards stay landscape and pan
+            Rotated = autoRotatePortrait && stage.Width > stage.Height && !PanHorizontal;
             ViewLayout = Rotated ? new BoardLayout(stage.Height, stage.Width, Layout.NodeSpacing) : Layout;
+            PanRange = 0f; PanHomeX = 0f;
             var lib = library; float s = Layout.NodeSpacing;
             _board = Root("Board"); _floor = Root("Floor"); _paths = Root("Paths"); _nodes = Root("Nodes"); _overlays = Root("Overlays"); _props = Root("Props"); _actors = Root("Actors"); _markers = Root("Markers"); _fx = Root("FX");
             _placeholderDisc = lib.node;

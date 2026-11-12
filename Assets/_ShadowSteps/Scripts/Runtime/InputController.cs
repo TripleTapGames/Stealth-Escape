@@ -29,6 +29,10 @@ namespace ShadowSteps.Runtime
 
         public event Action RetryRequested;
         public event Action UndoRequested;
+        /// <summary>D-080: horizontal pan of the view requested by a two-finger drag (or a right/middle mouse drag in the editor), in screen pixels per frame (positive = fingers moved right). Only the presentation listens; it is never a game action and never advances a turn.</summary>
+        public event Action<float> PanRequested;
+        /// <summary>True while a pan drag is in progress.</summary>
+        public bool PanDragging => _panDragging;
         /// <summary>Optional picking override for alternative presentations (e.g. the angled 3D view): screen point → grid node, or null.</summary>
         public Func<Vector2, GridCoord?> ScreenToNodeOverride;
         /// <summary>Optional picking override: screen point → camera index, or -1.</summary>
@@ -37,6 +41,7 @@ namespace ShadowSteps.Runtime
         public Func<Direction, Direction> ScreenToLogicalDirection;
 
         private bool _pointerDown, _gestureConsumed, _pointerStartedOverUi, _previewShown;
+        private bool _panDragging; private Vector2 _panLast;
         private Vector2 _pointerStart;
         private float _pointerDownTime;
         private float _ignoreUntil;
@@ -83,6 +88,7 @@ namespace ShadowSteps.Runtime
 
         private void HandlePointer()
         {
+            if (HandlePan()) return;
             bool down, up, held;
             Vector2 pos;
             if (Input.touchCount > 0)
@@ -134,6 +140,28 @@ namespace ShadowSteps.Runtime
                 if (!_gestureConsumed && !_pointerStartedOverUi && delta.magnitude <= tapPx) HandleTap(pos);
                 _gestureConsumed = false;
             }
+        }
+
+        /// <summary>
+        /// D-080 pan gesture: two fingers down (or the right/middle mouse button) drag the view sideways. Any one-finger gesture in progress
+        /// is dropped so the lift never counts as a tap or a swipe, and the frame after the fingers come off is swallowed. Returns true
+        /// while the pan owns the pointer. Nothing here reaches the session.
+        /// </summary>
+        private bool HandlePan()
+        {
+            bool panning; Vector2 at;
+            if (Input.touchCount >= 2) { var a = Input.GetTouch(0); var b = Input.GetTouch(1); at = (a.position + b.position) * 0.5f; panning = true; }
+            else if (Input.touchCount == 0 && (Input.GetMouseButton(1) || Input.GetMouseButton(2))) { at = Input.mousePosition; panning = true; }
+            else { at = Vector2.zero; panning = false; }
+            if (panning)
+            {
+                if (_panDragging) PanRequested?.Invoke(at.x - _panLast.x);
+                else { _panDragging = true; if (_previewShown) { Session.HidePreview(); _previewShown = false; } }
+                _panLast = at; _pointerDown = false; _gestureConsumed = false;
+                return true;
+            }
+            if (_panDragging) { _panDragging = false; _pointerDown = false; _gestureConsumed = false; return true; } // release frame: no tap, no swipe
+            return false;
         }
 
         private Vector3 WorldAt(Vector2 screenPos) => BoardCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -BoardCamera.transform.position.z));

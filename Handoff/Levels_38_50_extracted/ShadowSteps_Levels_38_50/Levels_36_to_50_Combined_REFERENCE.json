@@ -1,0 +1,1617 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L36_GARDEN_GAMBIT_V1",
+    "title": "Garden Gambit",
+    "intro": "Take the key. Flank a guard or circle the garden.",
+    "rows": [
+      "__.-.-.__",
+      "__|_|_|__",
+      ".-.-.-.__",
+      "|_|X|X|__",
+      ".-._.-.-.",
+      "|_|X|X|__",
+      ".-.-.-.__",
+      "__|_|_|__",
+      "__.-.-.__"
+    ],
+    "start": [
+      0,
+      4
+    ],
+    "exit": [
+      8,
+      4
+    ],
+    "key": [
+      2,
+      0
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          6,
+          4
+        ],
+        "b": [
+          8,
+          4
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            4,
+            4
+          ]
+        ],
+        "facing": "E",
+        "clockwise": true
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            6,
+            2
+          ]
+        ],
+        "facing": "S",
+        "clockwise": true
+      }
+    ],
+    "cameras": [],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "Original Hitman GO-inspired courtyard graph; not a copy of any Hitman GO level.",
+      "Key at (2,0) is required to cross the sole locked door from (6,4) to exit (8,4).",
+      "Design idea: secure the key, then choose the shorter upper knockout approach or longer lower outer circuit without knockouts.",
+      "Independent BFS: 8 actions with knockout of g2 at (6,2), route: (0,2),(2,2),(2,0) key,(4,0),(6,0),(6,2) KO,(6,4),(8,4) exit.",
+      "Independent BFS: 12 actions without knockouts, route: (0,2),(2,2),(2,0) key,(2,2),(2,4),(2,6),(2,8),(4,8),(6,8),(6,6),(6,4),(8,4) exit.",
+      "Guard sight checks are before and after each counted move; no WAIT. C# authoritative solver must confirm both routes and assign official par/stars."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L37_LOCKED_FLANK_V2_UNREACHABLE_PATROL",
+    "title": "The Locked Flank",
+    "intro": "Unlock the gate or circle behind the guard. Avoid the top patrol.",
+    "rows": [
+      ".-.-.-.-.",
+      "|_______|",
+      "._..._._.",
+      "|___X_|_|",
+      ".-.-.-.-.",
+      "__|___#_|",
+      "__.-.-.-.",
+      "__|_____|",
+      "__.-.-.-."
+    ],
+    "start": [
+      0,
+      4
+    ],
+    "exit": [
+      6,
+      2
+    ],
+    "key": [
+      4,
+      6
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          6,
+          6
+        ],
+        "b": [
+          8,
+          6
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            6,
+            4
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "Design: main guard g1 faces West at [6,4]. The front approach from [4,4] is illegal/detected; rear approach from [8,4] is the only way to KO g1 and reach exit [6,2].",
+      "Main guard g1 is mandatory. The only physical approach to exit [6,2] is through g1 node [6,4]; [8,2] and exit are not connected.",
+      "The upper guard g2 is a 3-node pingPong patrol [2,2]->[3,2]->[4,2] and back. This 3-node component has NO movement connection to the player-accessible component, regardless of whether the locked gate opens. Thus a knockout is physically impossible; no guard immunity flag or special exception is used.",
+      "Even though g2 cannot be approached, sight passes through empty ground: at the right endpoint facing E it sees exit [6,2] at distance 2; at the left endpoint facing W it sees [0,2]. Timing matters with before/after sight checks.",
+      "Key + gate route: [2,4],[2,6],[4,6] key,[6,6],[8,6] gate,[8,4],[6,4] KO g1,[6,2] exit (8 counted moves).",
+      "No-key lower detour example: [0,2],[0,4],[2,4],[2,6],[2,8],[4,8],[6,8],[8,8],[8,6],[8,4],[6,4] KO g1,[6,2] exit (12 counted moves), using two extra actions to align the exit with the patrol blind phase.",
+      "No-key upper approach example: [0,2],[0,0],[2,0],[4,0],[6,0],[8,0],[8,2],[8,0],[8,2],[8,4],[6,4] KO g1,[6,2] exit (12 counted moves). Returning to [8,0] and back uses movement, not WAIT, to synchronize the final exit.",
+      "Bespoke 9x9 puzzle, 24 nodes, all walkway cells are valid, no WAIT, 2-square guard sight, no cameras. Candidate pending official Unity C# solver verification."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L38_CROSSED_BLADES",
+    "title": "Crossed Blades",
+    "intro": "The centre guard turns while a patrol closes the upper path.",
+    "rows": [
+      "___________",
+      "_.-.-.-.-._",
+      "_|_|___|_|_",
+      "_.-.-.-.-._",
+      "_|_|X|_|_|_",
+      "_.-.-.-.-._",
+      "_|_|_|X|_|_",
+      "_.-.-.-.-._",
+      "___________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      9,
+      5
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": true
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "Two approaches converge at the same guarded junction; KO option versus an outer loop.",
+      "Upper patrol keeps moving every action; centre guard rotates every action.",
+      "Local Python search: shortest demonstrated winning route 6 counted actions; 1 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [1, 3], [3, 3], [3, 5], [5, 5], [7, 5], [9, 5]]",
+      "Independent checks: no-KO shortest=8; Ghost shortest=6; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L39_EYES_ON_THE_JUNCTION",
+    "title": "Eyes on the Junction",
+    "intro": "Time the eastern camera while the guards protect the junction.",
+    "rows": [
+      "_____________",
+      "_.-.-.-.-.-._",
+      "_|_|___|_|___",
+      "_.-.-.-._.-.#",
+      "_|_|_|X|_|_|_",
+      "_.-.-.-.-._.#",
+      "_|_|_|__X|_|_",
+      "_.-.-.___.-._",
+      "_____________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      11,
+      5
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            7,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "A camera watches the right-hand junction; the lower crossing is longer but less exposed.",
+      "An upper patrol creates a timing problem if players take the high route.",
+      "Local Python search: shortest demonstrated winning route 9 counted actions; 1 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [1, 3], [3, 3], [5, 3], [7, 3], [7, 5], [9, 5], [9, 3], [11, 3], [11, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=11; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L40_SWEEP_AND_STRIKE",
+    "title": "Sweep and Strike",
+    "intro": "Cross the centre while the sweeping lens and guard turn away.",
+    "rows": [
+      "_________#___",
+      "_.-.-.___.-._",
+      "_|_|_____|_|_",
+      "_.-.-.-._.-._",
+      "_|_|_|X|_|_|_",
+      "_.-.-.-.-.-._",
+      "_|_|_|_|X|_|_",
+      "_.-.-.-.-.-._",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": false
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 2
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Sweep phases repeat every four actions, but the patrol may be on a different cycle.",
+      "Players can flank the centre guard or take a longer southern route.",
+      "Local Python search: shortest demonstrated winning route 7 counted actions; 1 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [3, 5], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=9; Ghost shortest=7; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L41_KEY_UNDER_WATCH",
+    "title": "Key Under Watch",
+    "intro": "Collect the lower key, then pass the rotating guard to unlock exit.",
+    "rows": [
+      "_____#_______",
+      "_.-.-.-.-.-._",
+      "_|_|_|___|_|_",
+      "_.-.-.-.-.-._",
+      "_|_|_|_|X|___",
+      "_.-.-.-._.-._",
+      "_|_|_|X__|___",
+      "_.-.-.___.-._",
+      "___|_|_______",
+      "___.-._______",
+      "_____________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      11,
+      5
+    ],
+    "key": [
+      3,
+      9
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          9,
+          5
+        ],
+        "b": [
+          11,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "E",
+        "clockwise": true
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            7,
+            3
+          ],
+          [
+            9,
+            3
+          ],
+          [
+            11,
+            3
+          ]
+        ],
+        "facing": "W",
+        "offset": 1
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          5,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "rotating",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "The key is mandatory and off the direct route; unlock the exit edge only after collecting it.",
+      "The rotating camera complicates the return from the key branch.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [3, 5], [3, 7], [3, 9], [3, 7], [3, 5], [5, 5], [7, 5], [7, 3], [9, 3], [9, 5], [11, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=11; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L42_THREE-WAY_WATCH",
+    "title": "Three-Way Watch",
+    "intro": "Three guards divide the routes; find a flank at the junction.",
+    "rows": [
+      "_____________",
+      "___.-.-.-.___",
+      "___|_|_|_|___",
+      "_.-._.-._.-._",
+      "_|_|_|X|_|_|_",
+      "_.-.-.-.-.-._",
+      "_|_|_|_|X|_|_",
+      "_.-._.-._.-.#",
+      "___|_|___|X__",
+      "___.-.___.___",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "N",
+        "clockwise": false
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          7
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "First level with three guards alongside a camera.",
+      "Sentries occupy distinct areas so each influences a different route.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [3, 9], [5, 9], [5, 7], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=15; Ghost shortest=11; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L43_SMOKE_AT_THE_FORK",
+    "title": "Smoke at the Fork",
+    "intro": "Spend one Smoke charge to hide a dangerous crossing.",
+    "rows": [
+      "_____________",
+      "_.-.-._.-.___",
+      "_|_|_|___|___",
+      "_.-._._._.-._",
+      "_|_|_|__X|___",
+      "_.-.-.-.-.-.#",
+      "_|_|_|X|_|_|_",
+      "_.-.-._.-.-._",
+      "___|_|_______",
+      "___.-._______",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "static",
+        "route": [
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "S"
+      },
+      {
+        "id": "g3",
+        "kind": "static",
+        "route": [
+          [
+            11,
+            5
+          ]
+        ],
+        "facing": "W"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Smoke can block guard or camera LOS for two counted moves; consider when to place it.",
+      "Do not claim Smoke mandatory until the C# solver confirms.",
+      "The isolated static guard at (7,3) cannot be knocked out: no walkable edge leads into that node.",
+      "Crossing (7,5) from the left requires placing Smoke on that node unless another genuine route exists; verify in C# solver.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 1; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [3, 7], [5, 7], [5, 5], [7, 5], [7, 7], [9, 7], [11, 7], [11, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=no solution; no-Smoke solvable=False; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L44_OVERLAPPING_LENSES",
+    "title": "Overlapping Lenses",
+    "intro": "Two cameras watch different exits from a three-guard courtyard.",
+    "rows": [
+      "_________#___",
+      "_.-.-.-.-.-._",
+      "_|_|_|___|_|_",
+      "_.-._.-._.-._",
+      "_|_|_|X|_|_|_",
+      "_.-.-._.-.-.#",
+      "_|_|_|_|X|_|_",
+      "_.-.-._.-.-._",
+      "_________|___",
+      "_________.___",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "N",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Camera angles overlap near one of the central junctions.",
+      "Choose whether to take a lockdown dash or detour around surveillance.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [5, 7], [5, 5], [5, 3], [7, 3], [7, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=no solution; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L45_GATEHOUSE_CIRCUIT",
+    "title": "Gatehouse Circuit",
+    "intro": "Get the key, then flank the guards in the far right wing.",
+    "rows": [
+      "_________#_____",
+      "___.-.-.-.-.___",
+      "___|_|___|_|___",
+      "_._._.-._.-.-.#",
+      "_|_|_|X|_|_|___",
+      "_.-.-.-.-._.-._",
+      "_|_|_____|X|___",
+      "_.-._____._.___",
+      "___|X____|_____",
+      "___._____._____",
+      "_______________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      13,
+      5
+    ],
+    "key": [
+      3,
+      9
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          11,
+          5
+        ],
+        "b": [
+          13,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "N"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            3
+          ]
+        ],
+        "facing": "E",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "W",
+        "offset": 1
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          14,
+          3
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "First 15-column level: camera follows player horizontally; pan without consuming actions.",
+      "The far-right locked exit cannot be reached until the key branch is visited.",
+      "Local Python search: shortest demonstrated winning route 12 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [3, 5], [3, 7], [3, 9], [3, 7], [3, 5], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [11, 5], [13, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=no solution; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L46_POWER_CUT",
+    "title": "Power Cut",
+    "intro": "Time an EMP to disable a camera guarding the last crossing.",
+    "rows": [
+      "___________#___",
+      "_.-.-._.-.-.___",
+      "_|_|_|_|_|_|___",
+      "_._.-._._.-.-._",
+      "_|_|_|X#_|_|_|_",
+      "_.-._.-.-.-.-.#",
+      "_|_|___|X__|___",
+      "_.-.___.___.___",
+      "_______|_______",
+      "_______._______",
+      "_______________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      13,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": true
+      },
+      {
+        "id": "g2",
+        "kind": "static",
+        "route": [
+          [
+            9,
+            3
+          ]
+        ],
+        "facing": "N"
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          7,
+          4
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          11,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 1
+    },
+    "alarmBudget": 1,
+    "notes": [
+      "An EMP can silence exactly one camera for two counted moves.",
+      "EMP effects do not change guard schedules or turn count; use timing at the far side.",
+      "The first camera is physically wall-mounted at (7,4) and watches (7,5), a bridge node.",
+      "With a one-action alarm, crossing this camera without EMP should fail; verify the restriction against bypass routes.",
+      "Local Python search: shortest demonstrated winning route 10 counted actions; 2 KOs; Smoke activations 0; EMP activations 1; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [3, 5], [3, 3], [5, 3], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [13, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=10; no-Smoke solvable=True; no-EMP solvable=False."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L47_BROKEN_LINE_OF_SIGHT",
+    "title": "Broken Line of Sight",
+    "intro": "Use cover, a key and gadgets to reach the eastern door.",
+    "rows": [
+      "_________#_____",
+      "___.-.-.-.-.___",
+      "___|_|_|_|_|___",
+      "_._._.-._.-.-._",
+      "_|_|_|_|X|_|___",
+      "_.-.-.-.-.-.-.#",
+      "_|_|_|X__|_|___",
+      "_.-.-.___._.___",
+      "_____|_________",
+      "_____._________",
+      "_______________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      13,
+      3
+    ],
+    "key": [
+      5,
+      9
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          11,
+          3
+        ],
+        "b": [
+          13,
+          3
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "E",
+        "clockwise": false
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "W",
+        "offset": 2
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          14,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "rotating",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 1
+    },
+    "alarmBudget": 2,
+    "notes": [
+      "The key detour requires leaving the shortest apparent corridor.",
+      "Smoke and EMP are available as different tools; assess their real necessity via solver.",
+      "Local Python search: shortest demonstrated winning route 12 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [5, 7], [5, 9], [5, 7], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [13, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=12; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L48_THE_FOUR_SENTINELS",
+    "title": "The Four Sentinels",
+    "intro": "Four guards guard separate loops; use the lower circuit to flank.",
+    "rows": [
+      "___#___________",
+      "___.-.-._______",
+      "___|_|_|_______",
+      "_.-.-.-._.-.-._",
+      "_|_|_|_|_|_|_|_",
+      "_.-.-.-.-.-.-.#",
+      "_|_|_|X__|X|___",
+      "_.-.-.___._.___",
+      "___|X____|_____",
+      "___._____._____",
+      "_________|_____",
+      "_________._____",
+      "_______________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      13,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 1
+      },
+      {
+        "id": "g4",
+        "kind": "static",
+        "route": [
+          [
+            9,
+            9
+          ]
+        ],
+        "facing": "N"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          14,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          3,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Four separate guards control distinct parts of the board.",
+      "The lower ring creates an alternate flanking route, not just a longer straight path.",
+      "Local Python search: shortest demonstrated winning route 10 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [5, 7], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [13, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=10; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L49_THREE_EYES_ONE_KEY",
+    "title": "Three Eyes, One Key",
+    "intro": "Three cameras divide the level; get the key before lockdown.",
+    "rows": [
+      "___#___#_______",
+      "_.-.-.-._______",
+      "_|_|_|_|_______",
+      "_.-.-.-._.-.___",
+      "_|_|_|_|_|_|___",
+      "_.-.-.-._.-.-.#",
+      "___|_|X|_|X|___",
+      "___.-.-.-._.___",
+      "___|X____|_____",
+      "___._____._____",
+      "_________|_____",
+      "_________._____",
+      "_______________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      13,
+      5
+    ],
+    "key": [
+      9,
+      11
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          11,
+          5
+        ],
+        "b": [
+          13,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "S",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            1,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      },
+      {
+        "id": "g4",
+        "kind": "static",
+        "route": [
+          [
+            3,
+            9
+          ]
+        ],
+        "facing": "N"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          14,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          3,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "rotating",
+        "clockwise": true
+      },
+      {
+        "id": "cam3",
+        "wall": [
+          7,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 1
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Three cameras cover independent zones while four guards control the route network.",
+      "Unlock the only exit door using the key from the southern branch.",
+      "Local Python search: shortest demonstrated winning route 14 counted actions; 3 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [1, 3], [3, 3], [5, 3], [5, 5], [5, 7], [7, 7], [9, 7], [9, 9], [9, 11], [9, 9], [9, 7], [9, 5], [11, 5], [13, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=14; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  },
+  {
+    "base": "LEVEL-30",
+    "name": "L50_THE_LAST_EXIT",
+    "title": "The Last Exit",
+    "intro": "Outthink four guards and three cameras to open the final door.",
+    "rows": [
+      "_____#_________",
+      "___._.-._._____",
+      "___|___|_|_____",
+      "#._._._._.-.-.#",
+      "_|_|___|X#_|___",
+      "_.-.-.-.-.-.-._",
+      "_|___|X__|X|___",
+      "_.-._.___._.___",
+      "___|___________",
+      "___.___________",
+      "___|___________",
+      "___.___________",
+      "_______________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      13,
+      5
+    ],
+    "key": [
+      3,
+      11
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          11,
+          5
+        ],
+        "b": [
+          13,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            3
+          ]
+        ],
+        "facing": "S"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "N",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            9,
+            3
+          ],
+          [
+            11,
+            3
+          ],
+          [
+            13,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      },
+      {
+        "id": "g4",
+        "kind": "static",
+        "route": [
+          [
+            11,
+            7
+          ]
+        ],
+        "facing": "W"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          9,
+          4
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          5,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": true
+      },
+      {
+        "id": "cam3",
+        "wall": [
+          0,
+          3
+        ],
+        "mountFace": "E",
+        "facing": "E",
+        "kind": "rotating",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 1
+    },
+    "alarmBudget": 1,
+    "notes": [
+      "Final multi-mechanic test: required key, guards, 70-degree cameras, Smoke/EMP choices.",
+      "Reach the lower key branch, then navigate back to a protected exit.",
+      "Sentry g1 is geometrically inaccessible at (5,3) and watches the sole west-to-east bridge (5,5). Smoke that bridge to pass.",
+      "Camera cam1 at (9,4) controls the next bridge (9,5). EMP is intended to allow crossing it before lockdown.",
+      "All alternatives must be checked by the Unity solver; do not claim mandatory gadgets until verified.",
+      "Local Python search: shortest demonstrated winning route 16 counted actions; 1 KOs; Smoke activations 1; EMP activations 1; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [3, 5], [1, 5], [1, 7], [3, 7], [3, 9], [3, 11], [3, 9], [3, 7], [1, 7], [1, 5], [3, 5], [5, 5], [7, 5], [9, 5], [11, 5], [13, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=16; no-Smoke solvable=False; no-EMP solvable=False."
+    ]
+  }
+]

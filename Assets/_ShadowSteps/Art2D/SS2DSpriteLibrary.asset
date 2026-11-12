@@ -23,7 +23,40 @@ MonoBehaviour:
     height: 0.577
   backgroundBoardPadding: 1
   backgroundFrameInsideBoundaryWalls: 1
-  backgroundThemes: []
+  backgroundThemes:
+  - name: Museum
+    sprite: {fileID: 21300000, guid: 00373052f7d6b774a9a3b095507e1994, type: 3}
+    boardRect:
+      serializedVersion: 2
+      x: 0.321
+      y: 0.28
+      width: 0.357
+      height: 0.4475
+    firstLevelId: 41
+    lastLevelId: 44
+    clearColor: {r: 0.486, g: 0.796, b: 0.176, a: 1}
+  - name: Desert
+    sprite: {fileID: 21300000, guid: 440c91a37fc3e1144aa3f9e33ace18d0, type: 3}
+    boardRect:
+      serializedVersion: 2
+      x: 0.279
+      y: 0.245
+      width: 0.443
+      height: 0.455
+    firstLevelId: 45
+    lastLevelId: 47
+    clearColor: {r: 0.914, g: 0.765, b: 0.561, a: 1}
+  - name: Courtyard (original)
+    sprite: {fileID: 21300000, guid: 96a6676608fed403eb6101643c5bff6a, type: 3}
+    boardRect:
+      serializedVersion: 2
+      x: 0.277
+      y: 0.344
+      width: 0.432
+      height: 0.368
+    firstLevelId: 48
+    lastLevelId: 50
+    clearColor: {r: 0.004, g: 0.431, b: 0.753, a: 1}
   showBoardPanel: 0
   showFloorTiles: 0
   showPerimeterWalls: 0
@@ -60,6 +93,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2425db81c600240a5bc64a7aa597e96c, type: 2}
   - {fileID: 11400000, guid: 7eaeff318355a4a6883896c4ece78331, type: 2}
   - {fileID: 11400000, guid: dec2a5e49ab3c4f5c9b567989ea0d98b, type: 2}
+  - {fileID: 11400000, guid: fd3998f05ec8348ac380a87913742201, type: 2}
+  - {fileID: 11400000, guid: 193f1effc54c07711e0f354ce520f1a7, type: 2}
+  - {fileID: 11400000, guid: e3e6ca387dd723ea27244b964a0e253a, type: 2}
+  - {fileID: 11400000, guid: 4271667a214dbd5d65c3190e453335f0, type: 2}
+  - {fileID: 11400000, guid: 2f751c514162184ee428c4d64952d9e7, type: 2}
+  - {fileID: 11400000, guid: 01b46adc3fad026b3ec3e31f7e3e4d04, type: 2}
+  - {fileID: 11400000, guid: 63e993712cc9d3cc9053fc8f2751593b, type: 2}
+  - {fileID: 11400000, guid: 3eedd4a0fe33c5a0b189cc04988ddcbf, type: 2}
+  - {fileID: 11400000, guid: 7a11fb4dd03f02abee851b95657165a2, type: 2}
+  - {fileID: 11400000, guid: 7a2b301a4ea9068b36e4b09af849d50d, type: 2}
+  - {fileID: 11400000, guid: c04e50fb780d44f23b48f33b8e999f4a, type: 2}
+  - {fileID: 11400000, guid: 9d1d0e54af997888a6ced8cde518df4f, type: 2}
+  - {fileID: 11400000, guid: 9ec6e8e9aec5216ac1dc333ce1bb6103, type: 2}
   defaultObstacleArt: 1
   interiorWallArt: 2
   wallRunCameraHug: 0.36

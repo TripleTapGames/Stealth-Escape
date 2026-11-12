@@ -10,6 +10,9 @@ namespace ShadowSteps.Art2D
     /// <see cref="ShadowSteps.Runtime.CameraFitter"/> so taps resolve identically. The zoom never goes tighter than
     /// <see cref="referenceGridNodes"/> (the pack's largest grid), so nodes, characters and the ground keep one size on
     /// every level; smaller boards sit centred in the band with more surround instead of being blown up.
+    /// D-080: a board the renderer flags as <see cref="ShadowSteps2DRenderer.PanHorizontal"/> is zoomed to its height only;
+    /// the width that does not fit becomes a horizontal pan range. The view follows the player (smoothly, after every
+    /// move) and can be dragged by hand; both only move this camera and never touch the session.
     /// </summary>
     [RequireComponent(typeof(Camera))]
     [ExecuteAlways]
@@ -25,14 +28,27 @@ namespace ShadowSteps.Art2D
         [Tooltip("Every level is framed at least as wide and as tall as this grid (portrait orientation: short side × long side, in nodes), so sprites read the same size on every level. The bridge and the preview set it to the loaded pack's largest grid (SetReferenceFromPack); 0 × 0 = fit each board on its own.")]
         public Vector2Int referenceGridNodes = new Vector2Int(9, 11);
         private Camera _cam; private int _lastW, _lastH, _lastHash;
+        private float _homeX, _homeY, _offsetX, _panX;
+
+        /// <summary>Half the horizontal overflow of the board beyond the view in world units; 0 when the whole board is in view (every board narrower than the pan threshold).</summary>
+        public float PanRange { get; private set; }
+        /// <summary>Current pan, in world units, within ±<see cref="PanRange"/> (0 = board centred).</summary>
+        public float PanX => _panX;
+        /// <summary>When true the view glides toward the player every frame (set again by the bridge at every counted action); a manual drag turns it off until the next move.</summary>
+        public bool FollowPlayer { get; set; } = true;
+        /// <summary>True while a drag gesture is in progress (the follow waits for it to finish).</summary>
+        public bool Dragging { get; set; }
 
         private void LateUpdate()
         {
             if (board == null || !board.IsBuilt) return;
             int hash = board.Stage.GetHashCode();
-            if (Screen.width == _lastW && Screen.height == _lastH && hash == _lastHash) return;
-            Fit((float)Screen.width / Mathf.Max(1, Screen.height));
-            _lastW = Screen.width; _lastH = Screen.height; _lastHash = hash;
+            if (Screen.width != _lastW || Screen.height != _lastH || hash != _lastHash)
+            {
+                Fit((float)Screen.width / Mathf.Max(1, Screen.height));
+                _lastW = Screen.width; _lastH = Screen.height; _lastHash = hash;
+            }
+            if (PanRange > 0f && FollowPlayer && !Dragging && Application.isPlaying) FollowStep(Time.unscaledDeltaTime);
         }
 
         /// <summary>Largest grid in the pack in portrait orientation (short side, long side), the zoom every level is framed at.</summary>
@@ -81,22 +97,86 @@ namespace ShadowSteps.Art2D
             if (board.library != null) { topReservedFraction = board.library.hudTop; bottomReservedFraction = board.library.hudBottom; }
             var vb = board.ViewBounds; // panel + door, already including the board margin
             float boardW = vb.width + marginNodes * s * 2f, boardH = vb.height + marginNodes * s * 2f;
-            var reference = ReferenceExtent(s); boardW = Mathf.Max(boardW, reference.x); boardH = Mathf.Max(boardH, reference.y);
+            var reference = ReferenceExtent(s); float framedW = Mathf.Max(boardW, reference.x), framedH = Mathf.Max(boardH, reference.y);
             Rect safe = respectSafeArea && Application.isPlaying ? Screen.safeArea : new Rect(0, 0, Screen.width, Screen.height);
             float safeBottom = safe.yMin / Mathf.Max(1, Screen.height), safeTop = 1f - safe.yMax / Mathf.Max(1, Screen.height);
             float safeLeft = safe.xMin / Mathf.Max(1, Screen.width), safeRight = 1f - safe.xMax / Mathf.Max(1, Screen.width);
             float usableH = Mathf.Max(0.2f, 1f - topReservedFraction - bottomReservedFraction - safeTop - safeBottom);
             float usableW = Mathf.Max(0.2f, 1f - safeLeft - safeRight);
-            float size = Mathf.Max(boardH * 0.5f / usableH, boardW * 0.5f / (usableW * aspect));
+            float size;
+            if (board.PanHorizontal)
+            {
+                // D-080: the height (and the shared reference zoom) set the zoom; the width beyond the view is panned, never shrunk.
+                size = Mathf.Max(framedH * 0.5f / usableH, reference.x * 0.5f / (usableW * aspect));
+                float viewW = 2f * size * aspect * usableW;
+                PanRange = Mathf.Max(0f, (boardW - viewW) * 0.5f);
+            }
+            else
+            {
+                size = Mathf.Max(framedH * 0.5f / usableH, framedW * 0.5f / (usableW * aspect));
+                PanRange = 0f;
+            }
             _cam.orthographicSize = size;
             float bandCentre = (bottomReservedFraction + safeBottom + (1f - topReservedFraction - safeTop)) * 0.5f;
             float offsetY = (0.5f - bandCentre) * 2f * size;
             float bandCentreX = (safeLeft + (1f - safeRight)) * 0.5f;
-            float offsetX = (0.5f - bandCentreX) * 2f * size * aspect;
+            _offsetX = (0.5f - bandCentreX) * 2f * size * aspect;
             var c = board.transform.TransformPoint(new Vector3(vb.center.x, vb.center.y, 0f));
-            _cam.transform.position = new Vector3(c.x + offsetX, c.y + offsetY, -10f);
-            board.ReferenceGridNodes = referenceGridNodes; board.FitBackground(_cam);
+            _homeX = c.x + _offsetX; _homeY = c.y + offsetY;
+            _panX = Mathf.Clamp(_panX, -PanRange, PanRange);
+            ApplyPan();
+            board.ReferenceGridNodes = referenceGridNodes; board.PanRange = PanRange; board.PanHomeX = _homeX; board.FitBackground(_cam);
             _cam.nearClipPlane = 0.1f; _cam.farClipPlane = 50f;
+        }
+
+        private void ApplyPan()
+        {
+            if (_cam == null) return;
+            _cam.transform.position = new Vector3(_homeX + _panX, _homeY, -10f);
+        }
+
+        /// <summary>Pan the player wants, in world units: the player's drawn x centred in the band, clamped to the board.</summary>
+        public float PlayerPanTarget()
+        {
+            if (board == null || !board.IsBuilt || board.Player == null) return 0f;
+            float boardCentreX = _homeX - _offsetX;
+            return Mathf.Clamp(board.Player.transform.position.x - boardCentreX, -PanRange, PanRange);
+        }
+
+        /// <summary>One frame of the glide toward the player (exponential ease by <see cref="SS2DSpriteLibrary.panFollowSmoothing"/>).</summary>
+        public void FollowStep(float dt)
+        {
+            if (PanRange <= 0f) return;
+            float target = PlayerPanTarget();
+            float k = board != null && board.library != null ? board.library.panFollowSmoothing : 6f;
+            _panX = Mathf.Lerp(_panX, target, 1f - Mathf.Exp(-Mathf.Max(0f, k) * Mathf.Max(0f, dt)));
+            if (Mathf.Abs(_panX - target) < 1e-4f) _panX = target;
+            ApplyPan();
+        }
+
+        /// <summary>Jumps the view onto the player (stage load, retry) and resumes following.</summary>
+        public void SnapToPlayer()
+        {
+            FollowPlayer = true; Dragging = false;
+            if (PanRange <= 0f) { _panX = 0f; ApplyPan(); return; }
+            _panX = PlayerPanTarget(); ApplyPan();
+        }
+
+        /// <summary>Manual pan by a screen-space drag (pixels, positive = finger moved right, so the board follows the finger). Stops the follow until the next counted action. Never a game action.</summary>
+        public void PanByScreenPixels(float dx)
+        {
+            if (PanRange <= 0f || _cam == null) return;
+            float worldPerPixel = _cam.orthographicSize * 2f * _cam.aspect / Mathf.Max(1, _cam.pixelWidth);
+            PanByWorld(-dx * worldPerPixel);
+        }
+
+        /// <summary>Manual pan in world units (positive = view moves right). Stops the follow until the next counted action.</summary>
+        public void PanByWorld(float dx)
+        {
+            if (PanRange <= 0f) return;
+            FollowPlayer = false;
+            _panX = Mathf.Clamp(_panX + dx, -PanRange, PanRange);
+            ApplyPan();
         }
     }
 }

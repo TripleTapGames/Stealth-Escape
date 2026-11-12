@@ -54,6 +54,21 @@ namespace ShadowSteps.Art2D.Tests
                 using (var rig = new Rig(st))
                 {
                     float plain = rig.Fit(null), framed = rig.Fit(pack);
+                    if (rig.Renderer.PanHorizontal)
+                    {
+                        // D-080: a wide board is zoomed to its height (never tighter than the reference) and the rest of its width is a pan range.
+                        var vl = rig.Renderer.ViewLayout; float sp = vl.NodeSpacing; var l = rig.Renderer.library;
+                        float boardH = (vl.Height + 2f * l.boardMargin + 2f * rig.Fitter.marginNodes) * sp, boardW = (vl.Width + 2f * l.boardMargin + 2f * rig.Fitter.marginNodes) * sp;
+                        float heightFit = Mathf.Max(boardH * 0.5f / (1f - l.hudTop - l.hudBottom), rig.Fitter.ReferenceExtent(sp).x * 0.5f / Aspect, rig.Fitter.ReferenceExtent(sp).y * 0.5f / (1f - l.hudTop - l.hudBottom));
+                        Assert.AreEqual(heightFit, framed, 1e-4f, st.Code + ": zoomed to the board height, not shrunk to its width");
+                        float wholeBoardFit = Mathf.Max(boardH * 0.5f / (1f - l.hudTop - l.hudBottom), boardW * 0.5f / Aspect);
+                        Assert.Less(framed, wholeBoardFit, st.Code + ": closer than a fit of the whole wide board would be");
+                        Assert.AreEqual(plain, framed, 1e-4f, st.Code + ": the pan fit does not depend on the reference grid here (the height already exceeds it)");
+                        Assert.AreEqual(Mathf.Max(0f, (boardW - 2f * framed * Aspect) * 0.5f), rig.Fitter.PanRange, 1e-4f, st.Code + ": the overflow becomes the pan range");
+                        Assert.Greater(rig.Fitter.PanRange, 0f, st.Code + ": a wide board pans");
+                        bigger++; continue;
+                    }
+                    Assert.AreEqual(0f, rig.Fitter.PanRange, 1e-6f, st.Code + ": no pan on a board that fits");
                     Assert.AreEqual(Mathf.Max(plain, referenceZoom), framed, 1e-4f, st.Code + ": the reference zoom, unless the board needs more room");
                     Assert.LessOrEqual(plain, framed + 1e-4f, st.Code + ": the whole board always stays in view");
                     Assert.AreEqual(1f, rig.Renderer.transform.lossyScale.x, 1e-5f, "node spacing in world units is the same on every board");

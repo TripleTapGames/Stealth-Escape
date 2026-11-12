@@ -52,8 +52,15 @@ namespace ShadowSteps.Art2D.Tests
             // Floor between the inner wall faces of the v2 painting (x 334–1036, y 532–1686 from the top), not the v1 rect (0.277, 0.344, 0.432, 0.368).
             Assert.AreEqual(0.240f, lib.backgroundBoardRect.x, 0.005f, "floor left"); Assert.AreEqual(0.157f, lib.backgroundBoardRect.y, 0.005f, "floor bottom");
             Assert.AreEqual(0.499f, lib.backgroundBoardRect.width, 0.005f, "floor width"); Assert.AreEqual(0.577f, lib.backgroundBoardRect.height, 0.005f, "floor height");
-            Assert.IsTrue(lib.backgroundThemes == null || lib.backgroundThemes.Length == 0, "one setting only: no alternate themes");
-            foreach (var st in pack.Stages) Assert.IsNull(lib.ThemeFor(st.Id), st.Code + " uses the single background");
+            // D-081 (levels 38-50 handoff): the four painted settings as campaign chapters by board tier. Ids 1-40 keep the courtyard v2 above.
+            Assert.IsNotNull(lib.backgroundThemes); Assert.AreEqual(3, lib.backgroundThemes.Length, "museum, desert and the original courtyard as alternate chapters");
+            foreach (var st in pack.Stages)
+            {
+                var theme = lib.ThemeFor(st.Id);
+                string expected = st.Id <= 40 ? null : st.Id <= 44 ? "Museum-Sculpture-Court-Final-1400x2000-v6" : st.Id <= 47 ? "Desert-Palace-Terrace-Final-1400x2000-v2" : "Courtyard-Natural-Sides-1400x2000";
+                if (expected == null) Assert.IsNull(theme, st.Code + " uses the single courtyard v2 background");
+                else { Assert.IsNotNull(theme, st.Code + " has a chapter theme"); Assert.AreEqual(expected, theme.sprite.name, st.Code); Assert.AreEqual(256f, theme.sprite.pixelsPerUnit, 0.01f, st.Code + " theme imported at the background PPU"); Assert.Greater(theme.boardRect.width * theme.boardRect.height, 0.05f, st.Code + " measured floor rect"); }
+            }
         }
 
         [Test]
@@ -102,10 +109,10 @@ namespace ShadowSteps.Art2D.Tests
                             var p = (Vector2)rig.Renderer.Pos(c);
                             Assert.IsTrue(inset.Contains(p), st.Code + ": node " + c + " at " + p + " lies inside the painted floor " + floor);
                         }
-                    // The scaled image still covers the whole camera view (no clear colour showing).
+                    // The scaled image still covers the whole camera view (no clear colour showing), at both ends of the pan range on a wide board (D-080).
                     var bg = rig.Renderer.BackgroundRenderer; var size = bg.sprite.bounds.size * bg.transform.localScale.x; var centre = (Vector2)bg.transform.position;
-                    float viewH = rig.Camera.orthographicSize * 2f, viewW = viewH * Aspect; var camP = (Vector2)rig.Camera.transform.position;
-                    Assert.LessOrEqual(camP.x + viewW * 0.5f, centre.x + size.x * 0.5f + 1e-3f, st.Code + ": right edge covered"); Assert.GreaterOrEqual(camP.x - viewW * 0.5f, centre.x - size.x * 0.5f - 1e-3f, st.Code + ": left edge covered");
+                    float viewH = rig.Camera.orthographicSize * 2f, viewW = viewH * Aspect; var camP = (Vector2)rig.Camera.transform.position; float pan = rig.Fitter.PanRange;
+                    Assert.LessOrEqual(camP.x + pan + viewW * 0.5f, centre.x + size.x * 0.5f + 1e-3f, st.Code + ": right edge covered"); Assert.GreaterOrEqual(camP.x - pan - viewW * 0.5f, centre.x - size.x * 0.5f - 1e-3f, st.Code + ": left edge covered");
                     Assert.LessOrEqual(camP.y + viewH * 0.5f, centre.y + size.y * 0.5f + 1e-3f, st.Code + ": top edge covered"); Assert.GreaterOrEqual(camP.y - viewH * 0.5f, centre.y - size.y * 0.5f - 1e-3f, st.Code + ": bottom edge covered");
                 }
         }

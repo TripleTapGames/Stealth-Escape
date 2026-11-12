@@ -36,6 +36,32 @@ public static class V3Tools
         return report.IsValid && mismatches == 0 ? 0 : 1;
     }
 
+    /// <summary>
+    /// Appends the stages of a second pack to the shipped pack (every id and code must be new; existing stages are written back
+    /// untouched through the same serializer) and checks the merged pack's structure: --v3-append pack extra out.
+    /// </summary>
+    public static int Append(string packPath, string extraPath, string outPath)
+    {
+        var pack = StageJson.Parse(File.ReadAllText(packPath));
+        var extra = StageJson.Parse(File.ReadAllText(extraPath));
+        var stages = new List<Stage>(pack.Stages);
+        var ids = new HashSet<int>(); var codes = new HashSet<string>();
+        foreach (var s in stages) { ids.Add(s.Id); codes.Add(s.Code); }
+        foreach (var s in extra.Stages)
+        {
+            if (!ids.Add(s.Id)) { Console.WriteLine("REFUSED: id " + s.Id + " (" + s.Code + ") already exists in " + packPath); return 1; }
+            if (!codes.Add(s.Code)) { Console.WriteLine("REFUSED: code " + s.Code + " already exists in " + packPath); return 1; }
+            stages.Add(s);
+            Console.WriteLine("append " + s.Id.ToString().PadLeft(3) + " " + s.Code.PadRight(9) + " " + s.Title.PadRight(24) + " par " + s.Par + " 3*<=" + s.ThreeStarActions + " 2*<=" + s.TwoStarActions + " ghost " + s.GhostOffered);
+        }
+        var report = StageValidator.ValidatePack(stages, new StageValidationOptions { RunSolver = false, RequireNoWait = true });
+        Console.WriteLine("structural validation: " + report.ErrorCount + " errors, " + report.WarningCount + " warnings");
+        if (!report.IsValid) { Console.WriteLine(report.ToString()); return 1; }
+        File.WriteAllText(outPath, StageJson.ToJson(stages));
+        Console.WriteLine("wrote " + outPath + " (" + stages.Count + " stages)");
+        return 0;
+    }
+
     public static int Validate(string packPath)
     {
         var pack = StageJson.Parse(File.ReadAllText(packPath));

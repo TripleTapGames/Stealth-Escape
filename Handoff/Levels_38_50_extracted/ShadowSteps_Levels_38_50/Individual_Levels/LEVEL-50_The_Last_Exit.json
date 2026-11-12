@@ -1,0 +1,154 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L50_THE_LAST_EXIT",
+    "title": "The Last Exit",
+    "intro": "Outthink four guards and three cameras to open the final door.",
+    "rows": [
+      "_____#_________",
+      "___._.-._._____",
+      "___|___|_|_____",
+      "#._._._._.-.-.#",
+      "_|_|___|X#_|___",
+      "_.-.-.-.-.-.-._",
+      "_|___|X__|X|___",
+      "_.-._.___._.___",
+      "___|___________",
+      "___.___________",
+      "___|___________",
+      "___.___________",
+      "_______________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      13,
+      5
+    ],
+    "key": [
+      3,
+      11
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          11,
+          5
+        ],
+        "b": [
+          13,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            3
+          ]
+        ],
+        "facing": "S"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "N",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            9,
+            3
+          ],
+          [
+            11,
+            3
+          ],
+          [
+            13,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      },
+      {
+        "id": "g4",
+        "kind": "static",
+        "route": [
+          [
+            11,
+            7
+          ]
+        ],
+        "facing": "W"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          9,
+          4
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          5,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": true
+      },
+      {
+        "id": "cam3",
+        "wall": [
+          0,
+          3
+        ],
+        "mountFace": "E",
+        "facing": "E",
+        "kind": "rotating",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 1
+    },
+    "alarmBudget": 1,
+    "notes": [
+      "Final multi-mechanic test: required key, guards, 70-degree cameras, Smoke/EMP choices.",
+      "Reach the lower key branch, then navigate back to a protected exit.",
+      "Sentry g1 is geometrically inaccessible at (5,3) and watches the sole west-to-east bridge (5,5). Smoke that bridge to pass.",
+      "Camera cam1 at (9,4) controls the next bridge (9,5). EMP is intended to allow crossing it before lockdown.",
+      "All alternatives must be checked by the Unity solver; do not claim mandatory gadgets until verified.",
+      "Local Python search: shortest demonstrated winning route 16 counted actions; 1 KOs; Smoke activations 1; EMP activations 1; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [3, 5], [1, 5], [1, 7], [3, 7], [3, 9], [3, 11], [3, 9], [3, 7], [1, 7], [1, 5], [3, 5], [5, 5], [7, 5], [9, 5], [11, 5], [13, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=16; no-Smoke solvable=False; no-EMP solvable=False."
+    ]
+  }
+]

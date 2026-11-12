@@ -78,12 +78,12 @@ namespace ShadowSteps.Tests.EditMode.V3
         }
 
         [Test]
-        public void ShippedPack_Has37Stages_WithSolverScoring_AndNoWarnings()
+        public void ShippedPack_Has50Stages_WithSolverScoring_AndNoWarnings()
         {
             var pack = Pack();
-            Assert.AreEqual(37, pack.Stages.Count, "5 FTUE + 25 main + Levels 26-30 (ids 31-35) + Levels 31-32 (ids 36-37, D-078)");
+            Assert.AreEqual(50, pack.Stages.Count, "5 FTUE + 25 main + Levels 26-30 (ids 31-35) + Levels 31-32 (ids 36-37, D-078) + Levels 33-45 (ids 38-50, D-081)");
             Assert.AreEqual(0, pack.Warnings.Count, string.Join("\n", pack.Warnings));
-            for (int i = 0; i < 37; i++) Assert.AreEqual(i + 1, pack.Stages[i].Id);
+            for (int i = 0; i < 50; i++) Assert.AreEqual(i + 1, pack.Stages[i].Id);
             var report = StageValidator.ValidatePack(pack.Stages);
             Assert.IsTrue(report.IsValid, report.ToString());
             foreach (var s in pack.Stages)
@@ -99,7 +99,7 @@ namespace ShadowSteps.Tests.EditMode.V3
         {
             var pack = Pack();
             var entries = JsonAccess.AsArray(MiniJson.Parse(File.ReadAllText(P(ValidationRelative))), "validation_v4");
-            Assert.AreEqual(37, entries.Count);
+            Assert.AreEqual(50, entries.Count);
             foreach (JsonObject e in entries)
             {
                 var stage = pack.FindByCode((string)e["code"]);
@@ -152,10 +152,10 @@ namespace ShadowSteps.Tests.EditMode.V3
             }
             // Under Knockout / no WAIT (validation_v4.json export, 2026-11-04): LEVEL-30 now needs its EMP as well (no WAIT to time the camera).
             // D-068 (doors open on approach): LEVEL-30's lock now swings open under the sentry when the key-holder arrives beside it, so its Smoke is mandatory too.
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27", "LEVEL-30" }, smokeRequired);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-21", "LEVEL-25", "LEVEL-27", "LEVEL-30", "LEVEL-38", "LEVEL-45" }, smokeRequired); // D-081: kit 43 Smoke at the Fork, kit 50 The Last Exit
             // 2026-11-10 (stage editor, D-073): LEVEL-18 re-authored with a 3-facing sweep (E, clockwise), which leaves no alarm-free route; LEVEL-24 (3-facing sweep N) still has an EMP-free route (8 vs par 6).
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25", "LEVEL-30" }, empRequired);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-18", "LEVEL-20", "LEVEL-23" }, forcedAlarm);
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-23", "LEVEL-25", "LEVEL-30", "LEVEL-41", "LEVEL-45" }, empRequired); // D-081: kit 46 Power Cut, kit 50 The Last Exit
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-16", "LEVEL-17", "LEVEL-18", "LEVEL-20", "LEVEL-23", "LEVEL-38", "LEVEL-39", "LEVEL-40" }, forcedAlarm); // D-081: kit 43/44/45 have no alarm-free route
         }
 
         [Test]
@@ -166,10 +166,10 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(55, blocked); Assert.AreEqual(25, stagesWithCover);
             int shipped = 0;
             foreach (var s in Pack().Stages) shipped += s.BlockedCount;
-            Assert.AreEqual(49, shipped, "44 after D-048 / LEVEL-17 / D-074, plus LEVEL-31 (4 cover cells) and LEVEL-32 (1) from the 2026-11-11 kit (D-078); the imported 55 no longer apply (the browser export is only compared through Imported())");
+            Assert.AreEqual(80, shipped, "44 after D-048 / LEVEL-17 / D-074, plus LEVEL-31 (4 cover cells) and LEVEL-32 (1) from the 2026-11-11 kit (D-078), plus 31 on LEVEL-33..45 (D-081); the imported 55 no longer apply (the browser export is only compared through Imported())");
             var ghost = new List<string>();
             foreach (var s in Pack().Stages) if (s.GhostOffered) ghost.Add(s.Code);
-            CollectionAssert.AreEquivalent(new[] { "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30" }, ghost); // LEVEL-18 lost its Ghost route in the 2026-11-10 re-authoring (forced alarm); LEVEL-19 keeps one after D-074
+            CollectionAssert.AreEquivalent(new[] { "LEVEL-19", "LEVEL-24", "LEVEL-25", "LEVEL-28", "LEVEL-29", "LEVEL-30", "LEVEL-34", "LEVEL-35", "LEVEL-36", "LEVEL-37", "LEVEL-41", "LEVEL-42", "LEVEL-43", "LEVEL-44", "LEVEL-45" }, ghost); // D-081: nine of the thirteen new camera levels keep an alarm-free par route // LEVEL-18 lost its Ghost route in the 2026-11-10 re-authoring (forced alarm); LEVEL-19 keeps one after D-074
         }
     }
 }

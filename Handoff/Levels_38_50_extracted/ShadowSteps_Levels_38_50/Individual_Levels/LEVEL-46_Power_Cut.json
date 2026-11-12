@@ -1,0 +1,115 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L46_POWER_CUT",
+    "title": "Power Cut",
+    "intro": "Time an EMP to disable a camera guarding the last crossing.",
+    "rows": [
+      "___________#___",
+      "_.-.-._.-.-.___",
+      "_|_|_|_|_|_|___",
+      "_._.-._._.-.-._",
+      "_|_|_|X#_|_|_|_",
+      "_.-._.-.-.-.-.#",
+      "_|_|___|X__|___",
+      "_.-.___.___.___",
+      "_______|_______",
+      "_______._______",
+      "_______________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      13,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": true
+      },
+      {
+        "id": "g2",
+        "kind": "static",
+        "route": [
+          [
+            9,
+            3
+          ]
+        ],
+        "facing": "N"
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          7,
+          4
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          11,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 1
+    },
+    "alarmBudget": 1,
+    "notes": [
+      "An EMP can silence exactly one camera for two counted moves.",
+      "EMP effects do not change guard schedules or turn count; use timing at the far side.",
+      "The first camera is physically wall-mounted at (7,4) and watches (7,5), a bridge node.",
+      "With a one-action alarm, crossing this camera without EMP should fail; verify the restriction against bypass routes.",
+      "Local Python search: shortest demonstrated winning route 10 counted actions; 2 KOs; Smoke activations 0; EMP activations 1; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [3, 5], [3, 3], [5, 3], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [13, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=10; no-Smoke solvable=True; no-EMP solvable=False."
+    ]
+  }
+]

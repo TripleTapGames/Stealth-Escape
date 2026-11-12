@@ -131,7 +131,7 @@ namespace ShadowSteps.Art2D.Tests
                 var l = Build<LevelSelectScreen>(root); l.Rebuild();
                 Assert.AreEqual(skin.cardTall, l.transform.Find("SafeArea/Card").GetComponent<Image>().sprite);
                 Assert.AreEqual(skin.backButton, SpriteOf(l.BackButton)); Assert.AreEqual(skin.backArrow, l.BackButton.transform.Find("Arrow").GetComponent<Image>().sprite);
-                Assert.AreEqual("LEVELS", l.transform.Find("SafeArea/Card/Header/Title").GetComponent<UiText>().Text); Assert.AreEqual("1/35", l.ProgressText.Text);
+                Assert.AreEqual("LEVELS", l.transform.Find("SafeArea/Card/Header/Title").GetComponent<UiText>().Text); Assert.AreEqual("1/" + AppServices.Stages.Count, l.ProgressText.Text); // one win out of the whole pack (50 since D-081)
                 Assert.AreEqual(AppServices.Stages.Count, l.Grid.childCount, "one box per stage");
                 var first = l.Grid.GetChild(0); Assert.AreEqual(skin.levelBoxOpen, first.GetComponent<Image>().sprite); Assert.IsTrue(first.GetComponent<Button>().interactable);
                 Assert.AreEqual("FTUE 1", first.Find("Code").GetComponent<UiText>().Text);

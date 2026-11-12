@@ -1,0 +1,94 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L43_SMOKE_AT_THE_FORK",
+    "title": "Smoke at the Fork",
+    "intro": "Spend one Smoke charge to hide a dangerous crossing.",
+    "rows": [
+      "_____________",
+      "_.-.-._.-.___",
+      "_|_|_|___|___",
+      "_.-._._._.-._",
+      "_|_|_|__X|___",
+      "_.-.-.-.-.-.#",
+      "_|_|_|X|_|_|_",
+      "_.-.-._.-.-._",
+      "___|_|_______",
+      "___.-._______",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "static",
+        "route": [
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "S"
+      },
+      {
+        "id": "g3",
+        "kind": "static",
+        "route": [
+          [
+            11,
+            5
+          ]
+        ],
+        "facing": "W"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Smoke can block guard or camera LOS for two counted moves; consider when to place it.",
+      "Do not claim Smoke mandatory until the C# solver confirms.",
+      "The isolated static guard at (7,3) cannot be knocked out: no walkable edge leads into that node.",
+      "Crossing (7,5) from the left requires placing Smoke on that node unless another genuine route exists; verify in C# solver.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 1; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [3, 7], [5, 7], [5, 5], [7, 5], [7, 7], [9, 7], [11, 7], [11, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=no solution; no-Smoke solvable=False; no-EMP solvable=True."
+    ]
+  }
+]

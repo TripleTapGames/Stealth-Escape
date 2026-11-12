@@ -1,0 +1,89 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L40_SWEEP_AND_STRIKE",
+    "title": "Sweep and Strike",
+    "intro": "Cross the centre while the sweeping lens and guard turn away.",
+    "rows": [
+      "_________#___",
+      "_.-.-.___.-._",
+      "_|_|_____|_|_",
+      "_.-.-.-._.-._",
+      "_|_|_|X|_|_|_",
+      "_.-.-.-.-.-._",
+      "_|_|_|_|X|_|_",
+      "_.-.-.-.-.-._",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "rotating",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": false
+      },
+      {
+        "id": "g2",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 2
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Sweep phases repeat every four actions, but the patrol may be on a different cycle.",
+      "Players can flank the centre guard or take a longer southern route.",
+      "Local Python search: shortest demonstrated winning route 7 counted actions; 1 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [3, 5], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=9; Ghost shortest=7; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  }
+]

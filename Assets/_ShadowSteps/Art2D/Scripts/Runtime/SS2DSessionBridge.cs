@@ -53,6 +53,7 @@ namespace ShadowSteps.Art2D
                 composer.Input.ScreenToNodeOverride = screen => Renderer.IsBuilt ? Renderer.ToGrid(composer.BoardCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -composer.BoardCamera.transform.position.z))) : (GridCoord?)null;
                 composer.Input.ScreenToCameraOverride = screen => Renderer.IsBuilt ? Renderer.CameraIndexNear(composer.BoardCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -composer.BoardCamera.transform.position.z))) : -1;
                 composer.Input.ScreenToLogicalDirection = d => Renderer.IsBuilt ? Renderer.Logical(d) : d;
+                composer.Input.PanRequested += OnPanRequested; // D-080: two-finger / mouse drag pans wide boards; never a game action
             }
             _session.StageLoaded += OnStageLoaded; _session.StateChanged += OnStateChanged; _session.ActionStarted += OnActionStarted; _session.ActionCompleted += OnActionCompleted; _session.Retried += OnRetried;
             _session.ModeChanged += OnModeChanged; _session.PreviewShown += OnPreviewShown; _session.PreviewHidden += OnPreviewHidden;
@@ -72,6 +73,7 @@ namespace ShadowSteps.Art2D
 
         private void OnDestroy()
         {
+            if (_composer != null && _composer.Input != null) _composer.Input.PanRequested -= OnPanRequested;
             if (_session == null) return;
             _session.StageLoaded -= OnStageLoaded; _session.StateChanged -= OnStateChanged; _session.ActionStarted -= OnActionStarted; _session.ActionCompleted -= OnActionCompleted; _session.Retried -= OnRetried;
             _session.ModeChanged -= OnModeChanged; _session.PreviewShown -= OnPreviewShown; _session.PreviewHidden -= OnPreviewHidden;
@@ -201,9 +203,11 @@ namespace ShadowSteps.Art2D
             t.localPosition = origin;
         }
 
+        private bool _snapViewToPlayer; // D-080: the next applied state puts the panned view on the player (stage load, retry)
+
         private void OnStageLoaded(Stage stage)
         {
-            CancelPresentation();
+            CancelPresentation(); _snapViewToPlayer = true;
             Renderer.Build(stage);
             _composer.BoardCamera.backgroundColor = Renderer.BackgroundClearColor; // per-theme surround (D-058)
             if (_fitter != null) _fitter.Fit(_composer.BoardCamera.aspect);
@@ -211,9 +215,13 @@ namespace ShadowSteps.Art2D
             if (_composer.Board != null) foreach (var r in _composer.Board.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
         }
 
+        /// <summary>D-080: a drag pans the view of a wide board; the follow resumes at the next counted action.</summary>
+        private void OnPanRequested(float dx) { if (_fitter != null) { _fitter.Dragging = _composer != null && _composer.Input != null && _composer.Input.PanDragging; _fitter.PanByScreenPixels(dx); } }
+        private void LateUpdate() { if (_fitter != null && _fitter.Dragging && (_composer == null || _composer.Input == null || !_composer.Input.PanDragging)) _fitter.Dragging = false; }
+
         private ActionOutcome _lastOutcome; private StageState _pendingState;
         private void OnActionCompleted(ActionOutcome o) { _lastOutcome = o; }
-        private void OnRetried() { CancelPresentation(); } // retry (any mode) drops stale animation callbacks; the session publishes the initial state right after
+        private void OnRetried() { CancelPresentation(); _snapViewToPlayer = true; } // retry (any mode) drops stale animation callbacks; the session publishes the initial state right after
 
         /// <summary>
         /// Schedule index to present a state at. The rules keep the clock at the old index on a capture ("the failed action is
@@ -240,6 +248,7 @@ namespace ShadowSteps.Art2D
             _pendingState = null;
             var stage = _session.Stage; var lib = Renderer.library; int t = ShownClock(state);
             Renderer.SetPlayer(state.Player); Renderer.SetPlayerWalking(false);
+            if (_snapViewToPlayer) { _snapViewToPlayer = false; if (_fitter != null) _fitter.SnapToPlayer(); }
             Renderer.SetPlayerTint(state.Result == StageResult.Caught ? lib.captured : state.Result == StageResult.Won ? lib.won : state.Result == StageResult.Lockdown ? lib.lockdown : (Color?)null);
             for (int i = 0; i < stage.Guards.Count; i++)
             {
@@ -303,6 +312,7 @@ namespace ShadowSteps.Art2D
         private void OnActionStarted(ActionOutcome o)
         {
             if (o.Free) return;
+            if (_fitter != null) _fitter.FollowPlayer = true; // D-080: every counted action brings the view back onto the player
             if (_tween != null) { StopCoroutine(_tween); _tween = null; if (_pendingState != null) ApplyState(_pendingState); }
             _tween = StartCoroutine(Tween(o));
         }

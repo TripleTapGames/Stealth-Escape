@@ -1,0 +1,126 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L48_THE_FOUR_SENTINELS",
+    "title": "The Four Sentinels",
+    "intro": "Four guards guard separate loops; use the lower circuit to flank.",
+    "rows": [
+      "___#___________",
+      "___.-.-._______",
+      "___|_|_|_______",
+      "_.-.-.-._.-.-._",
+      "_|_|_|_|_|_|_|_",
+      "_.-.-.-.-.-.-.#",
+      "_|_|_|X__|X|___",
+      "_.-.-.___._.___",
+      "___|X____|_____",
+      "___._____._____",
+      "_________|_____",
+      "_________._____",
+      "_______________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      13,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "W",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            3
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "E",
+        "offset": 1
+      },
+      {
+        "id": "g4",
+        "kind": "static",
+        "route": [
+          [
+            9,
+            9
+          ]
+        ],
+        "facing": "N"
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          14,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          3,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 1,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Four separate guards control distinct parts of the board.",
+      "The lower ring creates an alternate flanking route, not just a longer straight path.",
+      "Local Python search: shortest demonstrated winning route 10 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [5, 7], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [13, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=10; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  }
+]

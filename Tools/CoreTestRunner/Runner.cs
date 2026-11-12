@@ -19,6 +19,7 @@ public static class Runner
         if (args.Length >= 3 && args[0] == "--generate") return Generator.Run(args[1], args[2], args.Length > 3 && args[3] == "--verbose");
         if (args.Length >= 3 && args[0] == "--v3-import") return V3Tools.Import(args[1], args[2], args.Length > 3 ? args[3] : null);
         if (args.Length >= 2 && args[0] == "--v3-validate") return V3Tools.Validate(args[1]);
+        if (args.Length >= 4 && args[0] == "--v3-append") return V3Tools.Append(args[1], args[2], args[3]);
         if (args.Length >= 3 && args[0] == "--v3-export-validation") return V3Tools.ExportValidation(args[1], args[2]);
         if (args.Length >= 3 && args[0] == "--v3-trace") return V3Tools.Trace(args[1], args[2]);
         if (args.Length >= 4 && args[0] == "--v3-replay") return V3Tools.Replay(args[1], args[2], args.Skip(3).ToArray());

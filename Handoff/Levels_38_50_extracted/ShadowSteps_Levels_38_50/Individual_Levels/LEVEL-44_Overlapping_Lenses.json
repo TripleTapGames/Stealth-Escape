@@ -1,0 +1,113 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L44_OVERLAPPING_LENSES",
+    "title": "Overlapping Lenses",
+    "intro": "Two cameras watch different exits from a three-guard courtyard.",
+    "rows": [
+      "_________#___",
+      "_.-.-.-.-.-._",
+      "_|_|_|___|_|_",
+      "_.-._.-._.-._",
+      "_|_|_|X|_|_|_",
+      "_.-.-._.-.-.#",
+      "_|_|_|_|X|_|_",
+      "_.-.-._.-.-._",
+      "_________|___",
+      "_________.___",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            7,
+            3
+          ]
+        ],
+        "facing": "N",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          5
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": false
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "Camera angles overlap near one of the central junctions.",
+      "Choose whether to take a lockdown dash or detour around surveillance.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [5, 7], [5, 5], [5, 3], [7, 3], [7, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=no solution; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  }
+]

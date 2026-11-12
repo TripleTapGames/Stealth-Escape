@@ -1,0 +1,127 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L45_GATEHOUSE_CIRCUIT",
+    "title": "Gatehouse Circuit",
+    "intro": "Get the key, then flank the guards in the far right wing.",
+    "rows": [
+      "_________#_____",
+      "___.-.-.-.-.___",
+      "___|_|___|_|___",
+      "_._._.-._.-.-.#",
+      "_|_|_|X|_|_|___",
+      "_.-.-.-.-._.-._",
+      "_|_|_____|X|___",
+      "_.-._____._.___",
+      "___|X____|_____",
+      "___._____._____",
+      "_______________"
+    ],
+    "start": [
+      1,
+      5
+    ],
+    "exit": [
+      13,
+      5
+    ],
+    "key": [
+      3,
+      9
+    ],
+    "cuts": [],
+    "doors": [
+      {
+        "a": [
+          11,
+          5
+        ],
+        "b": [
+          13,
+          5
+        ]
+      }
+    ],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "N"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            3
+          ]
+        ],
+        "facing": "E",
+        "clockwise": true
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "W",
+        "offset": 1
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          14,
+          3
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      },
+      {
+        "id": "cam2",
+        "wall": [
+          9,
+          0
+        ],
+        "mountFace": "S",
+        "facing": "S",
+        "kind": "sweeping",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 3,
+    "notes": [
+      "First 15-column level: camera follows player horizontally; pan without consuming actions.",
+      "The far-right locked exit cannot be reached until the key branch is visited.",
+      "Local Python search: shortest demonstrated winning route 12 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: True. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 5], [3, 5], [3, 7], [3, 9], [3, 7], [3, 5], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3], [11, 5], [13, 5]]",
+      "Independent checks: no-KO shortest=no solution; Ghost shortest=no solution; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  }
+]

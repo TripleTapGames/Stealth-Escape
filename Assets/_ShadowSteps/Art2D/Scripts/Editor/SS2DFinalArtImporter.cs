@@ -33,7 +33,13 @@ namespace ShadowSteps.Art2D.Editor
         static readonly Rect CourtyardFloor = new Rect(0.240f, 0.157f, 0.499f, 0.577f);
         static readonly Color Water = new Color32(0x01, 0x6E, 0xC0, 0xFF);
         /// <summary>Backdrop themes (D-058) with their level-id ranges. Empty by the user's call (2026-11-06): the courtyard v2 above paints every level. Add entries here (name, PNG path, measured floor rect, first/last id, clear colour) to bring a second setting back; the museum and desert floors were measured as (0.321, 0.280, 0.357, 0.4475) and (0.279, 0.245, 0.443, 0.455).</summary>
-        static readonly (string name, string path, Rect floor, int first, int last, Color clear)[] Themes = { };
+        static readonly (string name, string path, Rect floor, int first, int last, Color clear)[] Themes =
+        {
+            // D-081 (levels 38-50 handoff, 2026-11-11): the four painted settings as campaign chapters by board tier. Ids 1-40 keep the courtyard v2 (the library's single background).
+            ("Museum", BackgroundDir + "Museum-Sculpture-Court-Final-1400x2000-v6.png", new Rect(0.321f, 0.280f, 0.357f, 0.4475f), 41, 44, new Color(0.486f, 0.796f, 0.176f)),
+            ("Desert", BackgroundDir + "Desert-Palace-Terrace-Final-1400x2000-v2.png", new Rect(0.279f, 0.245f, 0.443f, 0.455f), 45, 47, new Color(0.914f, 0.765f, 0.561f)),
+            ("Courtyard (original)", BackgroundDir + "Courtyard-Natural-Sides-1400x2000.png", new Rect(0.277f, 0.344f, 0.432f, 0.368f), 48, 50, new Color(0.004f, 0.431f, 0.753f)),
+        };
         public const string ObstacleDir = SpritesRoot + "Obstacles/";
         public const string BushPath = ObstacleDir + "obstacle bush.png", WallSidePath = ObstacleDir + "obstacle wall side.png", WallFrontPath = ObstacleDir + "obstacle wall front.png";
         /// <summary>Obstacle art is authored at 2048 px with pillar centres / the planter box ≈ 1000 px apart: 1000 px = one node spacing.</summary>
@@ -185,7 +191,21 @@ namespace ShadowSteps.Art2D.Editor
                 lib.wallRunCameraHug = 0.36f;
                 lib.levelArt = new[] { Level19Layout(), Layout("LEVEL-26", new[] { B(2, 3), W(3, 6, SS2DWallAxis.LogicalX) }), Layout("LEVEL-27", new[] { B(4, 3) }),
                     Layout("LEVEL-28", new[] { B(2, 3), W(6, 5, SS2DWallAxis.LogicalY) }, "cam1", "cam2"), Layout("LEVEL-29", new[] { B(3, 2), W(3, 6, SS2DWallAxis.LogicalX) }, "cam1"),
-                    Layout("LEVEL-30", new[] { B(4, 2) }, "cam1", "cam2") };
+                    Layout("LEVEL-30", new[] { B(4, 2) }, "cam1", "cam2"),
+                    // D-081: levels 38-50 handoff (codes LEVEL-33..45). Planters and stone pieces on the authored X cells, stone mounts on perimeter cameras, poles on the two interior wall cameras.
+                    Layout("LEVEL-33", new[] { B(4, 4), W(6, 6, SS2DWallAxis.LogicalX) }),
+                    Layout("LEVEL-34", new[] { B(6, 4), W(8, 6, SS2DWallAxis.LogicalY) }, "cam1"),
+                    Layout("LEVEL-35", new[] { W(6, 4, SS2DWallAxis.LogicalX), B(8, 6) }, "cam1"),
+                    Layout("LEVEL-36", new[] { B(8, 4), W(6, 6, SS2DWallAxis.LogicalX) }, "cam1"),
+                    Layout("LEVEL-37", new[] { B(6, 4), W(8, 6, SS2DWallAxis.LogicalY), B(10, 8) }, "cam1"),
+                    Layout("LEVEL-38", new[] { W(8, 4, SS2DWallAxis.LogicalX), B(6, 6) }, "cam1"),
+                    Layout("LEVEL-39", new[] { B(6, 4), W(8, 6, SS2DWallAxis.LogicalX) }, "cam1", "cam2"),
+                    Layout("LEVEL-40", new[] { B(6, 4), W(10, 6, SS2DWallAxis.LogicalY), B(4, 8) }, "cam1", "cam2"),
+                    LayoutWithPoles("LEVEL-41", new[] { W(6, 4, SS2DWallAxis.LogicalX), B(8, 6) }, new[] { "cam2" }, new[] { "cam1" }),
+                    Layout("LEVEL-42", new[] { B(8, 4), W(6, 6, SS2DWallAxis.LogicalX) }, "cam1", "cam2"),
+                    Layout("LEVEL-43", new[] { W(6, 6, SS2DWallAxis.LogicalX), B(10, 6), B(4, 8) }, "cam1", "cam2"),
+                    Layout("LEVEL-44", new[] { B(6, 6), W(10, 6, SS2DWallAxis.LogicalY), B(4, 8) }, "cam1", "cam2", "cam3"),
+                    LayoutWithPoles("LEVEL-45", new[] { W(8, 4, SS2DWallAxis.LogicalX), B(6, 6), W(10, 6, SS2DWallAxis.LogicalY) }, new[] { "cam2", "cam3" }, new[] { "cam1" }) };
             }
             EditorUtility.SetDirty(lib);
             AssetDatabase.SaveAssets();
@@ -221,6 +241,15 @@ namespace ShadowSteps.Art2D.Editor
             layout.obstacles = new System.Collections.Generic.List<SS2DObstacleArtEntry>(obstacles);
             layout.cameras = new System.Collections.Generic.List<SS2DCameraArtEntry>();
             foreach (var id in stoneMountCameraIds) layout.cameras.Add(new SS2DCameraArtEntry { cameraId = id, mount = SS2DCameraMountArt.StoneWall });
+            EditorUtility.SetDirty(layout);
+            return layout;
+        }
+
+        /// <summary>As <see cref="Layout"/>, plus pole mounts for cameras on interior wall cells (the art has its own pedestal).</summary>
+        public static SS2DLevelArtLayout LayoutWithPoles(string code, SS2DObstacleArtEntry[] obstacles, string[] stoneMountCameraIds, string[] poleMountCameraIds)
+        {
+            var layout = Layout(code, obstacles, stoneMountCameraIds);
+            foreach (var id in poleMountCameraIds) layout.cameras.Add(new SS2DCameraArtEntry { cameraId = id, mount = SS2DCameraMountArt.Pole });
             EditorUtility.SetDirty(layout);
             return layout;
         }

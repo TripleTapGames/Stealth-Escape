@@ -264,7 +264,8 @@ namespace ShadowSteps.Art2D.Tests
             var composer = Object.FindObjectOfType<GameSceneComposer>(); Assert.IsNotNull(composer);
             Assert.AreEqual("LEVEL-25", composer.Session.Stage.Code);
             var next = AppServices.Stages.NextAfter(composer.Session.Stage.Id); Assert.IsNotNull(next); Assert.AreEqual("LEVEL-26", next.Code);
-            foreach (var expected in new[] { "LEVEL-26", "LEVEL-27", "LEVEL-28", "LEVEL-29", "LEVEL-30", "LEVEL-31", "LEVEL-32" })
+            var sequence = new List<string>(); for (int n = 26; n <= 45; n++) sequence.Add("LEVEL-" + n); // D-078 / D-081: Main 26 ... 45
+            foreach (var expected in sequence)
             {
                 composer.OpenStage(next); yield return null; yield return null;
                 Assert.AreEqual(expected, composer.Session.Stage.Code);
@@ -273,7 +274,7 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.AreEqual(composer.Session.Stage.Guards.Count, bridge.Renderer.Guards.Count);
                 next = AppServices.Stages.NextAfter(composer.Session.Stage.Id);
             }
-            Assert.IsNull(next, "nothing after Main 32 (D-078): the flow returns to level select");
+            Assert.IsNull(next, "nothing after Main 45 (D-081): the flow returns to level select");
         }
 
         /// <summary>Levels opened from the menus load Assets/_ShadowSteps/Scenes/Game.unity; it must compose with the 2D layer too, not the placeholder board.</summary>

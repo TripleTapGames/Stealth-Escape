@@ -1,0 +1,102 @@
+[
+  {
+    "base": "LEVEL-30",
+    "name": "L42_THREE-WAY_WATCH",
+    "title": "Three-Way Watch",
+    "intro": "Three guards divide the routes; find a flank at the junction.",
+    "rows": [
+      "_____________",
+      "___.-.-.-.___",
+      "___|_|_|_|___",
+      "_.-._.-._.-._",
+      "_|_|_|X|_|_|_",
+      "_.-.-.-.-.-._",
+      "_|_|_|_|X|_|_",
+      "_.-._.-._.-.#",
+      "___|_|___|X__",
+      "___.-.___.___",
+      "_____________"
+    ],
+    "start": [
+      1,
+      7
+    ],
+    "exit": [
+      11,
+      3
+    ],
+    "key": null,
+    "cuts": [],
+    "doors": [],
+    "guards": [
+      {
+        "id": "g1",
+        "kind": "static",
+        "route": [
+          [
+            5,
+            5
+          ]
+        ],
+        "facing": "W"
+      },
+      {
+        "id": "g2",
+        "kind": "rotating",
+        "route": [
+          [
+            9,
+            5
+          ]
+        ],
+        "facing": "N",
+        "clockwise": false
+      },
+      {
+        "id": "g3",
+        "kind": "pingPong",
+        "route": [
+          [
+            3,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            7,
+            1
+          ]
+        ],
+        "facing": "E",
+        "offset": 0
+      }
+    ],
+    "cameras": [
+      {
+        "id": "cam1",
+        "wall": [
+          12,
+          7
+        ],
+        "mountFace": "W",
+        "facing": "W",
+        "kind": "fixed",
+        "clockwise": true
+      }
+    ],
+    "gadgets": {
+      "smoke": 0,
+      "emp": 0
+    },
+    "alarmBudget": 4,
+    "notes": [
+      "First level with three guards alongside a camera.",
+      "Sentries occupy distinct areas so each influences a different route.",
+      "Local Python search: shortest demonstrated winning route 11 counted actions; 2 KOs; Smoke activations 0; EMP activations 0; alarm triggered: False. This is provisional, NOT the Unity C# official par.",
+      "Local sample move sequence: [[1, 7], [1, 5], [1, 7], [3, 7], [3, 9], [5, 9], [5, 7], [5, 5], [7, 5], [9, 5], [9, 3], [11, 3]]",
+      "Independent checks: no-KO shortest=15; Ghost shortest=11; no-Smoke solvable=True; no-EMP solvable=True."
+    ]
+  }
+]

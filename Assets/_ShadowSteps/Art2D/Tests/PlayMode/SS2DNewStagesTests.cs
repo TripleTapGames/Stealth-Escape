@@ -67,33 +67,71 @@ namespace ShadowSteps.Art2D.Tests
             System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, fileName), tex.EncodeToPNG()); Object.Destroy(tex);
         }
 
-        private IEnumerator Settle() { float t0 = Time.realtimeSinceStartup; yield return null; while (S.IsBusy && Time.realtimeSinceStartup - t0 < 8f) yield return null; yield return null; }
+        /// <summary>Waits for the action's presentation, then for any modal that locks input (the alarm popup after a camera detection: the player taps OK, here it auto-dismisses) so the next action is accepted as it would be in play.</summary>
+        private IEnumerator Settle()
+        {
+            var bridge = Object.FindObjectOfType<SS2DSessionBridge>();
+            float t0 = Time.realtimeSinceStartup; yield return null; while ((S.IsBusy || (bridge != null && bridge.TweenRunning)) && Time.realtimeSinceStartup - t0 < 8f) yield return null;
+            // The alarm popup is pushed by the session's Run coroutine after its animation: give it a beat, dismiss it as the player would ("GOT IT"), then wait for the modal lock to clear.
+            yield return new WaitForSecondsRealtime(0.25f);
+            var popup = Object.FindObjectOfType<ShadowSteps.UI.AlarmPopupScreen>(true); if (popup != null && popup.IsVisible) { popup.OnDismiss?.Invoke(); yield return null; }
+            float t1 = Time.realtimeSinceStartup; while ((S.InputLocked || S.IsBusy) && Time.realtimeSinceStartup - t1 < 6f) yield return null; yield return null;
+        }
+
+        private string Diag(StageAction a) => "action " + a + " at t=" + S.State.T + " player " + S.State.Player + " alarm " + S.State.Alarm + " busy=" + S.IsBusy + " locked=" + S.InputLocked + " terminal=" + S.State.IsTerminal + " lastReject=" + _lastReject;
+        private string _lastReject = "none";
         private bool CanCapture => SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Null;
 
         private IEnumerator OpenDrawCaptureAndReplayPar(string code, string capture, int expectedPar, int expectedKnockouts)
         {
             yield return OpenGame(code);
             var bridge = Object.FindObjectOfType<SS2DSessionBridge>(); Assert.IsNotNull(bridge); Assert.IsTrue(bridge.Renderer.IsBuilt, code + " drawn by the 2D layer");
-            Assert.AreEqual(9, S.Stage.Width); Assert.AreEqual(9, S.Stage.Height);
             Assert.AreEqual(S.Stage.Guards.Count, bridge.Renderer.Guards.Count);
-            // Every node of the board is inside the portrait view (no panning, nothing cropped).
-            var cam = _composer.BoardCamera; cam.GetComponent<SS2DCameraFitter>()?.Fit(1080f / 1920f);
-            foreach (var n in S.Stage.FloorNodes())
+            var cam = _composer.BoardCamera; var fitter = cam.GetComponent<SS2DCameraFitter>(); fitter?.Fit(1080f / 1920f);
+            if (bridge.Renderer.PanHorizontal)
             {
-                var v = cam.WorldToViewportPoint(bridge.Renderer.transform.TransformPoint(bridge.Renderer.Pos(n)));
-                Assert.IsTrue(v.x > 0.02f && v.x < 0.98f && v.y > 0.02f && v.y < 0.98f, code + " node " + n + " inside the view: " + v);
+                // D-080: a wide board is drawn landscape and pans; the view sits on the player, every node is inside the vertical band and within the pan range.
+                Assert.IsFalse(bridge.Renderer.Rotated, code + " landscape"); Assert.Greater(fitter.PanRange, 0f, code + " pans");
+                fitter.SnapToPlayer();
+                var pv = cam.WorldToViewportPoint(bridge.Renderer.Player.transform.position);
+                Assert.IsTrue(pv.x > 0.02f && pv.x < 0.98f && pv.y > 0.02f && pv.y < 0.98f, code + " player inside the view after the snap: " + pv);
+                float viewW = cam.orthographicSize * 2f * cam.aspect;
+                foreach (var n in S.Stage.FloorNodes())
+                {
+                    var w = bridge.Renderer.transform.TransformPoint(bridge.Renderer.Pos(n)); var v = cam.WorldToViewportPoint(w);
+                    Assert.IsTrue(v.y > 0.02f && v.y < 0.98f, code + " node " + n + " inside the vertical band: " + v);
+                    Assert.LessOrEqual(Mathf.Abs(w.x - (cam.transform.position.x - fitter.PanX)), fitter.PanRange + viewW * 0.5f, code + " node " + n + " reachable by panning");
+                }
+            }
+            else
+            {
+                Assert.AreEqual(9, S.Stage.Width); Assert.AreEqual(9, S.Stage.Height);
+                // Every node of the board is inside the portrait view (no panning, nothing cropped).
+                foreach (var n in S.Stage.FloorNodes())
+                {
+                    var v = cam.WorldToViewportPoint(bridge.Renderer.transform.TransformPoint(bridge.Renderer.Pos(n)));
+                    Assert.IsTrue(v.x > 0.02f && v.x < 0.98f && v.y > 0.02f && v.y < 0.98f, code + " node " + n + " inside the view: " + v);
+                }
             }
             if (CanCapture) yield return CaptureGameView(capture);
             // The solver's par route, through the session (the knockout is the move onto the guard, from behind or the side).
             var m = StageMetrics.Analyze(S.Stage, StagePackTools.ShippedSolveOptions());
             Assert.AreEqual(expectedPar, m.Par, code + " par"); Assert.AreEqual(expectedKnockouts, m.KnockoutsInPar, code + " knockouts in par");
-            foreach (var a in m.Solution) { Assert.IsTrue(S.TrySubmit(a), code + " action " + a + " accepted"); yield return Settle(); if (S.State.IsTerminal) break; }
+            S.ActionRejected += (ra, reason) => _lastReject = ra + ":" + reason;
+            _composer.Animator.ReducedMotion = true; // the hidden placeholder board's tweens are not what is under test; the 2D layer keeps its own hop/knockout tween
+            foreach (var a in m.Solution) { Assert.IsTrue(S.TrySubmit(a), code + " action " + a + " accepted (" + Diag(a) + ")"); yield return Settle(); if (S.State.IsTerminal) break; }
             Assert.AreEqual(StageResult.Won, S.State.Result, code + " par route wins in the real scene");
             Assert.AreEqual(expectedPar, S.State.T);
         }
 
         [UnityTest]
         public IEnumerator Level31_GardenGambit_DrawsFitsAndParRouteWins() => OpenDrawCaptureAndReplayPar("LEVEL-31", "Art2D_Level31_GardenGambit_1080x1920.png", 8, 1);
+
+        // D-081: the four review levels the levels 38-50 handoff asked for (kit 43, 46, 49, 50), captured with guard fans and camera cones drawn.
+        [UnityTest] public IEnumerator Level38_SmokeAtTheFork_Kit43_DrawsPansAndParRouteWins() => OpenDrawCaptureAndReplayPar("LEVEL-38", "Art2D_Level38_Kit43_SmokeAtTheFork_1080x1920.png", 11, 2);
+        [UnityTest] public IEnumerator Level41_PowerCut_Kit46_DrawsPansAndParRouteWins() => OpenDrawCaptureAndReplayPar("LEVEL-41", "Art2D_Level41_Kit46_PowerCut_1080x1920.png", 10, 2);
+        [UnityTest] public IEnumerator Level44_ThreeEyesOneKey_Kit49_DrawsPansAndParRouteWins() => OpenDrawCaptureAndReplayPar("LEVEL-44", "Art2D_Level44_Kit49_ThreeEyesOneKey_1080x1920.png", 14, 3);
+        [UnityTest] public IEnumerator Level45_TheLastExit_Kit50_DrawsPansAndParRouteWins() => OpenDrawCaptureAndReplayPar("LEVEL-45", "Art2D_Level45_Kit50_TheLastExit_1080x1920.png", 16, 1);
 
         [UnityTest]
         public IEnumerator Level32_LockedFlank_DrawsFitsAndParRouteWins_FrontKnockoutRejected()
