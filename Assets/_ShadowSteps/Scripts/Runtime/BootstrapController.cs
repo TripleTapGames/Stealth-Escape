@@ -22,6 +22,8 @@ namespace ShadowSteps.Runtime
                 yield break;
             }
             AudioService.Ensure();
+            Status = "Starting services…";
+            yield return Analytics.AnalyticsService.Startup(); // D-082: SDK layer (GameAnalytics, Firebase, Facebook, Singular) + the game's event tracker
             SceneManager.LoadScene(NextScene);
         }
 

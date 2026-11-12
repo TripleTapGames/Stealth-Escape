@@ -40,6 +40,7 @@ globs = [
 ]
 compile_items = "\n".join('    <Compile Include="%s" />' % os.path.join(ROOT, g) for g in globs)
 extra_dlls = ["Unity.TextMeshPro.dll", "Unity.TextMeshPro.Editor.dll", "UnityEngine.UI.dll", "UnityEngine.TestRunner.dll", "UnityEditor.TestRunner.dll",
+              "UniTask.dll", "TTG.Foundation.Runtime.dll",  # D-082: the runtime analytics service builds on the TTG Foundation facade (UniTask-based)
               "Unity.RenderPipelines.Universal.Runtime.dll", "Unity.RenderPipelines.Core.Runtime.dll", "Unity.RenderPipelines.Universal.Editor.dll", "Unity.RenderPipelines.Core.Editor.dll"]
 refs = []
 for dll in extra_dlls:

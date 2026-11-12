@@ -1,6 +1,7 @@
 using System;
 using ShadowSteps.Core;
 using ShadowSteps.Data;
+using ShadowSteps.Data.Analytics;
 using ShadowSteps.Runtime;
 using ShadowSteps.V3;
 using UnityEngine;
@@ -55,22 +56,22 @@ namespace ShadowSteps.UI
             _spotlight = set.Create<FtueSpotlightScreen>(canvas.transform, null); // D-077: built from code, managed directly (never on the router stack)
             _spotlight.Hide(true);
 
-            pause.OnResume = () => Router.Pop();
-            pause.OnRestart = () => { Router.PopAllModals(); Session.Retry(); };
-            pause.OnSettings = () => Router.Push<SettingsScreen>();
-            pause.OnLevelSelect = GoToLevelSelect;
+            pause.OnResume = () => { Track.MenuAction("pause", "resume", LevelId); Router.Pop(); };
+            pause.OnRestart = () => { Track.MenuAction("pause", "restart", LevelId); Router.PopAllModals(); Session.Retry(); };
+            pause.OnSettings = () => { Track.MenuAction("pause", "settings", LevelId); Router.Push<SettingsScreen>(); };
+            pause.OnLevelSelect = () => GoToLevelSelect("pause");
             settings.OnClose = () => Router.Pop();
             settings.OnChanged = s =>
             {
                 Router.ReducedMotion = s.ReducedMotion;
                 if (Composer.Animator != null) Composer.Animator.ReducedMotion = s.ReducedMotion;
             };
-            results.OnNext = NextStage;
-            results.OnReplay = () => { Router.PopAllModals(); Session.Retry(); };
-            results.OnLevelSelect = GoToLevelSelect;
-            failure.OnUndo = () => { Router.PopAllModals(); Session.DebugUndo(); };
-            failure.OnRetry = () => { Router.PopAllModals(); Session.Retry(); };
-            failure.OnLevelSelect = GoToLevelSelect;
+            results.OnNext = () => { Track.MenuAction("results", "next", LevelId); NextStage(); };
+            results.OnReplay = () => { Track.MenuAction("results", "replay", LevelId); Router.PopAllModals(); Session.Retry(); };
+            results.OnLevelSelect = () => GoToLevelSelect("results");
+            failure.OnUndo = () => { Track.MenuAction("failure", "undo", LevelId); Router.PopAllModals(); Session.DebugUndo(); };
+            failure.OnRetry = () => { Track.MenuAction("failure", "retry", LevelId); Router.PopAllModals(); Session.Retry(); };
+            failure.OnLevelSelect = () => GoToLevelSelect("failure");
             onboarding.OnDismiss = () => { Router.Pop(); ShowNextGuardCard(); }; // guard cards follow the stage intro
             alarm.OnDismiss = () => { if (Router.Current == alarm) Router.Pop(); };
 
@@ -87,18 +88,32 @@ namespace ShadowSteps.UI
             Session.AlarmTriggered += OnAlarmTriggered;
             Session.UndoPerformed += () => AudioService.Instance?.Play(Sfx.Tap);
             Session.Retried += () => AudioService.Instance?.Play(Sfx.Tap);
+            // D-082 analytics: a retry opens a new attempt; a mode switch closes the attempt and opens one in the other rules (the session restarts the level and raises Retried after RulesModeChanged, which the tracker treats as part of the same switch).
+            Session.Retried += () => { if (_modeSwitchPending) { _modeSwitchPending = false; return; } Track.Retried(Session.Stage, Session.RulesMode, _actionsBeforeRestart); };
+            Session.RulesModeChanged += mode => { _modeSwitchPending = true; Track.ModeSwitched(Session.Stage, _lastMode, mode, _actionsBeforeRestart); _lastMode = mode; };
             Session.RulesModeChanged += _ => { CancelGuardQueue(); CancelGadgetGuide(); _messageShownThisVisit = false; Router.PopAllModals(); }; // a mode switch restarts the current level: any results/failure/alarm/guard card is stale; the new mode may show its one card
             Session.Retried += RebuildGuardQueue; // retry and mode switch: a fresh board context; acknowledged cards never repeat, interrupted ones become eligible again
             Session.Retried += () => { CancelGadgetGuide(); StartGadgetGuideIfNeeded(); }; // a retry restarts the guide from step 1, or drops it once the gadget has been used
 
             _hud = Composer.Hud as GameHudController;
-            if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
-            else if (Composer.Hud is IGameHudPause pausable) pausable.PauseRequested += () => { if (!Router.AnyModalOpen) Router.Push<PauseScreen>(); };
+            if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) { Track.MenuAction("hud", "pause", LevelId); Router.Push<PauseScreen>(); } };
+            else if (Composer.Hud is IGameHudPause pausable) pausable.PauseRequested += () => { if (!Router.AnyModalOpen) { Track.MenuAction("hud", "pause", LevelId); Router.Push<PauseScreen>(); } };
             AudioService.Ensure();
+            ShadowSteps.Runtime.Analytics.AnalyticsService.Ensure();
         }
+
+        // ---------------------------------------------------------------- analytics (D-082)
+
+        private static GameAnalyticsTracker Track => GameAnalytics.Tracker;
+        private string LevelId => Session != null && Session.HasStage ? Session.Stage.Code : null;
+        private StageMode _lastMode; private bool _modeSwitchPending; private int _actionsBeforeRestart;
+
+        private void OnDestroy() { if (Session != null && Session.HasStage && Session.State != null && !Session.State.IsTerminal) Track.LevelQuit(Session.State.T, "scene"); }
 
         private void OnStageLoaded(Stage stage)
         {
+            _lastMode = Session.RulesMode; _modeSwitchPending = false; _actionsBeforeRestart = 0;
+            Track.StageLoaded(stage, Session.RulesMode);
             CancelGuardQueue();
             CancelGadgetGuide();
             StartGadgetGuideIfNeeded(); // D-076: the HUD line sits under whatever card or intro opens next
@@ -184,6 +199,7 @@ namespace ShadowSteps.UI
             _guardIntro.OnDismiss = () => DismissGuardCard(token, card, mode);
             _guardIntro.Present(card);
             Router.Push<GuardIntroScreen>();
+            Track.CardShown(CardToken(card));
             if (card is GuardOnboarding.Card guard) HighlightGuard(guard.GuardIndex);
             else if (card is GadgetOnboarding.Card gadget) HighlightGadget(gadget.Kind);
         }
@@ -199,9 +215,12 @@ namespace ShadowSteps.UI
             else if (card is GadgetOnboarding.Card gadget) GadgetOnboarding.MarkSeen(AppServices.Save, gadget.Kind);
             AppServices.PersistSave();
             AudioService.Instance?.Play(Sfx.Tap);
+            Track.CardDismissed(CardToken(card));
             ShowNextGuardCard();
             if (_gadgetGuide.Active) ApplyGadgetGuide(); else StartGadgetGuideIfNeeded(); // after the card: "Tap SMOKE to arm it" with the button accented again
         }
+
+        private static string CardToken(OnboardingCard card) => card is GuardOnboarding.Card g ? "guard_" + GuardOnboarding.Token(g.Kind) + "_" + StageModeUtil.Token(g.Mode) : card is GadgetOnboarding.Card gd ? "gadget_" + (gd.Kind == GadgetKind.Smoke ? "smoke" : "emp") : "card";
 
         // ---------------------------------------------------------------- scripted spotlight guide (D-076 / D-077)
 
@@ -255,12 +274,13 @@ namespace ShadowSteps.UI
             bool ours = o.Free && (_gadgetGuide.Kind == GadgetKind.Smoke ? o.Action.Kind == StageActionKind.Smoke : o.Action.Kind == StageActionKind.Emp);
             if (ours && !GadgetOnboarding.IsUsed(AppServices.Save, _gadgetGuide.Kind)) { GadgetOnboarding.MarkUsed(AppServices.Save, _gadgetGuide.Kind); AppServices.PersistSave(); } // any real throw counts as learned
             var result = _gadgetGuide.OnAction(o.Action.Kind, o.PlayerTo, o.Action.Kind == StageActionKind.Smoke ? o.Action.Target : default, o.Action.CameraIndex);
+            string gadgetToken = _gadgetGuide.Kind == GadgetKind.Smoke ? "smoke" : "emp";
             switch (result)
             {
-                case GadgetOnboarding.Guide.ActionResult.Advanced:
-                case GadgetOnboarding.Guide.ActionResult.Completed: ApplyGadgetGuide(); break;
+                case GadgetOnboarding.Guide.ActionResult.Advanced: Track.GadgetGuideStep(gadgetToken, _gadgetGuide.Current != null ? _gadgetGuide.Current.Kind.ToString().ToLowerInvariant() : "next"); ApplyGadgetGuide(); break;
+                case GadgetOnboarding.Guide.ActionResult.Completed: Track.GadgetGuideDone(gadgetToken, "completed"); ApplyGadgetGuide(); break;
                 case GadgetOnboarding.Guide.ActionResult.Diverged:
-                    if (ours) { var kind = _gadgetGuide.Kind; _gadgetGuide.Cancel(); ApplyGadgetGuide(); Composer.Hud?.ShowMessage(GadgetOnboarding.ThrownMessage(kind)); StartGadgetGuideIfNeeded(); } // thrown elsewhere: lesson learned, no charge left to guide
+                    if (ours) { var kind = _gadgetGuide.Kind; Track.GadgetGuideDone(gadgetToken, "thrown_elsewhere"); _gadgetGuide.Cancel(); ApplyGadgetGuide(); Composer.Hud?.ShowMessage(GadgetOnboarding.ThrownMessage(kind)); StartGadgetGuideIfNeeded(); } // thrown elsewhere: lesson learned, no charge left to guide
                     else RescriptGadgetGuide(o.After);
                     break;
             }
@@ -368,6 +388,8 @@ namespace ShadowSteps.UI
 
         private void OnActionStarted(ActionOutcome o)
         {
+            Track.ActionStarted(o); // D-082: knockouts, gadget throws, key pickups, first camera detection
+            if (o.After != null) _actionsBeforeRestart = o.After.T;
             // D-076/D-077: every started action drives the scripted guide (before the audio early-out so it also works without an AudioService).
             OnGuideAction(o);
             var audio = AudioService.Instance;
@@ -406,6 +428,7 @@ namespace ShadowSteps.UI
                 AppServices.PersistSave();
             }
             var next = catalog?.NextAfter(stage.Id);
+            Track.Won(stage, o, StageScoring.Stars(actions, stage.ParFor(mode)), newBest, next == null);
             System.Action showResults = () => Router.Push<ResultsScreen>().Present(stage, mode, actions, best, newBest, ghostEarned, ghostEver, next != null);
             if (Composer.WinTransition != null && Composer.WinTransition(o, showResults)) return; // presentation plays its completion sequence first
             showResults();
@@ -427,6 +450,7 @@ namespace ShadowSteps.UI
         /// <summary>The state is already final; a presentation may finish the enemy's step/turn and its capture beat before the screen appears.</summary>
         private void PresentFailure(ActionOutcome o)
         {
+            Track.Failed(o);
             System.Action present = () =>
             {
                 AudioService.Instance?.Play(Sfx.Alert);
@@ -440,13 +464,16 @@ namespace ShadowSteps.UI
         private void NextStage()
         {
             var next = AppServices.Stages?.NextAfter(Session.Stage.Id);
-            if (next == null) { GoToLevelSelect(); return; }
+            if (next == null) { GoToLevelSelect("results"); return; }
             Router.PopAllModals();
+            Track.SetNextSource(GameAnalyticsTracker.SourceNext);
             Composer.OpenStage(next);
         }
 
-        private void GoToLevelSelect()
+        private void GoToLevelSelect(string via)
         {
+            Track.MenuAction(via, "level_select", LevelId);
+            if (Session.HasStage && Session.State != null) Track.LevelQuit(Session.State.T, via);
             AppServices.PendingMenu = AppServices.MenuLevelSelect;
             SceneManager.LoadScene(HomeSceneName);
         }

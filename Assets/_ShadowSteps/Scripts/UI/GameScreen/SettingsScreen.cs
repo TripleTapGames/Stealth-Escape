@@ -76,23 +76,26 @@ namespace ShadowSteps.UI
         {
             if (_wired || CloseButton == null) return;
             _wired = true;
-            MusicButton.Button.onClick.AddListener(() => Toggle(s => s.MusicOn = !s.MusicOn));
-            SfxButton.Button.onClick.AddListener(() => Toggle(s => s.SfxOn = !s.SfxOn));
-            HapticsButton.Button.onClick.AddListener(() => Toggle(s => s.HapticsOn = !s.HapticsOn));
-            ReducedMotionButton.Button.onClick.AddListener(() => Toggle(s => s.ReducedMotion = !s.ReducedMotion));
-            ColorAssistButton.Button.onClick.AddListener(() => Toggle(s => s.ColorBlindAssist = !s.ColorBlindAssist));
+            MusicButton.Button.onClick.AddListener(() => Toggle("music", s => s.MusicOn = !s.MusicOn));
+            SfxButton.Button.onClick.AddListener(() => Toggle("sfx", s => s.SfxOn = !s.SfxOn));
+            HapticsButton.Button.onClick.AddListener(() => Toggle("haptics", s => s.HapticsOn = !s.HapticsOn));
+            ReducedMotionButton.Button.onClick.AddListener(() => Toggle("reduced_motion", s => s.ReducedMotion = !s.ReducedMotion));
+            ColorAssistButton.Button.onClick.AddListener(() => Toggle("color_blind_assist", s => s.ColorBlindAssist = !s.ColorBlindAssist));
             UnlockAllButton.Button.onClick.AddListener(ToggleUnlockAll);
-            PrivacyButton.Button.onClick.AddListener(() => Application.OpenURL(PrivacyPolicyUrl));
+            PrivacyButton.Button.onClick.AddListener(() => { ShadowSteps.Data.Analytics.GameAnalytics.Tracker.MenuAction("settings", "privacy_policy"); Application.OpenURL(PrivacyPolicyUrl); });
             CloseButton.Button.onClick.AddListener(() => OnClose?.Invoke());
         }
 
         protected override void Awake() { base.Awake(); Wire(); }
 
-        private void Toggle(Action<SettingsData> change)
+        private static bool SettingValue(string setting, SettingsData d) => setting == "music" ? d.MusicOn : setting == "sfx" ? d.SfxOn : setting == "haptics" ? d.HapticsOn : setting == "reduced_motion" ? d.ReducedMotion : d.ColorBlindAssist;
+
+        private void Toggle(string setting, Action<SettingsData> change)
         {
             var save = AppServices.Save;
             if (save == null) return;
             change(save.Settings);
+            ShadowSteps.Data.Analytics.GameAnalytics.Tracker.SettingChanged(setting, SettingValue(setting, save.Settings)); // D-082
             AppServices.PersistSave();
             AudioService.Instance?.ApplySettings(save.Settings);
             OnChanged?.Invoke(save.Settings);

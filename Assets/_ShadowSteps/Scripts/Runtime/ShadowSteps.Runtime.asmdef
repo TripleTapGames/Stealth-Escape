@@ -3,7 +3,9 @@
     "rootNamespace": "ShadowSteps.Runtime",
     "references": [
         "ShadowSteps.Core",
-        "ShadowSteps.Data"
+        "ShadowSteps.Data",
+        "TTG.Foundation.Runtime",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,5 +1,6 @@
 using System.Collections;
 using ShadowSteps.Data;
+using ShadowSteps.Data.Analytics;
 using ShadowSteps.Runtime;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -37,14 +38,15 @@ namespace ShadowSteps.UI
             var home = Router.Register(set.Create<HomeScreen>(canvas.transform, set.HomeScreen));
             var levels = Router.Register(set.Create<LevelSelectScreen>(canvas.transform, set.LevelSelectScreen));
             var settings = Router.Register(set.Create<SettingsScreen>(canvas.transform, set.SettingsScreen));
-            home.OnPlay = () => OpenStage(StageProgression.ResumeStage(AppServices.Stages, AppServices.Save).Id);
-            home.OnLevelSelect = () => Router.Push<LevelSelectScreen>();
-            home.OnSettings = () => Router.Push<SettingsScreen>();
-            levels.OnBack = () => Router.Pop();
-            levels.OnLevelChosen = OpenStage;
+            home.OnPlay = () => { var resume = StageProgression.ResumeStage(AppServices.Stages, AppServices.Save); GameAnalytics.Tracker.MenuAction("home", "play", resume?.Code); GameAnalytics.Tracker.SetNextSource(GameAnalyticsTracker.SourceResume); OpenStage(resume.Id); };
+            home.OnLevelSelect = () => { GameAnalytics.Tracker.MenuAction("home", "level_select"); Router.Push<LevelSelectScreen>(); };
+            home.OnSettings = () => { GameAnalytics.Tracker.MenuAction("home", "settings"); Router.Push<SettingsScreen>(); };
+            levels.OnBack = () => { GameAnalytics.Tracker.MenuAction("level_select", "back"); Router.Pop(); };
+            levels.OnLevelChosen = id => { GameAnalytics.Tracker.MenuAction("level_select", "open", AppServices.Stages?.ById(id)?.Code); GameAnalytics.Tracker.SetNextSource(GameAnalyticsTracker.SourceSelect); OpenStage(id); };
             settings.OnClose = () => Router.Pop();
             settings.OnChanged = s => Router.ReducedMotion = s.ReducedMotion;
             AudioService.Ensure();
+            ShadowSteps.Runtime.Analytics.AnalyticsService.Ensure();
             Router.Replace<HomeScreen>();
             if (AppServices.PendingMenu == AppServices.MenuLevelSelect) Router.Push<LevelSelectScreen>();
             AppServices.PendingMenu = null;
