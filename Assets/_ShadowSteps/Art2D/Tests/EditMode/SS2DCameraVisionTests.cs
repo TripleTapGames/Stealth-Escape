@@ -58,7 +58,10 @@ namespace ShadowSteps.Art2D.Tests
             Assert.AreEqual(activeCams, r.CameraCones.Count, label + ": one cone per active camera, none for EMP-disabled ones");
             int rings = 0; var ringT = r.transform.Find("Overlays/CameraVision");
             foreach (Transform t in ringT) if (t.name == "NodeRing" && t.gameObject.activeSelf) { rings++; bool onNode = false; foreach (var c in expected) if (Vector3.Distance(t.localPosition, r.Pos(c)) < 1e-3f) onNode = true; Assert.IsTrue(onNode, label + ": ring off a detected node"); }
-            Assert.AreEqual(expected.Count, rings, label + ": one ring per detected node");
+            int visibleMarkers = 0;
+            foreach (var c in expected) if (r.CameraOverlay.ShowsNodeMarker(c)) visibleMarkers++;
+            Assert.AreEqual(visibleMarkers, rings, label + ": one ring per visible detected node");
+            Assert.IsFalse(r.CameraOverlay.ShowsNodeMarker(stage.Exit), label + ": no camera marker on the exit");
         }
 
         private static Stage PoleStage()
@@ -493,7 +496,7 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
-        public void ClosedDoor_BlocksCameraVision_UntilOpened()
+        public void ClosedDoor_DoesNotBlockCameraVision()
         {
             // 5×4: camera on the north wall (2,0) looking south down column 2; a door between (2,1) and (2,2).
             var b = new StageBuilder { Id = 901, Code = "T-DOOR", Title = "door", Start = new GridCoord(0, 2), Exit = new GridCoord(4, 2), Key = new GridCoord(0, 1), AlarmBudget = 3 };
@@ -506,8 +509,8 @@ namespace ShadowSteps.Art2D.Tests
                 var closed = StageState.Initial(stage); Present(r, stage, closed); AssertOverlayMatchesEngine(r, stage, closed, "door closed");
                 var opened = new StageState(closed.Player, 0, true, 1, null, null, 0, 0, -1, false, StageResult.Playing, null); Present(r, stage, opened); AssertOverlayMatchesEngine(r, stage, opened, "door open");
                 var seenClosed = EngineCameraCells(stage, closed); var seenOpen = EngineCameraCells(stage, opened);
-                Assert.IsTrue(seenOpen.IsSupersetOf(seenClosed)); Assert.Greater(seenOpen.Count, seenClosed.Count, "the closed door hides at least one node");
-                Assert.IsTrue(seenOpen.Contains(new GridCoord(2, 2)) && !seenClosed.Contains(new GridCoord(2, 2)), "node behind the door becomes visible when it opens");
+                CollectionAssert.AreEquivalent(seenClosed, seenOpen);
+                Assert.IsTrue(seenClosed.Contains(new GridCoord(2, 2)));
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }
@@ -552,6 +555,64 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
+        public void TurningCameraMarkers_StayCenteredAboveTheArtworkInEveryFacing()
+        {
+            var stage = Pack().FindByCode("LEVEL-30");
+            var renderer = Build(stage);
+            try
+            {
+                if (!renderer.UsesDirectionalCameraArt) Assert.Ignore("No directional camera artwork.");
+                for (int i = 0; i < stage.Cameras.Count; i++)
+                {
+                    if (stage.Cameras[i].Kind == CameraKind.Fixed) continue;
+                    var body = renderer.transform.Find("Props/Camera_" + i + "/Head/Body").GetComponent<SpriteRenderer>();
+                    var marker = renderer.transform.Find("Props/Camera_" + i + "/TypeMarker").GetComponent<SpriteRenderer>();
+                    Assert.IsTrue(marker.gameObject.activeSelf);
+                    for (int facing = 0; facing < 4; facing++)
+                    {
+                        renderer.SetCameraVisualFacing(i, (Direction)facing);
+                        var vertices = body.sprite.vertices;
+                        var visibleArt = new Bounds(body.transform.TransformPoint(vertices[0]), Vector3.zero);
+                        foreach (var vertex in vertices) visibleArt.Encapsulate(body.transform.TransformPoint(vertex));
+                        Assert.AreEqual(visibleArt.center.x, marker.bounds.center.x, 1e-4f);
+                        Assert.Greater(marker.bounds.min.y, visibleArt.max.y);
+                        Assert.AreEqual(body.sortingLayerID, marker.sortingLayerID);
+                        Assert.Greater(marker.sortingOrder, body.sortingOrder);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(renderer.gameObject); }
+        }
+
+        [Test]
+        public void DetectedPlayer_DrawsUnderCameraFill_AndReturnsToActorsWhenCameraIsDisabled()
+        {
+            var stage = Pack().FindByCode("LEVEL-16");
+            var state = StageState.Initial(stage);
+            var detected = new List<GridCoord>(Sight.CameraVision(stage, state, 0, state.T));
+            Assert.IsNotEmpty(detected);
+            var renderer = Build(stage);
+            try
+            {
+                Present(renderer, stage, state);
+                var fill = renderer.CameraOverlay.transform.Find("Region_Fill").GetComponent<MeshRenderer>();
+                // Touchdown moves the player before the vision state is republished.
+                renderer.SetPlayer(detected[0]);
+                Assert.AreEqual(fill.sortingLayerID, renderer.Player.body.sortingLayerID);
+                Assert.Less(renderer.Player.body.sortingOrder, fill.sortingOrder);
+                Assert.Less(renderer.Player.shadow.sortingOrder, renderer.Player.body.sortingOrder);
+                Assert.Less(renderer.Player.ring.sortingOrder, renderer.Player.body.sortingOrder);
+
+                renderer.SetCamera(0, CameraTrack.FacingAt(stage.Cameras[0], state.T), 2, false);
+                renderer.SetVision(null, null);
+                Assert.AreEqual(SS2DLayers.Actors, renderer.Player.body.sortingLayerName);
+                Assert.AreEqual(SS2DLayers.Actors, renderer.Player.ring.sortingLayerName);
+                Assert.AreEqual(SS2DLayers.Actors, renderer.Player.shadow.sortingLayerName);
+            }
+            finally { Object.DestroyImmediate(renderer.gameObject); }
+        }
+
+        [Test]
         public void GuardAndCameraOverlap_KeepsBothIndicators()
         {
             var stage = Pack().FindByCode("LEVEL-25"); var r = Build(stage);
@@ -562,15 +623,17 @@ namespace ShadowSteps.Art2D.Tests
                 var cam = EngineCameraCells(stage, s0);
                 var both = new HashSet<GridCoord>(guard); both.IntersectWith(cam);
                 Assert.Greater(both.Count, 0, "the static guard and the camera share at least one node at t=0");
-                int redRings = 0; int camRingOrder = -1;
-                foreach (Transform t in r.transform.Find("Overlays/CameraVision")) if (t.name == "NodeRing" && t.gameObject.activeSelf) camRingOrder = t.GetComponent<SpriteRenderer>().sortingOrder;
+                int redRings = 0;
                 foreach (Transform t in r.transform.Find("Overlays/GuardVision"))
                     if (t.name == "NodeRing" && t.gameObject.activeSelf)
                     {
-                        redRings++; Assert.Greater(t.GetComponent<SpriteRenderer>().sortingOrder, camRingOrder, "red ring drawn above the amber ring");
-                        foreach (var c in both) if (Vector3.Distance(t.localPosition, r.Pos(c)) < 1e-3f) Assert.IsTrue(r.CameraOverlay.Contains(c), "amber region under the red ring at " + c);
+                        redRings++;
+                        var ring = t.GetComponent<SpriteRenderer>();
+                        Assert.AreEqual(SS2DLayers.GuardVision, ring.sortingLayerName, "guard rings use their own layer");
+                        Assert.AreEqual(r.library.guardVisionOrder + 2, ring.sortingOrder, "guard rings use the guard draw order");
+                        foreach (var c in both) if (Vector3.Distance(t.localPosition, r.Pos(c)) < 1e-3f) Assert.IsTrue(r.CameraOverlay.Contains(c), "camera detection also covers " + c);
                     }
-                Assert.AreEqual(guard.Count, redRings, "one red ring per guard-seen node, drawn above the amber region");
+                Assert.AreEqual(guard.Count, redRings, "one red ring per guard-seen node");
                 Assert.IsTrue(guard.SetEquals(r.GuardOverlay.DrawnCells)); Assert.AreEqual(1, r.GuardCones.Count, "one red fan for the static guard");
             }
             finally { Object.DestroyImmediate(r.gameObject); }

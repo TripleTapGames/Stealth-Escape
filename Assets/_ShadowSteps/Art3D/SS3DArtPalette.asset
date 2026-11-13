@@ -14,15 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   floorA: {fileID: 4814140183114437194, guid: f6b9ec202074f4cdeb9d645c08745294, type: 3}
   floorB: {fileID: 4814140183114437194, guid: fd2916615311e4aac82316d11d9577bf, type: 3}
-  wallBlock: {fileID: 1048459307401366, guid: 5763b5c079fc82d4f9eba6bdb64be096, type: 3}
+  wallBlock: {fileID: 4814140183114437194, guid: 9427e1d7d95644c9b95c62875eb0f08a,
+    type: 3}
   wallStraight: {fileID: 4814140183114437194, guid: 5a2f4cc5527ca4c0cb9aed1f6e2b7ec6,
     type: 3}
   coverObstacles:
-  - {fileID: 1719569932363254, guid: 2f8e08a414723f3478184919435f67c0, type: 3}
-  - {fileID: 1894982720226970, guid: b26e035715d763f409a7e837ae204dab, type: 3}
-  - {fileID: 1748694898646254, guid: c6efdc6da1dc29241a8651dcd1622ccc, type: 3}
-  - {fileID: 1177926268367656, guid: 9113b902fee41e840a16886b937e28d9, type: 3}
-  - {fileID: 1793482622933152, guid: 0b4b7d63ece7f3d48b599d2dbfee78ff, type: 3}
+  - {fileID: 4814140183114437194, guid: 905009cbb6a594fe7940b359dd6e2703, type: 3}
+  - {fileID: 4814140183114437194, guid: 68d82fd5d24004aa6bb84b2c54449c7a, type: 3}
+  - {fileID: 4814140183114437194, guid: 5dc6a41046fe243afa07f00955dccc7b, type: 3}
   floorTop: 0.112
   wallHeightScale: 0.5
   coverHeightScale: 0.62
@@ -67,10 +66,10 @@ MonoBehaviour:
     type: 3}
   stairs: {fileID: 4814140183114437194, guid: ff7dc1e18dc6e4c4099675810416c5b2, type: 3}
   pillar: {fileID: 4814140183114437194, guid: 5b036ebe1418b4a44bf0825d218427b6, type: 3}
-  water: {fileID: 1318850858775610, guid: 70dd3f256d189fa45aac0e45bb7bb06e, type: 3}
-  bench: {fileID: 1940261937569050, guid: a5e64cdff84bd42489a68df615fff053, type: 3}
+  water: {fileID: 4814140183114437194, guid: be5b00bd9f62a42138e65203c37593f8, type: 3}
+  bench: {fileID: 4814140183114437194, guid: 0b2d03c0021b24e4680f3165ee6f0f96, type: 3}
   lantern: {fileID: 4814140183114437194, guid: 17991a4b796a2452da2e672419dc164c, type: 3}
-  banner: {fileID: 1368671110142866, guid: 1892a9bbd9c37a049b7326377596c2df, type: 3}
+  banner: {fileID: 4814140183114437194, guid: 7bbb7fb99d3c443fba674b7c6c289857, type: 3}
   flowerbed: {fileID: 4814140183114437194, guid: ccd8999fd4b1642229ed4f533c2f7fbe,
     type: 3}
   kitMode: 1

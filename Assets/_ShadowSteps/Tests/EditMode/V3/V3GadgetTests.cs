@@ -104,7 +104,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             b.Cameras.Add(Camera(C(5, 1), Direction.South, Direction.West));
             var stage = b.Build();
             var s = StageState.Initial(stage);
-            CollectionAssert.AreEquivalent(Cells((4, 2), (3, 2), (2, 2)), Sight.CameraVision(stage, s, 0, 0), "cone from (5,1.5) facing W: forward 1, 2 and 3 along the corridor (D-053); (5,2) is beside the origin");
+            CollectionAssert.AreEquivalent(Cells((3, 2), (2, 2)), Sight.CameraVision(stage, s, 0, 0), "cone from (5,1.5) facing W: forward 2 and 3 along the corridor; forward 1 (4,2) is partial overlay and ignored");
             Step(stage, ref s, E); // (1,2) dark
             var emp = Step(stage, ref s, StageAction.Emp(0));
             Assert.IsTrue(emp.Free); Assert.AreEqual(0, s.EmpCharges); Assert.AreEqual(2, s.EmpLeftOn(0)); Assert.AreEqual(1, s.T);

@@ -73,12 +73,13 @@ namespace ShadowSteps.Tests.EditMode.V3
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
             Assert.AreEqual(70.0, Sight.CameraFovDegrees, 1e-9); Assert.AreEqual(3.0, Sight.CameraRange, 1e-9);
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
+            CollectionAssert.AreEquivalent(Cells((3, 1), (3, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
             Assert.IsTrue(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(3, 1)));
             Assert.IsTrue(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(3, 3)), "forward 2.5 is within the 3-spacing reach (D-053: two node rows past the lens node, walkway or not)");
             var far = Board("#######", "#.....#", "#.....#", "#.....#", "#.....#", "#######"); far.Start = C(1, 4); far.Exit = C(5, 4); far.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             Assert.IsFalse(Sight.AnyCameraSees(far.Build(), StageState.Initial(far.Build()), 0, C(3, 4)), "forward 3.5 exceeds the reach");
             Assert.IsFalse(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(2, 1)), "63° beside the lens is outside the 35° half-angle");
+            Assert.IsFalse(Sight.AnyCameraSees(stage, StageState.Initial(stage), 0, C(2, 2)), "(2,2) is only partially overlaid by the cone edge and must be ignored");
         }
 
         [Test]
@@ -87,13 +88,13 @@ namespace ShadowSteps.Tests.EditMode.V3
             var b = Board("#######", "#.....#", "#..#..#", "#.....#", "#######"); b.Start = C(1, 3); b.Exit = C(5, 3);
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
-            // The wall at (3,2) hides itself; the lens node (3,1) and the side nodes (2,2),(4,2) stay visible (rays to them pass beside the wall).
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (4, 2)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
+            // The wall at (3,2) hides itself; (2,2)/(4,2) only have partial cone coverage; the lens node (3,1) stays visible.
+            CollectionAssert.AreEquivalent(Cells((3, 1)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0));
             var open = Board("#######", "#.....#", "#.....#", "#.....#", "#######"); open.Start = C(1, 3); open.Exit = C(5, 3);
             open.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var s2 = open.Build();
             var smokedSide = new StageState(C(1, 3), 0, false, 0, new[] { new SmokeCloud(C(3, 2), 2) }, null, 0, 0, -1, false, StageResult.Playing, null);
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (4, 2)), Sight.CameraVision(s2, smokedSide, 0, 0), "smoke behaves like the wall: its node is hidden, the rest of the cone stays");
+            CollectionAssert.AreEquivalent(Cells((3, 1)), Sight.CameraVision(s2, smokedSide, 0, 0), "smoke behaves like the wall: its node is hidden, the rest of the cone stays");
             var smokedLens = new StageState(C(1, 3), 0, false, 0, new[] { new SmokeCloud(C(3, 1), 2) }, null, 0, 0, -1, false, StageResult.Playing, null);
             CollectionAssert.IsEmpty(Sight.CameraVision(s2, smokedLens, 0, 0), "a cloud on the lens node blocks every ray out of the cone");
         }
@@ -111,30 +112,49 @@ namespace ShadowSteps.Tests.EditMode.V3
             int guard = 0;
             while (s.Clouds.Count > 0 && guard++ < 6) { var o = StageRules.TryApply(stage, s, StageAction.Wait); Assert.IsTrue(o.Valid); s = o.After; }
             Assert.AreEqual(0, s.Clouds.Count, "smoke expires after its counted actions");
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, s, 0, s.T), "cone restored after expiry");
+            CollectionAssert.AreEquivalent(Cells((3, 1), (3, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, s, 0, s.T), "cone restored after expiry");
         }
 
         [Test]
         public void Camera_ConeBoundaries_UseTheHalfAngle_TheForwardReach_AndATolerance()
         {
             var o = new Vec2(0, 0); double tan35 = System.Math.Tan(35.0 * System.Math.PI / 180.0);
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(tan35, 1.0)), "exactly on the 35° edge counts as inside");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(-tan35, 1.0)), "symmetric on the other side");
-            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(tan35 + 1e-3, 1.0)), "just past the half-angle is outside");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.0)), "forward 3.0 is the last reachable projection (D-053)");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.0 + 1e-7)), "within the tolerance");
-            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.01)), "beyond the reach");
-            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0.1, 0)), "zero forward projection (beside the origin) is outside");
-            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, -1)), "behind the camera");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.East, new Vec2(1.5, -1)), "East: forward is +x, lateral is y");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.North, new Vec2(1, -1.5)), "North: forward is −y");
-            Assert.IsTrue(Sight.InCameraCone(o, Direction.West, new Vec2(-1.5, 1)), "West: forward is −x");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(tan35, 1.0), 0.0), "exactly on the 35° edge counts as inside");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(-tan35, 1.0), 0.0), "symmetric on the other side");
+            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(tan35 + 1e-3, 1.0), 0.0), "just past the half-angle is outside");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.0), 0.0), "forward 3.0 is the last reachable projection (D-053)");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.0 + 1e-7), 0.0), "within the tolerance");
+            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, 3.01), 0.0), "beyond the reach");
+            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0.1, 0), 0.0), "zero forward projection (beside the origin) is outside");
+            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(0, -1), 0.0), "behind the camera");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.East, new Vec2(1.5, -1), 0.0), "East: forward is +x, lateral is y");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.North, new Vec2(1, -1.5), 0.0), "North: forward is −y");
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.West, new Vec2(-1.5, 1), 0.0), "West: forward is −x");
+        }
+
+        [Test]
+        public void Camera_InCameraCone_RequiresCompleteVisionCoverage_PartialOverlayIgnored()
+        {
+            var o = new Vec2(0, 0);
+            // forward = 1.5, lateral = 1.0. At 35°, boundary is at 1.5 * tan(35°) ≈ 1.0503.
+            // Point center is inside (1.0 <= 1.0503), but with nodeRadius 0.25, outer edge is 1.25 > 1.0503 (partial overlay).
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(1.0, 1.5), 0.0), "point center is inside cone");
+            Assert.IsFalse(Sight.InCameraCone(o, Direction.South, new Vec2(1.0, 1.5)), "partial overlay on node dot is ignored");
+            // forward = 2.5, lateral = 1.0. At 35°, boundary is at 2.5 * tan(35°) ≈ 1.7505.
+            // 1.0 + 0.25 = 1.25 <= 1.7505 (complete vision coverage).
+            Assert.IsTrue(Sight.InCameraCone(o, Direction.South, new Vec2(1.0, 2.5)), "dot in complete vision is detected");
+
+            // Level 30 (Movie_006): cam1 at (0.5, 7.0) facing South.
+            // (1, 8) at forward 1.0, lateral 0.5 has clearance 0.2002 < 0.25 -> partial overlay, ignored.
+            Assert.IsFalse(Sight.InCameraCone(new Vec2(0.5, 7.0), Direction.South, new Vec2(1.0, 8.0)), "Level 30 (1, 8) partial overlay ignored");
+            // (1, 9) at forward 2.0, lateral 0.5 has clearance 0.9004 > 0.25 -> complete vision coverage, detected.
+            Assert.IsTrue(Sight.InCameraCone(new Vec2(0.5, 7.0), Direction.South, new Vec2(1.0, 9.0)), "Level 30 (1, 9) complete vision detected");
         }
 
         [Test]
         public void Camera_Cone_FromEveryWallFace_AndEveryFacing()
         {
-            // 7×7 room; a camera on each wall looking inward sees the lens node plus three nodes of the second and of the third row (D-053: reach 3).
+            // 7×7 room; a camera on each wall looking inward sees the lens node plus complete-vision nodes of subsequent rows.
             string[] rows = { "#######", "#.....#", "#.....#", "#.....#", "#.....#", "#.....#", "#######" };
             void Check(GridCoord wall, Direction face, (int, int)[] expected)
             {
@@ -142,14 +162,14 @@ namespace ShadowSteps.Tests.EditMode.V3
                 var stage = b.Build();
                 CollectionAssert.AreEquivalent(Cells(expected), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0), wall + " " + face);
             }
-            Check(C(3, 0), Direction.South, new[] { (3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3) });
-            Check(C(3, 6), Direction.North, new[] { (3, 5), (2, 4), (3, 4), (4, 4), (2, 3), (3, 3), (4, 3) });
-            Check(C(0, 3), Direction.East, new[] { (1, 3), (2, 2), (2, 3), (2, 4), (3, 2), (3, 3), (3, 4) });
-            Check(C(6, 3), Direction.West, new[] { (5, 3), (4, 2), (4, 3), (4, 4), (3, 2), (3, 3), (3, 4) });
-            // Sideways along the wall (mount S, facing E): the two nodes along the wall at forward 1 and 2, lateral ½ (26.6°); nothing further out.
+            Check(C(3, 0), Direction.South, new[] { (3, 1), (3, 2), (2, 3), (3, 3), (4, 3) });
+            Check(C(3, 6), Direction.North, new[] { (3, 5), (3, 4), (2, 3), (3, 3), (4, 3) });
+            Check(C(0, 3), Direction.East, new[] { (1, 3), (2, 3), (3, 2), (3, 3), (3, 4) });
+            Check(C(6, 3), Direction.West, new[] { (5, 3), (4, 3), (3, 2), (3, 3), (3, 4) });
+            // Sideways along the wall (mount S, facing E): forward 1 at lateral ½ is only partially overlaid so ignored; forward 2 at lateral ½ has complete vision.
             var side = Board(rows); side.Start = C(1, 5); side.Exit = C(5, 5); side.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.East));
             var ss = side.Build();
-            CollectionAssert.AreEquivalent(Cells((4, 1), (5, 1)), Sight.CameraVision(ss, StageState.Initial(ss), 0, 0));
+            CollectionAssert.AreEquivalent(Cells((5, 1)), Sight.CameraVision(ss, StageState.Initial(ss), 0, 0));
             // Facing straight into its own wall: every node has a negative forward projection.
             var into = Board(rows); into.Start = C(1, 5); into.Exit = C(5, 5); into.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.North));
             var si = into.Build();
@@ -164,9 +184,9 @@ namespace ShadowSteps.Tests.EditMode.V3
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
             var closed = StageState.Initial(stage);
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (4, 2)), Sight.CameraVision(stage, closed, 0, 0), "the closed door across (3,1)-(3,2) hides (3,2); the diagonal rays pass beside it");
+            CollectionAssert.AreEquivalent(Cells((3, 1)), Sight.CameraVision(stage, closed, 0, 0), "the closed door across (3,1)-(3,2) hides (3,2); (2,2)/(4,2) partial overlay ignored");
             var opened = new StageState(C(1, 3), 0, true, 1, null, null, 0, 0, -1, false, StageResult.Playing, null);
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (4, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, opened, 0, 0), "an unlocked door no longer blocks vision (reach 3: two rows past the lens)");
+            CollectionAssert.AreEquivalent(Cells((3, 1), (3, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(stage, opened, 0, 0), "an unlocked door no longer blocks vision (reach 3: two rows past the lens)");
         }
 
         [Test]
@@ -238,7 +258,7 @@ namespace ShadowSteps.Tests.EditMode.V3
             Assert.AreEqual(Direction.North, CameraTrack.FacingAt(stage.Cameras[0], 2));
             CollectionAssert.IsEmpty(Sight.CameraVision(stage, StageState.Initial(stage), 0, 2), "facing into its own wall: no node has a positive forward projection");
             Assert.AreEqual(Direction.West, CameraTrack.FacingAt(stage.Cameras[0], 1));
-            CollectionAssert.AreEquivalent(Cells((2, 1), (1, 1)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 1), "facing W along the wall: the two nodes along it");
+            CollectionAssert.AreEquivalent(Cells((1, 1)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 1), "facing W along the wall: forward 1 (2,1) has partial overlay so ignored; forward 2 (1,1) is detected");
         }
 
         [Test]

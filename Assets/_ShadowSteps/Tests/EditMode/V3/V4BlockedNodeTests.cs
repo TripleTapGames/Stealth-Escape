@@ -55,12 +55,12 @@ namespace ShadowSteps.Tests.EditMode.V3
             var b = Board("#######", "#.....#", "#..X..#", "#..X..#", "#######"); b.Start = C(1, 3); b.Exit = C(5, 3);
             b.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var stage = b.Build();
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (4, 2)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0),
-                "cone: lens node visible; (3,2) is cover and hides itself, (2,2) and (4,2) are reached beside it");
+            CollectionAssert.AreEquivalent(Cells((3, 1)), Sight.CameraVision(stage, StageState.Initial(stage), 0, 0),
+                "cone: lens node visible; (3,2) is cover and hides itself, (2,2) and (4,2) only have partial coverage");
             var beside = Board("#######", "#...X.#", "#.....#", "#.....#", "#######"); beside.Start = C(1, 3); beside.Exit = C(5, 3);
             beside.Cameras.Add(Camera(C(3, 0), Direction.South, Direction.South));
             var bs = beside.Build();
-            CollectionAssert.AreEquivalent(Cells((3, 1), (2, 2), (3, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(bs, StageState.Initial(bs), 0, 0),
+            CollectionAssert.AreEquivalent(Cells((3, 1), (3, 2), (2, 3), (3, 3), (4, 3)), Sight.CameraVision(bs, StageState.Initial(bs), 0, 0),
                 "cover beside the lens at (4,1) sits on the ray to (4,2) (it enters that cell at (3.5, 1.25)); the steeper ray to (4,3) clears it (reach 3)");
         }
 

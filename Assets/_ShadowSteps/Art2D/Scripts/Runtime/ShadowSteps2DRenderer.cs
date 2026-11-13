@@ -152,17 +152,51 @@ namespace ShadowSteps.Art2D
         public void SetCameraVisualFacing(int i, Direction facing)
         {
             if (i < 0 || i >= _cameraBodies.Count || _cameraBodies[i] == null) return;
-            _cameraBodies[i].sprite = library.cameraArt[(int)View(facing)];
+            var body = _cameraBodies[i];
+            var sprite = library.cameraArt[(int)View(facing)];
+            if (body.sprite == sprite) return;
+            body.sprite = sprite;
+            PositionCameraTypeMarker(i);
         }
+
+        public void SetCameraVisualRotation(int i, Quaternion rotation)
+        {
+            _cameraHeads[i].localRotation = rotation;
+            PositionCameraTypeMarker(i);
+        }
+
+        public void AnimateCameraCones(int previousTurn, float progress)
+        {
+            if (CameraOverlay == null) return;
+            bool turning = false;
+            int coneIndex = 0;
+            for (int i = 0; i < Stage.Cameras.Count; i++)
+            {
+                if (_cameraDisabledNow[i]) continue;
+                var camera = Stage.Cameras[i];
+                var from = CameraTrack.FacingAt(camera, previousTurn);
+                var to = CameraTrack.FacingAt(camera, previousTurn + 1);
+                float angle = Mathf.DeltaAngle(RotationFor(from).eulerAngles.z, RotationFor(to).eulerAngles.z);
+                turning |= angle != 0f && progress < 1f;
+                CameraOverlay.SetConeRotation(coneIndex++, angle * progress);
+            }
+            bool turningChanged = _cameraTurning != turning;
+            _cameraTurning = turning;
+            if (CameraOverlay.ApplyConeRotations() || turningChanged) RefreshNodeTints();
+        }
+        private bool _cameraTurning;
         private readonly List<bool> _cameraPoleMounted = new List<bool>();
         // Last presented camera facings / EMP state, door mask and clouds: the cone silhouettes are traced from these with the engine's ray-cast.
         private readonly List<Direction> _cameraFacings = new List<Direction>();
         private readonly List<bool> _cameraDisabledNow = new List<bool>();
         private int _openDoorMask;
         private IReadOnlyList<SmokeCloud> _cloudState;
-        /// <summary>Drawn cone polygons (local positions, apex first) of the active cameras, as last shown.</summary>
+        /// <summary>Board-space cone geometry for active cameras, with the logical origin first.</summary>
         public IReadOnlyList<Vector3[]> CameraCones => _cameraCones;
         private readonly List<Vector3[]> _cameraCones = new List<Vector3[]>();
+        private readonly List<Vector3> _cameraConeVisualOrigins = new List<Vector3>();
+        private readonly List<Vector3[]> _fullCameraFans = new List<Vector3[]>();
+        private readonly List<Vector3> _cameraInwardNormals = new List<Vector3>();
         /// <summary>True when camera i is drawn on a pole (its wall cell is a lone block inside the floor); false for a wall stub / bracket.</summary>
         public bool IsPoleMounted(int i) => i >= 0 && i < _cameraPoleMounted.Count && _cameraPoleMounted[i];
         /// <summary>Wall-mount when the camera's wall cell is on the grid boundary or part of a wall run; pole when it is a lone block inside the floor (presentation only).</summary>
@@ -308,9 +342,11 @@ namespace ShadowSteps.Art2D
         public bool HasNode(GridCoord c) => _nodeSprites.ContainsKey(c);
         private readonly List<Transform> _clouds = new List<Transform>();
         private SpriteRenderer _key, _exit, _exitGlow, _previewMarker;
+        private SS2DExitGlowAnimator _exitHomeAnimator;
+        private SS2DPulse _exitFallbackPulse;
         /// <summary>The exit marker sprite (final "home" disc or the generated highlight) and its glow (null without the home art).</summary>
         public SpriteRenderer ExitMarker => _exit;
-        public SpriteRenderer ExitGlow => _exitGlow;
+        public SpriteRenderer ExitGlow => _exitGlow != null && _exitGlow.gameObject.activeSelf ? _exitGlow : null;
         private readonly Overlay _guardVision = new Overlay(), _cameraVision = new Overlay(), _previewGuard = new Overlay(), _previewCamera = new Overlay(), _targets = new Overlay();
         private Sprite _placeholderDisc;
 
@@ -406,22 +442,9 @@ namespace ShadowSteps.Art2D
                 }
 
             // Exit: highlight on the node (the logical exit) and a door beyond the board edge as the visible destination, joined by a doorstep path.
-            if (lib.HasExitHome)
-            {
-                // Final art (D-063, user mock): the green "home" disc sits still on the exit node; its soft glow ring under it breathes with the exit pulse.
-                float glowScale = lib.exitHomeSize * lib.exitHomeGlowScale * s;
-                _exitGlow = Make(_props, "ExitGlow", lib.exitHomeGlow, Pos(stage.Exit), glowScale, lib.exitHomeGlowTint, SS2DLayers.Nodes, 1);
-                SpriteRenderer ripple = lib.exitHomeRipple ? Make(_props, "ExitRipple", lib.exitHomeGlow, Pos(stage.Exit), glowScale, lib.exitHomeGlowTint, SS2DLayers.Nodes, 0) : null;
-                var anim = _exitGlow.gameObject.AddComponent<SS2DExitGlowAnimator>();
-                anim.glow = _exitGlow; anim.ripple = ripple; anim.baseScale = glowScale; anim.tint = lib.exitHomeGlowTint; anim.pulse = lib.exitHomePulse; anim.alphaMin = lib.exitHomeGlowAlphaMin; anim.period = lib.exitHomePeriod; anim.rippleGrow = lib.exitHomeRippleGrow;
-                anim.Apply(0f);
-                _exit = Make(_props, "Exit", lib.exitHome, Pos(stage.Exit), lib.exitHomeSize * s, Color.white, SS2DLayers.Nodes, 2);
-            }
-            else
-            {
-                _exit = Make(_props, "Exit", lib.exitHighlight != null ? lib.exitHighlight : lib.exit, Pos(stage.Exit), lib.exitSize * s, lib.exitTint, SS2DLayers.Nodes, 2);
-                var pulse = _exit.gameObject.AddComponent<SS2DPulse>(); pulse.amplitude = lib.exitPulse; pulse.baseScale = lib.exitSize * s;
-            }
+            _exit = Make(_props, "Exit", null, Pos(stage.Exit), 1f, Color.white, SS2DLayers.Nodes, 2);
+            RefreshExitHome();
+            if (_exitHomeAnimator != null) _exitHomeAnimator.Apply(0f);
             DoorOutward = View(ExitEdge(stage));
             var outVec = WorldDir(DoorOutward);
             DoorPosition = Pos(stage.Exit) + outVec * (lib.doorOffset * s);
@@ -444,7 +467,7 @@ namespace ShadowSteps.Art2D
             for (int i = 0; i < stage.Cameras.Count; i++)
             {
                 var cam = stage.Cameras[i];
-                // Logical anchor: the wall-cell edge toward the lens node. Wall mount: camera on that edge over a wall stub.
+                // Logical anchor: the wall-cell edge toward the lens node. The artwork can sit back on the wall cap.
                 // Pole mount (lone wall cell inside the floor): screen-upright post from the cell centre, camera head on top.
                 var camArt = ArtLayout != null ? ArtLayout.FindCamera(cam.Id) : null;
                 var mountArt = camArt != null ? camArt.mount : SS2DCameraMountArt.Auto;
@@ -456,9 +479,8 @@ namespace ShadowSteps.Art2D
                 var p = pole ? Pos(cam.WallCell) + new Vector3(0f, lib.cameraPoleHeight * s, 0f) : Pos(cam.WallCell) + faceDir * (0.5f * s);
                 _cameraPoleMounted.Add(pole);
                 _cameraFacings.Add(cam.Facing); _cameraDisabledNow.Add(false);
-                _cameraPositions.Add(transform.TransformPoint(p));
                 var holder = new GameObject("Camera_" + i); holder.transform.SetParent(_props, false); holder.transform.localPosition = p;
-                var hl = Make(holder.transform, "Highlight", lib.highlightRing, Vector3.zero, lib.cameraSize * 2.2f * s, lib.cameraHighlight, SS2DLayers.Markers, 0); hl.gameObject.SetActive(false); _cameraHighlights.Add(hl);
+                var wallTopOffset = Vector3.zero;
                 if (pole)
                 {
                     // Post sprite: 1 unit tall at scale 1 with its pivot at the base, so scale = pole height; the base sits on the blocked cell centre.
@@ -466,6 +488,8 @@ namespace ShadowSteps.Art2D
                 }
                 else if (onStoneRun)
                 {
+                    var plan = _interiorArt[cam.WallCell];
+                    wallTopOffset = Pos(cam.WallCell) + Offset(plan.shift + plan.offset, s) - p;
                     var tag = new GameObject("Mount"); tag.transform.SetParent(holder.transform, false); tag.SetActive(false); // the run piece Wall_x_y is the mount
                 }
                 else if (stone)
@@ -478,7 +502,8 @@ namespace ShadowSteps.Art2D
                     float back = sprite == lib.wallSide ? 0.36f : (faceDir.y > 0.5f ? 0.5f : 0.15f);
                     var extra = camArt != null ? Offset(camArt.offset, s) : Vector3.zero;
                     int so = camArt != null ? camArt.sortingOffset : 0;
-                    Make(holder.transform, "Mount", sprite, -faceDir * (back * s) + extra, lib.stoneWallSize * s, Color.white, SS2DLayers.Props, 49 + so);
+                    wallTopOffset = -faceDir * (back * s) + extra;
+                    Make(holder.transform, "Mount", sprite, wallTopOffset, lib.stoneWallSize * s, Color.white, SS2DLayers.Props, 49 + so);
                 }
                 else if (lib.cameraWallPlate != null)
                 {
@@ -487,13 +512,17 @@ namespace ShadowSteps.Art2D
                 }
                 var bracket = Make(holder.transform, "Bracket", lib.cameraBody, Vector3.zero, lib.cameraSize * s, Color.white, SS2DLayers.Props, 50);
                 bracket.transform.localRotation = RotationFor(cam.MountFace); bracket.gameObject.SetActive(!pole);
-                var head = Make(holder.transform, "Head", lib.cameraHead, Vector3.zero, lib.cameraSize * 1.15f * s, Color.white, SS2DLayers.Props, 51);
+                // The stone pivot marks the top centre, and the camera PNG pivot marks the centre of its base plate.
+                var artOffset = lib.HasCameraArt ? wallTopOffset : Vector3.zero;
+                _cameraPositions.Add(transform.TransformPoint(p + artOffset));
+                var hl = Make(holder.transform, "Highlight", lib.highlightRing, artOffset, lib.cameraSize * 2.2f * s, lib.cameraHighlight, SS2DLayers.Markers, 0); hl.gameObject.SetActive(false); _cameraHighlights.Add(hl);
+                var head = Make(holder.transform, "Head", lib.cameraHead, artOffset, lib.cameraSize * 1.15f * s, Color.white, SS2DLayers.Props, 51);
                 _cameraHeads.Add(head.transform);
                 if (lib.HasCameraArt)
                 {
                     // Final art: the head keeps its logical rotation (invisible), the body child shows the sprite for the drawn facing, upright, pivot on the base plate at the anchor.
                     head.sprite = null; bracket.gameObject.SetActive(false);
-                    var body = Make(head.transform, "Body", lib.cameraArt[(int)View(cam.Facing)], Vector3.zero, 1f, Color.white, SS2DLayers.Props, 51);
+                    var body = Make(head.transform, "Body", lib.cameraArt[(int)View(cam.Facing)], Vector3.zero, 1f, Color.white, SS2DLayers.Camera, SS2DLayers.CameraArtworkOrder);
                     body.transform.localScale = Vector3.one * (lib.cameraArtSize * s / Mathf.Max(0.01f, lib.cameraSize * 1.15f * s)); // undo the head's scale
                     _cameraBodies.Add(body);
                     if (pole) { var m = holder.transform.Find("Mount"); if (m != null) m.gameObject.SetActive(false); } // the art has its own pedestal and plate
@@ -503,11 +532,11 @@ namespace ShadowSteps.Art2D
                 var lens = Make(head.transform, "Lens", lib.cameraLens, new Vector3(0f, 0.30f, 0f), 0.34f, lib.cameraLensActive, SS2DLayers.Props, 52);
                 if (lib.HasCameraArt) lens.gameObject.SetActive(false); // the lens is baked into the art; the EMP state tints the body
                 _cameraLenses.Add(lens);
-                // Type indicator beside the mount: circular arrow for rotating (flipped for counter-clockwise), two-way arc for sweeping.
-                var side = Quaternion.Euler(0f, 0f, 90f) * WorldDir(View(cam.MountFace));
-                var marker = Make(holder.transform, "TypeMarker", cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, side * (0.46f * s), lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.Markers, 12);
+                // Use the same layer as the camera artwork, one order above its body.
+                var marker = Make(holder.transform, "TypeMarker", cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, Vector3.zero, lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.Camera, SS2DLayers.CameraArtworkOrder + 1);
                 marker.flipX = !cam.Clockwise; marker.gameObject.SetActive(cam.Kind != CameraKind.Fixed && marker.sprite != null);
                 _cameraTypeMarkers.Add(marker);
+                PositionCameraTypeMarker(i);
                 var badge = Make(holder.transform, "Disabled", lib.empBadge, new Vector3(0f, 0.30f, 0f) * s, lib.markerSize * 1.1f * s, lib.cameraDisabled, SS2DLayers.Markers, 2); badge.gameObject.SetActive(false); _cameraBadges.Add(badge);
                 var pips = new SpriteRenderer[2];
                 for (int k = 0; k < 2; k++) { pips[k] = Make(holder.transform, "Pip" + k, lib.pip, new Vector3((k - 0.5f) * 0.14f, -0.30f, 0f) * s, 0.08f * s, lib.cameraDisabled, SS2DLayers.Markers, 3); pips[k].gameObject.SetActive(false); }
@@ -515,6 +544,7 @@ namespace ShadowSteps.Art2D
             }
 
             Player = MakeCharacter("Spy", lib.spy, lib.playerAccent, false, Pos(stage.Start));
+            _playerNode = stage.Start;
             Player.SetFacing(View(Direction.North));
             for (int i = 0; i < stage.Guards.Count; i++)
             {
@@ -548,14 +578,121 @@ namespace ShadowSteps.Art2D
 
             var camHost = new GameObject("CameraVisionHost"); camHost.transform.SetParent(_overlays, false);
             CameraOverlay = camHost.AddComponent<CameraVisionOverlayRenderer>();
-            if (lib.fullCameraCone && lib.cameraConeAboveObstacles) CameraOverlay.Setup(this, lib, _overlays, "CameraVision", lib.cameraVisionFill, lib.cameraVisionBorder, lib.cameraVisionGlow, 2, SS2DLayers.Props, lib.cameraConePropsOrder);
-            else CameraOverlay.Setup(this, lib, _overlays);
+            CameraOverlay.Setup(this, lib, _overlays);
             var guardHost = new GameObject("GuardVisionHost"); guardHost.transform.SetParent(_overlays, false);
             GuardOverlay = guardHost.AddComponent<CameraVisionOverlayRenderer>();
-            GuardOverlay.Setup(this, lib, _overlays, "GuardVision", lib.guardVisionFill, lib.guardVisionBorder, lib.guardVisionGlow, 6);
+            GuardOverlay.Setup(this, lib, _overlays, "GuardVision", lib.guardVisionBorder, lib.guardVisionGlow, 6);
             _previewMarker = Make(_markers, "PreviewMarker", lib.highlightRing, Vector3.zero, lib.nodeSize * 2.6f * s, lib.previewSafe, SS2DLayers.Markers, 20);
             _previewMarker.gameObject.SetActive(false);
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Attach(this, _overlays);
+        }
+
+        private void Update()
+        {
+            if (!Application.isPlaying || !IsBuilt || library == null) return;
+            if (_exit != null) RefreshExitHome();
+            RefreshLiveColors();
+
+            if (CameraOverlay != null && (_lastFullCameraCone != library.fullCameraCone ||
+                _lastCameraCurvature != library.cameraConeCurvature ||
+                _lastCameraAngle != library.cameraConeHalfAngleDegrees))
+                DrawCameraVision(_cameraCells);
+        }
+
+        private readonly HashSet<GridCoord> _cameraCells = new HashSet<GridCoord>();
+        private GridCoord _playerNode;
+        internal GridCoord PlayerNode => _playerNode;
+        private bool _playerUnderCameraCone;
+        private bool _lastFullCameraCone;
+        private float _lastCameraCurvature, _lastCameraAngle;
+        private Color _lastCameraNodeTint, _lastNodeTint, _lastCameraSafeNode;
+        private bool _showingSmokeTargets;
+        private VisionPreviewTone? _previewTone;
+        private readonly HashSet<int> _highlightedGuards = new HashSet<int>();
+
+        public enum VisionPreviewTone { Safe, Danger, Alarm }
+
+        private Color PreviewColor(VisionPreviewTone tone) => tone == VisionPreviewTone.Danger
+            ? library.previewDanger : tone == VisionPreviewTone.Alarm ? library.previewAlarm : library.previewSafe;
+
+        private void RefreshLiveColors()
+        {
+            if (_key != null) _key.color = library.keyTint;
+            for (int i = 0; i < _cameraLenses.Count; i++)
+            {
+                _cameraLenses[i].color = _cameraDisabledNow[i] ? library.cameraLensDisabled : library.cameraLensActive;
+                if (_cameraBodies[i] != null)
+                    _cameraBodies[i].color = _cameraDisabledNow[i] ? library.cameraArtDisabledTint : Color.white;
+                _cameraTypeMarkers[i].color = library.rotationMarkerTint;
+            }
+            foreach (var arrow in _guardNext) if (arrow != null) arrow.color = library.nextMarkerTint;
+            for (int i = 0; i < _guardRotation.Count; i++)
+            {
+                var marker = _guardRotation[i];
+                // Authored rotation arrows have their own tint and may carry a tutorial highlight.
+                if (marker != null && marker.sprite != null && !_highlightedGuards.Contains(i))
+                    marker.color = library.rotationMarkerTint;
+            }
+            if (_lastCameraNodeTint != library.nodeCameraTint || _lastNodeTint != library.nodeTint ||
+                _lastCameraSafeNode != library.cameraSafeNode) RefreshNodeTints();
+            _previewGuard.RefreshColors(library.previewFill, library.previewBorder);
+            _previewCamera.RefreshColors(library.previewFill, library.previewBorder);
+            if (_previewTone.HasValue && _previewMarker != null) _previewMarker.color = PreviewColor(_previewTone.Value);
+            if (_showingSmokeTargets) _targets.RefreshColors(library.smokeTarget, library.smokeTarget);
+        }
+
+        private void RefreshExitHome()
+        {
+            var lib = library;
+            float spacing = Layout.NodeSpacing;
+            if (!lib.HasExitHome)
+            {
+                if (_exitGlow != null) _exitGlow.gameObject.SetActive(false);
+                if (_exitHomeAnimator != null && _exitHomeAnimator.ripple != null)
+                    _exitHomeAnimator.ripple.gameObject.SetActive(false);
+                _exit.sprite = lib.exitHighlight != null ? lib.exitHighlight : lib.exit;
+                _exit.color = lib.exitTint;
+                if (_exitFallbackPulse == null)
+                {
+                    _exitFallbackPulse = _exit.gameObject.AddComponent<SS2DPulse>();
+                    _exit.transform.localScale = Vector3.one * (lib.exitSize * spacing);
+                }
+                _exitFallbackPulse.baseScale = lib.exitSize * spacing;
+                _exitFallbackPulse.amplitude = lib.exitPulse;
+                _exitFallbackPulse.enabled = true;
+                return;
+            }
+
+            if (_exitFallbackPulse != null) _exitFallbackPulse.enabled = false;
+            _exit.sprite = lib.exitHome;
+            _exit.color = Color.white;
+            float discScale = lib.exitHomeSize * spacing;
+            _exit.transform.localScale = Vector3.one * discScale;
+            float glowScale = discScale * lib.exitHomeGlowScale;
+
+            if (_exitHomeAnimator == null)
+            {
+                _exitGlow = Make(_props, "ExitGlow", lib.exitHomeGlow, _exit.transform.localPosition, glowScale, lib.exitHomeGlowTint, SS2DLayers.Nodes, 1);
+                _exitHomeAnimator = _exitGlow.gameObject.AddComponent<SS2DExitGlowAnimator>();
+                _exitHomeAnimator.glow = _exitGlow;
+            }
+
+            var anim = _exitHomeAnimator;
+            _exitGlow.gameObject.SetActive(true);
+            _exitGlow.sprite = lib.exitHomeGlow;
+            if (lib.exitHomeRipple && anim.ripple == null)
+                anim.ripple = Make(_props, "ExitRipple", lib.exitHomeGlow, _exit.transform.localPosition, glowScale, lib.exitHomeGlowTint, SS2DLayers.Nodes, 0);
+            if (anim.ripple != null)
+            {
+                anim.ripple.sprite = lib.exitHomeGlow;
+                anim.ripple.gameObject.SetActive(lib.exitHomeRipple);
+            }
+            anim.baseScale = glowScale;
+            anim.tint = lib.exitHomeGlowTint;
+            anim.pulse = lib.exitHomePulse;
+            anim.alphaMin = lib.exitHomeGlowAlphaMin;
+            anim.period = lib.exitHomePeriod;
+            anim.rippleGrow = lib.exitHomeRippleGrow;
         }
 
         public void Clear()
@@ -564,16 +701,40 @@ namespace ShadowSteps.Art2D
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
             _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
             Player = null; _key = null; _exit = null; _exitGlow = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null; _resting.Clear();
+            _exitHomeAnimator = null;
+            _exitFallbackPulse = null;
+            _cameraCells.Clear();
+            _playerUnderCameraCone = false;
+            _playerResult = StageResult.Playing;
+            _playerCameraAlarmTriggered = false;
+            _highlightedGuards.Clear();
+            _previewTone = null;
+            _showingSmokeTargets = false;
             foreach (var o in new[] { _guardVision, _cameraVision, _previewGuard, _previewCamera, _targets }) o.Reset();
             Stage = null;
         }
 
         // ---------------------------------------------------------------- state setters (fed by the session bridge or the preview)
 
-        public void SetPlayer(GridCoord node) { if (Player != null) { Player.transform.localPosition = Pos(node); Player.SetSortingOrderFromY(); } }
+        public void SetPlayer(GridCoord node)
+        {
+            _playerNode = node;
+            if (Player == null) return;
+            Player.transform.localPosition = Pos(node);
+            Player.SetSortingOrderFromY();
+            RefreshPlayerCameraSorting();
+        }
         public void SetPlayerFacing(Direction d) { if (Player != null) Player.SetFacing(View(d)); }
         public void SetPlayerWalking(bool walking) { if (Player != null) Player.SetWalking(walking); }
-        public void SetPlayerTint(Color? tint) { if (Player != null) Player.SetTint(tint); }
+        private StageResult _playerResult;
+        private bool _playerCameraAlarmTriggered;
+
+        public void SetPlayerResult(StageResult result, bool cameraAlarmTriggered = false)
+        {
+            _playerResult = result;
+            _playerCameraAlarmTriggered = cameraAlarmTriggered;
+            RefreshPlayerCameraSorting();
+        }
 
         public void SetGuard(int i, GuardPose3 pose, Direction? nextStep)
         {
@@ -713,12 +874,18 @@ namespace ShadowSteps.Art2D
         public void SetGuardHighlight(int i, Color? tint)
         {
             if (i < 0 || i >= _guards.Count) return;
+            if (tint.HasValue) _highlightedGuards.Add(i); else _highlightedGuards.Remove(i);
             if (!_guards[i].Defeated) _guards[i].SetTint(tint);
             if (i < _guardRotation.Count && _guardRotation[i] != null)
-                foreach (var sr in _guardRotation[i].GetComponentsInChildren<SpriteRenderer>(true)) if (sr.sprite != null) sr.color = tint ?? library.rotationArrowTint;
+                foreach (var sr in _guardRotation[i].GetComponentsInChildren<SpriteRenderer>(true))
+                    if (sr.sprite != null) sr.color = tint ?? (sr == _guardRotation[i] ? library.rotationMarkerTint : library.rotationArrowTint);
         }
         /// <summary>Discs under guards the player can knock out right now (same overlay as smoke targets; Knockout mode only).</summary>
-        public void SetKnockoutTargets(IEnumerable<GridCoord> guardNodes) => _targets.Show(guardNodes, library.knockoutTarget, library.knockoutTarget, library.visionCellSize * 0.62f, 9, 10);
+        public void SetKnockoutTargets(IEnumerable<GridCoord> guardNodes)
+        {
+            _showingSmokeTargets = false;
+            _targets.Show(guardNodes, library.knockoutTarget, library.knockoutTarget, library.visionCellSize * 0.62f, 9, 10);
+        }
 
         public void SetCamera(int i, Direction facing, int disabledActionsLeft, bool highlight)
         {
@@ -735,6 +902,33 @@ namespace ShadowSteps.Art2D
             for (int k = 0; k < _cameraPips[i].Length; k++) _cameraPips[i][k].gameObject.SetActive(k < disabledActionsLeft);
             _cameraLenses[i].color = disabledActionsLeft > 0 ? library.cameraLensDisabled : library.cameraLensActive;
             _cameraHighlights[i].gameObject.SetActive(highlight);
+            PositionCameraTypeMarker(i);
+        }
+
+        private void PositionCameraTypeMarker(int i)
+        {
+            var marker = _cameraTypeMarkers[i];
+            if (!marker.gameObject.activeSelf) return;
+            var body = _cameraBodies[i];
+            var artwork = body != null ? body : _cameraHeads[i].GetComponent<SpriteRenderer>();
+            if (artwork == null || artwork.sprite == null) return;
+
+            var bounds = artwork.bounds;
+            if (body != null)
+            {
+                // Directional PNGs include transparent padding. Use the tight sprite mesh for the visible top.
+                var vertices = artwork.sprite.vertices;
+                if (vertices.Length > 0)
+                {
+                    bounds = new Bounds(artwork.transform.TransformPoint(vertices[0]), Vector3.zero);
+                    for (int v = 1; v < vertices.Length; v++)
+                        bounds.Encapsulate(artwork.transform.TransformPoint(vertices[v]));
+                }
+            }
+            var markerBounds = marker.bounds;
+            float gap = transform.TransformVector(Vector3.up * (0.05f * Layout.NodeSpacing)).magnitude;
+            marker.transform.position += new Vector3(bounds.center.x - markerBounds.center.x,
+                bounds.max.y + gap - markerBounds.min.y, 0f);
         }
 
         public void SetDoor(int i, bool open)
@@ -788,9 +982,98 @@ namespace ShadowSteps.Art2D
                 _guardCones.Add(poly);
             }
             if (GuardOverlay != null) GuardOverlay.Show(guardList, _guardCones);
-            var camList = new List<GridCoord>(cameraCells ?? System.Array.Empty<GridCoord>());
+            _cameraTurning = false;
+            _cameraCells.Clear();
+            if (cameraCells != null) _cameraCells.UnionWith(cameraCells);
+            DrawCameraVision(_cameraCells);
+            RefreshBoardMarkerSorting();
+            RefreshPlayerCameraSorting();
+        }
+
+        private void LateUpdate()
+        {
+            RefreshBoardMarkerSorting();
+            RefreshPlayerCameraSorting();
+        }
+
+        private void RefreshBoardMarkerSorting()
+        {
+            if (CameraOverlay == null) return;
+            bool hasCone = _cameraCones.Count > 0;
+            int nodesLayer = SortingLayer.NameToID(SS2DLayers.Nodes);
+            int coneLayer = hasCone ? CameraOverlay.FillSortingLayerId : nodesLayer;
+            int coneOrder = hasCone ? CameraOverlay.FillSortingOrder : 0;
+            foreach (var kv in _nodeSprites)
+            {
+                bool showPlain = hasCone && !CameraOverlay.ShowsNodeMarker(kv.Key);
+                bool coveredByGate = false;
+                foreach (var pair in _doors)
+                {
+                    if ((_openDoorMask & (1 << pair.Key)) != 0) continue;
+                    var door = Stage.Doors[pair.Key];
+                    if (kv.Key != door.A && kv.Key != door.B) continue;
+                    if (pair.Value.sprite == null || !pair.Value.bounds.Contains(kv.Value.transform.position)) continue;
+                    // The sprite bounds can span both endpoints. Only the endpoint nearest the gate art replaces its dot.
+                    var other = kv.Key == door.A ? door.B : door.A;
+                    var center = pair.Value.bounds.center;
+                    if ((center - transform.TransformPoint(Pos(other))).sqrMagnitude <=
+                        (center - kv.Value.transform.position).sqrMagnitude) continue;
+                    coveredByGate = true;
+                    break;
+                }
+                kv.Value.enabled = !coveredByGate;
+                SetMarkerSorting(kv.Value, showPlain ? coneLayer : nodesLayer, showPlain ? coneOrder + 1 : 1);
+            }
+            SetMarkerSorting(_exit, coneLayer, coneOrder + (hasCone ? 3 : 2));
+            SetMarkerSorting(_exitGlow, coneLayer, coneOrder + (hasCone ? 2 : 1));
+            if (_exitHomeAnimator != null)
+                SetMarkerSorting(_exitHomeAnimator.ripple, coneLayer, coneOrder + (hasCone ? 1 : 0));
+        }
+
+        private static void SetMarkerSorting(SpriteRenderer marker, int layer, int order)
+        {
+            if (marker == null) return;
+            if (marker.sortingLayerID != layer) marker.sortingLayerID = layer;
+            if (marker.sortingOrder != order) marker.sortingOrder = order;
+        }
+
+        private void RefreshPlayerCameraSorting()
+        {
+            if (Player == null) return;
+            bool detected = CameraOverlay != null && _cameraCells.Contains(_playerNode);
+            Player.SetTint(_playerResult == StageResult.Won ? library.won :
+                _playerCameraAlarmTriggered || _playerResult == StageResult.Lockdown ? library.CameraSpyTint :
+                _playerResult == StageResult.Caught ? library.captured :
+                detected ? library.CameraSpyTint : (Color?)null);
+            if (detected)
+            {
+                // Use the cone's actual layer, including its fallback when Unity has the old layer order loaded.
+                int layer = CameraOverlay.FillSortingLayerId;
+                int order = CameraOverlay.FillSortingOrder;
+                Player.shadow.sortingLayerID = Player.ring.sortingLayerID = Player.body.sortingLayerID = layer;
+                Player.shadow.sortingOrder = order - 4;
+                Player.ring.sortingOrder = order - 3;
+                Player.body.sortingOrder = order - 2;
+            }
+            else if (_playerUnderCameraCone)
+            {
+                Player.shadow.sortingLayerName = Player.ring.sortingLayerName = Player.body.sortingLayerName = SS2DLayers.Actors;
+                Player.SetSortingOrderFromY();
+            }
+            _playerUnderCameraCone = detected;
+            CameraOverlay?.RefreshNodeRingSorting();
+        }
+
+        private void DrawCameraVision(IEnumerable<GridCoord> cameraCells)
+        {
+            _lastFullCameraCone = library.fullCameraCone;
+            _lastCameraCurvature = library.cameraConeCurvature;
+            _lastCameraAngle = library.cameraConeHalfAngleDegrees;
             // Cone silhouettes of the active cameras, traced by the engine (same occluders, doors and smoke as the detection) and mapped like nodes.
             _cameraCones.Clear();
+            _cameraConeVisualOrigins.Clear();
+            _fullCameraFans.Clear();
+            _cameraInwardNormals.Clear();
             for (int i = 0; i < Stage.Cameras.Count && i < _cameraFacings.Count; i++)
             {
                 if (_cameraDisabledNow[i]) continue; // EMP: no cone at all (existing disabled treatment)
@@ -800,25 +1083,137 @@ namespace ShadowSteps.Art2D
                 var poly = new Vector3[pts.Count];
                 for (int k = 0; k < pts.Count; k++) poly[k] = PosF(pts[k].X, pts[k].Y);
                 _cameraCones.Add(poly);
+                var cameraBase = CameraConeVisualOrigin(i, poly[0]);
+                var camera = Stage.Cameras[i];
+                var wall = camera.WallCell;
+                bool perimeter = wall.X == 0 || wall.Y == 0 || wall.X == Stage.Width - 1 || wall.Y == Stage.Height - 1;
+                _cameraInwardNormals.Add(perimeter && !_cameraPoleMounted[i] ? WorldDir(View(camera.MountFace)) : Vector3.zero);
+                if (library.fullCameraCone) _fullCameraFans.Add(BuildFullCameraFan(poly[0], cameraBase, camera, _cameraFacings[i]));
+                else _cameraConeVisualOrigins.Add(cameraBase);
             }
-            if (CameraOverlay != null) CameraOverlay.Show(camList, _cameraCones);
-            var camSet = new HashSet<GridCoord>(camList);
-            foreach (var kv in _nodeSprites) kv.Value.color = camSet.Contains(kv.Key) ? library.nodeCameraTint : library.nodeTint;
+            if (CameraOverlay == null) return;
+            if (library.fullCameraCone) CameraOverlay.Show(cameraCells, _fullCameraFans, inwardNormals: _cameraInwardNormals);
+            else CameraOverlay.Show(cameraCells, _cameraCones, _cameraConeVisualOrigins, _cameraInwardNormals);
+            RefreshNodeTints();
         }
+
+        private Vector3[] BuildFullCameraFan(Vector3 logicalOrigin, Vector3 cameraBase, CameraSpec camera, Direction facing)
+        {
+            const int rays = Sight.ConeOutlineRays;
+            var points = new Vector3[rays + 2];
+            points[0] = cameraBase;
+            Vector3 forward = WorldDir(View(facing));
+            Vector3 side = new Vector3(-forward.y, forward.x, 0f);
+            float angleDeg = library.cameraConeHalfAngleDegrees > 0f ? library.cameraConeHalfAngleDegrees : (float)Sight.CameraHalfAngleDegrees;
+            float halfAngle = angleDeg * Mathf.Deg2Rad;
+            float firstAngle = -halfAngle, lastAngle = halfAngle;
+            if (Stage.Code == "LEVEL-30" && camera.Id == "cam1" && facing == Direction.South)
+            {
+                // Put the inward edge between the gate passage and the detectable node below it.
+                var boundary = PosF(1, 8.5) - cameraBase;
+                float boundaryAngle = Mathf.Atan2(Vector3.Dot(boundary, side), Vector3.Dot(boundary, forward));
+                if (boundaryAngle < 0f) firstAngle = boundaryAngle;
+                else lastAngle = boundaryAngle;
+                logicalOrigin = cameraBase;
+            }
+            float range = (float)Sight.CameraRange * Layout.NodeSpacing;
+            // Round the far edge outward from the nominal corners, so the full fan retains its reach at the sides.
+            float cornerLength = range / Mathf.Cos(halfAngle);
+            float curvedRange = cornerLength / (float)Sight.FarEdgeRayLength(1d, halfAngle, library.cameraConeCurvature);
+            for (int ray = 0; ray <= rays; ray++)
+            {
+                float angle = Mathf.Lerp(firstAngle, lastAngle, (float)ray / rays);
+                float length = (float)Sight.FarEdgeRayLength(curvedRange, angle, library.cameraConeCurvature);
+                points[ray + 1] = logicalOrigin + (forward * Mathf.Cos(angle) + side * Mathf.Sin(angle)) * length;
+            }
+            return points;
+        }
+
+        private Vector3 CameraConeVisualOrigin(int index, Vector3 logicalOrigin)
+        {
+            var body = _cameraBodies[index];
+            if (body == null) return logicalOrigin;
+            // The camera art uses a common base-plate pivot across all four facings.
+            var cameraBase = transform.InverseTransformPoint(body.transform.position);
+            cameraBase.z = logicalOrigin.z;
+            return cameraBase;
+        }
+
+        private void RefreshNodeTints()
+        {
+            _lastCameraNodeTint = library.nodeCameraTint;
+            _lastNodeTint = library.nodeTint;
+            _lastCameraSafeNode = library.cameraSafeNode;
+            foreach (var kv in _nodeSprites)
+            {
+                var cell = kv.Key;
+                var tint = _lastNodeTint;
+                if (CameraOverlay != null && cell != Stage.Exit)
+                {
+                    if (CameraOverlay.ShowsNodeMarker(cell)) tint = _lastCameraNodeTint;
+                    else if (CameraOverlay.InsideVisibleCone(Pos(cell)))
+                    {
+                        if (_cameraTurning || _cameraCells.Contains(cell)) tint = _lastCameraNodeTint;
+                        else if ((GuardOverlay == null || !GuardOverlay.Contains(cell)) && CameraWallBlocksNode(cell)) tint = _lastCameraSafeNode;
+                    }
+                }
+                kv.Value.color = tint;
+            }
+        }
+
+
+
+        private bool CameraWallBlocksNode(GridCoord cell)
+        {
+            var point = Pos(cell);
+            var target = Vec2.Of(cell);
+            int coneIndex = 0;
+            bool covered = false;
+            for (int i = 0; i < Stage.Cameras.Count && i < _cameraFacings.Count; i++)
+            {
+                if (_cameraDisabledNow[i]) continue;
+                if (!CameraOverlay.InsideVisibleCone(point, coneIndex++)) continue;
+
+                covered = true;
+                var camera = Stage.Cameras[i];
+                var origin = Sight.CameraOrigin(camera);
+                bool blocked = false;
+                foreach (var wall in Stage.Occluders)
+                {
+                    if (wall == camera.WallCell || !Stage.IsWall(wall)) continue;
+                    if (!Sight.HitsRect(origin, target, wall.X, wall.Y)) continue;
+                    blocked = true;
+                    break;
+                }
+                if (!blocked) return false;
+            }
+            return covered;
+        }
+
 
         /// <summary>Brief amber brightening of the camera region (detection / alarm).</summary>
         public void FlashCameraVision() { if (CameraOverlay != null) CameraOverlay.Flash(); }
         public void SetPreview(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells, GridCoord? marker, Color markerColor)
         {
+            _previewTone = null;
             _previewGuard.Show(guardCells, library.previewFill, library.previewBorder, library.visionCellSize * 0.84f, 7, 8);
             _previewCamera.Show(cameraCells, library.previewFill, library.previewBorder, library.visionCellSize * 0.64f, 7, 8);
             if (_previewMarker == null) return;
             _previewMarker.gameObject.SetActive(marker.HasValue);
             if (marker.HasValue) { _previewMarker.transform.localPosition = Pos(marker.Value); _previewMarker.color = markerColor; }
         }
-        public void ClearPreview() { _previewGuard.Clear(); _previewCamera.Clear(); if (_previewMarker != null) _previewMarker.gameObject.SetActive(false); }
-        public void SetTargets(IEnumerable<GridCoord> cells) => _targets.Show(cells, library.smokeTarget, library.smokeTarget, library.visionCellSize * 0.56f, 9, 10);
-        public void ClearTargets() => _targets.Clear();
+        public void SetPreview(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells, GridCoord? marker, VisionPreviewTone tone)
+        {
+            SetPreview(guardCells, cameraCells, marker, PreviewColor(tone));
+            _previewTone = tone;
+        }
+        public void ClearPreview() { _previewTone = null; _previewGuard.Clear(); _previewCamera.Clear(); if (_previewMarker != null) _previewMarker.gameObject.SetActive(false); }
+        public void SetTargets(IEnumerable<GridCoord> cells)
+        {
+            _showingSmokeTargets = true;
+            _targets.Show(cells, library.smokeTarget, library.smokeTarget, library.visionCellSize * 0.56f, 9, 10);
+        }
+        public void ClearTargets() { _showingSmokeTargets = false; _targets.Clear(); }
 
         /// <summary>Index of the camera within half a node of a world point (EMP targeting), or −1.</summary>
         public int CameraIndexNear(Vector3 world)
@@ -864,12 +1259,14 @@ namespace ShadowSteps.Art2D
         {
             private readonly List<SpriteRenderer> _fills = new List<SpriteRenderer>(), _rings = new List<SpriteRenderer>();
             private ShadowSteps2DRenderer _r; private Transform _parent; private int _count;
+            private Color _fillColor, _borderColor;
             public void Attach(ShadowSteps2DRenderer r, Transform parent) { _r = r; _parent = parent; _fills.Clear(); _rings.Clear(); _count = 0; }
             public void Reset() { _fills.Clear(); _rings.Clear(); _parent = null; _count = 0; }
             public void Show(IEnumerable<GridCoord> cells, Color fill, Color border, float size, int order, int borderOrder = -1)
             {
                 if (borderOrder < 0) borderOrder = order + 1;
                 Clear(); if (_parent == null || cells == null) return;
+                _fillColor = fill; _borderColor = border;
                 float s = _r.Layout.NodeSpacing;
                 foreach (var c in cells)
                 {
@@ -888,6 +1285,17 @@ namespace ShadowSteps.Art2D
                     _count++;
                 }
             }
+            public void RefreshColors(Color fill, Color border)
+            {
+                if (_count == 0 || (_fillColor == fill && _borderColor == border)) return;
+                _fillColor = fill; _borderColor = border;
+                for (int i = 0; i < _count; i++)
+                {
+                    _fills[i].color = fill;
+                    _fills[i].GetComponent<SS2DFade>().SetBaseAlpha(fill.a);
+                    _rings[i].color = border;
+                }
+            }
             public void Clear() { foreach (var f in _fills) if (f != null) f.gameObject.SetActive(false); foreach (var b in _rings) if (b != null) b.gameObject.SetActive(false); _count = 0; }
         }
     }
@@ -897,6 +1305,7 @@ namespace ShadowSteps.Art2D
     {
         public float amplitude = 0.16f, period = 1.4f;
         private SpriteRenderer _sr; private float _baseAlpha = -1f;
+        public void SetBaseAlpha(float alpha) => _baseAlpha = alpha;
         private void OnEnable() { _sr = GetComponent<SpriteRenderer>(); _baseAlpha = -1f; }
         private void Update()
         {
@@ -917,7 +1326,7 @@ namespace ShadowSteps.Art2D
         public SpriteRenderer glow, ripple;
         public float baseScale = 1f, pulse = 0.16f, alphaMin = 0.45f, period = 1.6f, rippleGrow = 0.7f;
         public Color tint = Color.white;
-        private void Update() { if (Application.isPlaying) Apply(Time.time); }
+        private void LateUpdate() { if (Application.isPlaying) Apply(Time.time); }
         /// <summary>Pose at time <paramref name="t"/> (seconds): glow at base scale and full tint when t = 0, biggest and brightest half a period later; the ripple starts at the glow's size and alpha, ends grown by rippleGrow and transparent.</summary>
         public void Apply(float t)
         {

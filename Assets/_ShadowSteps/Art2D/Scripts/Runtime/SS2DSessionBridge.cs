@@ -249,7 +249,7 @@ namespace ShadowSteps.Art2D
             var stage = _session.Stage; var lib = Renderer.library; int t = ShownClock(state);
             Renderer.SetPlayer(state.Player); Renderer.SetPlayerWalking(false);
             if (_snapViewToPlayer) { _snapViewToPlayer = false; if (_fitter != null) _fitter.SnapToPlayer(); }
-            Renderer.SetPlayerTint(state.Result == StageResult.Caught ? lib.captured : state.Result == StageResult.Won ? lib.won : state.Result == StageResult.Lockdown ? lib.lockdown : (Color?)null);
+            Renderer.SetPlayerResult(state.Result, state.AlarmEver);
             for (int i = 0; i < stage.Guards.Count; i++)
             {
                 Renderer.SetGuardDefeated(i, state.IsDefeated(i)); // knocked-out guards are frozen and off the board: no pose updates, marker, vision or tint
@@ -299,12 +299,14 @@ namespace ShadowSteps.Art2D
         private void OnPreviewShown(ActionOutcome o)
         {
             if (!o.Valid || o.Free) { Renderer.ClearPreview(); return; }
-            var stage = _session.Stage; var after = o.After; var lib = Renderer.library;
+            var stage = _session.Stage; var after = o.After;
             var guardCells = new List<GridCoord>(); var seen = new HashSet<GridCoord>();
             for (int i = 0; i < stage.Guards.Count; i++) { if (after.IsDefeated(i)) continue; foreach (var c in Sight.GuardVision(stage, after, o.GuardsAfter[i])) if (seen.Add(c)) guardCells.Add(c); }
             var camCells = new List<GridCoord>(); seen.Clear();
             for (int i = 0; i < stage.Cameras.Count; i++) foreach (var c in Sight.CameraVision(stage, after, i, o.Before.T + 1)) if (seen.Add(c)) camCells.Add(c);
-            Renderer.SetPreview(guardCells, camCells, o.PlayerTo, o.Caught || o.Lockdown ? lib.previewDanger : o.AlarmTriggered ? lib.previewAlarm : lib.previewSafe);
+            Renderer.SetPreview(guardCells, camCells, o.PlayerTo, o.Caught || o.Lockdown
+                ? ShadowSteps2DRenderer.VisionPreviewTone.Danger
+                : o.AlarmTriggered ? ShadowSteps2DRenderer.VisionPreviewTone.Alarm : ShadowSteps2DRenderer.VisionPreviewTone.Safe);
         }
 
         private void OnPreviewHidden() => Renderer.ClearPreview();
@@ -350,7 +352,13 @@ namespace ShadowSteps.Art2D
                     float squash = o.Knockout ? lib.knockoutImpactSquash : lib.moveSquash;
                     Renderer.Player.ApplyHop(SS2DHop.At(t, dur, lib.moveSettle, hopHeight, lib.moveStretch, squash, lib.moveShadowShrink)); Renderer.Player.SetSortingOrderFromY();
                     if (o.Knockout && !shaken && t >= dur && lib.knockoutShake > 0f) { shaken = true; StartCoroutine(ShakeBoard(0.2f, lib.knockoutShake * Renderer.Layout.NodeSpacing)); }
-                    if (!landed && t >= dur) { landed = true; AudioService.Instance?.Play(o.Knockout ? Sfx.Impact : Sfx.Land); } // D-069: the sound lands with the token
+                    if (!landed && t >= dur)
+                    {
+                        landed = true;
+                        // Update the presented node at touchdown, before the settle, enemy turn and alarm popup.
+                        Renderer.SetPlayer(o.PlayerTo);
+                        AudioService.Instance?.Play(o.Knockout ? Sfx.Impact : Sfx.Land);
+                    }
                     if (launch && t >= dur) { if (!launched) { launched = true; AudioService.Instance?.Play(Sfx.Whoosh); Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, 0f); } else { flyT += Time.deltaTime; Renderer.ApplyGuardLaunch(o.KnockedOutGuard, o.PlayerTo, o.PlayerFrom, Mathf.Clamp01(flyT / flyDur)); } }
                     yield return null;
                 }
@@ -386,8 +394,9 @@ namespace ShadowSteps.Art2D
                 for (int i = 0; i < stage.Cameras.Count; i++)
                 {
                     if (Renderer.UsesDirectionalCameraArt) { if (e >= 0.5f) Renderer.SetCameraVisualFacing(i, CameraTrack.FacingAt(stage.Cameras[i], o.Before.T + 1)); } // per-facing art: swap at the half-way point
-                    else Renderer.CameraHeads[i].localRotation = Quaternion.Slerp(Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T)), Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T + 1)), e);
+                    else Renderer.SetCameraVisualRotation(i, Quaternion.Slerp(Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T)), Renderer.RotationFor(CameraTrack.FacingAt(stage.Cameras[i], o.Before.T + 1)), e));
                 }
+                Renderer.AnimateCameraCones(o.Before.T, e);
                 yield return null;
             }
             if (launch && !thudded) AudioService.Instance?.Play(Sfx.Thud);

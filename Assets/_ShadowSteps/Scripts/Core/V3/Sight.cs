@@ -33,6 +33,8 @@ namespace ShadowSteps.V3
         private static readonly double TanHalfAngle = Math.Tan(CameraHalfAngleDegrees * Math.PI / 180.0);
         /// <summary>Camera origin: the logical wall-face point, half a spacing from the wall cell centre toward the mount face.</summary>
         public const double CameraMountOffset = 0.5;
+        /// <summary>Radius of a node dot on the board (grid units) used to require complete vision coverage in the camera cone (partial overlay ignored).</summary>
+        public const double NodeRadius = 0.25;
         /// <summary>Half-length of the opaque segment drawn across a closed door edge.</summary>
         public const double DoorHalfWidth = 0.48;
         /// <summary>Rays sampled across the field of view when tracing the visible cone outline for drawing.</summary>
@@ -163,17 +165,19 @@ namespace ShadowSteps.V3
 
         /// <summary>
         /// Cone test in logical grid coordinates: the target's forward projection on the facing must be positive and at most
-        /// <see cref="CameraRange"/>, and its lateral offset within the 35° half-angle (|lateral| ≤ forward·tan 35°), each with
-        /// <see cref="ConeTolerance"/>. Nothing behind the camera or beside its lens can pass.
+        /// <see cref="CameraRange"/>, and its lateral offset plus <paramref name="nodeRadius"/> within the 35° half-angle
+        /// (|lateral| + nodeRadius ≤ forward·tan 35°), each with <see cref="ConeTolerance"/>.
+        /// Requires complete vision coverage over the node dot; partial overlays on the dot are ignored.
+        /// Nothing behind the camera or beside its lens can pass.
         /// </summary>
-        public static bool InCameraCone(Vec2 origin, Direction facing, Vec2 target)
+        public static bool InCameraCone(Vec2 origin, Direction facing, Vec2 target, double nodeRadius = NodeRadius)
         {
             double fx = DirectionUtil.DeltaX(facing), fy = DirectionUtil.DeltaY(facing);
             double dx = target.X - origin.X, dy = target.Y - origin.Y;
             double forward = dx * fx + dy * fy;
             if (forward <= ConeTolerance || forward > CameraRange + ConeTolerance) return false;
             double lateral = Math.Abs(dx * fy - dy * fx);
-            return lateral <= forward * TanHalfAngle + ConeTolerance;
+            return lateral + nodeRadius <= forward * TanHalfAngle + ConeTolerance;
         }
 
         /// <summary>True when the open segment origin→target crosses an active smoke cloud's node square.</summary>
@@ -187,7 +191,7 @@ namespace ShadowSteps.V3
         /// <summary>
         /// Nodes a camera detects at counted-action index t: every floor node whose centre lies inside the 70° cone from the
         /// wall-face origin along the facing (<see cref="InCameraCone"/>), with an unobstructed line of sight from the origin to
-        /// the node centre (walls, solid cover, closed doors; corner contact blocks) that crosses no smoke cloud. Disabled
+        /// the node centre (walls and solid cover; corner contact blocks) that crosses no smoke cloud. Disabled
         /// cameras see nothing unless <paramref name="ignoreDisabled"/> is set (for drawing the inactive cone).
         /// Node order is row-major (top-left first) so callers get a deterministic list.
         /// </summary>
@@ -215,7 +219,7 @@ namespace ShadowSteps.V3
                     if (!stage.IsFloor(p)) continue;
                     var target = Vec2.Of(p);
                     if (!InCameraCone(origin, facing, target)) continue;
-                    if (Obstructed(stage, openDoorMask, origin, target, cam.WallCell)) continue;
+                    if (Obstructed(stage, ~0, origin, target, cam.WallCell)) continue;
                     if (Smoked(clouds, origin, target)) continue;
                     seen.Add(p);
                 }
@@ -311,7 +315,7 @@ namespace ShadowSteps.V3
                 double a = -half + (2.0 * half) * i / rays;
                 double ca = Math.Cos(a), sa = Math.Sin(a);
                 var dir = new Vec2(fx * ca - fy * sa, fx * sa + fy * ca);
-                double dist = RayDistance(stage, openDoorMask, clouds, origin, dir, FarEdgeRayLength(radius, a, curvature), cam.WallCell);
+                double dist = RayDistance(stage, ~0, clouds, origin, dir, FarEdgeRayLength(radius, a, curvature), cam.WallCell);
                 pts.Add(new Vec2(origin.X + dir.X * dist, origin.Y + dir.Y * dist));
             }
             return pts;

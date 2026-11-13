@@ -220,7 +220,19 @@ namespace ShadowSteps.Art2D
         public Color lineReachable = new Color(0.26f, 0.76f, 0.76f);
         public Color playerAccent = new Color(0.16f, 0.20f, 0.36f);
         public Color guardAccent = new Color(0.22f, 0.48f, 0.92f);
+        [Header("Guard Vision")]
+        [InspectorName("Guard Vision Near Color")]
         public Color guardVisionFill = new Color(0.96f, 0.32f, 0.32f, 0.24f);
+        public Color guardVisionFarColor = new Color(1f, 0.52f, 0.25f, 0.12f);
+        [Range(0.05f, 1f), Tooltip("Fraction of the cone used for the color transition.")]
+        public float guardVisionSpread = 1f;
+        [Range(-0.5f, 0.5f), Tooltip("Move the transition toward the origin (negative) or far edge (positive).")]
+        public float guardVisionOffset;
+        public VisionBlendCurve guardVisionBlendCurve;
+        [Tooltip("Draw order of the guard cone within the Guard Vision layer.")]
+        public int guardVisionOrder = 6;
+        [Tooltip("Show the outline around the guard cone. Node markers are controlled separately.")]
+        public bool showGuardVisionOutline = true;
         public Color guardVisionBorder = new Color(0.90f, 0.24f, 0.24f, 0.80f);
         public Color guardVisionGlow = new Color(0.96f, 0.32f, 0.32f, 0.14f);
         [Tooltip("Half-angle of the drawn guard sight fan (drawing only: a guard sees the two nodes straight ahead). Narrow enough that the neighbouring lanes' node centres stay outside.")]
@@ -229,18 +241,32 @@ namespace ShadowSteps.Art2D
         [Range(0f, 1f)] public float guardConeOvershoot = 0.5f;
         [Tooltip("Curve of the guard fan's far edge: 1 = circular arc centred on the guard, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only.")]
         [Range(0f, 1f)] public float guardConeCurvature = 1f;
+        [Header("Camera Vision")]
+        [Tooltip("Half-angle of the drawn camera sight fan (drawing only). Narrow enough that adjacent corridor nodes stay outside the cone at distance 1.")]
+        [Range(10f, 35f)] public float cameraConeHalfAngleDegrees = 20f;
         [Tooltip("Curve of the camera cone's far edge: 1 = circular arc centred on the lens, lower = flatter arc (radius = reach ÷ curvature), 0 = straight edge. Drawing only; detected nodes always stay inside.")]
         [Range(0f, 1f)] public float cameraConeCurvature = 1f;
-        [Tooltip("D-042: draw the full geometric camera cone (70°, two spacings forward, flat far edge) across obstacles and beyond the board. Off = the old silhouette traced by the detection occluders.")]
-        public bool fullCameraCone = false; // D-054: off = the engine-traced silhouette, clipped by cover, walls, closed doors and smoke, so the painted cone is exactly what detects
-        [Tooltip("With the full cone: draw its fill/outline on the Props layer above obstacle art (below actors, markers and HUD) so bushes and walls do not cut it.")]
+        [Tooltip("Draw the full camera fan across obstacles and beyond the board. Off draws the silhouette traced by the detection rules.")]
+        public bool fullCameraCone = true;
+        [Tooltip("Draw the cone on the Camera Vision layer above walls and below the camera artwork.")]
         public bool cameraConeAboveObstacles = true;
         public int cameraConePropsOrder = 5000;
+        [InspectorName("Camera Vision Near Color")]
         public Color cameraVisionFill = new Color(1.00f, 0.74f, 0.22f, 0.32f);
+        public Color cameraVisionFarColor = new Color(1f, 0.94f, 0.48f, 0.14f);
+        [Range(0.05f, 1f), Tooltip("Fraction of the cone used for the color transition.")]
+        public float cameraVisionSpread = 1f;
+        [Range(-0.5f, 0.5f), Tooltip("Move the transition toward the origin (negative) or far edge (positive).")]
+        public float cameraVisionOffset;
+        public VisionBlendCurve cameraVisionBlendCurve;
+        [Tooltip("Show the outline around the camera cone.")]
+        public bool showCameraVisionBorder = true;
         public Color cameraVisionBorder = new Color(0.98f, 0.64f, 0.14f, 0.92f);
         public Color cameraVisionGlow = new Color(1.00f, 0.78f, 0.30f, 0.16f);
         public Color nodeCameraTint = new Color(1.00f, 0.90f, 0.70f);
+        [Tooltip("Active tint for the separate lens sprite on generated cameras. Authored camera art has a baked-in lens.")]
         public Color cameraLensActive = new Color(1.00f, 0.70f, 0.20f);
+        [Tooltip("EMP tint for the separate lens sprite on generated cameras. Authored cameras use Camera Art Disabled Tint.")]
         public Color cameraLensDisabled = new Color(0.35f, 0.88f, 0.95f);
         public Color alarmFlash = new Color(1.00f, 0.72f, 0.18f);
         public Color previewFill = new Color(1f, 0.85f, 0.40f, 0.14f);
@@ -249,10 +275,13 @@ namespace ShadowSteps.Art2D
         public Color previewDanger = new Color(1.00f, 0.25f, 0.25f, 0.9f);
         public Color previewAlarm = new Color(1.00f, 0.70f, 0.15f, 0.9f);
         public Color smokeTarget = new Color(0.40f, 0.95f, 0.90f, 0.40f);
+        [Tooltip("Tint for the generated exit highlight. The Exit Home sprite uses its authored colors.")]
         public Color exitTint = Color.white;
         public Color keyTint = Color.white;
         public Color nextMarkerTint = new Color(0.20f, 0.80f, 1.00f);
         public Color rotationMarkerTint = new Color(1.00f, 0.86f, 0.35f);
+        [Tooltip("Color of a node inside the visible camera cone that neither a camera nor a guard detects.")]
+        public Color cameraSafeNode = new Color(0.2f, 0.85f, 0.5f);
         [Header("Rotating guard arcs (user art; two curved arrows around the guard like the reference mock)")]
         [Header("Guard facing arrow (final art, D-071): the dark arrowhead peeking out from under the base disc on the facing side, as in the mock")]
         [Tooltip("Sprites/Markers/cap_arrow.png, authored pointing right (east), pivot at its centre. Empty = the generated chevron above the head.")] public Sprite facingArrow;
@@ -268,7 +297,21 @@ namespace ShadowSteps.Art2D
         public Color cameraDisabled = new Color(0.45f, 0.88f, 0.95f);
         public Color cameraHighlight = new Color(0.40f, 1.00f, 0.90f);
         public Color shadowTint = new Color(0.10f, 0.08f, 0.06f, 0.20f);
+        [Header("Spy Detection Tints")]
+        [Tooltip("Spy body tint when caught by a guard.")]
         public Color captured = new Color(1.00f, 0.35f, 0.35f);
+        public bool useCameraConeColorForSpyTint = true;
+        [Tooltip("Spy body tint when detected by a camera or caught in lockdown. Used when Use Camera Cone Color For Spy Tint is off.")]
+        public Color cameraDetectedSpyTint = new Color(0.945f, 0f, 0.627f);
+        public Color CameraSpyTint
+        {
+            get
+            {
+                var tint = useCameraConeColorForSpyTint ? cameraVisionFill : cameraDetectedSpyTint;
+                tint.a = 1f;
+                return tint;
+            }
+        }
         [Tooltip("Disc under a guard the player can knock out right now (Knockout mode only).")]
         public Color knockoutTarget = new Color(1.00f, 0.62f, 0.20f, 0.95f);
         [Tooltip("Tint of a knocked-out guard while it topples (decorative only).")]
@@ -317,6 +360,7 @@ namespace ShadowSteps.Art2D
     /// <summary>Sorting layer names (added to the project's TagManager) and the orders used inside them.</summary>
     public static class SS2DLayers
     {
-        public const string Background = "Background", Board = "Board", Floor = "Floor", Paths = "Paths", Nodes = "Nodes", Overlays = "Overlays", Props = "Props", Actors = "Actors", Markers = "Markers", FX = "FX";
+        public const string Background = "Background", Board = "Board", Floor = "Floor", Paths = "Paths", Nodes = "Nodes", Overlays = "Overlays", GuardVision = "Guard Vision", Props = "Props", Camera = "Camera", Actors = "Actors", Markers = "Markers", CameraVision = "Camera Vision", FX = "FX";
+        public const int CameraArtworkOrder = 1;
     }
 }
