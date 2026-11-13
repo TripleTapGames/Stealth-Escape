@@ -286,6 +286,10 @@ MonoBehaviour:
   keyTint: {r: 1, g: 1, b: 1, a: 1}
   nextMarkerTint: {r: 0.2, g: 0.8, b: 1, a: 1}
   rotationMarkerTint: {r: 1, g: 0.86, b: 0.35, a: 1}
+  cameraRotationArrow: {fileID: 21300000, guid: c5a1b03a6b3f842839a1a88e58ee1686, type: 3}
+  cameraRotationArrowSize: 0.285
+  cameraRotationArrowGap: 0.05
+  cameraRotationArrowTint: {r: 1, g: 1, b: 1, a: 1}
   cameraSafeNode: {r: 0.07778571, g: 0.7169812, b: 0.37428004, a: 1}
   facingArrow: {fileID: 21300000, guid: 2108e8f6f757d4e178dac94f89a9fea4, type: 3}
   facingArrowSize: 0.45

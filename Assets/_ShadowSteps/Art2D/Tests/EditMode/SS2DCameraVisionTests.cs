@@ -464,7 +464,7 @@ namespace ShadowSteps.Art2D.Tests
                 }
                 Assert.IsTrue(seen[0].SetEquals(seen[4]), "period 4");
                 var marker = r.transform.Find("Props/Camera_0/TypeMarker").GetComponent<SpriteRenderer>();
-                Assert.IsTrue(marker.gameObject.activeSelf); Assert.AreEqual(r.library.rotationMarker, marker.sprite); Assert.AreEqual(!cam.Clockwise, marker.flipX);
+                Assert.IsTrue(marker.gameObject.activeSelf); Assert.AreEqual(r.library.cameraRotationArrow != null ? r.library.cameraRotationArrow : r.library.rotationMarker, marker.sprite); Assert.AreEqual(!cam.Clockwise, marker.flipX);
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }
@@ -515,7 +515,7 @@ namespace ShadowSteps.Art2D.Tests
                 Assert.AreEqual(3, cam.SweepFacings, "LEVEL-19 ships the 3-facing sweep (D-074)");
                 CollectionAssert.AreEqual(new[] { cam.Facing, cam.Facing, other, other, third, third }, facings, "adjacent facings, two actions each");
                 var marker = r.transform.Find("Props/Camera_0/TypeMarker").GetComponent<SpriteRenderer>();
-                Assert.IsTrue(marker.gameObject.activeSelf); Assert.AreEqual(r.library.sweepMarker, marker.sprite);
+                Assert.IsTrue(marker.gameObject.activeSelf); Assert.AreEqual(r.library.cameraRotationArrow != null ? r.library.cameraRotationArrow : r.library.sweepMarker, marker.sprite);
             }
             finally { Object.DestroyImmediate(r.gameObject); }
         }

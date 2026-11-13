@@ -150,6 +150,10 @@ namespace ShadowSteps.Art2D
         public Sprite vfxGlow, vfxSparkle;
         [Header("Overlays and markers")]
         public Sprite visionCell, visionRing, arrow, nextMarker, rotationMarker, highlightRing, pip;
+        [Tooltip("Local offset from the camera mount, in node spacings.")]
+        public Vector3 cameraHighlightRingPosition;
+        [InspectorName("Camera Highlight Ring Color")]
+        public Color cameraHighlight = new Color(0.40f, 1.00f, 0.90f);
         [Header("Characters (captured)")]
         public SS2DCharacterSet spy = new SS2DCharacterSet();
         public SS2DCharacterSet guard = new SS2DCharacterSet();
@@ -282,6 +286,14 @@ namespace ShadowSteps.Art2D
         public Color keyTint = Color.white;
         public Color nextMarkerTint = new Color(0.20f, 0.80f, 1.00f);
         public Color rotationMarkerTint = new Color(1.00f, 0.86f, 0.35f);
+
+        [Header("Camera Rotation Indicator")]
+        public Sprite cameraRotationArrow;
+        [Min(0.01f)] public float cameraRotationArrowSize = 0.285f;
+        [Min(0f)] public float cameraRotationArrowGap = 0.05f;
+        [Tooltip("Local rotation of the camera indicator in degrees.")]
+        public Vector3 cameraRotationArrowRotation;
+        public Color cameraRotationArrowTint = Color.white;
         [Tooltip("Color of a node inside the visible camera cone that neither a camera nor a guard detects.")]
         public Color cameraSafeNode = new Color(0.2f, 0.85f, 0.5f);
         [Header("Rotating guard arcs (user art; two curved arrows around the guard like the reference mock)")]
@@ -297,7 +309,7 @@ namespace ShadowSteps.Art2D
         [Tooltip("Height of the arcs' centre above the node (node spacings). 0 = centred on the base disc the guard stands on.")] public float rotationArrowSideHeight = 0f;
         public Color rotationArrowTint = new Color(0.16f, 0.14f, 0.14f, 0.95f);
         public Color cameraDisabled = new Color(0.45f, 0.88f, 0.95f);
-        public Color cameraHighlight = new Color(0.40f, 1.00f, 0.90f);
+
         public Color shadowTint = new Color(0.10f, 0.08f, 0.06f, 0.20f);
         [Header("Spy Detection Tints")]
         [Tooltip("Spy body tint when caught by a guard.")]

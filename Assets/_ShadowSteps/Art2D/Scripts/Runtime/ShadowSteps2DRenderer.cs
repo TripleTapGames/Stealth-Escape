@@ -515,7 +515,7 @@ namespace ShadowSteps.Art2D
                 // The stone pivot marks the top centre, and the camera PNG pivot marks the centre of its base plate.
                 var artOffset = lib.HasCameraArt ? wallTopOffset : Vector3.zero;
                 _cameraPositions.Add(transform.TransformPoint(p + artOffset));
-                var hl = Make(holder.transform, "Highlight", lib.highlightRing, artOffset, lib.cameraSize * 2.2f * s, lib.cameraHighlight, SS2DLayers.Markers, 0); hl.gameObject.SetActive(false); _cameraHighlights.Add(hl);
+                var hl = Make(holder.transform, "Highlight", lib.highlightRing, artOffset + lib.cameraHighlightRingPosition * s, lib.cameraSize * 2.2f * s, lib.cameraHighlight, SS2DLayers.Markers, 0); hl.gameObject.SetActive(false); _cameraHighlights.Add(hl);
                 var head = Make(holder.transform, "Head", lib.cameraHead, artOffset, lib.cameraSize * 1.15f * s, Color.white, SS2DLayers.Props, 51);
                 _cameraHeads.Add(head.transform);
                 if (lib.HasCameraArt)
@@ -533,7 +533,7 @@ namespace ShadowSteps.Art2D
                 if (lib.HasCameraArt) lens.gameObject.SetActive(false); // the lens is baked into the art; the EMP state tints the body
                 _cameraLenses.Add(lens);
                 // Same layer as the camera artwork (Camera Vision, above the cone), one order above its body.
-                var marker = Make(holder.transform, "TypeMarker", cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, Vector3.zero, lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.CameraVision, lib.cameraConePropsOrder + SS2DLayers.CameraArtworkOrderOffset + 1);
+                var marker = Make(holder.transform, "TypeMarker", lib.cameraRotationArrow != null ? lib.cameraRotationArrow : cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, Vector3.zero, lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.CameraVision, lib.cameraConePropsOrder + SS2DLayers.CameraArtworkOrderOffset + 1);
                 marker.flipX = !cam.Clockwise; marker.gameObject.SetActive(cam.Kind != CameraKind.Fixed && marker.sprite != null);
                 _cameraTypeMarkers.Add(marker);
                 PositionCameraTypeMarker(i);
@@ -623,7 +623,10 @@ namespace ShadowSteps.Art2D
                 _cameraLenses[i].color = _cameraDisabledNow[i] ? library.cameraLensDisabled : library.cameraLensActive;
                 if (_cameraBodies[i] != null)
                     _cameraBodies[i].color = _cameraDisabledNow[i] ? library.cameraArtDisabledTint : Color.white;
-                _cameraTypeMarkers[i].color = library.rotationMarkerTint;
+                var highlight = _cameraHighlights[i];
+                highlight.color = library.cameraHighlight;
+                highlight.transform.localPosition = _cameraHeads[i].localPosition + library.cameraHighlightRingPosition * Layout.NodeSpacing;
+                PositionCameraTypeMarker(i);
             }
             foreach (var arrow in _guardNext) if (arrow != null) arrow.color = library.nextMarkerTint;
             for (int i = 0; i < _guardRotation.Count; i++)
@@ -908,7 +911,17 @@ namespace ShadowSteps.Art2D
         private void PositionCameraTypeMarker(int i)
         {
             var marker = _cameraTypeMarkers[i];
+            var camera = Stage.Cameras[i];
+            var arrow = library.cameraRotationArrow;
+            var sprite = arrow != null ? arrow : camera.Kind == CameraKind.Sweeping ? library.sweepMarker : library.rotationMarker;
+            marker.gameObject.SetActive(camera.Kind != CameraKind.Fixed && sprite != null);
             if (!marker.gameObject.activeSelf) return;
+
+            marker.sprite = sprite;
+            marker.color = arrow != null ? library.cameraRotationArrowTint : library.rotationMarkerTint;
+            marker.transform.localRotation = arrow != null ? Quaternion.Euler(library.cameraRotationArrowRotation) : Quaternion.identity;
+            float size = arrow != null ? library.cameraRotationArrowSize / Mathf.Max(sprite.bounds.size.x, 0.0001f) : library.markerSize * 0.95f;
+            marker.transform.localScale = Vector3.one * (size * Layout.NodeSpacing);
             var body = _cameraBodies[i];
             var artwork = body != null ? body : _cameraHeads[i].GetComponent<SpriteRenderer>();
             if (artwork == null || artwork.sprite == null) return;
@@ -926,7 +939,7 @@ namespace ShadowSteps.Art2D
                 }
             }
             var markerBounds = marker.bounds;
-            float gap = transform.TransformVector(Vector3.up * (0.05f * Layout.NodeSpacing)).magnitude;
+            float gap = transform.TransformVector(Vector3.up * ((arrow != null ? library.cameraRotationArrowGap : 0.05f) * Layout.NodeSpacing)).magnitude;
             marker.transform.position += new Vector3(bounds.center.x - markerBounds.center.x,
                 bounds.max.y + gap - markerBounds.min.y, 0f);
         }
