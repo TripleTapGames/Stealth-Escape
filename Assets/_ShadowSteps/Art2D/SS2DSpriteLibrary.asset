@@ -233,6 +233,8 @@ MonoBehaviour:
   preferStoneCameraMounts: 1
   cameraPoleHeight: 0.36
   markerSize: 0.26
+  smokeEffectPrefab: {fileID: 2865457247697500550, guid: 136e8543dff04234a821f21d528f22aa,
+    type: 3}
   cloudSize: 0.92
   visionCellSize: 0.92
   background: {r: 0.003921569, g: 0.43137255, b: 0.7529412, a: 1}
