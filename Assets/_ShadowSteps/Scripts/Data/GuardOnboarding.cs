@@ -97,12 +97,13 @@ namespace ShadowSteps.Data
             return queue;
         }
 
-        /// <summary>Marks every first-encounter card acknowledged: all behaviours in both modes and (D-075) both gadget cards. For test fixtures and developer saves that do not want any card.</summary>
+        /// <summary>Marks every first-encounter card acknowledged: all behaviours in both modes, (D-075) both gadget cards and guides, and (D-083) the first-knockout guide. For test fixtures and developer saves that do not want any card.</summary>
         public static void MarkAllSeen(SaveData save)
         {
             if (save == null) return;
             foreach (var kind in QueueOrder) { MarkSeen(save, kind, StageMode.Stealth); MarkSeen(save, kind, StageMode.Knockout); }
             GadgetOnboarding.MarkAllSeen(save);
+            KnockoutOnboarding.MarkUsed(save);
         }
 
         /// <summary>

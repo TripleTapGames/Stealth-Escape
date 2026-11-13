@@ -46,8 +46,8 @@ Every in-level event also carries `group`, `mode` (`stealth` | `knockout`) and `
 | `key_collected` | key picked up | turn | |
 | `alarm_triggered` | first camera detection of the attempt | turn, actions_left | |
 | `ftue_card_shown` / `ftue_card_dismissed` | guard / gadget first-encounter card | card (`guard_<kind>_<mode>`, `gadget_smoke`, `gadget_emp`) | |
-| `gadget_guide_step` | spotlight guide advanced | gadget, step (`arm`, `deploynode`, `deploycamera`, `deployany`, `followup`, `moveto`) | |
-| `gadget_guide_done` | guide finished | gadget, result (`completed`, `thrown_elsewhere`) | |
+| `gadget_guide_step` | spotlight guide advanced | gadget (`smoke`, `emp`, or `knockout` for the first-knockout guide, D-083), step (`arm`, `deploynode`, `deploycamera`, `deployany`, `followup`, `moveto`, `knockout`) | |
+| `gadget_guide_done` | guide finished | gadget (`smoke`, `emp`, `knockout`), result (`completed`, `thrown_elsewhere`) | |
 | `menu_action` | a menu/HUD button | screen (`home`, `level_select`, `hud`, `pause`, `results`, `failure`, `settings`), action, level_id | |
 | `settings_changed` | a settings toggle | setting (`music`, `sfx`, `haptics`, `reduced_motion`, `color_blind_assist`), value | |
 

@@ -248,7 +248,7 @@ namespace ShadowSteps.Art2D
         [Range(0f, 1f)] public float cameraConeCurvature = 1f;
         [Tooltip("Draw the full camera fan across obstacles and beyond the board. Off draws the silhouette traced by the detection rules.")]
         public bool fullCameraCone = true;
-        [Tooltip("Draw the cone on the Camera Vision layer above walls and below the camera artwork.")]
+        [Tooltip("Draw the cone on the Camera Vision layer above walls; the camera artwork sits on the same layer, above the cone.")]
         public bool cameraConeAboveObstacles = true;
         public int cameraConePropsOrder = 5000;
         [InspectorName("Camera Vision Near Color")]
@@ -360,7 +360,8 @@ namespace ShadowSteps.Art2D
     /// <summary>Sorting layer names (added to the project's TagManager) and the orders used inside them.</summary>
     public static class SS2DLayers
     {
-        public const string Background = "Background", Board = "Board", Floor = "Floor", Paths = "Paths", Nodes = "Nodes", Overlays = "Overlays", GuardVision = "Guard Vision", Props = "Props", Camera = "Camera", Actors = "Actors", Markers = "Markers", CameraVision = "Camera Vision", FX = "FX";
-        public const int CameraArtworkOrder = 1;
+        public const string Background = "Background", Board = "Board", Floor = "Floor", Paths = "Paths", Nodes = "Nodes", Overlays = "Overlays", GuardVision = "Guard Vision", Props = "Props", Actors = "Actors", Markers = "Markers", CameraVision = "Camera Vision", FX = "FX";
+        /// <summary>Camera artwork shares the Camera Vision layer with the cone; the body sits this many orders above the cone fill (the outline is at fill + 1), the type marker one above the body.</summary>
+        public const int CameraArtworkOrderOffset = 2;
     }
 }

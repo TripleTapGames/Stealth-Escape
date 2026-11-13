@@ -433,20 +433,14 @@ namespace ShadowSteps.Art2D
             }
             else if (library.cameraConeAboveObstacles)
             {
+                // The camera artwork shares this layer and is drawn at cameraConePropsOrder + CameraArtworkOrderOffset, above the fill and outline.
                 int vision = SortingLayer.NameToID(SS2DLayers.CameraVision);
-                int art = SortingLayer.NameToID(SS2DLayers.Camera);
                 int visionDepth = SortingLayer.GetLayerValueFromID(vision);
                 int wallDepth = SortingLayer.GetLayerValueFromName(SS2DLayers.Props);
-                if (vision != 0 && visionDepth > wallDepth && visionDepth < SortingLayer.GetLayerValueFromID(art))
+                if (vision != 0 && visionDepth > wallDepth)
                 {
                     layer = SS2DLayers.CameraVision;
                     order = library.cameraConePropsOrder;
-                }
-                else if (art != 0)
-                {
-                    // An already open Editor may still have the old layer order loaded.
-                    layer = SS2DLayers.Camera;
-                    order = SS2DLayers.CameraArtworkOrder - 3;
                 }
             }
             _fillRenderer.sortingLayerName = _lineRenderer.sortingLayerName = layer;

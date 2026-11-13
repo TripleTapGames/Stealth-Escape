@@ -522,7 +522,7 @@ namespace ShadowSteps.Art2D
                 {
                     // Final art: the head keeps its logical rotation (invisible), the body child shows the sprite for the drawn facing, upright, pivot on the base plate at the anchor.
                     head.sprite = null; bracket.gameObject.SetActive(false);
-                    var body = Make(head.transform, "Body", lib.cameraArt[(int)View(cam.Facing)], Vector3.zero, 1f, Color.white, SS2DLayers.Camera, SS2DLayers.CameraArtworkOrder);
+                    var body = Make(head.transform, "Body", lib.cameraArt[(int)View(cam.Facing)], Vector3.zero, 1f, Color.white, SS2DLayers.CameraVision, lib.cameraConePropsOrder + SS2DLayers.CameraArtworkOrderOffset);
                     body.transform.localScale = Vector3.one * (lib.cameraArtSize * s / Mathf.Max(0.01f, lib.cameraSize * 1.15f * s)); // undo the head's scale
                     _cameraBodies.Add(body);
                     if (pole) { var m = holder.transform.Find("Mount"); if (m != null) m.gameObject.SetActive(false); } // the art has its own pedestal and plate
@@ -532,8 +532,8 @@ namespace ShadowSteps.Art2D
                 var lens = Make(head.transform, "Lens", lib.cameraLens, new Vector3(0f, 0.30f, 0f), 0.34f, lib.cameraLensActive, SS2DLayers.Props, 52);
                 if (lib.HasCameraArt) lens.gameObject.SetActive(false); // the lens is baked into the art; the EMP state tints the body
                 _cameraLenses.Add(lens);
-                // Use the same layer as the camera artwork, one order above its body.
-                var marker = Make(holder.transform, "TypeMarker", cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, Vector3.zero, lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.Camera, SS2DLayers.CameraArtworkOrder + 1);
+                // Same layer as the camera artwork (Camera Vision, above the cone), one order above its body.
+                var marker = Make(holder.transform, "TypeMarker", cam.Kind == CameraKind.Sweeping ? lib.sweepMarker : lib.rotationMarker, Vector3.zero, lib.markerSize * 0.95f * s, lib.rotationMarkerTint, SS2DLayers.CameraVision, lib.cameraConePropsOrder + SS2DLayers.CameraArtworkOrderOffset + 1);
                 marker.flipX = !cam.Clockwise; marker.gameObject.SetActive(cam.Kind != CameraKind.Fixed && marker.sprite != null);
                 _cameraTypeMarkers.Add(marker);
                 PositionCameraTypeMarker(i);

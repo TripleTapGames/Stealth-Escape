@@ -62,9 +62,6 @@ TagManager:
   - name: Props
     uniqueID: 2321657569
     locked: 0
-  - name: Camera
-    uniqueID: 1745286093
-    locked: 0
   - name: Actors
     uniqueID: 3521180389
     locked: 0
@@ -72,7 +69,7 @@ TagManager:
     uniqueID: 1898732143
     locked: 0
   - name: Camera Vision
-    uniqueID: 1870435613
+    uniqueID: 2099439237
     locked: 0
   - name: FX
     uniqueID: 2777081609

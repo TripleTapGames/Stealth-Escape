@@ -470,6 +470,31 @@ namespace ShadowSteps.Art2D.Tests
         }
 
         [Test]
+        public void CameraBodyAndTypeMarker_DrawOnTheCameraVisionLayer_AboveTheCone()
+        {
+            var stage = Pack().FindByCode("LEVEL-18"); var r = Build(stage);
+            try
+            {
+                if (!r.UsesDirectionalCameraArt) Assert.Ignore("the library has no directional camera art, so there is no Body sprite");
+                Present(r, stage, StageState.Initial(stage));
+                var body = r.transform.Find("Props/Camera_0/Head/Body").GetComponent<SpriteRenderer>();
+                var marker = r.transform.Find("Props/Camera_0/TypeMarker").GetComponent<SpriteRenderer>();
+                Assert.AreEqual(SS2DLayers.CameraVision, body.sortingLayerName, "the camera body shares the Camera Vision layer");
+                Assert.AreEqual(r.library.cameraConePropsOrder + SS2DLayers.CameraArtworkOrderOffset, body.sortingOrder);
+                Assert.AreEqual(SS2DLayers.CameraVision, marker.sortingLayerName, "the type marker sits on the same layer as the body");
+                Assert.AreEqual(body.sortingOrder + 1, marker.sortingOrder);
+                var fill = r.transform.Find("Overlays/CameraVision/Region_Fill").GetComponent<MeshRenderer>();
+                var outline = r.transform.Find("Overlays/CameraVision/Region_Outline").GetComponent<MeshRenderer>();
+                if (r.library.cameraConeAboveObstacles)
+                {
+                    Assert.AreEqual(SS2DLayers.CameraVision, fill.sortingLayerName, "the cone draws on the Camera Vision layer");
+                    Assert.Greater(body.sortingOrder, outline.sortingOrder, "the camera artwork stays in front of the cone fill and outline");
+                }
+            }
+            finally { Object.DestroyImmediate(r.gameObject); }
+        }
+
+        [Test]
         public void SweepingCamera_Level19_HoldsEachFacingForTwoActions()
         {
             var stage = Unlimited(Pack().FindByCode("LEVEL-19")); var r = Build(stage); var cam = stage.Cameras[0];

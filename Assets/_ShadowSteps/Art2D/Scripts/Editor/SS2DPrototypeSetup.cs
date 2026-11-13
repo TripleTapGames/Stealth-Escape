@@ -417,6 +417,48 @@ namespace ShadowSteps.Art2D.Editor
             catch (System.Exception e) { Debug.LogError("[SS2D] screen skin failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
         }
 
+        /// <summary>
+        /// Batch entry (2026-11-13): render the Level Select screen from its BAKED prefab (<c>Assets/_ShadowSteps/Prefabs/UI/LevelSelectScreen.prefab</c>,
+        /// whose grid cell may differ from the code default) over the LEVEL-2 preview as Docs/Reports/Renders/Art2D_Screen_LevelSelectPrefab_1080x1920.png.
+        /// The save is the editor's real save when present, else every stage completed with three stars so the star rows are visible.
+        /// </summary>
+        public static void RenderLevelSelectPrefab()
+        {
+            try
+            {
+                var skin = ShadowSteps.UI.UiSkin.Current ?? AssetDatabase.LoadAssetAtPath<ShadowSteps.UI.UiSkin>(ShadowSteps.UI.UiSkin.DefaultAssetPath);
+                if (skin == null || !skin.IsComplete) throw new System.IO.FileNotFoundException("screen skin incomplete");
+                ShadowSteps.UI.UiSkin.Current = skin;
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_ShadowSteps/Prefabs/UI/LevelSelectScreen.prefab");
+                if (prefab == null) throw new System.IO.FileNotFoundException("no LevelSelectScreen prefab");
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                var pv = Object.FindObjectOfType<SS2DPreviewController>(); if (pv == null) throw new System.Exception("no preview controller in " + ScenePath);
+                pv.stageCode = "LEVEL-2"; pv.previewActions = null; pv.previewMode = ShadowSteps.V3.StageMode.Knockout; pv.BuildPreview();
+                if (!ShadowSteps.Runtime.AppServices.IsInitialized) ShadowSteps.Runtime.AppServices.TryInitializeSync();
+                var save = ShadowSteps.Runtime.AppServices.Save;
+                if (save == null || (save.Results.Count == 0 && save.KnockoutResults.Count == 0))
+                {
+                    save = new ShadowSteps.Data.SaveData { DebugUnlockAll = true };
+                    foreach (var st in ShadowSteps.Runtime.AppServices.Stages.Stages) save.RecordWin(st.Id, st.ParFor(ShadowSteps.V3.StageMode.Knockout), 1 + st.Id % 3, false, -1, ShadowSteps.V3.StageMode.Knockout);
+                    ShadowSteps.Runtime.AppServices.InstallSaveForTests(save);
+                }
+                var cam = Camera.main != null ? Camera.main : Object.FindObjectOfType<Camera>();
+                var cgo = new GameObject("ScreenReviewCanvas", typeof(RectTransform)); var canvas = cgo.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = cam; canvas.planeDistance = 1f; canvas.sortingLayerName = SS2DLayers.FX; canvas.sortingOrder = 150;
+                var scaler = cgo.AddComponent<UnityEngine.UI.CanvasScaler>(); scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1080f, 1920f); scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight; scaler.matchWidthOrHeight = 0.5f;
+                cgo.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                var set = ScriptableObject.CreateInstance<ShadowSteps.UI.UiPrefabSet>();
+                var levels = set.Create<ShadowSteps.UI.LevelSelectScreen>(cgo.transform, prefab);
+                levels.Rebuild();
+                levels.gameObject.SetActive(true); var g = levels.GetComponent<CanvasGroup>(); if (g != null) g.alpha = 1f;
+                Canvas.ForceUpdateCanvases(); UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(levels.Rect); Canvas.ForceUpdateCanvases();
+                RenderOpenScene("Docs/Reports/Renders/Art2D_Screen_LevelSelectPrefab_1080x1920.png", 1080, 1920, false);
+                Object.DestroyImmediate(cgo);
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+            catch (System.Exception e) { Debug.LogError("[SS2D] level select prefab render failed: " + e); if (Application.isBatchMode) EditorApplication.Exit(1); }
+        }
+
         /// <summary>Batch entry (D-058): import the backdrop (courtyard v2) and render the smallest, a typical and the largest board for review.</summary>
         public static void ImportBackgroundsAndRender()
         {

@@ -162,7 +162,16 @@ namespace ShadowSteps.Art2D.Tests
                     Assert.AreEqual(SS2DLayers.CameraVision, outline.sortingLayerName); Assert.AreEqual(lib.cameraConePropsOrder + 1, outline.sortingOrder);
                     int coneLayer = SortingLayer.GetLayerValueFromName(SS2DLayers.CameraVision);
                     Assert.Greater(coneLayer, SortingLayer.GetLayerValueFromName(SS2DLayers.Props), "the walls stay behind the cone");
-                    Assert.Less(coneLayer, SortingLayer.GetLayerValueFromName(SS2DLayers.Camera), "the camera artwork stays in front of the cone");
+                    var cameraBody = r.transform.Find("Props/Camera_0/Head/Body");
+                    if (cameraBody != null)
+                    {
+                        var bodySr = cameraBody.GetComponent<SpriteRenderer>();
+                        Assert.AreEqual(SS2DLayers.CameraVision, bodySr.sortingLayerName, "the camera body shares the Camera Vision layer");
+                        Assert.Greater(bodySr.sortingOrder, outline.sortingOrder, "the camera artwork stays in front of the cone");
+                        var typeMarker = r.transform.Find("Props/Camera_0/TypeMarker").GetComponent<SpriteRenderer>();
+                        Assert.AreEqual(SS2DLayers.CameraVision, typeMarker.sortingLayerName);
+                        Assert.Greater(typeMarker.sortingOrder, bodySr.sortingOrder, "the type marker sits above the body");
+                    }
                     Assert.Less(coneLayer, SortingLayer.GetLayerValueFromName(SS2DLayers.FX), "the HUD stays above the cone");
                 }
                 Assert.IsNull(fill.GetComponent<Collider2D>()); Assert.IsNull(fill.GetComponent<Collider>());

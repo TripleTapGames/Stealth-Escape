@@ -143,10 +143,16 @@ namespace ShadowSteps.UI
                 {
                     ui.Label = UiSkinKit.TextAt(box.transform, "Code", code, 30f, Color.white, true, TextAnchor.MiddleCenter, 0.04f, 0.64f, 0.96f, 0.95f);
                     UiSkinKit.TextAt(box.transform, "Title", stage.Title, 22f, Color.white, true, TextAnchor.UpperCenter, 0.05f, 0.34f, 0.95f, 0.66f);
-                    var stars = UiBuilder.CreateRect("Stars", box.transform); UiBuilder.Anchor(stars, 0.2f, 0.06f, 0.8f, 0.32f);
+                    // The row must never be narrower than its three stars: an overflowing HorizontalLayoutGroup ignores its centre alignment and
+                    // starts at the left edge (seen with the prefab's 180 px cell, 2026-11-13). Wide band, and stars that shrink (min 0) rather than overflow.
+                    var stars = UiBuilder.CreateRect("Stars", box.transform); UiBuilder.Anchor(stars, 0.08f, 0.06f, 0.92f, 0.32f);
                     var h = stars.gameObject.AddComponent<HorizontalLayoutGroup>(); h.spacing = 6f; h.childAlignment = TextAnchor.MiddleCenter; h.childControlWidth = true; h.childControlHeight = true; h.childForceExpandWidth = false; h.childForceExpandHeight = false;
                     int earned = done ? Mathf.Clamp(result.BestStars, 0, 3) : 0;
-                    for (int i = 0; i < 3; i++) UiSkinKit.Icon(stars, "Star" + i, i < earned ? skin.starFull : skin.starBlank, 38f, Color.white);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var star = UiSkinKit.Icon(stars, "Star" + i, i < earned ? skin.starFull : skin.starBlank, 38f, Color.white);
+                        var le = star.GetComponent<LayoutElement>(); le.minWidth = 0f; le.minHeight = 0f; // preferred 38, shrinks to fit; preserveAspect keeps the star shape
+                    }
                 }
                 else
                 {

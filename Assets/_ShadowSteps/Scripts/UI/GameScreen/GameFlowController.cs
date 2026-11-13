@@ -91,9 +91,9 @@ namespace ShadowSteps.UI
             // D-082 analytics: a retry opens a new attempt; a mode switch closes the attempt and opens one in the other rules (the session restarts the level and raises Retried after RulesModeChanged, which the tracker treats as part of the same switch).
             Session.Retried += () => { if (_modeSwitchPending) { _modeSwitchPending = false; return; } Track.Retried(Session.Stage, Session.RulesMode, _actionsBeforeRestart); };
             Session.RulesModeChanged += mode => { _modeSwitchPending = true; Track.ModeSwitched(Session.Stage, _lastMode, mode, _actionsBeforeRestart); _lastMode = mode; };
-            Session.RulesModeChanged += _ => { CancelGuardQueue(); CancelGadgetGuide(); _messageShownThisVisit = false; Router.PopAllModals(); }; // a mode switch restarts the current level: any results/failure/alarm/guard card is stale; the new mode may show its one card
+            Session.RulesModeChanged += _ => { CancelGuardQueue(); CancelGuides(); _messageShownThisVisit = false; Router.PopAllModals(); }; // a mode switch restarts the current level: any results/failure/alarm/guard card is stale; the new mode may show its one card
             Session.Retried += RebuildGuardQueue; // retry and mode switch: a fresh board context; acknowledged cards never repeat, interrupted ones become eligible again
-            Session.Retried += () => { CancelGadgetGuide(); StartGadgetGuideIfNeeded(); }; // a retry restarts the guide from step 1, or drops it once the gadget has been used
+            Session.Retried += () => { CancelGuides(); StartGuidesIfNeeded(); }; // a retry restarts the guide from step 1, or drops it once the knockout / gadget has been used
 
             _hud = Composer.Hud as GameHudController;
             if (_hud != null) _hud.PauseRequested += () => { if (!Router.AnyModalOpen) { Track.MenuAction("hud", "pause", LevelId); Router.Push<PauseScreen>(); } };
@@ -115,8 +115,8 @@ namespace ShadowSteps.UI
             _lastMode = Session.RulesMode; _modeSwitchPending = false; _actionsBeforeRestart = 0;
             Track.StageLoaded(stage, Session.RulesMode);
             CancelGuardQueue();
-            CancelGadgetGuide();
-            StartGadgetGuideIfNeeded(); // D-076: the HUD line sits under whatever card or intro opens next
+            CancelGuides();
+            StartGuidesIfNeeded(); // D-076 / D-083: the HUD line sits under whatever card or intro opens next
             _messageShownThisVisit = false;
             Router.PopAllModals();
             var save = AppServices.Save;
@@ -217,7 +217,7 @@ namespace ShadowSteps.UI
             AudioService.Instance?.Play(Sfx.Tap);
             Track.CardDismissed(CardToken(card));
             ShowNextGuardCard();
-            if (_gadgetGuide.Active) ApplyGadgetGuide(); else StartGadgetGuideIfNeeded(); // after the card: "Tap SMOKE to arm it" with the button accented again
+            if (_knockoutGuide.Active) ApplyKnockoutGuide(); else if (_gadgetGuide.Active) ApplyGadgetGuide(); else StartGuidesIfNeeded(); // after the card: the guide's step comes back (button accent, spotlight)
         }
 
         private static string CardToken(OnboardingCard card) => card is GuardOnboarding.Card g ? "guard_" + GuardOnboarding.Token(g.Kind) + "_" + StageModeUtil.Token(g.Mode) : card is GadgetOnboarding.Card gd ? "gadget_" + (gd.Kind == GadgetKind.Smoke ? "smoke" : "emp") : "card";
@@ -266,6 +266,7 @@ namespace ShadowSteps.UI
             // Re-apply on every mode change while active: the HUD's own handler (subscribed before this one) clears the pill and the
             // button accent whenever the session returns to movement, including the reset right after a stage loads.
             if (_gadgetGuide.Active) ApplyGadgetGuide();
+            else if (_knockoutGuide.Active) ApplyKnockoutGuide();
         }
 
         private void OnGuideAction(ActionOutcome o)
@@ -325,6 +326,89 @@ namespace ShadowSteps.UI
                 return;
             }
             hud?.ClearGuide();
+        }
+
+        // ---------------------------------------------------------------- first-knockout spotlight guide (D-083)
+
+        private readonly KnockoutOnboarding.Guide _knockoutGuide = new KnockoutOnboarding.Guide();
+        /// <summary>The knockout step being taught, or null.</summary>
+        public KnockoutOnboarding.ScriptStep KnockoutGuideCurrent => _knockoutGuide.Current;
+        public bool KnockoutGuideActive => _knockoutGuide.Active;
+
+        /// <summary>One spotlight at a time: the knockout guide (FTUE-3 in the campaign) comes before any gadget guide; the gadget guide follows its completion.</summary>
+        private void StartGuidesIfNeeded()
+        {
+            StartKnockoutGuideIfNeeded();
+            if (!_knockoutGuide.Active) StartGadgetGuideIfNeeded();
+        }
+
+        private void CancelGuides()
+        {
+            CancelKnockoutGuide();
+            CancelGadgetGuide();
+        }
+
+        /// <summary>Starts the first-knockout guide when knockouts are on, a live guard is on the board, the player has never knocked one out and the shortest route from here does; no-op otherwise.</summary>
+        private void StartKnockoutGuideIfNeeded()
+        {
+            if (_knockoutGuide.Active || !Session.HasStage || Session.State == null) return;
+            if (KnockoutOnboarding.IsUsed(AppServices.Save) || !KnockoutOnboarding.Offers(Session.Stage, Session.State)) return;
+            var script = KnockoutOnboarding.BuildScript(Session.Stage, Session.State);
+            if (script == null) return;
+            _knockoutGuide.Start(script);
+            ApplyKnockoutGuide();
+        }
+
+        /// <summary>Re-plans from the current state (the player did something the script did not ask for); a route without a knockout ends the guide.</summary>
+        private void RescriptKnockoutGuide(StageState from)
+        {
+            _knockoutGuide.Cancel();
+            var script = from == null || from.IsTerminal ? null : KnockoutOnboarding.BuildScript(Session.Stage, from);
+            if (script != null) _knockoutGuide.Start(script);
+            ApplyKnockoutGuide();
+            if (!_knockoutGuide.Active) StartGadgetGuideIfNeeded();
+        }
+
+        private void CancelKnockoutGuide()
+        {
+            if (!_knockoutGuide.Active && !_knockoutGuide.Done) return;
+            _knockoutGuide.Cancel();
+            ApplyKnockoutGuide();
+        }
+
+        private void OnKnockoutGuideAction(ActionOutcome o)
+        {
+            if (o.Knockout && !KnockoutOnboarding.IsUsed(AppServices.Save)) { KnockoutOnboarding.MarkUsed(AppServices.Save); AppServices.PersistSave(); } // any real knockout counts as learned
+            if (!_knockoutGuide.Active) return;
+            switch (_knockoutGuide.OnAction(o.Action.Kind, o.PlayerTo, o.KnockedOutGuard))
+            {
+                case KnockoutOnboarding.Guide.ActionResult.Advanced: Track.GadgetGuideStep(KnockoutOnboarding.Token, _knockoutGuide.Current != null && _knockoutGuide.Current.IsKnockout ? "knockout" : "moveto"); ApplyKnockoutGuide(); break;
+                case KnockoutOnboarding.Guide.ActionResult.Completed: Track.GadgetGuideDone(KnockoutOnboarding.Token, "completed"); ApplyKnockoutGuide(); break;
+                case KnockoutOnboarding.Guide.ActionResult.Diverged: RescriptKnockoutGuide(o.After); break;
+            }
+        }
+
+        /// <summary>Mirrors the knockout guide onto the screen: nothing while dormant; the guard's node spotlit with the line (pinned in the HUD) for the knockout step; the done line (transient) after the knockout, then the gadget guide if any.</summary>
+        private void ApplyKnockoutGuide()
+        {
+            var hud = Composer.Hud as IGameHudGadgetHighlight;
+            var step = _knockoutGuide.Current;
+            if (step != null && step.Silent) { HideSpotlight(); hud?.ClearGuide(); return; }
+            if (step != null)
+            {
+                hud?.ShowGuide(step.Message);
+                var n = step.Node;
+                ShowSpotlight(() => NodeHole(n), step.Message);
+                return;
+            }
+            HideSpotlight();
+            hud?.ClearGuide();
+            if (_knockoutGuide.Done)
+            {
+                Composer.Hud?.ShowMessage(_knockoutGuide.Message);
+                _knockoutGuide.Cancel();
+                StartGadgetGuideIfNeeded();
+            }
         }
 
         private void ShowSpotlight(Func<Rect?> hole, string message)
@@ -390,7 +474,8 @@ namespace ShadowSteps.UI
         {
             Track.ActionStarted(o); // D-082: knockouts, gadget throws, key pickups, first camera detection
             if (o.After != null) _actionsBeforeRestart = o.After.T;
-            // D-076/D-077: every started action drives the scripted guide (before the audio early-out so it also works without an AudioService).
+            // D-076/D-077/D-083: every started action drives the scripted guides (before the audio early-out so it also works without an AudioService).
+            OnKnockoutGuideAction(o);
             OnGuideAction(o);
             var audio = AudioService.Instance;
             if (audio == null) return;
