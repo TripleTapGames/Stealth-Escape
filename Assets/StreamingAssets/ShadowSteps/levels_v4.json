@@ -1612,7 +1612,7 @@
       "group": "Main",
       "title": "Inner Citadel",
       "intro": "Collect access, cross under Smoke, then beat the last guard and camera.",
-      "rows": ["#########", "#.-.-.-.#", "#|_|X.-.#", "#.-.-.__#", "#####.###", "#.-.-.-.#", "#.#######", "#.-.-.-.#", "#.#######", "#.-.-.-.#", "#########"],
+      "rows": ["#########", "#.-.-.-.#", "#|_|X.-.#", "#.-.-.__#", "#####.###", "#.-.-.-.#", "#.#######", "#.______#", "#.#######", "#.-.-.-.#", "#########"],
       "start": [1, 9],
       "exit": [7, 1],
       "key": [7, 9],
@@ -1643,9 +1643,10 @@
           "id": "cam1",
           "wall": [0, 7],
           "mountFace": "E",
-          "facing": "E",
+          "facing": "N",
           "kind": "sweeping",
-          "clockwise": true
+          "clockwise": true,
+          "sweep": 3
         },
         {
           "id": "cam2",
