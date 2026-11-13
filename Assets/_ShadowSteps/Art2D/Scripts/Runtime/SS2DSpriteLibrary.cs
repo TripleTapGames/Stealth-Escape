@@ -207,6 +207,8 @@ namespace ShadowSteps.Art2D
         [Tooltip("Height of the pole mount in node spacings (screen-up from the cell centre); the camera head sits at the top.")]
         public float cameraPoleHeight = 0.36f;
         public float markerSize = 0.30f;
+        [Tooltip("Board smoke effect. Clear this to use the cloud sprite. Changes apply to active smoke in Play Mode.")]
+        public GameObject smokeEffectPrefab;
         public float cloudSize = 0.92f;
         public float visionCellSize = 0.92f;
 

@@ -699,7 +699,7 @@ namespace ShadowSteps.Art2D
         {
             for (int i = transform.childCount - 1; i >= 0; i--) { var go = transform.GetChild(i).gameObject; if (Application.isPlaying) Destroy(go); else DestroyImmediate(go); }
             _nodeSprites.Clear(); _nodeRings.Clear(); _lines.Clear(); _lineByEdge.Clear(); _doors.Clear(); _guards.Clear(); _guardNext.Clear(); _guardRotation.Clear();
-            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
+            _cameraHeads.Clear(); _cameraPositions.Clear(); _cameraPoleMounted.Clear(); _cameraFacings.Clear(); _cameraDisabledNow.Clear(); _cameraCones.Clear(); _openDoorMask = 0; _cloudState = null; _cameraBadges.Clear(); _cameraPips.Clear(); _cameraHighlights.Clear(); _cameraLenses.Clear(); _cameraTypeMarkers.Clear(); _cameraBodies.Clear(); _clouds.Clear(); _smokeEffects.Clear(); CameraOverlay = null; GuardOverlay = null; _guardCones.Clear(); _guardPoses.Clear();
             Player = null; _key = null; _exit = null; _exitGlow = null; _previewMarker = null; _background = null; _door = null; ActiveTheme = null; _resting.Clear();
             _exitHomeAnimator = null;
             _exitFallbackPulse = null;
@@ -946,25 +946,68 @@ namespace ShadowSteps.Art2D
             foreach (var e in connections) if (_lineByEdge.TryGetValue(e, out var l)) l.color = library.lineReachable;
         }
 
+        private GameObject _shownSmokePrefab;
+        private readonly List<GameObject> _smokeEffects = new List<GameObject>();
+
         public void SetClouds(IReadOnlyList<SmokeCloud> clouds)
         {
             _cloudState = clouds;
-            foreach (var c in _clouds) c.gameObject.SetActive(false);
+            RefreshSmokePrefab();
+            int count = clouds?.Count ?? 0;
             float s = Layout.NodeSpacing;
-            for (int i = 0; i < clouds.Count; i++)
+            for (int i = 0; i < count; i++)
             {
                 if (i >= _clouds.Count)
                 {
-                    var holder = new GameObject("SmokeCloud_" + i); holder.transform.SetParent(_fx, false);
+                    var holder = new GameObject("SmokeCloud_" + i);
+                    holder.SetActive(false);
+                    holder.transform.SetParent(_fx, false);
                     Make(holder.transform, "Cloud", library.cloud, Vector3.zero, library.cloudSize * s, Color.white, SS2DLayers.FX, 0);
                     for (int k = 0; k < 2; k++) Make(holder.transform, "Pip" + k, library.pip, new Vector3((k - 0.5f) * 0.16f, -0.30f, 0f) * s, 0.08f * s, Color.white, SS2DLayers.FX, 1);
                     _clouds.Add(holder.transform);
+                    _smokeEffects.Add(null);
+                    UpdateSmokeEffect(i);
                 }
-                var t = _clouds[i]; t.localPosition = Pos(clouds[i].Node); t.gameObject.SetActive(true);
+
+                var t = _clouds[i];
+                var position = Pos(clouds[i].Node);
+                if (t.localPosition != position) t.gameObject.SetActive(false);
+                t.localPosition = position;
                 for (int k = 0; k < 2; k++) t.GetChild(1 + k).gameObject.SetActive(k < clouds[i].ActionsLeft);
                 t.GetChild(0).localScale = Vector3.one * library.cloudSize * s * (clouds[i].ActionsLeft >= 2 ? 1f : 0.82f);
+                t.gameObject.SetActive(true);
+            }
+            for (int i = count; i < _clouds.Count; i++) _clouds[i].gameObject.SetActive(false);
+        }
+
+        private void RefreshSmokePrefab()
+        {
+            if (library == null || _shownSmokePrefab == library.smokeEffectPrefab) return;
+            _shownSmokePrefab = library.smokeEffectPrefab;
+            for (int i = 0; i < _clouds.Count; i++) UpdateSmokeEffect(i);
+        }
+
+        private void UpdateSmokeEffect(int index)
+        {
+            var holder = _clouds[index];
+            var previous = _smokeEffects[index];
+            if (previous != null)
+            {
+                previous.SetActive(false);
+                Destroy(previous);
+            }
+
+            holder.GetChild(0).gameObject.SetActive(_shownSmokePrefab == null);
+            var effect = _shownSmokePrefab != null ? Instantiate(_shownSmokePrefab, holder, false) : null;
+            _smokeEffects[index] = effect;
+            if (effect == null) return;
+            foreach (var effectRenderer in effect.GetComponentsInChildren<Renderer>(true))
+            {
+                effectRenderer.sortingLayerName = SS2DLayers.FX;
+                effectRenderer.sortingOrder = 0;
             }
         }
+
 
         /// <summary>Exactly the cells the engine reports: red guard cells (border drawn above everything, order 6) and the merged amber camera region (orders 1–4), so an overlapped node shows a red outer border around the amber inner region.</summary>
         public void SetVision(IEnumerable<GridCoord> guardCells, IEnumerable<GridCoord> cameraCells)
@@ -992,6 +1035,7 @@ namespace ShadowSteps.Art2D
 
         private void LateUpdate()
         {
+            RefreshSmokePrefab();
             RefreshBoardMarkerSorting();
             RefreshPlayerCameraSorting();
         }
